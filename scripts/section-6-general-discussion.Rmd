@@ -1,0 +1,11 @@
+<!-- Do NOT knit this document. It is part of a larger document. Instead knit the main document (my-apa-formatted-article) -->
+
+# General discussion
+Fig. XX summarizes participants’ categorization functions across the different test blocks. To analyse the incremental effects of exposure condition on the proportion of /t/ responses at test, we fitted a Bayesian mixed-effects psychometric model with lapse rate (cf. Wichmann & Hill, 2001). The perceptual model contained exposure condition (sliding difference coded, comparing the +10ms against the +0ms shift condition, and the +40ms against the +10ms shift condition), test block (sliding difference coded from the first to last test block), VOT (Gelman scaled), and their full factorial interaction. We also included the full random effect structure by participant and item. The lapse rate and response bias (.5 for both /d/ and /t/) were assumed to be constant across blocks and exposure condition. We used the same weakly regularizing priors as in Xie, Liu, and Jaeger (2021).
+Condition and test blocks were successive-difference coded. 
+There was a main effect of VOT; participants were more likely to give voiceless responses as VOT increased. Condition had a main effect on responses such that with larger shifts, participants on average responded with fewer /t/s.  Additionally, the difference in average /t/ responses between the +40 and +10 conditions (-2.4 reduction in log-odds) was larger than the difference between the +10 and +0 conditions (-1.05 in log-odds).
+Qualitatively, the results indicate listeners adjust their expectations to align with the statistics of the exposure talker, consonant with previous findings of studies employing this paradigm (e.g., Clayards et al.; K&J16). 
+
+
+## Methodological advances that can move the field forward 
+An example of a subsection. 

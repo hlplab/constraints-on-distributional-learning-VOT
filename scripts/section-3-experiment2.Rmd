@@ -1,0 +1,135 @@
+```{r}
+require(tidyverse)
+require(magrittr)
+
+require(brms)
+require(MVBeliefUpdatr)
+require(phonR)
+
+source("functions.R")
+```
+
+
+# EXPERIMENT 2: Listeners' adaptation to an unfamiliar talker
+The chief aim of experiment 2 was to investigate the incremental process of adapting expectations when listening to an atypical talker. We simulate atypical talkers by incrementally shifting the production statistics from the original distribution of our synthesised stimuli (as determined from the perceptual responses in experiment 1). This gave us a baseline talker (+0ms shift), a marginally shifted talker (+10ms), and a significantly shifted talker (+40ms shift). 
+
+The previous investigation of this question [@kleinschmidt2016you and @kleinschmidt2020constrains] found that while listeners do learn the statistics of a given exposure talker, adaptation tended to fall short of the ideal categorisation boundary when the talker displayed atypical distributional information. Crucially, the distance from the ideal boundary was larger, the more the statistics deviate from the distribution of a typical talker. 
+
+## Methods
+### Participants
+Participants were recruited over the Prolific platform, and paid $8.00 each (for a targeted remuneration of \$19.40/hour). The experiment was only visible to Prolific participants who (1) had an IP address in the United States, (2) were US citizens and only knew English, and (3) had not previously participated in any experiment on stop voicing from our lab.
+
+122 L1 US English listeners (male = 60, female = 59, NA = 3; mean age = 38 years; SD age = 12 years) completed the experiment. To be eligible, participants had to confirm that they (1) spent at least the first 10 years of their life in the US speaking only English, (2) were in a quiet place and free from distractions, and (3) wore in-ear or over-the-ears headphones that cost at least \$15.
+
+Participants had to undergo a sound check designed to test that they were indeed wearing headphones [CITE headphone check study]
+
+### Materials
+A subset of the materials described in experiment 1 were used, in particular three continua of the minimal pairs dill-till, din-tin, and dip-tip. The dim-tim continuum was omitted in order to keep the pairs as distinguishable as possible. 
+
+We employed a multi-block exposure-test design \@ref(fig:exp2-design-figure) which enabled the assessment of listener perception before informative exposure as well as incrementally at intervals during informative exposure. To have a comparable test of exposure, test blocks were made up of a uniform distribution of 12 VOT stimuli (-5, 5, 15, 25, 30, 35, 40, 45, 50, 55, 65, 70), identical across test blocks and between conditions. Each of the test tokens were presented once at random. 
+
+The conditions were created by first ascertaining the baseline distribution (+0ms shift) and then shifting that distribution by +10ms and by +40ms to obtain the remaining two conditions. We began by estimating the point of subjective equality (PSE) from the fitted categorisation function in experiment 1. The PSE is the stimulus along the continuum that was perceived to be the most ambiguous by listeners (i.e. the point that elicited equal probability of being categorised as /d/ or /t/) thus marking the categorical boundary. The PSE is where the likelihoods of both categories intersect and have equal density (we assumed Gaussian distributions and equal prior probability for each category). To limit the infinite combinations of likelihoods that meet this criterion we set the variances of the /d/ and /t/ categories based on parameter estimates (@Kurumada_Xie_Jaeger_2022) obtained from the production database of @chodroff2017structure. To each variance value we added 80ms noise following (@kronrod) because these likelihoods were estimated from perception data wherein listeners are expected to have perceived the target sound through a noisy channel. We took an additional degree of freedom of setting the distance between the means of the categories at 46ms; this too was based on the population parameter estimates. The means of both categories were then obtained through a grid-search process to find the posterior
+
+```{r exp2-design-figure, fig.height=3, fig.width=5, fig.cap="Experiment 2 multi-block design. Test blocks in grey comprised identical stimuli within and between conditions"}
+knitr::include_graphics("../figures/experiment2_design_image.png")
+```
+
+## Procedure
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+# geom_line(
+#     data = p2[[1]] %>% 
+#       filter(Block == 1), 
+#     mapping = aes(x = descale(VOT_gs, VOT.mean_test, VOT.sd_test), 
+#                    y = estimate__),
+#     colour = "orange", 
+#     size = 2,
+#     inherit.aes = F) +
+#   geom_ribbon(
+#     data = p2[[1]] %>% 
+#       filter(Block == 1), 
+#     mapping = aes(x = descale(VOT_gs, VOT.mean_test, VOT.sd_test), 
+#                   ymin = lower__, 
+#                   ymax = upper__),
+#     alpha = .08,
+#     inherit.aes = F) +
+#   geom_errorbarh(
+#     data = post_sample_block1 %>% 
+#       summarise(
+#         PSE.lower = quantile(PSE, probs = c(.025)),
+#         PSE.median = quantile(PSE, probs = c(.5)),
+#         PSE.upper = quantile(PSE, probs = c(.975))) %>% 
+#       mutate(y = .01),
+#     mapping = aes(xmin = PSE.lower, xmax = PSE.upper, y = y), 
+#     color = "orange",
+#     height = 0,
+#     alpha = .5,
+#     size = 2) +
+#   geom_point(
+#     data = post_sample_block1 %>% 
+#       summarise(
+#         PSE.lower = quantile(PSE, probs = c(.025)),
+#         PSE.median = quantile(PSE, probs = c(.5)),
+#         PSE.upper = quantile(PSE, probs = c(.975))) %>% 
+#       mutate(y = .01),
+#     mapping = aes(x = PSE.median, y = y), 
+#     color = "orange", size = 1.8) +
+#    annotate(
+#     geom = "text", 
+#     y = .035, x = 60,
+#     label = paste("PSE pre-test range = ", 35, "-", 50),
+#     size = 3)
+
+# add layer of last 3 blocks, condition 40
+# p.IOs +
+#     geom_line(
+#     data = p[[1]] %>% 
+#       filter(Block %in% c(7, 8, 9) & Condition.Exposure == "Shift40"), 
+#     mapping = aes(x = descale(VOT_gs, VOT.mean_test, VOT.sd_test), 
+#                    y = estimate__),
+#     colour = "#0481F3", 
+#     size = 2,
+#     inherit.aes = F) +
+#   geom_ribbon(
+#     data = p[[1]] %>% 
+#       filter(Block %in% c(7, 8, 9) & Condition.Exposure == "Shift40"), 
+#     mapping = aes(x = descale(VOT_gs, VOT.mean_test, VOT.sd_test), 
+#                   ymin = lower__, 
+#                   ymax = upper__),
+#     alpha = .08,
+#     inherit.aes = F) 
+```
+
+
+
+You should use a verbose caption that is self-contained and clearly states the main points of the figure. When you look at the R markdown for this document, note that the caption is *outside* of the R-chunk but linked to the R-chunk through a reference in the chunk option fig.cap. Notice also how the reference in the main text uses the label fig:label, whereas the caption and the R chunk option fig.cap that generates the figure use the label ref:label. Finally, the R-chunk itself is called label. Make sure to follow this format in order to make sure that your figure references and captions knit correctly. This example also demonstrates how you can use a globally defined base width and height for all figures. In this example, the base height is multiplied by two because we're faceting the data into two rows.
+
+
+You can also make phonetic symbols, e.g., for the sound category [`r linguisticsdown::cond_cmpl("ʃ")`] [as in *ship*, Newman et al., -@newman2001]. And you can type equations like Equation \@ref(eq:posterior-probability-lapse), which describes Wichmann and Hill's psychometric model with parameters $\alpha$ and $\beta$ and more.  
+
+\begin{equation}\label{eq:posterior-probability-lapse}
+p(category | input) = (1 - \lambda) \frac{\mathcal{N}\!\left( input | \mu_c, \Sigma_c \right) \pi}{\Sigma_i \mathcal{N}\!\left( input | \mu_{c_i}, \Sigma_{c_i} \right) \pi_i} + \lambda \frac{\pi}{\Sigma_i \pi_i}
+\end{equation}
+
+<!-- This is a markdown comment that will NOT show when you knit the document.  -->
+
+All data and code for this article can be downloaded from[https://osf.io/q7gjp/](OSF). This article is written in R markdown, allowing readers to replicate our analyses with the press of a button using freely available software [R, @R; @RStudio], while changing any of the parameters of our models. Readers can revisit any of the assumptions we make---for example, by substituting alternative models of linguistic representations. The supplementary information (SI, \@ref(sec:SI-software)) lists the software/libraries required to compile this document. Beyond our immediate goals here, we hope that this can be helpful to researchers who are interested in developing more informative experimental designs, and to facilitate the interpretation of existing results [see also @tan2021]. 
