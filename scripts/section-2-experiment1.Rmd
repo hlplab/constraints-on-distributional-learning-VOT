@@ -1,0 +1,797 @@
+```{r, stand-alone-preamble}
+require(tidyverse)
+require(magrittr)
+
+require(brms)
+require(tidybayes)
+require(MVBeliefUpdatr)
+require(phonR)
+
+source("functions.R")
+```
+
+# Experiment 1: Listener's expectations prior to informative exposure
+Experiment 1 investigates native (L1) US English listeners' categorization of word-initial stop voicing by an unfamiliar female L1 US English talker, prior to more informative exposure. Specifically, listeners heard isolated recordings from a /d/-/t/ continuum, and had to respond which word they  heard (e.g., "din" or "tin"). The recordings varied in voice onset time (VOT), the primary phonetic cue to word-initial stop voicing in L1 US English, as well as correlated secondary cues (f0 and rhyme duration). Critically, exposure was relatively uninformative about the talker's use of the phonetic cues in that all phonetic realizations occurred equally often. The design of Experiment 1 serves two  goals.
+
+The first goal is methodological. We use Experiment 1 to test basic assumptions about the paradigm and stimuli we employ in the remainder of this study. Experiment 1 provides perceptual norms for a new set of /d/-/t/ stimuli developed to improve ecological validity. While it is well-established that larger VOT values make it more likely that listeners categorize a recording as having the voiceless stop (here "t"), the specific categorization function can vary between talkers [@REFS] and listeners [e.g., @clayards2008perception; @kleinschmidt2016you]. For Experiment 2, we wanted to have an estimate of the category boundary between /d/ and /t/, as perceived by listeners *of the type we seek to recruit for Experiment 2* and specifically *for the stimulus recordings we employ in all experiments*. In relation to establishing norms, we also aimed to test whether listeners' categorization behavior changes over time even when exposure is relatively uninformative---i.e., even when the stimuli listeners hear form a uniform distribution across trials. If listeners exhibit changes in categorization behavior even for such uninformative input, this would have implications for the interpretation of adaptive behavior when input like the type we employ in Experiment 2 is actually informative .
+
+The second purpose of Experiment 1 is to introduce and illustrate relevant theory. We compare different models of listeners' prior expectations against listeners' categorization responses in Experiment 1. The different models all aim to capture the implicit expectations of an L1 adult listener of US English might have about the mapping from acoustic cues to /d/ and /t/ based on previously experienced speech input. As we describe in more detail after the presentation of the experiment, the models differ, however, in whether these prior expectations take into account that talkers can differ in the way they realize /d/ and /t/. This ability to take into account talker differences even prior to more informative exposure is predicted---though through qualitatively different mechanisms, as we discuss below---both by normalization accounts [@cole2010; @mcmurray2011information] and by accounts that attribute adaptive speech perception to changes in category representations [Bayesian ideal adaptor theory, @kleinschmidt2015robust; EARSHOT, @magnuson2020earshot; episodic theory, @goldinger1998echoes; exemplar theory, @johnson1997talker; @pierrehumbert2001]. It is, however, unexpected under accounts that attribute adaptive speech perception solely to ad-hoc changes in decision-making. We did not expect that Experiment 1 yields a decisive conclusion with regard to this second goal, which is also addressed in Experiment 2. Rather, we use Experiment 1 as a presentationally convenient way to introduce some of the different models and provide readers with initial intuitions about what experiments of this type can and cannot achieve.
+
+## Methods 
+### Participants
+Participants were recruited over Amazon's Mechanical Turk platform, and paid $2.50 each (for a targeted remuneration of \$6/hour). The experiment was only visible to Mechanical Turk participants who (1) had an IP address in the United States, (2) had an approval rating of 95% based on at least 50 previous assignments, and (3) had not previously participated in any experiment on stop voicing from our lab. 
+
+24 L1 US English listeners (female = 9; mean age = 36.2 years; SD age = 9.2 years) completed the experiment. To be eligible, participants had to confirm that they (1) spent at least the first 10 years of their life in the US speaking only English, (2) were in a quiet place, and (3) wore in-ear or over-the-ears headphones that cost at least \$15. 
+
+### Materials 
+We recorded multiple tokens of four minimal word pairs ("dill"/"till", "dim"/"tim", "din"/"tin", and "dip"/"tip") from a 23-year-old, female L1 US English talker with a mid-Western accent. These recordings were used to create four natural-sounding minimal pair VOT continua (dill-till, dip-tip, din-tin, and dip-tip) using a Praat script [@winn2020manipulation]. The full procedure is described in the supplementary information (SI, \@ref(sec:SI-XXX)). The VOT continua ranged from -100ms VOT to +130ms VOT in 5ms steps. Experiment 1 employs 24 of these steps (-100, -50, -10, 5  `r paste0(seq(15, 90, 5), collapse = ", ")`, `r paste0(seq(100, 130, 10), collapse = ", ")`).
+
+We further set the F0 at vowel onset to follow the speaker's natural correlation which was estimated through a linear regression analysis of all the recorded speech tokens. We did this so that we could determine the approximate corresponding f0 values at each VOT value along the continua as predicted by this talker's VOT. The duration of the vowel was set to follow the natural trade-off relation with VOT reported in @allen1999effects. This approach closely resembles that taken in @theodore2019distributional, and resulted in continuum steps that sound highly natural [unlike the robotic-sounding stimuli employed in @clayards2008perception; @kleinschmidt2016you]. All stimuli are available as part of the OSF repository for this article.
+
+In addition to the critical minimal pairs we also recorded three words that did not did not contain any stop consonant sounds ("flare", "share", and "rare"). These word recordings were used as catch trials. Stimuli intensity were standardised at 70 dB sound pressure level. 
+
+### Procedure
+Participants underwent a headphones test and gave their consent to the study following the guidelines of the Research Subjects Review Board of the University of Rochester. After participants passed the headphones test and gave their consent they were taken to an instructions page. They were informed that they would hear a female talker say a word and that they would have to select which word they heard. They were instructed to listen carefully and answer as quickly and as accurately as possible. They were also alerted to the fact that the recordings were subtly different and therefore may sound repetitive. This was done to encourage their full attention to the playbacks.
+
+Each trial started with a green fixation dot being displayed. At 500ms from trial onset, two minimal pair words appeared on the screen, as shown in Figure \@ref(fig:exp1-example-trial). At 1000ms from trial onset, an audio recording from the matching minimal pair continuum started playing. Participants were required to click on the word they heard. After participants clicked on the word, the next trial began.
+
+```{r exp1-example-trial, fig.cap="Example trial display. The words were displayed 500ms after trial onset and the audio recording of the word was played 1000ms after trial onset"}
+knitr::include_graphics("../figures/exp1_trial_example.png")
+```
+
+The trials were presented randomly and the order of the written word forms were counter-balanced across participants. Participants were given 192 target trials along a 24-step VOT continuum to categorise. VOT tokens in the lower and upper ends were distributed over larger increments because stimuli in those ranges were expected to elicit floor and ceiling effects, respectively. Each word pair was played twice at each VOT step, constituting a uniform distribution. In addition to the critical trials, 12 catch trials were inserted randomly throughout the experiment. These trials served as a check on participant attention throughout the experiment. Participants were given the opportunity to take breaks after every 60 trials. Participants spent an average of 12 minutes (SD = 4.8) on the trials after which they answered a short survey about the experiment. 
+
+
+## Results
+We first present the behavioral analyses of listeners' categorisation responses, and then compare them to predictions of ideal observers.
+
+```{r, echo=FALSE}
+# load formatted dataframe from experiment 1
+d.test <- read_csv("../data/d.test.Exp1.csv", show_col_types = F)
+
+# mark catch trials rows and check correct
+ d.test %<>% mutate(Is.CatchTrial = ifelse(Item.ExpectedResponse %in% c("flare", "rare", "share"), TRUE, FALSE),
+                   CatchTrial.Correct = ifelse(Is.CatchTrial == TRUE & Item.MinimalPair == Response, TRUE, FALSE),
+                   CatchTrial.Correct = ifelse(Is.CatchTrial == FALSE, NA, CatchTrial.Correct)) %>% 
+   group_by(ParticipantID) %>% 
+   mutate(Excluded.due.to.CatchTrial = ifelse(sum(CatchTrial.Correct, na.rm = TRUE) < 10, TRUE, FALSE))
+
+# get the rows removed due to catch trial performance
+excluded.data.due.to.catch <- d.test %>% 
+  group_by(ParticipantID) %>%
+  filter(Excluded.due.to.CatchTrial == TRUE)
+
+# set RT exclusion criteria and create excluded columns
+d.test %<>%
+  group_by(ParticipantID) %>%
+  filter(Excluded.due.to.CatchTrial == FALSE) %>% 
+  mutate(Response.log_RT = log10(ifelse(Response.RT <= 0, NA_real_, Response.RT)),
+         Response.log_RT.scaled = scale(Response.log_RT), # deducts each value with subject's own mean, div by own SD
+         Response.log_RT.mean = mean(Response.log_RT, na.rm = T), # this gives each subject's mean log_RT
+         Excluded.participant.due.to.mean.RT = ifelse(abs(scale(Response.log_RT.mean)) > 3, TRUE, FALSE)) # scale by mean of participant means
+
+excluded.participants.due.to.mean.RT <- d.test %>% 
+  filter(Excluded.participant.due.to.mean.RT == TRUE)
+
+d.test %<>% 
+  filter(Excluded.due.to.CatchTrial == FALSE |
+           Excluded.participant.due.to.mean.RT == FALSE) %>% 
+  mutate(Excluded.participant.due.to.RT = ifelse(abs(Response.log_RT.scaled) > 3, TRUE, FALSE))
+  
+# get the rows removed due to RT
+excluded.data.due.to.RT <- d.test %>% 
+  filter(Excluded.participant.due.to.mean.RT == TRUE | 
+           Excluded.participant.due.to.RT == TRUE) 
+
+# get the proportion of rows excluded from analysis
+proportion.excluded <- (nrow(excluded.data.due.to.RT))/(nrow(d.test))
+
+# make a dataframe after exclusion to be used for analysis
+d.test.excluded <- d.test %>% 
+  filter(Is.CatchTrial == FALSE & 
+           Excluded.due.to.CatchTrial == FALSE & 
+           Excluded.participant.due.to.RT == FALSE) %>% 
+  mutate(Response.ProportionVoiceless = ifelse(Response.Voicing == "voiceless", 1, 0))
+```
+
+
+### Exclusions
+We excluded from analysis participants who committed more than 3 errors out of the 12 catch trials (<75% accuracy, N = 3), participants with an average reaction time (RT) more than three standard deviations from the mean of the by-participant means (N = 0), and participants who reported not to have used headphones (N = 0) or not to be native (L1) speakers of US English (N = 0). For the remaining participants, trials that were more than three SDs from the participant's mean RT were excluded from analysis (`r proportion.excluded * 100 `%). Finally, we excluded participants (N = 0) who had less than 50% data remaining after these exclusions. 
+
+### Behavioral analyses
+The goal of our behavioral analyses was to address three methodological questions that are of relevance to Experiment 2: (1) whether our stimuli resulted in 'reasonable' categorisation functions, (2) whether these functions differed between the four minimal pair items, and (3) whether participants' categorisation functions changed throughout the 192 test trials.
+
+To address these questions, we fit a single Bayesian mixed-effects psychometric model to participants' categorization responses on critical trials [e.g., @prins2011]. The model describes the probability of "t"-responses as a weighted mixture of a lapsing-model and a perceptual model. The lapsing model is a mixed-effects logistic regression [@jaeger2008categorical] that predicts participant responses that are made independent of the stimulus---for example, responses that result from attentional lapses. These responses are independent of the stimulus, and depend only on participants' response bias. The perceptual model is a mixed-effects logistic regression that predicts all other responses, and captures stimulus-dependent aspects of participants' responses. The relative weight of the two models is determined by the lapse rate, which is described by a third mixed-effects logistic regression.
+
+The *lapsing model* only had an intercept (the response bias in log-odds) and by-participant random intercepts. Similarly, the *model for the lapse rate* only had an intercept (the lapse rate) and by-participants random intercepts. Previous studies with similar paradigms have typically found lapse rates of 0-10% [< -2.2 log-odds, e.g., @clayards2008perception; @kleinschmidt2016you]. No by-item random effects were included for the lapse rate nor lapsing model since these parts of the analysis---by definition---describe stimulus-*in*dependent behavior. The *perceptual model* included an intercept and VOT, as well as the full random effect structure by participants and items (the four minimal pair continua), including random intercepts and random slopes by participant and minimal pair. We did not model the random effects of trial to reduce model complexity. This however makes our analysis of trials in the model anti-conservative. 
+
+Based on previous experiments, we expected a strong positive effect of VOT, with increasing proportions of "t"-responses for increasing VOTs. We did not have clear expectations for the effect of trial other than that responses should become more uniformed (i.e move towards 50-50 "d"/"t"-bias or 0-log-odds) as the experiment progressed [@liu2018inferring] due to the un-informativeness of the stimuli. Finally, the models included the covariance between by-participant random effects across the three linear predictors for the lapsing model, lapse rate model, and perceptual model. This allows us to capture whether participants who lapse more often have, for example, different response biases or different sensitivity to VOT (after accounting for lapsing).
+
+We fit the model using the package \texttt{brms} [@R-brms_a] in R [@R; @RStudio]. Following our previous work [@horberg2021rational; @xie2021cross], we used weakly regularizing priors to facilitate model convergence. For fixed effect parameters, we standardized continuous predictors (VOT) by dividing through twice their standard deviation [@gelman2008standardize], and used Student priors centered around zero with a scale of 2.5 units [following @gelman2008weakly] and 3 degrees of freedom. For random effect standard deviations, we used a Cauchy prior with location 0 and scale 2, and for random effect correlations, we used an uninformative LKJ-Correlation prior with its only parameter set to 1, describing a uniform prior over correlation matrices [@Lewandowski2009]. Four chains with 2000 warm-up samples and 2000 posterior samples each were fit. No divergent transitions after warm-up were observed, and all $\hat{R}$ were close to 1.
+
+```{r}
+# load the psychometric model with interaction
+fit_mix <- brm(
+  bf(
+    Response.Voicing == "voiceless" ~ 1,
+    mu1 ~ 1 + (1 | g | ParticipantID),
+    mu2 ~ 1 + sVOT * sTrial + (1 + sVOT | g | ParticipantID) + (1 + sVOT | h | Item.MinimalPair),
+    theta1 ~ 1 + (1 | g | ParticipantID)),
+  data = d.test.excluded,
+  cores = 4,
+  iter = 4000,
+  warmup = 2000,
+  family = mixture(bernoulli("logit"), bernoulli("logit")),
+  control = list(adapt_delta = .99),
+  file = "../models/Exp-NORM-lapsing-bias-GLMM")
+
+# set the mean and SD values for scaling/unscaling purposes
+VOT.mean_norm <- mean(d.test.excluded$Item.VOT)
+VOT.sd_norm <- sd(d.test.excluded$Item.VOT)
+Trial.mean <- mean(d.test.excluded$Trial) 
+Trial.sd <- sd(d.test.excluded$Trial)
+d.test.excluded %<>%
+  mutate(
+    sVOT = (Item.VOT - VOT.mean_norm) / (2 * VOT.sd_norm),
+    sTrial = (Trial - Trial.mean) / (2 * Trial.sd))
+
+psychometric_fit_data <- 
+  conditional_effects(
+    fit_mix, 
+    effects = "sVOT", 
+    plot = F)[[1]]
+
+psychometric_fit_interaction <-
+  conditional_effects(
+    fit_mix,
+    effects = "sVOT:sTrial",
+    plot = F)[[1]]
+
+# get the PSE from the fitted categorisation function
+PSE.fit_mix <- descale(-(summary(fit_mix)$fixed["mu2_Intercept", 1] / summary(fit_mix)$fixed["mu2_sVOT", 1]), VOT.mean_norm, VOT.sd_norm) 
+
+
+# get posterior samples of intercept and slope, and median qi of the PSEs
+post_sample_norm <- spread_draws(fit_mix, b_mu2_Intercept, b_mu2_sVOT) %>% 
+  mutate(PSE = descale(-(b_mu2_Intercept/b_mu2_sVOT), VOT.mean_norm, VOT.sd_norm)) %>% 
+  median_qi(PSE)
+
+```
+
+
+
+
+
+```{r}
+newdata <- expand_grid(
+  sVOT = (seq(-100, 130, 1) - VOT.mean_norm) / (2 * VOT.sd_norm),
+  Item.MinimalPair = levels(factor(d.test.excluded$Item.MinimalPair)),
+  ParticipantID = levels(factor(d.test.excluded$ParticipantID)),
+  sTrial = 0)
+
+if (file.exists("../data/categorisation_by_min_pair.rds")) {
+  cat_minimalpair <- read_rds("../data/categorisation_by_min_pair.rds")
+} else {
+  cat_minimalpair <- fit_mix %>%
+  epred_draws(newdata = newdata,
+              ndraws = 1000,
+              re_formula = ~ (1 + sVOT | Item.MinimalPair))
+}
+```
+
+
+
+```{r fitted-categorisation-minimal-pair"}
+MinPair_plot <- cat_minimalpair %>% 
+  group_by(sVOT, Item.MinimalPair) %>% 
+  ggplot(aes(x = descale(sVOT, VOT.mean_norm, VOT.sd_norm), 
+             y = .epred, colour = Item.MinimalPair)) +
+  stat_lineribbon(alpha = .6) +
+  scale_x_continuous("VOT (ms)") +
+  scale_y_continuous("Fitted proportion of 't'-responses") +
+  scale_color_brewer("Minimal Pair", palette = "Blues", labels = c("dill/till", "dim/tim", "din/tin", "dip/tip")) +
+  scale_fill_brewer("CI", palette = "Greys", type = "qual") +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
+```
+
+
+
+```{r psychometric-plot, fig.width=3.8, fig.height =2.6, message=FALSE}
+p.psychometric.vot <- psychometric_fit_data %>% 
+  ggplot(aes(x = descale(sVOT, VOT.mean_norm, VOT.sd_norm), 
+             y = estimate__)) +
+  scale_x_continuous("VOT (ms)", breaks = scales::pretty_breaks(n = 4), limits = c(-100, 130)) +
+  scale_y_continuous("Fitted proportion of 't' responses") +
+  ## transformation of by-participant means into empirical logits
+   # stat_summary(
+   #  data = d.test.excluded %>% 
+   #    group_by(ParticipantID, Item.VOT) %>% 
+   #    mutate(Response.ProportionVoiceless = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
+   #    summarise(Response.EmpiricalLogitVoiceless = qlogis((sum(Response.ProportionVoiceless) + .5)/(length(Response.ProportionVoiceless) + 1))), 
+   #  mapping = aes(x = Item.VOT, 
+   #                y = Response.EmpiricalLogitVoiceless),
+   #  geom = "pointrange",
+   #  fun.data = function(x){mean_cl_boot(x) %>% mutate(across(c(y, ymin, ymax), ~ plogis(.x)))},
+   #  size = .4,
+   #  colour = "#c4b7a6",
+   #  alpha = .6,
+   #  inherit.aes = F)  
+  stat_summary(
+    data = d.test.excluded %>% 
+      group_by(ParticipantID, Item.VOT) %>% 
+      mutate(Response.ProportionVoiceless = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
+      summarise(Response.ProportionVoiceless = mean(Response.ProportionVoiceless)), 
+    mapping = aes(x = Item.VOT, 
+                  y = Response.ProportionVoiceless),
+    geom = "pointrange",
+    fun.data = "mean_cl_boot",
+    size = .4,
+    colour = "#c4b7a6",
+    alpha = .6,
+    inherit.aes = F)
+
+p.vot <- p.psychometric.vot +
+  geom_ribbon(
+    aes(ymin = lower__, 
+        ymax = upper__), alpha = .08) +
+  geom_line(size = 1.5, 
+            colour = "#333333",
+            alpha = .8) +
+  # annotate(geom = "segment", 
+  #          y = .5, yend = 0, 
+  #          x = PSE.fit_mix, xend = PSE.fit_mix, 
+  #          arrow = arrow(angle = 15, length = unit(0.1, "inches"), 
+  #                        ends = "last", 
+  #                        type = "closed"), 
+  #          color = "darkgray", 
+  #          linetype = 1) +
+  # annotate(geom = "text", 
+  #          y = 0, 
+  #          x = PSE.fit_mix + 10, 
+  #          label = paste("PSE =", round(PSE.fit_mix, 1), "ms"), 
+  #          color = "darkgray", 
+  #          hjust = 0, 
+  #          vjust = 0, size = 3.5) +
+  geom_errorbarh(
+    data = post_sample_norm %>% 
+      mutate(y = .01),
+    mapping = aes(xmin = .lower, xmax = .upper, y = y), 
+    color = "#333333",
+    height = 0,
+    alpha = .5,
+    size = 1, 
+    inherit.aes = F) +
+  geom_point(
+    data = post_sample_norm %>% 
+      median_qi(PSE) %>% 
+      mutate(y = 0.01),
+    mapping = aes(x = PSE, y = y), 
+    color = "#333333", 
+    size = 1.3,
+    alpha = .5) +
+  annotate(
+    geom = "text",
+    x = 75,
+    y = 0.01, 
+    label = paste(round(post_sample_norm[[2]]), "ms", "-", round(post_sample_norm[[3]]), "ms"),
+    size = 2.5,
+    colour = "darkgray") 
+
+p.vot_trial <- p.psychometric.vot %+%
+  (filter(psychometric_fit_interaction, effect2__ == 0)) +
+  geom_ribbon(
+    aes(ymin = lower__, 
+        ymax = upper__), alpha = .08) +
+  geom_line(linewidth = 1.5, 
+            colour = "#333333",
+            alpha = .8) + 
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
+```
+(ref:fitted-categorisation-plots) Fitted categorisation functions to listeners' responses marginalizing over trial effects as well as all random effects (left) and combined effects of VOT and trial (middle), marginalizing over all random effects. Vertical point ranges represent the mean proportion of 't'-responses at respective VOTs and vertical bars denote the 95% bootstrapped confidence interval. Black error bar (bottom of left panel) denotes the 95% quantile interval of the points of subjective equality (PSE), derived from 8000 sample draws from the posterior distribution of estimated population parameters. Rightmost plot shows the predicted categorisation functions for all four minimal pair items.   
+
+```{r fitted-categorisation-plots, warning=FALSE, fig.width=6.8, fig.height = 2.8, fig.cap="(ref:fitted-categorisation-plots)"}
+legend <- get_legend(MinPair_plot + theme(legend.position = "top"))
+
+MinPair_plot <- MinPair_plot + theme(legend.position = "none")
+
+grid1 <- plot_grid(p.vot + theme(axis.title.x = element_blank()),
+                   p.vot_trial,
+                   MinPair_plot,
+                   ncol = 3, 
+                   align = "h", 
+                   labels = NULL, 
+                   label_size = 10,
+                   hjust = .1, 
+                   rel_widths = c(0.95, 0.8, 0.8))
+
+grid2 <- plot_grid(legend, 
+          grid1,
+          ncol = 1,
+          rel_heights = c(0.1, 1))
+
+ggdraw(add_sub(grid2, "VOT (ms)", size = 10, fontface = "bold"))
+```
+
+```{r by-participant-lapse-bias, fig.height=2.6, fig.width=6.5}
+# lapse_participant <- fit_mix %>% spread_draws(r_ParticipantID__theta1[ParticipantID, term], b_theta1_Intercept) %>%
+#   group_by(ParticipantID) %>%
+#   mutate(ParticipantID = factor(ParticipantID),
+#          Participant_lapse = b_theta1_Intercept + r_ParticipantID__theta1,
+#          estimated_lapse = plogis(Participant_lapse) * 100) %>%
+#   select(ParticipantID, term, r_ParticipantID__theta1, Participant_lapse, estimated_lapse) %>%
+#   mode_hdci(estimated_lapse)
+# 
+# bias_participant <- fit_mix %>%
+#   spread_draws(r_ParticipantID__mu1[ParticipantID, term], b_mu1_Intercept) %>%
+#   group_by(ParticipantID) %>%
+#   mutate(ParticipantID = factor(ParticipantID),
+#          Participant_bias = b_mu1_Intercept + r_ParticipantID__mu1,
+#          estimated_bias = plogis(Participant_bias) * 100) %>%
+#   select(ParticipantID, term, r_ParticipantID__mu1, Participant_bias, estimated_bias) %>%
+#   mode_hdci(estimated_bias)
+# 
+# estimate_minpair <- fit_mix %>% spread_draws(r_Item.MinimalPair__mu2[Item.MinimalPair, term], b_mu2_Intercept, b_mu2_sVOT) %>%
+#   group_by(Item.MinimalPair) %>%
+#   mutate(predicted_eff = ifelse(term == "Intercept", r_Item.MinimalPair__mu2 + b_mu2_Intercept, r_Item.MinimalPair__mu2 + b_mu2_sVOT)) %>%
+#   group_by(Item.MinimalPair, term) %>%
+#   mode_hdci(predicted_eff) %>%
+#   pivot_wider(names_from = term,
+#               values_from = c(predicted_eff, .lower, .upper))
+```
+
+
+
+The lapse rate was estimated to be on the slightly larger side, but within the expected range 
+(`r make_CI(fit_mix, "theta1_Intercept", "theta1_Intercept < 0")`). Maximum a posteriori (MAP) estimates of by-participant lapse rates ranged from XX . Very high lapse rates were estimated for four of the participants with one in particular whose CI indicated exceptionally high uncertainty. These lapse rates might reflect data quality issues with Mechanical Turk that started to emerge over recent years [see @REFS; and, specifically for experiments on speech perception, @cummings2023], and we return to this issue in Experiment 2. 
+
+The response bias were estimated to slightly favor "t"-responses (`r make_CI(fit_mix, "mu1_Intercept", "mu1_Intercept > 0")`), as also visible in Figure \@ref(fig:fitted-categorisation-plots) (left).
+Unsurprisingly, the psychometric model suggests high uncertainty about the participant-specific response biases, as it is difficult to reliably estimate participant-specific biases while also accounting for trial and VOT effects (range of by-participant MAP estimates: XX). For all but four participants, the 95% CI includes the hypothesis that responses were unbiased. Of the remaining four participants, three were biased towards "t"-responses and one was biased toward "d"-responses.
+
+There was no convincing evidence of a main effect of trial ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sTrial", "mu2_sTrial < 0")`). Given the slight overall bias towards "t"-responses, the direction of this effect indicates that participants converged towards a 50/50 bias as the test phase proceeded. This is also evident in Figure \@ref(fig:fitted-categorisation-plots) (right). In contrast, there was clear evidence for a positive main effect of VOT on the proportion of "t"-responses ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sVOT", "mu2_sVOT > 0")`). The effect of VOT was consistent across all minimal pair words as evident from the slopes of the fitted lines by minimal pair \@ref(fig:fitted-categorisation-plots) (left). MAP estimates of by minimal pair slopes ranged from . The by minimal-pair intercepts were more varied (MAP estimates: ) with one of the pairs, dim/tim having a slightly lower intercept resulting in fewer 't'-responses on average. In all, this justifies our assumptions that word pair would not have a substantial effect on categorisation behaviour. From the parameter estimates of the overall fit we obtained the category boundary from the point of subjective equality (PSE) (`r descale(-(summary(fit_mix)$fixed["mu2_Intercept", 1] / summary(fit_mix)$fixed["mu2_sVOT", 1]), VOT.mean_norm, VOT.sd_norm)`ms) which we use for the design of Experiment 2.
+
+Finally to accomplish the first goal of experiment 1, we look at the interaction between VOT and trial. There was weak evidence that the effect of VOT decreased across trials ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sVOT:sTrial", "mu2_sVOT:sTrial < 0")`). The direction of this change---towards more shallow VOT slopes as the experiment progressed---makes sense since the test stimuli were not informative about the talker's pronunciation. Similar changes throughout prolonged testing have been reported in previous work. [@liu-jaeger2018; @liu-jaeger2019; @REFS].
+
+Overall, there was little evidence that participants substantially changed their categorisation behaviour as the experiment progressed. Still, to err on the cautious side, Experiment 2 employs shorter test phases.
+
+## Comparisons to model of adaptive speech perception
+We now turn to final aim of experiment 1 which is to make use of computational models to delve into the theoretical underpinnings that inform the assumptions we make in studies of this kind.
+
+Speakers' productions can act as a proxy for listeners' implicit knowledge of the distributional patterns of cues. This production-perception relationship within a phonological system was observed in early work by [@abramson1973voice] who found that production statistics of talkers along VOT aligned well with data from listeners who had categorised a separate set of synthesised VOT stimuli. This allows for the use of analytic models as tools for predicting categorisation behaviour from speech production [@nearey1986phonological].
+
+We apply this principle in  fitting ideal observer (IO) models by linking the distributional patterns of input to the categorisation behaviour that listeners make in the perception of our stimuli. We compare the categorisation behaviour against predictions of several IO models differentiated by the various assumptions they incorporate. These IOs are trained on cue measurements extracted from an annotated database of 92 L1 US-English talkers' productions [@chodroff2017structure] of word initial stops. By using IOs trained solely on production data to predict behaviour we avoid additional computational degrees of freedom and limit the risk of overfitting the model to the data thus reducing bias.
+
+Hypotheses about the nature of long-term representations maintained by listeners continues to be debated and revised. On one hand there is the proposition that automatic processes that operate purely on the acoustic input is sufficient mechanism for listeners to cope with variation; this can be loosely referred to as normalization accounts. On the other hand are hypotheses that listeners learn and store cue distributions in memory for later retrieval --this does not however, preclude cue normalisation and may even happen in conjunction to it. Within this latter hypothesis, there is debate over the resolution of the input that is actually learned and stored, with exemplar models arguably, accounting for the greatest degree of granularity -- listeners could for instance store talker-specific statistics. A more parsimonious account would suggest that listeners store models of groups of talkers, according to a structure that is most informative for robust speech perception [@kleinschmidt2015robust; @kleinschmidt2019structure]. We thus compare listener categorisations to models that incorporate one or more of these hypotheses (see SI for details of IO fitting). 
+
+Each panel in figure \@ref(fig:comparative-IO-plot) shows 92 talker-specific ideal observer models colour-coded by talker sex, bearing different assumptions plotted against the psychometric fit of listener categorisations (thick black line). We focus mainly on comparing the points of subjective equality (PSEs) which represents the boundary between the two categories. While the functions are not simply described by their PSEs since their slope also matters, we focus on it here as this is most relevant to the design of experiment 2. All IO plots in figure \@ref(fig:comparative-IO-plot) except for (A) are integrated with a noise variance to simulate perceptual noise on the part of listeners [@kronrod2016unified]. The IOs were trained on unnormalised VOTs without noise (A); unnormalised VOTs (B); unnormalised bivariate cues of VOT and F0 (C); C-CuRE-normalised VOT and F0 (D) (@mcmurray2011information see SI section).
+
+Beginning with a qualitative assessment of the plots, IOs that incorporate perceptual noise in the models (B-D) appear to capture the uncertainty reflected in our data better. The slopes of the IOs in panel A are far steeper than the fitted categorisation function but with added noise, as with the IOs in B-D the IO slopes flatten out to better match the slope of the fitted line. This itself indicates that perception of acoustic stimuli is not entirely faithful to the bottom-up signal but is inferred through a combination of what listeners actually perceived and their existing knowledge of the underlying linguistic category [@kronrod2016unified].
+Noticeably, in all IO types the median estimated PSE from our participant data is located to the left of the IO-predicted median PSEs although the range of fitted estimates do overlap with the IOs in the upper region. 
+
+
+
+\newpage
+
+```{r bivariate-model-brms, echo=FALSE}
+# d.chodroff_wilson <-
+#   get_ChodroffWilson_data(
+#     database_filename = "data/all_observations_with_non-missing_vot_cog_f0.csv",
+#     min.n_per_talker_and_stop = 25,
+#     limits.VOT = c(-Inf, Inf),
+#     limits.f0 = c(0, 350),
+#     max.p_for_multimodality = .1
+#   ) %>%
+#   mutate_at(
+#     c("VOT", "f0_Mel"),
+#     list("centered" = function(x) apply_ccure(x, data = .)))
+# 
+# 
+# d.chodroff_wilson.selected <-
+#   d.chodroff_wilson %>%
+#   filter(poa == "/d/-/t/") %>%
+#   group_by(Talker, category) %>%
+#   mutate(n = n()) %>%
+#   group_by(Talker) %>%
+#   # subsample n tokens, as determined by category with fewer tokens
+#   mutate(
+#     n_min = min(n),
+#     n_category = n_distinct(category)) %>%
+#   # select talkers with both /d/ and /t/ observations
+#   filter(n_category == 2) %>%
+#   group_by(Talker, category) %>%
+#   sample_n(size = first(n_min)) %>%
+#   ungroup() %>%
+#   mutate_at(
+#       c("VOT", "f0", "f0_Mel", "f0_semitones"),
+#       list("centered" = function(x) apply_ccure(x, data = .)))%>% 
+#   mutate(category = factor(category))
+# 
+# contrasts(d.chodroff_wilson.selected$category) = cbind("/t/ vs. /d/" = c(-.5, .5))
+# contrasts(d.chodroff_wilson.selected$gender) = cbind("female vs. male" = c(-.5, .5))
+# 
+# 
+# bf_VOT <- bf(
+#   VOT_centered ~ 1 + category * gender + (1 + category | tm | Talker) + (1 | wm | Word),
+#   sigma ~ 1 + category * gender + (1 + category | ts | Talker) + (1 | ws | Word))
+# 
+# bf_f0_Mel <- bf(
+#   f0_Mel_centered ~ 1 + category * gender + (1 + category | tm | Talker) + (1 | wm | Word),
+#   sigma ~ 1 + category * gender + (1 + category | ts | Talker) + (1 | ws | Word))
+#   
+# cues <- c("VOTcentered", "f0Melcentered")
+# randoms <- c("Talker", "Word")
+# 
+# my.priors.bivariate = c(
+#   # weakly regularizing prior for fixed effect coefficients for mu.
+#   set_prior("student_t(3, 0, 2.5)", class = "b", resp = cues),
+#   # weakly regularizing prior for fixed effect coefficients for sigma.
+#   set_prior("student_t(3, 0, 2.5)", class = "b", resp = cues, dpar = "sigma"),
+#   set_prior("cauchy(0, 5)", class = "sd", resp = cues), 
+#   set_prior("cauchy(0, 5)", class = "sd", resp = cues, dpar = "sigma"), 
+#   set_prior("cauchy(0, 5)", class = "sd", resp = cues, group = randoms), 
+#   set_prior("cauchy(0, 5)", class = "sd", resp = cues, group = randoms, dpar = "sigma"))
+# 
+# m.bivariate_distributional <- brm(
+#   formula = bf_VOT + bf_f0_Mel + set_rescor(TRUE),
+#   data = d.chodroff_wilson.selected,
+#   prior = my.priors.bivariate,
+#   chains = 4,
+#   cores = 4,
+#   warmup = 3000,
+#   iter = 4500,
+#   control = list(adapt_delta = .995, max_treedepth = 20),
+#   file = "../../models/bivariate_VOTf0_model.rds")  
+```
+
+```{r}
+# prepare production corpus from Chodroff & Wilson
+d.chodroff_wilson <-
+  get_ChodroffWilson_data(
+    database_filename = "../data/all_observations_with_non-missing_vot_cog_f0.csv",
+    min.n_per_talker_and_stop = 25,
+    limits.VOT = c(-Inf, Inf),
+    limits.f0 = c(0, 350),
+    max.p_for_multimodality = .1
+  ) %>%
+  mutate_at(
+    c("VOT", "f0_Mel"),
+    list("centered" = function(x) apply_ccure(x, data = .)))
+
+d.chodroff_wilson.selected <-
+  d.chodroff_wilson %>%
+  filter(poa == "/d/-/t/") %>%
+  group_by(Talker, category) %>%
+  mutate(n = n()) %>%
+  group_by(Talker) %>%
+  # subsample n tokens, as determined by category with fewer tokens
+  mutate(
+    n_min = min(n),
+    n_category = n_distinct(category)) %>%
+  # select talkers with both /d/ and /t/ observations
+  filter(n_category == 2) %>%
+  group_by(Talker, category) %>%
+  sample_n(size = first(n_min)) %>%
+  ungroup() %>%
+  mutate_at(
+      c("VOT", "f0", "f0_Mel", "f0_semitones"),
+      list("centered" = function(x) apply_ccure(x, data = .)))%>% 
+  mutate(category = factor(category))
+```
+
+
+```{r IOs-univariate-predictions, fig.width=3.7, fig.height=2.5, cache=FALSE}
+plot_IO_fit <- function(
+    data,
+    data_group,
+    PSEs
+) {
+  plot <- ggplot() + 
+  # geom_ribbon(
+  #   data =
+  #     data %>%
+  #     select(-x) %>%
+  #     unnest(categorization) %>%
+  #     group_by(gender, x) %>%
+  #     summarise(
+  #       VOT = map(x, ~ .x[1]) %>% unlist(),
+  #       across(response, list("lower" = ~ quantile(.x, .025), "upper" = ~ quantile(.x, .975)))),
+  #   mapping = aes(x = VOT, ymin = response_lower, ymax = response_upper, fill = gender),
+  #   alpha = .1) +
+  data$line + 
+  #data_group$line +
+  # stat_summary(
+  #   data =
+  #     io.talker.centered %>%
+  #     select(-x) %>%
+  #     unnest(categorization),
+  #   mapping = aes(x = VOT, y = response, fill = gender),
+  #   fun.data = mean_cl_boot,
+  #   geom = "ribbon",
+  #   alpha = .5) +
+  scale_x_continuous("VOT (msec)", breaks = scales::pretty_breaks(n = 3), limits = c(-15, 80), expand = c(0, 0)) +
+  scale_y_continuous('Proportion "t"-responses') +
+  scale_colour_manual("Model", 
+                      values = c(colours.sex), 
+                      labels = c("IO (female)", "IO (male)"),
+                      aesthetics = c("color", "fill")) +
+  geom_errorbarh(
+    data = data %>%
+      group_by(gender) %>%
+      summarise(
+        PSE.lower = round(quantile(PSE, probs = c(.025))),
+        PSE.median = round(quantile(PSE, probs = c(.5))),
+        PSE.upper = round(quantile(PSE, probs = c(.975)))) %>%
+      mutate(y = ifelse(gender == "male", -.025, - .06)),
+    mapping = aes(xmin = PSE.lower, xmax = PSE.upper, y = y, color = gender),
+    height = 0, alpha = .5, size = 1) +
+  geom_point(
+    data = data %>%
+      group_by(gender) %>%
+      summarise(
+        PSE.lower = round(quantile(PSE, probs = c(.025))),
+        PSE.median = round(quantile(PSE, probs = c(.5))),
+        PSE.upper = round(quantile(PSE, probs = c(.975)))) %>%
+      mutate(y = ifelse(gender == "male", -.025, - .06)),
+    mapping = aes(x = PSE.median, y = y, color = gender), size = 1.2) +
+      annotate(geom = "text",
+           y = -.025, x = 65,
+           label = paste(PSEs[[1, 2]], "ms", "-", PSEs[[1, 4]], "ms"),
+           size = 1.8,
+           colour = "#87bdd8") +
+  annotate(geom = "text",
+           y = -.06, x = 65,
+           label = paste(PSEs[[2, 2]], "ms", "-", PSEs[[2, 4]], "ms"),
+           size = 1.8,
+           colour = "#c1502e") 
+  plot + 
+  geom_line(
+    data = psychometric_fit_data,
+    mapping = aes(x = descale(sVOT, VOT.mean_norm, VOT.sd_norm), 
+                   y = estimate__),
+    colour = "#333333", 
+    size = 1,
+    alpha = .8,
+    inherit.aes = F) +
+  geom_ribbon(
+    data = psychometric_fit_data, 
+    mapping = aes(x = descale(sVOT, VOT.mean_norm, VOT.sd_norm), 
+                  ymin = lower__, 
+                  ymax = upper__),
+    alpha = .08,
+    inherit.aes = F) +
+  geom_errorbarh(
+    data = post_sample_norm %>% 
+      mutate(y = .01),
+    mapping = aes(xmin = .lower, xmax = .upper, y = y), 
+    color = "#333333",
+    height = 0,
+    alpha = .5,
+    size = 1) +
+  geom_point(
+    data = post_sample_norm %>% 
+      mutate(y = .01),
+    mapping = aes(x = PSE, y = y), 
+    color = "#333333", size = 1.3) +
+   annotate(
+    geom = "text", 
+    y = .02, x = 65,
+    label = paste(round(post_sample_norm[[2]]), "ms", "-", round(post_sample_norm[[3]]), "ms"),
+    size = 1.8) +
+  geom_rug(
+    data = d.test.excluded %>% 
+      ungroup() %>% 
+      distinct(Item.VOT),
+    mapping = aes(x = Item.VOT),
+    colour = "grey",
+    alpha = .6,
+    inherit.aes = F)
+}  
+```
+
+
+```{r, warning=FALSE}
+io.talker.univar.no.noise <- get_IO_categorization(cues = c("VOT"), groups = c("Talker", "gender"), with_noise = FALSE, alpha = .1, size = 0.3) %>% 
+  mutate(io.type = "io.talker.univar.no.noise")
+io.gender.univar.no.noise <- get_IO_categorization(cues = c("VOT"), with_noise = FALSE, group = "gender", alpha = 1, size = 1) %>% 
+  mutate(io.type = "io.gender.univar.no.noise")
+
+PSE_table.univar.no.noise <- 
+  io.talker.univar.no.noise %>%
+  group_by(gender) %>%
+  summarise(
+    PSE.lower = round(quantile(PSE, probs = c(.025))),
+    PSE.median = round(quantile(PSE, probs = c(.5))),
+    PSE.upper = round(quantile(PSE, probs = c(.975))))
+
+p.IOs.univar.no.noise <- plot_IO_fit(
+  data = io.talker.univar.no.noise,
+  data_group = io.gender.univar.no.noise,
+  PSEs = PSE_table.univar.no.noise
+)
+```
+
+
+```{r}
+# get IOs from VOT only
+io.talker.univar <- get_IO_categorization(cues = c("VOT"), groups = c("Talker", "gender"), alpha = .1, size = 0.3) %>% 
+  mutate(io.type = "io.talker.univar")
+io.gender.univar <- get_IO_categorization(cues = c("VOT"), group = "gender", alpha = 1, size = 1) %>% 
+  mutate(io.type = "io.gender.univar")
+
+PSE_table.univar <- 
+  io.talker.univar %>%
+  group_by(gender) %>%
+  summarise(
+    PSE.lower = round(quantile(PSE, probs = c(.025))),
+    PSE.median = round(quantile(PSE, probs = c(.5))),
+    PSE.upper = round(quantile(PSE, probs = c(.975))))
+
+p.IOs.univar <- plot_IO_fit(
+  data = io.talker.univar,
+  data_group = io.gender.univar,
+  PSEs = PSE_table.univar
+)  
+```
+
+
+```{r, warning=FALSE, fig.width=3.7, fig.height=2.5}
+# get IOs with multivariate cues
+io.talker.multivar <- get_IO_categorization(cues = c("VOT", "f0_Mel"), groups = c("Talker", "gender"), alpha = .1, size = .3) %>% 
+  mutate(io.type = "io.talker.multivar")
+
+io.gender.multivar <- get_IO_categorization(cues = c("VOT", "f0_Mel"), group = "gender", alpha = 1, size = 1) %>% 
+  mutate(io.type = "io.gender.multivar")
+
+PSE_table.multivar <- 
+  io.talker.multivar %>%
+  group_by(gender) %>%
+  summarise(
+    PSE.lower = round(quantile(PSE, probs = c(.025))),
+    PSE.median = round(quantile(PSE, probs = c(.5))),
+    PSE.upper = round(quantile(PSE, probs = c(.975))))
+
+p.IOs.multivar <- plot_IO_fit(
+  data = io.talker.multivar,
+  data_group = io.gender.multivar,
+  PSEs = PSE_table.multivar
+  )
+```
+
+
+```{r, warning=FALSE, fig.width=3.7, fig.height=2.5}
+# using centered cues
+io.talker.centered <- get_IO_categorization(
+  cues = c("VOT_centered", "f0_Mel_centered"), 
+  groups = c("Talker", "gender"), alpha = .1, size = .3) %>% 
+  mutate(io.type = "io.talker.centered")
+io.gender.centered <- get_IO_categorization(
+  cues = c("VOT_centered", "f0_Mel_centered"),
+  group = "gender", alpha = 1, size = 1) 
+
+PSE_table.centered <- io.talker.centered %>%
+  group_by(gender) %>%
+  summarise(
+    PSE.lower = round(quantile(PSE, probs = c(.025))),
+    PSE.median = round(quantile(PSE, probs = c(.5))),
+    PSE.upper = round(quantile(PSE, probs = c(.975))))
+
+p.IOs.centered <- 
+plot_IO_fit(
+  data = io.talker.centered,
+  data_group = io.gender.centered,
+  PSEs = PSE_table.centered
+)
+```
+
+(ref:comparative-IO-plot) Comparing predicted vs. observed categorization functions for Experiment 1. The black line and interval show the psychometric fit and 95% CI for Experiment 1 marginalizing over all random effects. Each thin line shows the prediction of a single talker-specific ideal observers derived from a database of word-initial stop productions [data: @chodroff2017structure; data preparation & model code: @Kurumada_Xie_Jaeger_2022]. The lapse rate and response bias for the ideal observers was set to match the MAP estimates of the psychometric model. For ease of comparisons, horizontal point ranges show the PSE and its 95% CI after discounting lapses.
+
+```{r comparative-IO-plot, warning=FALSE, fig.width=6, fig.height=5, fig.cap="(ref:comparative-IO-plot)"}
+p1 <- p.IOs.univar.no.noise + 
+  theme(legend.position = "none", 
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
+p2 <- p.IOs.univar + 
+  theme(legend.position = "none", 
+        axis.title.y = element_blank(), 
+        axis.text.y = element_blank(), 
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
+p3 <- p.IOs.multivar + 
+  theme(legend.position = "none",
+        axis.title.x = element_blank()) 
+p4 <- p.IOs.centered + 
+  theme(legend.position = "none", 
+        axis.title.y = element_blank(), 
+        axis.text.y = element_blank(), 
+        axis.title.x = element_blank(), 
+        axis.ticks.y = element_blank())
+  
+legend <- get_legend(p.IOs.multivar + theme(legend.position = "top"))
+
+IO_grid1 <- plot_grid(p1, p3, 
+                   ncol = 1, 
+                   align = "v", 
+                   labels = c("A", "C"), 
+                   label_size = 10, 
+                   hjust = -7, 
+                   vjust = 3,
+                   rel_heights = c(0.90, 1))
+
+IO_grid2 <- plot_grid(p2, p4, 
+                   ncol = 1, 
+                   align = "v", 
+                   labels = c("B", "D"), 
+                   label_size = 10, 
+                   hjust = -2.5, 
+                   vjust = 3,
+                   rel_heights = c(0.90, 1))
+
+IO_grid3 <- plot_grid(IO_grid1, IO_grid2, ncol = 2, align = "h", rel_widths = c(1.1, 1))
+
+
+IO_grid4 <- plot_grid(legend, IO_grid3, align = "h", ncol = 1, rel_heights = c(.1, 1))
+ggdraw(add_sub(IO_grid4, "VOT (ms)", size = 10, fontface = "bold"))
+```
+
+```{r}
+# join the 4 IO groups
+d.talker.IO <- rbind(io.talker.univar.no.noise, io.talker.univar, io.talker.multivar, io.talker.centered) %>% 
+  select(-c(PSE, line, categorization))
+
+# get the likelihoods for each IO
+d.talker.IO %>% 
+  ungroup() %>%
+  unnest(io) %>% 
+  mutate(likelihood = 
+           pmap(list(x, mu, Sigma, Sigma_noise), 
+                ~ get_MVG_likelihood(x = ..1$x, mu = ..2, Sigma = ..3, noise_treatment = "marginalize", Sigma_noise = ..4)))
+```
+
+
+
+
+
+
+
+
+
+```{r}
+# Make multivariate Gaussian IO
+
+cues <- c("VOT_centered", "f0_Mel_centered")
+m.VOT_f0_MVG <-
+  make_MVG_from_data(
+  data = d.chodroff_wilson.selected,
+  category = "category",
+  cues = cues) %>%
+  make_stop_VOTf0_ideal_observer() %>%
+  arrange(category)
+ 
+# Make a LIST of multivariate Gaussian IAs from that IO 
+# (with different kappas and nus)
+m.ia.VOT_f0.PR <-
+  crossing(
+    prior_kappa = 4^(1:5),
+    prior_nu = 4^(1:5)) %>%
+  rowwise() %>%
+  mutate(
+    ideal_adaptor = map2(prior_kappa, prior_nu, ~ make_stop_VOTf0_ideal_adaptor(m = m.VOT_f0_MVG, kappa = .x, nu = .y))) %>%
+  unnest(ideal_adaptor) %>%
+  arrange(category)
+
+```
+
+
+
+
+
+
+
