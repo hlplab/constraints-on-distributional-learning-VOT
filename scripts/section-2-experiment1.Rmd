@@ -388,76 +388,7 @@ fit_mix %>%
 
 \newpage
 
-```{r bivariate-model-brms, echo=FALSE}
-# d.chodroff_wilson <-
-#   get_ChodroffWilson_data(
-#     database_filename = "data/all_observations_with_non-missing_vot_cog_f0.csv",
-#     min.n_per_talker_and_stop = 25,
-#     limits.VOT = c(-Inf, Inf),
-#     limits.f0 = c(0, 350),
-#     max.p_for_multimodality = .1
-#   ) %>%
-#   mutate_at(
-#     c("VOT", "f0_Mel"),
-#     list("centered" = function(x) apply_ccure(x, data = .)))
-# 
-# 
-# d.chodroff_wilson.selected <-
-#   d.chodroff_wilson %>%
-#   filter(poa == "/d/-/t/") %>%
-#   group_by(Talker, category) %>%
-#   mutate(n = n()) %>%
-#   group_by(Talker) %>%
-#   # subsample n tokens, as determined by category with fewer tokens
-#   mutate(
-#     n_min = min(n),
-#     n_category = n_distinct(category)) %>%
-#   # select talkers with both /d/ and /t/ observations
-#   filter(n_category == 2) %>%
-#   group_by(Talker, category) %>%
-#   sample_n(size = first(n_min)) %>%
-#   ungroup() %>%
-#   mutate_at(
-#       c("VOT", "f0", "f0_Mel", "f0_semitones"),
-#       list("centered" = function(x) apply_ccure(x, data = .)))%>% 
-#   mutate(category = factor(category))
-# 
-# contrasts(d.chodroff_wilson.selected$category) = cbind("/t/ vs. /d/" = c(-.5, .5))
-# contrasts(d.chodroff_wilson.selected$gender) = cbind("female vs. male" = c(-.5, .5))
-# 
-# 
-# bf_VOT <- bf(
-#   VOT_centered ~ 1 + category * gender + (1 + category | tm | Talker) + (1 | wm | Word),
-#   sigma ~ 1 + category * gender + (1 + category | ts | Talker) + (1 | ws | Word))
-# 
-# bf_f0_Mel <- bf(
-#   f0_Mel_centered ~ 1 + category * gender + (1 + category | tm | Talker) + (1 | wm | Word),
-#   sigma ~ 1 + category * gender + (1 + category | ts | Talker) + (1 | ws | Word))
-#   
-# cues <- c("VOTcentered", "f0Melcentered")
-# randoms <- c("Talker", "Word")
-# 
-# my.priors.bivariate = c(
-#   # weakly regularizing prior for fixed effect coefficients for mu.
-#   set_prior("student_t(3, 0, 2.5)", class = "b", resp = cues),
-#   # weakly regularizing prior for fixed effect coefficients for sigma.
-#   set_prior("student_t(3, 0, 2.5)", class = "b", resp = cues, dpar = "sigma"),
-#   set_prior("cauchy(0, 5)", class = "sd", resp = cues), 
-#   set_prior("cauchy(0, 5)", class = "sd", resp = cues, dpar = "sigma"), 
-#   set_prior("cauchy(0, 5)", class = "sd", resp = cues, group = randoms), 
-#   set_prior("cauchy(0, 5)", class = "sd", resp = cues, group = randoms, dpar = "sigma"))
-# 
-# m.bivariate_distributional <- brm(
-#   formula = bf_VOT + bf_f0_Mel + set_rescor(TRUE),
-#   data = d.chodroff_wilson.selected,
-#   prior = my.priors.bivariate,
-#   chains = 4,
-#   cores = 4,
-#   warmup = 3000,
-#   iter = 4500,
-#   control = list(adapt_delta = .995, max_treedepth = 20),
-#   file = "../../models/bivariate_VOTf0_model.rds")  
-```
+
 
 ```{r}
 # prepare production corpus from Chodroff & Wilson
