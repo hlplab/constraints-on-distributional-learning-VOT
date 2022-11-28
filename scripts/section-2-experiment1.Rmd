@@ -139,12 +139,15 @@ psychometric_fit_data <-
   conditional_effects(
     fit_mix, 
     effects = "sVOT", 
+    #re_formula = NULL, # by default conditional_effects excludes random effects when calculating predictions
     plot = F)[[1]]
 
+int_conditions <- list(sTrial = quantile(sort(unique((d.test.excluded$Trial - Trial.mean)) / (2 * Trial.sd))))
 psychometric_fit_interaction <-
   conditional_effects(
     fit_mix,
     effects = "sVOT:sTrial",
+    int_conditions = int_conditions,
     plot = F)[[1]]
 
 # get the PSE from the fitted categorisation function
@@ -195,6 +198,7 @@ MinPair_plot <- cat_minimalpair %>%
         axis.text.y = element_blank(),
         axis.ticks.y = element_blank())
 ```
+
 
 
 
@@ -280,7 +284,7 @@ p.vot <- p.psychometric.vot +
     colour = "darkgray") 
 
 p.vot_trial <- p.psychometric.vot %+%
-  (filter(psychometric_fit_interaction, effect2__ == 0)) +
+  (filter(psychometric_fit_interaction, effect2__ == .5)) +
   geom_ribbon(
     aes(ymin = lower__, 
         ymax = upper__), alpha = .08) +
@@ -292,7 +296,7 @@ p.vot_trial <- p.psychometric.vot %+%
         axis.text.y = element_blank(),
         axis.ticks.y = element_blank())
 ```
-(ref:fitted-categorisation-plots) Fitted categorisation functions to listeners' responses marginalizing over trial effects as well as all random effects (left) and combined effects of VOT and trial (middle), marginalizing over all random effects. Vertical point ranges represent the mean proportion of 't'-responses at respective VOTs and vertical bars denote the 95% bootstrapped confidence interval. Black error bar (bottom of left panel) denotes the 95% quantile interval of the points of subjective equality (PSE), derived from 8000 sample draws from the posterior distribution of estimated population parameters. Rightmost plot shows the predicted categorisation functions for all four minimal pair items.   
+(ref:fitted-categorisation-plots) Fitted categorisation functions to listeners' responses marginalizing over trial effects as well as all random effects (left) and combined effects of VOT and trial (middle), marginalizing over all random effects. Vertical point ranges represent the mean proportion of t-responses at respective VOTs and vertical bars denote the 95% bootstrapped confidence interval. Black error bar (bottom of left panel) denotes the 95% quantile interval of the points of subjective equality (PSE), derived from 8000 sample draws from the posterior distribution of estimated population parameters. Rightmost plot shows the predicted categorisation functionsfor all four minimal pair items.   
 
 ```{r fitted-categorisation-plots, warning=FALSE, fig.width=6.8, fig.height = 2.8, fig.cap="(ref:fitted-categorisation-plots)"}
 legend <- get_legend(MinPair_plot + theme(legend.position = "top"))
@@ -317,15 +321,19 @@ grid2 <- plot_grid(legend,
 ggdraw(add_sub(grid2, "VOT (ms)", size = 10, fontface = "bold"))
 ```
 
+
+
+
 ```{r by-participant-lapse-bias, fig.height=2.6, fig.width=6.5}
-# lapse_participant <- fit_mix %>% spread_draws(r_ParticipantID__theta1[ParticipantID, term], b_theta1_Intercept) %>%
-#   group_by(ParticipantID) %>%
-#   mutate(ParticipantID = factor(ParticipantID),
-#          Participant_lapse = b_theta1_Intercept + r_ParticipantID__theta1,
-#          estimated_lapse = plogis(Participant_lapse) * 100) %>%
-#   select(ParticipantID, term, r_ParticipantID__theta1, Participant_lapse, estimated_lapse) %>%
-#   mode_hdci(estimated_lapse)
-# 
+# lapse_participant <- fit_mix %>%
+#   spread_draws(r_ParticipantID__theta1[ParticipantID, term], b_theta1_Intercept) %>% 
+  # group_by(ParticipantID) %>%
+  # mutate(ParticipantID = factor(ParticipantID),
+  #        Participant_lapse = b_theta1_Intercept + r_ParticipantID__theta1,
+  #        estimated_lapse = plogis(Participant_lapse) * 100) %>%
+  # select(ParticipantID, term, r_ParticipantID__theta1, Participant_lapse, estimated_lapse) %>%
+  # mode_hdci(estimated_lapse)
+
 # bias_participant <- fit_mix %>%
 #   spread_draws(r_ParticipantID__mu1[ParticipantID, term], b_mu1_Intercept) %>%
 #   group_by(ParticipantID) %>%
@@ -334,7 +342,7 @@ ggdraw(add_sub(grid2, "VOT (ms)", size = 10, fontface = "bold"))
 #          estimated_bias = plogis(Participant_bias) * 100) %>%
 #   select(ParticipantID, term, r_ParticipantID__mu1, Participant_bias, estimated_bias) %>%
 #   mode_hdci(estimated_bias)
-# 
+#
 # estimate_minpair <- fit_mix %>% spread_draws(r_Item.MinimalPair__mu2[Item.MinimalPair, term], b_mu2_Intercept, b_mu2_sVOT) %>%
 #   group_by(Item.MinimalPair) %>%
 #   mutate(predicted_eff = ifelse(term == "Intercept", r_Item.MinimalPair__mu2 + b_mu2_Intercept, r_Item.MinimalPair__mu2 + b_mu2_sVOT)) %>%
@@ -342,12 +350,11 @@ ggdraw(add_sub(grid2, "VOT (ms)", size = 10, fontface = "bold"))
 #   mode_hdci(predicted_eff) %>%
 #   pivot_wider(names_from = term,
 #               values_from = c(predicted_eff, .lower, .upper))
+
 ```
 
-
-
 The lapse rate was estimated to be on the slightly larger side, but within the expected range 
-(`r make_CI(fit_mix, "theta1_Intercept", "theta1_Intercept < 0")`). Maximum a posteriori (MAP) estimates of by-participant lapse rates ranged from XX . Very high lapse rates were estimated for four of the participants with one in particular whose CI indicated exceptionally high uncertainty. These lapse rates might reflect data quality issues with Mechanical Turk that started to emerge over recent years [see @REFS; and, specifically for experiments on speech perception, @cummings2023], and we return to this issue in Experiment 2. 
+(`r make_CI(fit_mix, "theta1_Intercept", "theta1_Intercept < 0")`). Maximum a posteriori (MAP) estimates of by-participant lapse rates ranged from XX. Very high lapse rates were estimated for four of the participants with one in particular whose CI indicated exceptionally high uncertainty. These lapse rates might reflect data quality issues with Mechanical Turk that started to emerge over recent years [see @REFS; and, specifically for experiments on speech perception, @cummings2023], and we return to this issue in Experiment 2. 
 
 The response bias were estimated to slightly favor "t"-responses (`r make_CI(fit_mix, "mu1_Intercept", "mu1_Intercept > 0")`), as also visible in Figure \@ref(fig:fitted-categorisation-plots) (left).
 Unsurprisingly, the psychometric model suggests high uncertainty about the participant-specific response biases, as it is difficult to reliably estimate participant-specific biases while also accounting for trial and VOT effects (range of by-participant MAP estimates: XX). For all but four participants, the 95% CI includes the hypothesis that responses were unbiased. Of the remaining four participants, three were biased towards "t"-responses and one was biased toward "d"-responses.
@@ -372,6 +379,11 @@ Each panel in figure \@ref(fig:comparative-IO-plot) shows 92 talker-specific ide
 Beginning with a qualitative assessment of the plots, IOs that incorporate perceptual noise in the models (B-D) appear to capture the uncertainty reflected in our data better. The slopes of the IOs in panel A are far steeper than the fitted categorisation function but with added noise, as with the IOs in B-D the IO slopes flatten out to better match the slope of the fitted line. This itself indicates that perception of acoustic stimuli is not entirely faithful to the bottom-up signal but is inferred through a combination of what listeners actually perceived and their existing knowledge of the underlying linguistic category [@kronrod2016unified].
 Noticeably, in all IO types the median estimated PSE from our participant data is located to the left of the IO-predicted median PSEs although the range of fitted estimates do overlap with the IOs in the upper region. 
 
+
+```{r}
+fit_mix %>% 
+  gather_draws(r_ParticipantID__theta1[ParticpantID, term], b_theta1_Intercept)
+```
 
 
 \newpage
@@ -752,10 +764,7 @@ temp <- d.talker.IO %>%
   mutate(likelihood = 
            pmap(list(x, mu, Sigma, Sigma_noise), 
                 ~ get_MVG_likelihood(x = ..1$x, mu = ..2, Sigma = ..3, noise_treatment = "marginalize", Sigma_noise = ..4)))   
-  group_by(io.type, category) %>% 
-  mutate(marginal.loglik = sum(likelihood) / nrow(category))
 
-temp[369,][[6]]
 ```
 
 
