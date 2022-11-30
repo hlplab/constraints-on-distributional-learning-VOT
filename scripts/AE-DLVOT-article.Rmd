@@ -102,7 +102,12 @@ always_allow_html: true
 <!-- THIS IS THE DOCUMENT THAT YOU USE FOR KNITTING. IT WILL KNIT ALL THE OTHER SECTIONS, TOO -->
 
 ```{r libraries, include=FALSE, message=FALSE}
-#devtools::install_github("crsh/papaja") # Make sure this library is up-to-date
+library(curl)               # Check availability of internet for install of remote libraries
+
+# Install remotes package if necessary
+if(!requireNamespace("remotes", quietly = TRUE)) if (has_internet()) install.packages("remotes")
+# Install the stable development version from GitHub
+if (has_internet()) remotes::install_github("crsh/papaja")
 library(papaja)             # APA formatted ms
 
 library(tidyverse)
@@ -111,16 +116,18 @@ library(rlang)              # quosures (in functions)
 library(assertthat)         # asserts (in functions)
 
 library(cowplot)
-
 library(magick)
 
 library(linguisticsdown)    # IPA symbols
 library(latexdiffr)         # trackchanges
+
 library(brms)
-library(MVBeliefUpdatr)
 library(phonR)
 library(tidybayes)
 library(posterior)
+
+if (has_internet()) remotes::install_github("hlplab/MVBeliefUpdatr")
+library(MVBeliefUpdatr)  # for generating Ideal Observers
 ```
 
 ```{r constants-general, include=FALSE}
