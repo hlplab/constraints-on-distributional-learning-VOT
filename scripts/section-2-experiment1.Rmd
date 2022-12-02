@@ -194,15 +194,16 @@ if (file.exists("../data/categorisation_by_min_pair.rds")) {
 ```
 
 ```{r fitted-categorisation-minimal-pair"}
-MinPair_plot <- 
-  cat_minimalpair %>% 
+MinPair_plot <- cat_minimalpair %>% 
   group_by(sVOT, Item.MinimalPair) %>% 
   ggplot(aes(x = descale(sVOT, VOT.mean_norm, VOT.sd_norm), 
              y = .epred, colour = Item.MinimalPair)) +
-  stat_lineribbon(alpha = .6) +
+  stat_lineribbon(alpha = .9, .width = 0.95) +
   scale_x_continuous("VOT (ms)") +
   scale_y_continuous("Fitted proportion of 't'-responses") +
-  scale_color_brewer("Minimal Pair", palette = "Blues", labels = c("dill/till", "dim/tim", "din/tin", "dip/tip")) +
+  scale_color_manual("Minimal Pair", breaks = c("dilltill", "dimtim", "dintin", "diptip"),  
+                     values = c("#002699", "#0040ff", "#668cff", "#b3c6ff"), 
+                     labels = c("dill/till", "dim/tim", "din/tin", "dip/tip")) +
   scale_fill_brewer("CI", palette = "Greys", type = "qual") +
   theme(axis.title.y = element_blank(),
         axis.title.x = element_blank(),
