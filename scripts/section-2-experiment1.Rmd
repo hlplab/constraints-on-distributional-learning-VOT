@@ -151,13 +151,20 @@ psychometric_fit_data <-
     effects = "sVOT", 
     plot = F)[[1]]
 
-int_conditions <- list(sTrial = quantile(sort(unique((d.test.excluded$Trial - Trial.mean)) / (2 * Trial.sd))))
-psychometric_fit_interaction <-
+if (file.exists("../data/conditional_effects_VOT_Trial.rds")) {
+  psychometric_fit_interaction <- read_rds("../data/conditional_effects_VOT_Trial.rds")
+} else {
+  int_conditions <- list(sTrial = sort(unique((d.test.excluded$Trial - Trial.mean)) / (2 * Trial.sd)))
+  
+  psychometric_fit_interaction <-
   conditional_effects(
     fit_mix,
     effects = "sVOT:sTrial",
     int_conditions = int_conditions,
     plot = F)[[1]]
+
+write_rds(psychometric_fit_interaction, file = "../data/conditional_effects_VOT_Trial.rds")
+}
 
 # get the PSE from the fitted categorisation function
 PSE.fit_mix <- descale(-(summary(fit_mix)$fixed["mu2_Intercept", 1] / summary(fit_mix)$fixed["mu2_sVOT", 1]), VOT.mean_norm, VOT.sd_norm) 
@@ -284,41 +291,42 @@ p.vot <- p.psychometric.vot +
     size = 2.5,
     colour = "darkgray") 
 
-p.vot_trial <- p.psychometric.vot %+%
-  (filter(psychometric_fit_interaction, effect2__ == 0)) +
-  geom_ribbon(
-    aes(ymin = lower__, 
-        ymax = upper__), alpha = .08) +
-  geom_line(linewidth = 1.5, 
-            colour = "#333333",
-            alpha = .8) + 
-  theme(axis.title.y = element_blank(),
-        axis.title.x = element_blank(),
-        axis.text.y = element_blank(),
-        axis.ticks.y = element_blank())
+p.trial <- psychometric_fit_interaction %>% 
+  ggplot(aes(x = descale(sVOT, VOT.mean_norm, VOT.sd_norm),
+             y = descale(sTrial, Trial.mean, Trial.sd),
+             z = estimate__)) +
+  geom_raster(aes(fill = estimate__), alpha = .9) + 
+  scale_x_continuous("VOT (ms)", scales::pretty_breaks()) +
+  scale_y_continuous("Trial") +
+  scale_fill_continuous("Proportion of 't'-responses") +
+  theme(legend.position = "top")
 ```
 
 (ref:fitted-categorisation-plots) Categorisation functions and points of subjective equality (PSE) derived from the Bayesian mixed-effects psychometric model fit to listeners' responses in Experiment 1. The categorization functions include lapse rates and biases. The PSEs correct for lapse rates and lapse biases (i.e., they are the PSEs of the perceptual component of the psychometric model).^[Here and in Experiment 2, lapse biases were close to uniform (.5/.5). For such scenarios, bias-corrected PSEs will be very similar to uncorrected PSEs. This is also evident in Figure \@ref(fig:fitted-categorisation-plots).] **Panel A:** Effects of VOT, lapse rate, and lapse bias, while marginalizing over trial effects as well as all random effects. Vertical point ranges represent the mean proportion and 95% bootstrapped CIs of paricipants' "t"-responses at each VOT step. Horizontal point ranges denote the mean and 95% quantile interval of the points of subjective equality (PSE), derived from the 8000 posterior samples of the population parameters. **Panel B:** The same but showing the fitted categorization functions for each of the four minimal pair continua. Participants' responses are omitted to avoid clutter. **Panel C:** Joint effects of VOT and trial as well as lapse rate and bias, while marginalizing over random effects.   
 
 ```{r fitted-categorisation-plots, warning=FALSE, fig.width=6.8, fig.height = 2.8, fig.cap="(ref:fitted-categorisation-plots)"}
-legend <- get_legend(MinPair_plot + theme(legend.position = "top"))
+legend1 <- get_legend(MinPair_plot + theme(legend.position = "top"))
 
 MinPair_plot <- MinPair_plot + theme(legend.position = "none")
 
 grid1 <- plot_grid(p.vot + theme(axis.title.x = element_blank()),
-                   p.vot_trial,
                    MinPair_plot,
-                   ncol = 3, 
+                   ncol = 2, 
                    align = "h", 
                    labels = NULL, 
                    label_size = 10,
                    hjust = .1, 
-                   rel_widths = c(0.95, 0.8, 0.8))
+                   rel_widths = c(0.95, 0.8))
 
-grid2 <- plot_grid(legend, 
-          grid1,
-          ncol = 1,
-          rel_heights = c(0.1, 1))
+legend2 <- get_legend(p.trial + theme(legend.position = "top"))
+
+grid2 <- plot_grid(
+  legend1, 
+  grid1,
+  legend2,
+  p.trial + theme(legend.position = "none", axis.title.x = element_blank()),
+  ncol = 1,
+  rel_heights = c(0.1, 1.1, .3, 1))
 
 ggdraw(add_sub(grid2, "VOT (ms)", size = 10, fontface = "bold"))
 ```
