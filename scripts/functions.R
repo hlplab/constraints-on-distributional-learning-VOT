@@ -291,3 +291,83 @@ get_IO_categorization <- function(
            PSE = map(categorization, ~ .x$VOT[which.min(abs(.x$response - .5))]) %>% unlist(),
            line = map2(categorization, gender, ~ geom_line(data = .x, aes(x = VOT, y = response, color = .y), alpha = alpha, size = size)))
 }
+
+
+
+
+## WIP: modify above function to get likelihood from MVG
+ 
+data <- d.chodroff_wilson.selected
+cues <- c("VOT")                            
+groups <- c("Talker", "gender")
+lapse_rate = plogis(summary(fit_mix)$fixed[3, 1])
+with_noise = FALSE
+VOTs = seq(0, 105, 1)
+F0s = normMel(predict_f0(VOTs))
+alpha = .2
+size = .5
+
+  data %<>%
+    make_MVG_from_data(cues = cues, group = groups) %>%
+    # optionally could go here (but look up help first) aggregate_models_by_group_structure(group_structure = ...) %>%
+    group_by(!!! syms(groups)) %>%
+    nest(mvg = -all_of(groups)) %>%
+    mutate(
+      io = map(
+        mvg, 
+        ~ lift_MVG_to_MVG_ideal_observer(
+          .x, 
+          group = NULL,
+          prior = c(.5, .5),
+          lapse_rate = lapse_rate,
+          lapse_bias = c(.5, .5),
+          Sigma_noise = 
+            if(with_noise == FALSE) {
+              matrix(c(0), ncol = 1, dimnames = list(cues, cues))
+            } else if(with_noise == TRUE & length(cues) == 1) {
+              matrix(c(80), ncol = 1, dimnames = list(cues, cues))
+            } else if(with_noise == TRUE & length(cues) == 2) {
+              matrix(c(80, 0, 0, 878), ncol = 2, dimnames = list(cues, cues))
+            })))
+  
+  data <- {if(length(cues) == 1) {
+    crossing(data, 
+             tibble(
+               !! sym(cues[1]) := VOTs, 
+               x = map(!! sym(cues[1]), ~ c(.x))))
+  } else {
+    crossing(data, 
+             tibble(
+               !! sym(cues[1]) := VOTs,
+               !! sym(cues[2]) := F0s,
+               x = map2(!! sym(cues[1]), 
+                        !! sym(cues[2]), ~ c(.x, .y))))
+  }} %>% 
+    select(- all_of(cues)) %>% 
+    nest(x = x) %>% 
+    mutate(likelihood = 
+             map2(x, io, ~ get_likelihood_from_MVG(x = .x$x, model = .y))) %>% 
+    unnest(likelihood) %>% 
+    group_by(Talker, category) %>% 
+    mutate(VOT = VOTs) %>% 
+    pivot_wider(names_from = category,
+                values_from = log_likelihood,
+                names_glue = "{.value}_{category}") %>% 
+    group_by(Talker) %>% 
+    nest(likelihood = c(VOT, "log_likelihood_/d/", "log_likelihood_/t/")) %>% 
+    mutate(
+      PSE = map_dbl(
+      likelihood, ~ .x$VOT[which.min(abs(.x[[2]] - .x[[3]]))]),
+      categorization = 
+        map2(
+          x, io, 
+          ~ get_categorization_from_MVG_ideal_observer(x = .x$x, model = .y, decision_rule = "proportional") %>%
+            filter(category == "/t/") %>%
+            mutate(VOT = map(x, ~ .x[1]) %>% unlist())),
+      line = map2(categorization, gender, ~ geom_line(data = .x, aes(x = VOT, y = response, color = .y), alpha = alpha, size = size))
+      )
+  
+  
+  
+
+
