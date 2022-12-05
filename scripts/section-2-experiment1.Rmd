@@ -684,18 +684,6 @@ IO_grid4 <- plot_grid(legend, IO_grid3, align = "h", ncol = 1, rel_heights = c(.
 ggdraw(add_sub(IO_grid4, "VOT (ms)", size = 10, fontface = "bold"))
 ```
 
-```{r}
-# join the 4 IO groups
-d.talker.IO <- rbind(io.talker.univar.no.noise, io.talker.univar, io.talker.multivar, io.talker.centered) %>% 
-  select(-c(PSE, line, categorization))
-
-d.talker.IO %>% 
-  ungroup() %>%
-  unnest(io) %>% 
-  mutate(likelihood = 
-           pmap(list(x, mu, Sigma, Sigma_noise), 
-                ~ get_MVG_likelihood(x = ..1$x, mu = ..2, Sigma = ..3, noise_treatment = "marginalize", Sigma_noise = ..4)))
-```
 
 
 
@@ -705,31 +693,8 @@ d.talker.IO %>%
 
 
 
-```{r}
-# Make multivariate Gaussian IO
 
-cues <- c("VOT_centered", "f0_Mel_centered")
-m.VOT_f0_MVG <-
-  make_MVG_from_data(
-  data = d.chodroff_wilson.selected,
-  category = "category",
-  cues = cues) %>%
-  make_stop_VOTf0_ideal_observer() %>%
-  arrange(category)
- 
-# Make a LIST of multivariate Gaussian IAs from that IO 
-# (with different kappas and nus)
-m.ia.VOT_f0.PR <-
-  crossing(
-    prior_kappa = 4^(1:5),
-    prior_nu = 4^(1:5)) %>%
-  rowwise() %>%
-  mutate(
-    ideal_adaptor = map2(prior_kappa, prior_nu, ~ make_stop_VOTf0_ideal_adaptor(m = m.VOT_f0_MVG, kappa = .x, nu = .y))) %>%
-  unnest(ideal_adaptor) %>%
-  arrange(category)
 
-```
 
 
 
