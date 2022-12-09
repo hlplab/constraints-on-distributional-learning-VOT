@@ -6,6 +6,7 @@ require(brms)
 require(tidybayes)
 require(MVBeliefUpdatr)
 require(phonR)
+require(cowplot)
 
 source("functions.R")
 ```
@@ -456,31 +457,22 @@ plot_IO_fit <- function(
   #   fun.data = mean_cl_boot,
   #   geom = "ribbon",
   #   alpha = .5) +
-  scale_x_continuous("VOT (msec)", breaks = scales::pretty_breaks(n = 3), limits = c(-15, 80), expand = c(0, 0)) +
+  scale_x_continuous("VOT (msec)", breaks = scales::pretty_breaks(n = 3), limits = c(-15, 85), expand = c(0, 0)) +
   scale_y_continuous('Proportion "t"-responses') +
   scale_colour_manual("Model", 
                       values = c(colours.sex), 
                       labels = c("IO (female)", "IO (male)"),
                       aesthetics = c("color", "fill")) +
   geom_errorbarh(
-    data = data %>%
-      group_by(gender) %>%
-      summarise(
-        PSE.lower = round(quantile(PSE, probs = c(.025))),
-        PSE.median = round(quantile(PSE, probs = c(.5))),
-        PSE.upper = round(quantile(PSE, probs = c(.975)))) %>%
+    data = PSEs %>%
       mutate(y = ifelse(gender == "male", -.025, - .06)),
     mapping = aes(xmin = PSE.lower, xmax = PSE.upper, y = y, color = gender),
     height = 0, alpha = .5, size = 1) +
   geom_point(
-    data = data %>%
-      group_by(gender) %>%
-      summarise(
-        PSE.lower = round(quantile(PSE, probs = c(.025))),
-        PSE.median = round(quantile(PSE, probs = c(.5))),
-        PSE.upper = round(quantile(PSE, probs = c(.975)))) %>%
+    data = PSEs %>%
       mutate(y = ifelse(gender == "male", -.025, - .06)),
-    mapping = aes(x = PSE.median, y = y, color = gender), size = 1.2) +
+    mapping = aes(x = PSE.median, y = y, color = gender),
+    size = 1.2) +
       annotate(geom = "text",
            y = -.025, x = 65,
            label = paste(PSEs[[1, 2]], "ms", "-", PSEs[[1, 4]], "ms"),
@@ -537,10 +529,11 @@ plot_IO_fit <- function(
 ```
 
 
-```{r, warning=FALSE}
+```{r, fig.width=3.7, fig.height=2.5}
 io.talker.univar.no.noise <- get_IO_categorization(cues = c("VOT"), groups = c("Talker", "gender"), with_noise = FALSE, alpha = .1, size = 0.3) %>% 
   mutate(io.type = "io.talker.univar.no.noise")
-io.gender.univar.no.noise <- get_IO_categorization(cues = c("VOT"), with_noise = FALSE, group = "gender", alpha = 1, size = 1) %>% 
+
+io.gender.univar.no.noise <- get_IO_categorization(cues = c("VOT"), with_noise = FALSE, groups = "gender", alpha = 1, size = 1) %>% 
   mutate(io.type = "io.gender.univar.no.noise")
 
 PSE_table.univar.no.noise <- 
@@ -559,10 +552,11 @@ p.IOs.univar.no.noise <- plot_IO_fit(
 ```
 
 
-```{r}
+```{r, fig.width=3.7, fig.height=2.5}
 # get IOs from VOT only
 io.talker.univar <- get_IO_categorization(cues = c("VOT"), groups = c("Talker", "gender"), alpha = .1, size = 0.3) %>% 
   mutate(io.type = "io.talker.univar")
+
 io.gender.univar <- get_IO_categorization(cues = c("VOT"), group = "gender", alpha = 1, size = 1) %>% 
   mutate(io.type = "io.gender.univar")
 
@@ -587,7 +581,7 @@ p.IOs.univar <- plot_IO_fit(
 io.talker.multivar <- get_IO_categorization(cues = c("VOT", "f0_Mel"), groups = c("Talker", "gender"), alpha = .1, size = .3) %>% 
   mutate(io.type = "io.talker.multivar")
 
-io.gender.multivar <- get_IO_categorization(cues = c("VOT", "f0_Mel"), group = "gender", alpha = 1, size = 1) %>% 
+io.gender.multivar <- get_IO_categorization(cues = c("VOT", "f0_Mel"), groups = "gender", alpha = 1, size = 1) %>% 
   mutate(io.type = "io.gender.multivar")
 
 PSE_table.multivar <- 
@@ -612,6 +606,7 @@ io.talker.centered <- get_IO_categorization(
   cues = c("VOT_centered", "f0_Mel_centered"), 
   groups = c("Talker", "gender"), alpha = .1, size = .3) %>% 
   mutate(io.type = "io.talker.centered")
+
 io.gender.centered <- get_IO_categorization(
   cues = c("VOT_centered", "f0_Mel_centered"),
   group = "gender", alpha = 1, size = 1) 
@@ -684,10 +679,60 @@ IO_grid4 <- plot_grid(legend, IO_grid3, align = "h", ncol = 1, rel_heights = c(.
 ggdraw(add_sub(IO_grid4, "VOT (ms)", size = 10, fontface = "bold"))
 ```
 
+### Comparing model goodness-of-fit
+Assess how well each of the four IOs fit human data 
 
 
 
 
+
+```{r}
+# According to Florian's guide
+test.VOTs.positive <- c(5, seq(15, 90, 5), seq(100, 130, 10))
+
+get_average_accuracy_of_IO <- function(observations, responses, model) {
+  posteriors <- 
+    get_categorization_from_MVG_ideal_observer(x = observations, model = model, decision_rule = "proportional") %>% 
+    # we only need one posterior since the other one is simply 1-that
+    filter(category == "/t/")
+    
+  } 
+mutate(
+     human_response = responses)     
+log_accuracy = ifelse(category == human_response, log(response), log(1 - response))) %>%
+    summarize(accuracy = exp(mean(log_accuracy)))
+  }
+
+
+# prepare data of IO for joining
+d.IOs <- rbind(io.talker.univar.no.noise, io.talker.univar, io.talker.multivar, io.talker.centered) %>% 
+  select(Talker, gender, io, io.type)
+
+d.f0.5ms <- read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv") %>% 
+  filter(VOT %in% test.VOTs.positive) %>% 
+  select(filename, VOT, f0_5ms_into_vowel) %>% 
+  rename(Item.VOT = VOT,
+         f0_5ms = f0_5ms_into_vowel,
+         Item.Filename = filename) %>% 
+  mutate(Item.Filename = paste0(Item.Filename, ".wav"))
+
+d.temp <- d.test.excluded %>% 
+  ungroup() %>% 
+  select(Item.Filename, Item.VOT, Response, Response.Voicing) %>% 
+  filter(Item.VOT %in% test.VOTs.positive) %>%
+  left_join(d.f0.5ms, by = c("Item.Filename", "Item.VOT")) %>% 
+  mutate(Item.F0.5ms = normMel(f0_5ms),
+         VOT_F0 = map2(Item.VOT, Item.F0.5ms, ~ c(.x, .y)),
+         Response.category = ifelse(Response.Voicing == "voiced", "/d/", "/t/"),
+         Response.t = ifelse(Response.Voicing == "voiceless", 1, 0)) %>% 
+  nest(d.perception = everything()) %>% 
+  crossing(d.IOs) %>% 
+  mutate(accuracy = 
+           pmap(list(d.perception, io, io.type), ~
+                  get_average_accuracy_of_IO(observations = ifelse(str_detect(..3, "io.talker.univar"), ..1$Item.VOT, ..1$VOT_F0), 
+                                             responses = ..1$Response.category, 
+                                             model = ..2)))
+```
 
 
 
