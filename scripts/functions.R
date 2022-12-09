@@ -239,10 +239,11 @@ get_IO_categorization <- function(
     groups,
     lapse_rate = plogis(summary(fit_mix)$fixed[3, 1]),# <-- get from lapsing model fit to human data (Set to 0 for PSEs that are just based on posterior)
     with_noise = TRUE,
-    VOTs = seq(0, 130, .5),            # <-- select sequences of VOTs
+    VOTs = seq(0, 100, .5),            # <-- select sequences of VOTs
     F0s = normMel(predict_f0(VOTs)),                       # <-- Change f0_Mel formula to reflect what's going on in *your stimuli*
     alpha = .2,
-    size = .5
+    size = .5,
+    io.type
 ) {
   data %<>%
     make_MVG_from_data(cues = cues, group = groups) %>%
@@ -299,7 +300,8 @@ get_IO_categorization <- function(
           ~ get_categorization_from_MVG_ideal_observer(x = .x$x, model = .y, decision_rule = "proportional") %>%
             filter(category == "/t/") %>%
             mutate(VOT = map(x, ~ .x[1]) %>% unlist())),
-      line = map2(categorization, gender, ~ geom_line(data = .x, aes(x = VOT, y = response, color = .y), alpha = alpha, size = size))
+      line = map2(categorization, gender, ~ geom_line(data = .x, aes(x = VOT, y = response, color = .y), alpha = alpha, size = size)),
+      io.type = io.type
     )
 }  
   

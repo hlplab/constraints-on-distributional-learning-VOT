@@ -292,16 +292,6 @@ p.vot <- p.psychometric.vot +
     label = paste(round(post_sample_norm[[2]]), "ms", "-", round(post_sample_norm[[3]]), "ms"),
     size = 2.5,
     colour = "darkgray") 
-
-p.trial <- psychometric_fit_interaction %>% 
-  ggplot(aes(x = descale(sVOT, VOT.mean_norm, VOT.sd_norm),
-             y = descale(sTrial, Trial.mean, Trial.sd),
-             z = estimate__)) +
-  geom_raster(aes(fill = estimate__), alpha = .9) + 
-  scale_x_continuous("VOT (ms)", scales::pretty_breaks()) +
-  scale_y_continuous("Trial") +
-  scale_fill_continuous("Proportion of 't'-responses") +
-  theme(legend.position = "top")
 ```
 
 (ref:fitted-categorisation-plots) Categorisation functions and points of subjective equality (PSE) derived from the Bayesian mixed-effects psychometric model fit to listeners' responses in Experiment 1. The categorization functions include lapse rates and biases. The PSEs correct for lapse rates and lapse biases (i.e., they are the PSEs of the perceptual component of the psychometric model).\protect\footnote{Here and in Experiment 2, lapse biases were close to uniform (.5/.5). For such scenarios, bias-corrected PSEs will be very similar to uncorrected PSEs. This is also evident in Figure \ref{fig:fitted-categorisation-plots}.} **Panel A:** Effects of VOT, lapse rate, and lapse bias, while marginalizing over trial effects as well as all random effects. Vertical point ranges represent the mean proportion and 95% bootstrapped CIs of participants' "t"-responses at each VOT step. Horizontal point ranges denote the mean and 95% quantile interval of the points of subjective equality (PSE), derived from the 8000 posterior samples of the population parameters. **Panel B:** The same but showing the fitted categorization functions for each of the four minimal pair continua. Participants' responses are omitted to avoid clutter. **Panel C:** Joint effects of VOT and trial as well as lapse rate and bias, while marginalizing over random effects.   
@@ -320,15 +310,11 @@ grid1 <- plot_grid(p.vot + theme(axis.title.x = element_blank()),
                    hjust = .1, 
                    rel_widths = c(0.95, 0.8))
 
-legend2 <- get_legend(p.trial + theme(legend.position = "top"))
-
 grid2 <- plot_grid(
   legend1, 
   grid1,
-  legend2,
-  p.trial + theme(legend.position = "none", axis.title.x = element_blank()),
   ncol = 1,
-  rel_heights = c(0.1, 1.1, .3, 1))
+  rel_heights = c(0.1, 1))
 
 ggdraw(add_sub(grid2, "VOT (ms)", size = 10, fontface = "bold"))
 ```
@@ -431,7 +417,6 @@ d.chodroff_wilson.selected <-
 ```{r IOs-univariate-predictions, fig.width=3.7, fig.height=2.5, cache=FALSE}
 plot_IO_fit <- function(
     data,
-    data_group,
     PSEs
 ) {
   plot <- ggplot() + 
@@ -447,16 +432,6 @@ plot_IO_fit <- function(
   #   mapping = aes(x = VOT, ymin = response_lower, ymax = response_upper, fill = gender),
   #   alpha = .1) +
   data$line + 
-  #data_group$line +
-  # stat_summary(
-  #   data =
-  #     io.talker.centered %>%
-  #     select(-x) %>%
-  #     unnest(categorization),
-  #   mapping = aes(x = VOT, y = response, fill = gender),
-  #   fun.data = mean_cl_boot,
-  #   geom = "ribbon",
-  #   alpha = .5) +
   scale_x_continuous("VOT (msec)", breaks = scales::pretty_breaks(n = 3), limits = c(-15, 85), expand = c(0, 0)) +
   scale_y_continuous('Proportion "t"-responses') +
   scale_colour_manual("Model", 
@@ -530,111 +505,107 @@ plot_IO_fit <- function(
 
 
 ```{r, fig.width=3.7, fig.height=2.5}
-io.talker.univar.no.noise <- get_IO_categorization(cues = c("VOT"), groups = c("Talker", "gender"), with_noise = FALSE, alpha = .1, size = 0.3) %>% 
-  mutate(io.type = "io.talker.univar.no.noise")
+talker.VOT.no.noise <- 
+  get_IO_categorization(cues = c("VOT"), 
+                        groups = c("Talker", "gender"), 
+                        with_noise = FALSE, 
+                        alpha = .1, 
+                        size = 0.3,
+                        io.type = "talker.VOT.no.noise")
 
-io.gender.univar.no.noise <- get_IO_categorization(cues = c("VOT"), with_noise = FALSE, groups = "gender", alpha = 1, size = 1) %>% 
-  mutate(io.type = "io.gender.univar.no.noise")
-
-PSE_table.univar.no.noise <- 
-  io.talker.univar.no.noise %>%
+PSE_VOT.no.noise <- 
+  talker.VOT.no.noise %>%
   group_by(gender) %>%
   summarise(
     PSE.lower = round(quantile(PSE, probs = c(.025))),
     PSE.median = round(quantile(PSE, probs = c(.5))),
     PSE.upper = round(quantile(PSE, probs = c(.975))))
 
-p.IOs.univar.no.noise <- plot_IO_fit(
-  data = io.talker.univar.no.noise,
-  data_group = io.gender.univar.no.noise,
-  PSEs = PSE_table.univar.no.noise
+p.IOs.VOT.no.noise <- plot_IO_fit(
+  data = talker.VOT.no.noise,
+  PSEs = PSE_VOT.no.noise
 )
 ```
 
 
 ```{r, fig.width=3.7, fig.height=2.5}
 # get IOs from VOT only
-io.talker.univar <- get_IO_categorization(cues = c("VOT"), groups = c("Talker", "gender"), alpha = .1, size = 0.3) %>% 
-  mutate(io.type = "io.talker.univar")
+talker.VOT <- 
+  get_IO_categorization(cues = c("VOT"), 
+                        groups = c("Talker", "gender"), 
+                        alpha = .1, 
+                        size = 0.3,
+                        io.type = "talker.VOT")
 
-io.gender.univar <- get_IO_categorization(cues = c("VOT"), group = "gender", alpha = 1, size = 1) %>% 
-  mutate(io.type = "io.gender.univar")
-
-PSE_table.univar <- 
-  io.talker.univar %>%
+PSE_talker.VOT <- 
+  talker.VOT %>%
   group_by(gender) %>%
   summarise(
     PSE.lower = round(quantile(PSE, probs = c(.025))),
     PSE.median = round(quantile(PSE, probs = c(.5))),
     PSE.upper = round(quantile(PSE, probs = c(.975))))
 
-p.IOs.univar <- plot_IO_fit(
-  data = io.talker.univar,
-  data_group = io.gender.univar,
-  PSEs = PSE_table.univar
+p.IOs.VOT <- plot_IO_fit(
+  data = talker.VOT,
+  PSEs = PSE_talker.VOT
 )  
 ```
 
 
 ```{r, warning=FALSE, fig.width=3.7, fig.height=2.5}
 # get IOs with multivariate cues
-io.talker.multivar <- get_IO_categorization(cues = c("VOT", "f0_Mel"), groups = c("Talker", "gender"), alpha = .1, size = .3) %>% 
-  mutate(io.type = "io.talker.multivar")
+talker.VOT_F0 <- 
+  get_IO_categorization(cues = c("VOT", "f0_Mel"), 
+                        groups = c("Talker", "gender"), 
+                        alpha = .1, 
+                        size = .3,
+                        io.type = "talker.VOT_F0") 
 
-io.gender.multivar <- get_IO_categorization(cues = c("VOT", "f0_Mel"), groups = "gender", alpha = 1, size = 1) %>% 
-  mutate(io.type = "io.gender.multivar")
-
-PSE_table.multivar <- 
-  io.talker.multivar %>%
+PSE_VOT_F0 <- 
+  talker.VOT_F0 %>%
   group_by(gender) %>%
   summarise(
     PSE.lower = round(quantile(PSE, probs = c(.025))),
     PSE.median = round(quantile(PSE, probs = c(.5))),
     PSE.upper = round(quantile(PSE, probs = c(.975))))
 
-p.IOs.multivar <- plot_IO_fit(
-  data = io.talker.multivar,
-  data_group = io.gender.multivar,
-  PSEs = PSE_table.multivar
+p.IOs.VOT_F0 <- plot_IO_fit(
+  data = talker.VOT_F0,
+  PSEs = PSE_VOT_F0
   )
 ```
 
 
 ```{r, warning=FALSE, fig.width=3.7, fig.height=2.5}
 # using centered cues
-io.talker.centered <- get_IO_categorization(
+talker.VOT_F0.centered <- get_IO_categorization(
   cues = c("VOT_centered", "f0_Mel_centered"), 
-  groups = c("Talker", "gender"), alpha = .1, size = .3) %>% 
-  mutate(io.type = "io.talker.centered")
+  groups = c("Talker", "gender"), alpha = .1, size = .3,
+  io.type = "talker.VOT_F0.centered") 
 
-io.gender.centered <- get_IO_categorization(
-  cues = c("VOT_centered", "f0_Mel_centered"),
-  group = "gender", alpha = 1, size = 1) 
-
-PSE_table.centered <- io.talker.centered %>%
+PSE_VOT_F0.centered <- talker.VOT_F0.centered %>%
   group_by(gender) %>%
   summarise(
     PSE.lower = round(quantile(PSE, probs = c(.025))),
     PSE.median = round(quantile(PSE, probs = c(.5))),
     PSE.upper = round(quantile(PSE, probs = c(.975))))
 
-p.IOs.centered <- 
+p.IOs.VOT_F0.centered <- 
 plot_IO_fit(
-  data = io.talker.centered,
-  data_group = io.gender.centered,
-  PSEs = PSE_table.centered
+  data = talker.VOT_F0.centered,
+  PSEs = PSE_VOT_F0.centered
 )
 ```
 
 (ref:comparative-IO-plot) Comparing predicted vs. observed categorization functions for Experiment 1. The black line and interval show the psychometric fit and 95% CI for Experiment 1 marginalizing over all random effects. Each thin line shows the prediction of a single talker-specific ideal observers derived from a database of word-initial stop productions [data: @chodroff2017structure; data preparation & model code: @Kurumada_Xie_Jaeger_2022]. The lapse rate and response bias for the ideal observers was set to match the MAP estimates of the psychometric model. For ease of comparisons, horizontal point ranges show the PSE and its 95% CI after discounting lapses.
 
 ```{r comparative-IO-plot, warning=FALSE, fig.width=6, fig.height=5, fig.cap="(ref:comparative-IO-plot)"}
-p1 <- p.IOs.univar.no.noise + 
+p1 <- p.IOs.VOT.no.noise + 
   theme(legend.position = "none", 
         axis.title.x = element_blank(),
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank())
-p2 <- p.IOs.univar + 
+p2 <- p.IOs.VOT + 
   theme(legend.position = "none", 
         axis.title.y = element_blank(), 
         axis.text.y = element_blank(), 
@@ -642,17 +613,17 @@ p2 <- p.IOs.univar +
         axis.title.x = element_blank(),
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank())
-p3 <- p.IOs.multivar + 
+p3 <- p.IOs.VOT_F0 + 
   theme(legend.position = "none",
         axis.title.x = element_blank()) 
-p4 <- p.IOs.centered + 
+p4 <- p.IOs.VOT_F0.centered + 
   theme(legend.position = "none", 
         axis.title.y = element_blank(), 
         axis.text.y = element_blank(), 
         axis.title.x = element_blank(), 
         axis.ticks.y = element_blank())
   
-legend <- get_legend(p.IOs.multivar + theme(legend.position = "top"))
+legend <- get_legend(p.IOs.VOT_F0 + theme(legend.position = "top"))
 
 IO_grid1 <- plot_grid(p1, p3, 
                    ncol = 1, 
@@ -678,6 +649,32 @@ IO_grid3 <- plot_grid(IO_grid1, IO_grid2, ncol = 2, align = "h", rel_widths = c(
 IO_grid4 <- plot_grid(legend, IO_grid3, align = "h", ncol = 1, rel_heights = c(.1, 1))
 ggdraw(add_sub(IO_grid4, "VOT (ms)", size = 10, fontface = "bold"))
 ```
+<!--TEMPORARY CHUNK: CHECKING LIKELIHOODS generated FROM get_IO_categorization function. This problem shows up for IO types based on a single cue. Increasing the step size doe not fix it. To avoid a PSE range estimate across talkers that extends to very high VOTs (e.g. 90ms and above), the VOT range for likelihood calculation must be limited to 85 ms or less.-->
+
+```{r, fig.height=6}
+all_IOs <- rbind(talker.VOT.no.noise, talker.VOT, talker.VOT_F0, talker.VOT_F0.centered)
+
+all_IOs %<>% 
+  filter(PSE > 60) %>% 
+  mutate(likelihood = 
+           map(likelihood, ~ mutate(.x, log_like_diff = abs(.x[[2]] - .x[[3]])) %>% 
+                 arrange(log_like_diff)))
+
+all_IOs %>% 
+  unnest(likelihood) %>% 
+  ggplot(aes(x = VOT, y = log_like_diff)) +
+  geom_line() +
+  scale_y_continuous(limits = c(0, .08)) +
+  facet_wrap(~Talker + io.type, labeller = label_wrap_gen(multi_line = F))
+```
+
+
+
+
+
+
+
+
 
 ### Comparing model goodness-of-fit
 Assess how well each of the four IOs fit human data 
@@ -687,27 +684,25 @@ Assess how well each of the four IOs fit human data
 
 
 ```{r}
-# According to Florian's guide
+# Specify sequence of postive VOTs
 test.VOTs.positive <- c(5, seq(15, 90, 5), seq(100, 130, 10))
 
 get_average_accuracy_of_IO <- function(observations, responses, model) {
   posteriors <- 
     get_categorization_from_MVG_ideal_observer(x = observations, model = model, decision_rule = "proportional") %>% 
     # we only need one posterior since the other one is simply 1-that
-    filter(category == "/t/")
-    
-  } 
-mutate(
-     human_response = responses)     
-log_accuracy = ifelse(category == human_response, log(response), log(1 - response))) %>%
+    filter(category == "/t/") %>% 
+    mutate(
+     human_response = responses, 
+     log_accuracy = ifelse(category == human_response, log(response), log(1 - response))) %>%
     summarize(accuracy = exp(mean(log_accuracy)))
-  }
-
+  } 
 
 # prepare data of IO for joining
-d.IOs <- rbind(io.talker.univar.no.noise, io.talker.univar, io.talker.multivar, io.talker.centered) %>% 
+d.IOs <- rbind(talker.VOT.no.noise, talker.VOT, talker.VOT_F0, talker.VOT_F0.centered) %>% 
   select(Talker, gender, io, io.type)
 
+# We need to give the IOs that are built on 2 cues, the F0 values of the stimuli. T
 d.f0.5ms <- read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv") %>% 
   filter(VOT %in% test.VOTs.positive) %>% 
   select(filename, VOT, f0_5ms_into_vowel) %>% 
@@ -720,18 +715,20 @@ d.temp <- d.test.excluded %>%
   ungroup() %>% 
   select(Item.Filename, Item.VOT, Response, Response.Voicing) %>% 
   filter(Item.VOT %in% test.VOTs.positive) %>%
-  left_join(d.f0.5ms, by = c("Item.Filename", "Item.VOT")) %>% 
+  left_join(d.f0.5ms, by = c("Item.Filename", "Item.VOT")) %>% # this incorporates the F0 measurements that align better with C&W 
   mutate(Item.F0.5ms = normMel(f0_5ms),
          VOT_F0 = map2(Item.VOT, Item.F0.5ms, ~ c(.x, .y)),
          Response.category = ifelse(Response.Voicing == "voiced", "/d/", "/t/"),
          Response.t = ifelse(Response.Voicing == "voiceless", 1, 0)) %>% 
   nest(d.perception = everything()) %>% 
   crossing(d.IOs) %>% 
+  mutate(x = 
+           map2(d.perception, io.type, ~
+                  ifelse(str_detect(.y, "VOT_F0"), tibble(.x$VOT_F0), tibble(.x$Item.VOT)))) %>% 
+  nest(x = x) %>% 
   mutate(accuracy = 
-           pmap(list(d.perception, io, io.type), ~
-                  get_average_accuracy_of_IO(observations = ifelse(str_detect(..3, "io.talker.univar"), ..1$Item.VOT, ..1$VOT_F0), 
-                                             responses = ..1$Response.category, 
-                                             model = ..2)))
+           pmap(list(x, d.perception, io), ~ 
+                  get_average_accuracy_of_IO(observations = ..1$x, responses = ..2$Response.category, model = ..3)))
 ```
 
 
