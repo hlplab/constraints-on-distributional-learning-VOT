@@ -296,7 +296,7 @@ p.vot <- p.psychometric.vot +
 
 (ref:fitted-categorisation-plots) Categorisation functions and points of subjective equality (PSE) derived from the Bayesian mixed-effects psychometric model fit to listeners' responses in Experiment 1. The categorization functions include lapse rates and biases. The PSEs correct for lapse rates and lapse biases (i.e., they are the PSEs of the perceptual component of the psychometric model).\protect\footnote{Here and in Experiment 2, lapse biases were close to uniform (.5/.5). For such scenarios, bias-corrected PSEs will be very similar to uncorrected PSEs. This is also evident in Figure \ref{fig:fitted-categorisation-plots}.} **Panel A:** Effects of VOT, lapse rate, and lapse bias, while marginalizing over trial effects as well as all random effects. Vertical point ranges represent the mean proportion and 95% bootstrapped CIs of participants' "t"-responses at each VOT step. Horizontal point ranges denote the mean and 95% quantile interval of the points of subjective equality (PSE), derived from the 8000 posterior samples of the population parameters. **Panel B:** The same but showing the fitted categorization functions for each of the four minimal pair continua. Participants' responses are omitted to avoid clutter. **Panel C:** Joint effects of VOT and trial as well as lapse rate and bias, while marginalizing over random effects.   
 
-```{r fitted-categorisation-plots, warning=FALSE, fig.width=6, fig.height = 4.8, fig.cap="(ref:fitted-categorisation-plots)"}
+```{r fitted-categorisation-plots, warning=FALSE, fig.width=6, fig.height = 3.3, fig.cap="(ref:fitted-categorisation-plots)"}
 legend1 <- get_legend(MinPair_plot + theme(legend.position = "top"))
 
 MinPair_plot <- MinPair_plot + theme(legend.position = "none")
@@ -651,7 +651,7 @@ ggdraw(add_sub(IO_grid4, "VOT (ms)", size = 10, fontface = "bold"))
 ```
 <!--TEMPORARY CHUNK: CHECKING LIKELIHOODS generated FROM get_IO_categorization function. This problem shows up for IO types based on a single cue. Increasing the step size doe not fix it. To avoid a PSE range estimate across talkers that extends to very high VOTs (e.g. 90ms and above), the VOT range for likelihood calculation must be limited to 85 ms or less.-->
 
-```{r, fig.height=6}
+```{r average-accuracy-of-IOs, fig.width=8.5, fig.height=6}
 all_IOs <- rbind(talker.VOT.no.noise, talker.VOT, talker.VOT_F0, talker.VOT_F0.centered)
 
 all_IOs %<>% 
@@ -671,32 +671,14 @@ all_IOs %>%
 
 
 
-
-
-
-
-
-### Comparing model goodness-of-fit
-Assess how well each of the four IOs fit human data 
-
-
-
+### Comparing ideal observer accuracies
+Assess how well each of the four IOs fit human data. 
+Get
 
 
 ```{r}
 # Specify sequence of postive VOTs
 test.VOTs.positive <- c(5, seq(15, 90, 5), seq(100, 130, 10))
-
-get_average_accuracy_of_IO <- function(observations, responses, model) {
-  posteriors <- 
-    get_categorization_from_MVG_ideal_observer(x = observations, model = model, decision_rule = "proportional") %>% 
-    # we only need one posterior since the other one is simply 1-that
-    filter(category == "/t/") %>% 
-    mutate(
-     human_response = responses, 
-     log_accuracy = ifelse(category == human_response, log(response), log(1 - response))) %>%
-    summarize(accuracy = exp(mean(log_accuracy)))
-  } 
 
 # prepare data of IO for joining
 d.IOs <- rbind(talker.VOT.no.noise, talker.VOT, talker.VOT_F0, talker.VOT_F0.centered) %>% 
@@ -711,26 +693,21 @@ d.f0.5ms <- read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv") %>%
          Item.Filename = filename) %>% 
   mutate(Item.Filename = paste0(Item.Filename, ".wav"))
 
-d.temp <- d.test.excluded %>% 
-  ungroup() %>% 
-  select(Item.Filename, Item.VOT, Response, Response.Voicing) %>% 
+d.temp <- d.test.excluded %>%
+  ungroup() %>%
+  select(Item.Filename, Item.VOT, Response, Response.Voicing) %>%
   filter(Item.VOT %in% test.VOTs.positive) %>%
-  left_join(d.f0.5ms, by = c("Item.Filename", "Item.VOT")) %>% # this incorporates the F0 measurements that align better with C&W 
+  left_join(d.f0.5ms, by = c("Item.Filename", "Item.VOT")) %>% # this incorporates the F0 measurements that align better with C&W
   mutate(Item.F0.5ms = normMel(f0_5ms),
          VOT_F0 = map2(Item.VOT, Item.F0.5ms, ~ c(.x, .y)),
          Response.category = ifelse(Response.Voicing == "voiced", "/d/", "/t/"),
-         Response.t = ifelse(Response.Voicing == "voiceless", 1, 0)) %>% 
-  nest(d.perception = everything()) %>% 
-  crossing(d.IOs) %>% 
-  mutate(x = 
-           map2(d.perception, io.type, ~
-                  ifelse(str_detect(.y, "VOT_F0"), tibble(.x$VOT_F0), tibble(.x$Item.VOT)))) %>% 
-  nest(x = x) %>% 
-  mutate(accuracy = 
-           pmap(list(x, d.perception, io), ~ 
-                  get_average_accuracy_of_IO(observations = ..1$x, responses = ..2$Response.category, model = ..3)))
+         Response.t = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
+  nest(d.perception = everything()) %>%
+  crossing(d.IOs) %>%
+  mutate(accuracy =
+           pmap(list(d.perception, io, io.type), ~
+                  get_average_accuracy_of_IO(observations = ifelse(str_detect(..3, "VOT_F0"), ..1$VOT_F0, ..1$Item.VOT), responses = ..1$Response.category, model = ..2)))
 ```
-
 
 
 

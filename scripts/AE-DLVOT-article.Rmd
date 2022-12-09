@@ -18,7 +18,7 @@ author:
     affiliation   : "2,3"
     # role:
     #   - Conceptualization
-    #   - Writing - Original Draft Preparation
+an    #   - Writing - Original Draft Preparation
     #   - Writing - Review & Editing
     #   - Coding of analyses and visualization
   - name          : "YOUR OTHER CO-AUTHOR"
