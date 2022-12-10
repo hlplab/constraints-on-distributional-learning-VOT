@@ -161,13 +161,13 @@ if (file.exists("../data/conditional_effects_VOT_Trial.rds")) {
   int_conditions <- list(sTrial = sort(unique((d.test.excluded$Trial - Trial.mean)) / (2 * Trial.sd)))
   
   psychometric_fit_interaction <-
-  conditional_effects(
-    fit_mix,
-    effects = "sVOT:sTrial",
-    int_conditions = int_conditions,
-    plot = F)[[1]]
-
-write_rds(psychometric_fit_interaction, file = "../data/conditional_effects_VOT_Trial.rds")
+    conditional_effects(
+      fit_mix,
+      effects = "sVOT:sTrial",
+      int_conditions = int_conditions,
+      plot = F)[[1]]
+  
+  write_rds(psychometric_fit_interaction, file = "../data/conditional_effects_VOT_Trial.rds")
 }
 
 # get the PSE from the fitted categorisation function
