@@ -46,7 +46,11 @@ Participants heard 192 target trials (four minimal pair continua, each with 24 V
 
 The order of trials was randomized for each participant with the only constraint that no stimulus was repeated before each stimulus had been heard at least once. Catch trials were distributed randomly throughout the experiment with the constraint that no more than two catch trials would occur in a row. <!-- TO DO: correct? --> Participants were given the opportunity to take breaks after every 60 trials. Participants took an average of 12 minutes (SD = 4.8) to complete the 204 trials, after which they answered a short survey about the experiment. 
 
-## Results
+### Exclusions
+We excluded from analysis participants who committed more than 3 errors out of the 12 catch trials (<75% accuracy, N = 3), participants with an average reaction time (RT) more than three standard deviations from the mean of the by-participant means (N = 0), and participants who reported not to have used headphones (N = 0) or not to be native (L1) speakers of US English (N = 0). For the remaining participants, trials that were more than three SDs from the participant's mean RT were excluded from analysis (`r proportion.excluded * 100 `%). Finally, we excluded participants (N = 0) who had less than 50% data remaining after these exclusions. 
+
+
+## Behavioral results
 We first present the behavioral analyses of participants' categorisation responses. Then we compare participants' responses to the predictions of different models fit on the distribution of stop voicing cues in a large database of L1 US English productions of word-initial /d/s and /t/s [@chodroff-wilson2018].
 
 ```{r, echo=FALSE}
@@ -106,21 +110,30 @@ d.test.excluded <-
   mutate(Response.ProportionVoiceless = ifelse(Response.Voicing == "voiceless", 1, 0))
 ```
 
-### Exclusions
-We excluded from analysis participants who committed more than 3 errors out of the 12 catch trials (<75% accuracy, N = 3), participants with an average reaction time (RT) more than three standard deviations from the mean of the by-participant means (N = 0), and participants who reported not to have used headphones (N = 0) or not to be native (L1) speakers of US English (N = 0). For the remaining participants, trials that were more than three SDs from the participant's mean RT were excluded from analysis (`r proportion.excluded * 100 `%). Finally, we excluded participants (N = 0) who had less than 50% data remaining after these exclusions. 
-
-### Behavioral analyses
+### Analysis approach
 The goal of our behavioral analyses was to address three methodological questions that are of relevance to Experiment 2: (1) whether our stimuli resulted in 'reasonable' categorisation functions, (2) whether these functions differed between the four minimal pair items, and (3) whether participants' categorisation functions changed throughout the 192 test trials.
 
 To address these questions, we fit a single Bayesian mixed-effects psychometric model to participants' categorization responses on critical trials [e.g., @prins2011]. This model is essentially an extension of mixed-effects logistic regression that also takes into account attentional lapses. A failure to do so---while commonplace in research on speech perception [incl. our own work, but see @clayards2008; @kleinschmidt2016you]---can lead to biased estimates of categorization boundaries [e.g., @wichman-hill2001]. The mixed-effects psychometric model describes the probability of "t"-responses as a weighted mixture of a lapsing-model and a perceptual model. The lapsing model is a mixed-effects logistic regression [@jaeger2008categorical] that predicts participant responses that are made independent of the stimulus---for example, responses that result from attentional lapses. These responses are independent of the stimulus, and depend only on participants' response bias. The perceptual model is a mixed-effects logistic regression that predicts all other responses, and captures stimulus-dependent aspects of participants' responses. The relative weight of the two models is determined by the lapse rate, which is described by a third mixed-effects logistic regression.
 
-The *lapsing model* only contained an intercept (the response bias in log-odds) and by-participant random intercepts. Similarly, the *model for the lapse rate* only had an intercept (the lapse rate) and by-participants random intercepts. Previous studies with similar paradigms have typically found lapse rates of 0-10% [< -2.2 log-odds, e.g., @clayards2008perception; @kleinschmidt2016you]. No by-item random effects were included for the lapse rate nor lapsing model since these parts of the analysis---by definition---describe stimulus-*in*dependent behavior. The *perceptual model* included an intercept and VOT, as well as the full random effect structure by participants and items (the four minimal pair continua), including random intercepts and random slopes by participant and minimal pair. We did not model the random effects of trial to reduce model complexity. This however makes our analysis of trials in the model anti-conservative. 
-
-Based on previous experiments, we expected a strong positive effect of VOT, with increasing proportions of "t"-responses for increasing VOTs. We did not have clear expectations for the effect of trial other than that responses should become more uniformed (i.e move towards 50-50 "d"/"t"-bias or 0-log-odds) as the experiment progressed [@liu2018inferring] due to the un-informativeness of the stimuli. Finally, the models included the covariance between by-participant random effects across the three linear predictors for the lapsing model, lapse rate model, and perceptual model. This allows us to capture whether participants who lapse more often have, for example, different response biases or different sensitivity to VOT (after accounting for lapsing).
+The *lapsing model* only contained an intercept (the response bias in log-odds) and by-participant random intercepts. Similarly, the *model for the lapse rate* only had an intercept (the lapse rate) and by-participants random intercepts. No by-item random effects were included for the lapse rate nor lapsing model since these parts of the analysis---by definition---describe stimulus-*in*dependent behavior. The *perceptual model* included an intercept and VOT, as well as the full random effect structure by participants and items (the four minimal pair continua), including random intercepts and random slopes by participant and minimal pair. We did not model the random effects of trial to reduce model complexity. This potentially makes our analysis of trials in the model anti-conservative. Finally, the models included the covariance between by-participant random effects across the three linear predictors for the lapsing model, lapse rate model, and perceptual model. This allows us to capture whether participants who lapse more often have, for example, different response biases or different sensitivity to VOT (after accounting for lapsing).
 
 We fit the model using the package \texttt{brms} [@R-brms_a] in R [@R; @RStudio]. Following previous work from our lab [@horberg2021rational; @xie2021cross], we used weakly regularizing priors to facilitate model convergence. For fixed effect parameters, we standardized continuous predictors (VOT) by dividing through twice their standard deviation [@gelman2008standardize], and used Student priors centered around zero with a scale of 2.5 units [following @gelman2008weakly] and 3 degrees of freedom. For random effect standard deviations, we used a Cauchy prior with location 0 and scale 2, and for random effect correlations, we used an uninformative LKJ-Correlation prior with its only parameter set to 1, describing a uniform prior over correlation matrices [@Lewandowski2009]. Four chains with 2000 warm-up samples and 2000 posterior samples each were fit. No divergent transitions after warm-up were observed, and all $\hat{R}$ were close to 1.
 
+### Expectations 
+Based on previous experiments, we expected a strong positive effect of VOT, with increasing proportions of "t"-responses for increasing VOTs. We did not have clear expectations for the effect of trial other than that responses should become more uniformed (i.e move towards 50-50 "d"/"t"-bias or 0-log-odds) as the experiment progressed [@liu2018inferring] due to the un-informativeness of the stimuli. 
+Previous studies with similar paradigms have typically found lapse rates of 0-10% [< -2.2 log-odds, e.g., @clayards2008perception; @kleinschmidt2016you]. 
+
 ```{r}
+# set the mean and SD values for scaling/unscaling purposes
+VOT.mean_norm <- mean(d.test.excluded$Item.VOT)
+VOT.sd_norm <- sd(d.test.excluded$Item.VOT)
+Trial.mean <- mean(d.test.excluded$Trial) 
+Trial.sd <- sd(d.test.excluded$Trial)
+d.test.excluded %<>%
+  mutate(
+    sVOT = (Item.VOT - VOT.mean_norm) / (2 * VOT.sd_norm),
+    sTrial = (Trial - Trial.mean) / (2 * Trial.sd))
+
 # load (or run) the psychometric model with interaction
 fit_mix <- brm(
   bf(
@@ -135,16 +148,6 @@ fit_mix <- brm(
   family = mixture(bernoulli("logit"), bernoulli("logit")),
   control = list(adapt_delta = .99),
   file = "../models/Exp-NORM-lapsing-bias-GLMM")
-
-# set the mean and SD values for scaling/unscaling purposes
-VOT.mean_norm <- mean(d.test.excluded$Item.VOT)
-VOT.sd_norm <- sd(d.test.excluded$Item.VOT)
-Trial.mean <- mean(d.test.excluded$Trial) 
-Trial.sd <- sd(d.test.excluded$Trial)
-d.test.excluded %<>%
-  mutate(
-    sVOT = (Item.VOT - VOT.mean_norm) / (2 * VOT.sd_norm),
-    sTrial = (Trial - Trial.mean) / (2 * Trial.sd))
 
 psychometric_fit_data <- 
   conditional_effects(
