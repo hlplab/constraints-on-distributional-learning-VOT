@@ -199,7 +199,8 @@ if (file.exists("../models/categorisation_by_min_pair.rds")) {
 ```
 
 ```{r fitted-categorisation-minimal-pair"}
-MinPair_plot <- cat_minimalpair %>% 
+MinPair_plot <- 
+  cat_minimalpair %>% 
   group_by(sVOT, Item.MinimalPair) %>% 
   ggplot(aes(x = descale(sVOT, VOT.mean_norm, VOT.sd_norm), 
              y = .epred, colour = Item.MinimalPair)) +
@@ -217,7 +218,8 @@ MinPair_plot <- cat_minimalpair %>%
 ```
 
 ```{r psychometric-plot, fig.width=3.8, fig.height =2.6, message=FALSE}
-p.psychometric.vot <- psychometric_fit_data %>% 
+p.psychometric.vot <- 
+  psychometric_fit_data %>% 
   ggplot(aes(x = descale(sVOT, VOT.mean_norm, VOT.sd_norm), 
              y = estimate__)) +
   scale_x_continuous("VOT (ms)", breaks = scales::pretty_breaks(n = 4), limits = c(-100, 130)) +
@@ -305,20 +307,23 @@ legend1 <- get_legend(MinPair_plot + theme(legend.position = "top"))
 
 MinPair_plot <- MinPair_plot + theme(legend.position = "none")
 
-grid1 <- plot_grid(p.vot + theme(axis.title.x = element_blank()),
-                   MinPair_plot,
-                   ncol = 2, 
-                   align = "h", 
-                   labels = NULL, 
-                   label_size = 10,
-                   hjust = .1, 
-                   rel_widths = c(0.95, 0.8))
+grid1 <- 
+  plot_grid(
+    p.vot + theme(axis.title.x = element_blank()),
+    MinPair_plot,
+    ncol = 2, 
+    align = "h", 
+    labels = NULL, 
+    label_size = 10,
+    hjust = .1, 
+    rel_widths = c(0.95, 0.8))
 
-grid2 <- plot_grid(
-  legend1, 
-  grid1,
-  ncol = 1,
-  rel_heights = c(0.1, 1))
+grid2 <- 
+  plot_grid(
+    legend1, 
+    grid1,
+    ncol = 1,
+    rel_heights = c(0.1, 1))
 
 ggdraw(add_sub(grid2, "VOT (ms)", size = 10, fontface = "bold"))
 ```
@@ -527,19 +532,19 @@ PSE_VOT.no.noise <-
 
 p.IOs.VOT.no.noise <- plot_IO_fit(
   data = talker.VOT.no.noise,
-  PSEs = PSE_VOT.no.noise
-)
+  PSEs = PSE_VOT.no.noise)
 ```
 
 
 ```{r, fig.width=3.7, fig.height=2.5}
 # get IOs from VOT only
 talker.VOT <- 
-  get_IO_categorization(cues = c("VOT"), 
-                        groups = c("Talker", "gender"), 
-                        alpha = .1, 
-                        size = 0.3,
-                        io.type = "talker.VOT")
+  get_IO_categorization(
+    cues = c("VOT"), 
+    groups = c("Talker", "gender"), 
+    alpha = .1, 
+    size = 0.3,
+    io.type = "talker.VOT")
 
 PSE_talker.VOT <- 
   talker.VOT %>%
@@ -549,21 +554,22 @@ PSE_talker.VOT <-
     PSE.median = round(quantile(PSE, probs = c(.5))),
     PSE.upper = round(quantile(PSE, probs = c(.975))))
 
-p.IOs.VOT <- plot_IO_fit(
-  data = talker.VOT,
-  PSEs = PSE_talker.VOT
-)  
+p.IOs.VOT <- 
+  plot_IO_fit(
+    data = talker.VOT,
+    PSEs = PSE_talker.VOT)  
 ```
 
 
 ```{r, warning=FALSE, fig.width=3.7, fig.height=2.5}
 # get IOs with multivariate cues
 talker.VOT_F0 <- 
-  get_IO_categorization(cues = c("VOT", "f0_Mel"), 
-                        groups = c("Talker", "gender"), 
-                        alpha = .1, 
-                        size = .3,
-                        io.type = "talker.VOT_F0") 
+  get_IO_categorization(
+    cues = c("VOT", "f0_Mel"), 
+    groups = c("Talker", "gender"), 
+    alpha = .1, 
+    size = .3,
+    io.type = "talker.VOT_F0") 
 
 PSE_VOT_F0 <- 
   talker.VOT_F0 %>%
@@ -573,19 +579,20 @@ PSE_VOT_F0 <-
     PSE.median = round(quantile(PSE, probs = c(.5))),
     PSE.upper = round(quantile(PSE, probs = c(.975))))
 
-p.IOs.VOT_F0 <- plot_IO_fit(
-  data = talker.VOT_F0,
-  PSEs = PSE_VOT_F0
-  )
+p.IOs.VOT_F0 <- 
+  plot_IO_fit(
+    data = talker.VOT_F0,
+    PSEs = PSE_VOT_F0)
 ```
 
 
 ```{r, warning=FALSE, fig.width=3.7, fig.height=2.5}
 # using centered cues
-talker.VOT_F0.centered <- get_IO_categorization(
-  cues = c("VOT_centered", "f0_Mel_centered"), 
-  groups = c("Talker", "gender"), alpha = .1, size = .3,
-  io.type = "talker.VOT_F0.centered") 
+talker.VOT_F0.centered <- 
+  get_IO_categorization(
+    cues = c("VOT_centered", "f0_Mel_centered"), 
+    groups = c("Talker", "gender"), alpha = .1, size = .3,
+    io.type = "talker.VOT_F0.centered") 
 
 PSE_VOT_F0.centered <- talker.VOT_F0.centered %>%
   group_by(gender) %>%
@@ -595,21 +602,22 @@ PSE_VOT_F0.centered <- talker.VOT_F0.centered %>%
     PSE.upper = round(quantile(PSE, probs = c(.975))))
 
 p.IOs.VOT_F0.centered <- 
-plot_IO_fit(
-  data = talker.VOT_F0.centered,
-  PSEs = PSE_VOT_F0.centered
-)
+  plot_IO_fit(
+    data = talker.VOT_F0.centered,
+    PSEs = PSE_VOT_F0.centered)
 ```
 
 (ref:comparative-IO-plot) Comparing predicted vs. observed categorization functions for Experiment 1. The black line and interval show the psychometric fit and 95% CI for Experiment 1 marginalizing over all random effects. Each thin line shows the prediction of a single talker-specific ideal observers derived from a database of word-initial stop productions [data: @chodroff2017structure; data preparation & model code: @Kurumada_Xie_Jaeger_2022]. The lapse rate and response bias for the ideal observers was set to match the MAP estimates of the psychometric model. For ease of comparisons, horizontal point ranges show the PSE and its 95% CI after discounting lapses.
 
 ```{r comparative-IO-plot, warning=FALSE, fig.width=6, fig.height=5, fig.cap="(ref:comparative-IO-plot)"}
-p1 <- p.IOs.VOT.no.noise + 
+p1 <- 
+  p.IOs.VOT.no.noise + 
   theme(legend.position = "none", 
         axis.title.x = element_blank(),
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank())
-p2 <- p.IOs.VOT + 
+p2 <- 
+  p.IOs.VOT + 
   theme(legend.position = "none", 
         axis.title.y = element_blank(), 
         axis.text.y = element_blank(), 
@@ -617,10 +625,12 @@ p2 <- p.IOs.VOT +
         axis.title.x = element_blank(),
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank())
-p3 <- p.IOs.VOT_F0 + 
+p3 <- 
+  p.IOs.VOT_F0 + 
   theme(legend.position = "none",
         axis.title.x = element_blank()) 
-p4 <- p.IOs.VOT_F0.centered + 
+p4 <- 
+  p.IOs.VOT_F0.centered + 
   theme(legend.position = "none", 
         axis.title.y = element_blank(), 
         axis.text.y = element_blank(), 
@@ -629,27 +639,29 @@ p4 <- p.IOs.VOT_F0.centered +
   
 legend <- get_legend(p.IOs.VOT_F0 + theme(legend.position = "top"))
 
-IO_grid1 <- plot_grid(p1, p3, 
-                   ncol = 1, 
-                   align = "v", 
-                   labels = c("A", "C"), 
-                   label_size = 10, 
-                   hjust = -7, 
-                   vjust = 3,
-                   rel_heights = c(0.90, 1))
+IO_grid1 <- 
+  plot_grid(
+    p1, p3, 
+    ncol = 1, 
+    align = "v", 
+    labels = c("A", "C"), 
+    label_size = 10, 
+    hjust = -7, 
+    vjust = 3,
+    rel_heights = c(0.90, 1))
 
-IO_grid2 <- plot_grid(p2, p4, 
-                   ncol = 1, 
-                   align = "v", 
-                   labels = c("B", "D"), 
-                   label_size = 10, 
-                   hjust = -2.5, 
-                   vjust = 3,
-                   rel_heights = c(0.90, 1))
+IO_grid2 <- 
+  plot_grid(
+    p2, p4, 
+    ncol = 1, 
+    align = "v", 
+    labels = c("B", "D"), 
+    label_size = 10, 
+    hjust = -2.5, 
+    vjust = 3,
+    rel_heights = c(0.90, 1))
 
 IO_grid3 <- plot_grid(IO_grid1, IO_grid2, ncol = 2, align = "h", rel_widths = c(1.1, 1))
-
-
 IO_grid4 <- plot_grid(legend, IO_grid3, align = "h", ncol = 1, rel_heights = c(.1, 1))
 ggdraw(add_sub(IO_grid4, "VOT (ms)", size = 10, fontface = "bold"))
 ```
@@ -667,11 +679,13 @@ Assess how well each of the four IOs fit human data.
 test.VOTs.positive <- c(5, seq(15, 90, 5), seq(100, 130, 10))
 
 # prepare data of IO for joining
-d.IOs <- rbind(talker.VOT.no.noise, talker.VOT, talker.VOT_F0, talker.VOT_F0.centered) %>% 
+d.IOs <- 
+  rbind(talker.VOT.no.noise, talker.VOT, talker.VOT_F0, talker.VOT_F0.centered) %>% 
   select(Talker, gender, io, io.type)
 
 # We need to give the IOs that are built on 2 cues, the F0 values of the stimuli. T
-d.f0.5ms <- read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv") %>% 
+d.f0.5ms <- 
+  read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv") %>% 
   filter(VOT %in% test.VOTs.positive) %>% 
   select(filename, VOT, f0_5ms_into_vowel) %>% 
   rename(Item.VOT = VOT,
@@ -679,20 +693,38 @@ d.f0.5ms <- read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv") %>%
          Item.Filename = filename) %>% 
   mutate(Item.Filename = paste0(Item.Filename, ".wav"))
 
-d.temp <- d.test.excluded %>%
+d.temp <- 
+  d.test.excluded %>%
   ungroup() %>%
   select(Item.Filename, Item.VOT, Response, Response.Voicing) %>%
   filter(Item.VOT %in% test.VOTs.positive) %>%
-  left_join(d.f0.5ms, by = c("Item.Filename", "Item.VOT")) %>% # this incorporates the F0 measurements that align better with C&W
-  mutate(Item.F0.5ms = normMel(f0_5ms),
-         VOT_F0 = map2(Item.VOT, Item.F0.5ms, ~ c(.x, .y)),
-         Response.category = ifelse(Response.Voicing == "voiced", "/d/", "/t/"),
-         Response.t = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
+  left_join(d.f0.5ms, by = c("Item.Filename", "Item.VOT")) %>% 
+  # this incorporates the F0 measurements that align better with C&W
+  mutate(
+    Item.F0.5ms = normMel(f0_5ms),
+    VOT_F0 = map2(Item.VOT, Item.F0.5ms, ~ c(.x, .y)),
+    Response.category = ifelse(Response.Voicing == "voiced", "/d/", "/t/"),
+    Response.t = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
   nest(d.perception = everything()) %>%
-  crossing(d.IOs) %>%
-  mutate(accuracy =
-           pmap(list(d.perception, io, io.type), ~
-                  get_average_accuracy_of_IO(observations = ifelse(str_detect(..3, "VOT_F0"), ..1$VOT_F0, ..1$Item.VOT), responses = ..1$Response.category, model = ..2)))
+  crossing(d.IOs) 
+
+d.temp %<>%
+  mutate(
+    likelihood_per_response =
+      pmap(
+        list(d.perception, io, io.type), 
+        ~ get_average_accuracy_of_IO(
+          observations = if (str_detect(..3, "VOT_F0")) ..1$VOT_F0 else ..1$Item.VOT, 
+          responses = ..1$Response.category, 
+          model = ..2,
+          log = T)) %>% unlist())
+
+d.temp %>%
+  group_by(io.type) %>%
+  summarise(
+    # Here you could use bootstrap to get the lower and uppper CI within each group
+    mean_likelihood_per_response = mean(likelihood_per_response) 
+  )
 ```
 
 

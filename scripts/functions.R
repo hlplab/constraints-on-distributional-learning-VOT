@@ -306,15 +306,15 @@ get_IO_categorization <- function(
 }  
   
 # function to evaluate the IOs
-get_average_accuracy_of_IO <- function(observations, responses, model) {
-  posteriors <- 
-    get_categorization_from_MVG_ideal_observer(x = observations, model = model, decision_rule = "proportional") %>% 
+get_average_accuracy_of_IO <- function(observations, responses, model, log = FALSE) {
+  get_categorization_from_MVG_ideal_observer(x = observations, model = model, decision_rule = "proportional") %>% 
     # we only need one posterior since the other one is simply 1-that
     filter(category == "/t/") %>% 
     mutate(
-      human_response = responses, 
-      log_accuracy = ifelse(category == human_response, log(response), log(1 - response))) %>%
-    summarize(accuracy = exp(mean(log_accuracy)))
+      human_response = .env$responses, 
+      response = if (log) log(response) else response,
+      likelihood = ifelse(category == human_response, response, 1 - response)) %>%
+    summarize(likelihood_per_response = mean(likelihood))
 } 
 
 

@@ -9,6 +9,7 @@
 .RData
 .Ruserdata
 *_cache*
-\figures
+*_files/
+scripts/*_files/
 *.pdf
 *.rds
