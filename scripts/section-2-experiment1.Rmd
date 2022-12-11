@@ -652,31 +652,13 @@ IO_grid3 <- plot_grid(IO_grid1, IO_grid2, ncol = 2, align = "h", rel_widths = c(
 IO_grid4 <- plot_grid(legend, IO_grid3, align = "h", ncol = 1, rel_heights = c(.1, 1))
 ggdraw(add_sub(IO_grid4, "VOT (ms)", size = 10, fontface = "bold"))
 ```
-<!--TEMPORARY CHUNK: CHECKING LIKELIHOODS generated FROM get_IO_categorization function. This problem shows up for IO types based on a single cue. Increasing the step size doe not fix it. To avoid a PSE range estimate across talkers that extends to very high VOTs (e.g. 90ms and above), the VOT range for likelihood calculation must be limited to 85 ms or less.-->
-
-```{r average-accuracy-of-IOs, fig.width=8.5, fig.height=6}
-all_IOs <- rbind(talker.VOT.no.noise, talker.VOT, talker.VOT_F0, talker.VOT_F0.centered)
-
-all_IOs %<>% 
-  filter(PSE > 60) %>% 
-  mutate(likelihood = 
-           map(likelihood, ~ mutate(.x, log_like_diff = abs(.x[[2]] - .x[[3]])) %>% 
-                 arrange(log_like_diff)))
-
-all_IOs %>% 
-  unnest(likelihood) %>% 
-  ggplot(aes(x = VOT, y = log_like_diff)) +
-  geom_line() +
-  scale_y_continuous(limits = c(0, .08)) +
-  facet_wrap(~Talker + io.type, labeller = label_wrap_gen(multi_line = F))
-```
 
 
 
 
 ### Comparing ideal observer accuracies
 Assess how well each of the four IOs fit human data. 
-Get
+
 
 
 ```{r}
