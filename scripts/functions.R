@@ -316,6 +316,93 @@ get_average_accuracy_of_IO <- function(observations, responses, model) {
       log_accuracy = ifelse(category == human_response, log(response), log(1 - response))) %>%
     summarize(accuracy = exp(mean(log_accuracy)))
 } 
-  
 
+
+# function to plot IOs in experiment 1 (section 2.3) 
+plot_IO_fit <- function(
+    data,
+    PSEs
+) {
+  plot <- ggplot() + 
+    # geom_ribbon(
+    #   data =
+    #     data %>%
+    #     select(-x) %>%
+    #     unnest(categorization) %>%
+    #     group_by(gender, x) %>%
+    #     summarise(
+    #       VOT = map(x, ~ .x[1]) %>% unlist(),
+    #       across(response, list("lower" = ~ quantile(.x, .025), "upper" = ~ quantile(.x, .975)))),
+    #   mapping = aes(x = VOT, ymin = response_lower, ymax = response_upper, fill = gender),
+    #   alpha = .1) +
+  data$line + 
+    scale_x_continuous("VOT (msec)", breaks = scales::pretty_breaks(n = 3), limits = c(-15, 85), expand = c(0, 0)) +
+    scale_y_continuous('Proportion "t"-responses') +
+    scale_colour_manual("Model", 
+                        values = c(colours.sex), 
+                        labels = c("IO (female)", "IO (male)"),
+                        aesthetics = c("color", "fill")) +
+    geom_errorbarh(
+      data = PSEs %>%
+        mutate(y = ifelse(gender == "male", -.025, - .06)),
+      mapping = aes(xmin = PSE.lower, xmax = PSE.upper, y = y, color = gender),
+      height = 0, alpha = .5, size = 1) +
+    geom_point(
+      data = PSEs %>%
+        mutate(y = ifelse(gender == "male", -.025, - .06)),
+      mapping = aes(x = PSE.median, y = y, color = gender),
+      size = 1.2) +
+    annotate(geom = "text",
+             y = -.025, x = 65,
+             label = paste(PSEs[[1, 2]], "ms", "-", PSEs[[1, 4]], "ms"),
+             size = 1.8,
+             colour = "#87bdd8") +
+    annotate(geom = "text",
+             y = -.06, x = 65,
+             label = paste(PSEs[[2, 2]], "ms", "-", PSEs[[2, 4]], "ms"),
+             size = 1.8,
+             colour = "#c1502e") 
+  plot + 
+    geom_line(
+      data = psychometric_fit_data,
+      mapping = aes(x = descale(sVOT, VOT.mean_norm, VOT.sd_norm), 
+                    y = estimate__),
+      colour = "#333333", 
+      size = 1,
+      alpha = .8,
+      inherit.aes = F) +
+    geom_ribbon(
+      data = psychometric_fit_data, 
+      mapping = aes(x = descale(sVOT, VOT.mean_norm, VOT.sd_norm), 
+                    ymin = lower__, 
+                    ymax = upper__),
+      alpha = .08,
+      inherit.aes = F) +
+    geom_errorbarh(
+      data = post_sample_norm %>% 
+        mutate(y = .01),
+      mapping = aes(xmin = .lower, xmax = .upper, y = y), 
+      color = "#333333",
+      height = 0,
+      alpha = .5,
+      size = 1) +
+    geom_point(
+      data = post_sample_norm %>% 
+        mutate(y = .01),
+      mapping = aes(x = PSE, y = y), 
+      color = "#333333", size = 1.3) +
+    annotate(
+      geom = "text", 
+      y = .02, x = 65,
+      label = paste(round(post_sample_norm[[2]]), "ms", "-", round(post_sample_norm[[3]]), "ms"),
+      size = 1.8) +
+    geom_rug(
+      data = d.test.excluded %>% 
+        ungroup() %>% 
+        distinct(Item.VOT),
+      mapping = aes(x = Item.VOT),
+      colour = "grey",
+      alpha = .6,
+      inherit.aes = F)
+}
 
