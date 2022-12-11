@@ -155,8 +155,8 @@ psychometric_fit_data <-
     effects = "sVOT", 
     plot = F)[[1]]
 
-if (file.exists("../data/conditional_effects_VOT_Trial.rds")) {
-  psychometric_fit_interaction <- read_rds("../data/conditional_effects_VOT_Trial.rds")
+if (file.exists("../models/conditional_effects_VOT_Trial.rds")) {
+  psychometric_fit_interaction <- read_rds("../models/conditional_effects_VOT_Trial.rds")
 } else {
   int_conditions <- list(sTrial = sort(unique((d.test.excluded$Trial - Trial.mean)) / (2 * Trial.sd)))
   
@@ -167,7 +167,7 @@ if (file.exists("../data/conditional_effects_VOT_Trial.rds")) {
       int_conditions = int_conditions,
       plot = F)[[1]]
   
-  write_rds(psychometric_fit_interaction, file = "../data/conditional_effects_VOT_Trial.rds")
+  write_rds(psychometric_fit_interaction, file = "../models/conditional_effects_VOT_Trial.rds")
 }
 
 # get the PSE from the fitted categorisation function
@@ -186,14 +186,14 @@ newdata <- expand_grid(
   ParticipantID = levels(factor(d.test.excluded$ParticipantID)),
   sTrial = 0)
 
-if (file.exists("../model/categorisation_by_min_pair.rds")) {
-  cat_minimalpair <- read_rds("../model/categorisation_by_min_pair.rds")
+if (file.exists("../models/categorisation_by_min_pair.rds")) {
+  cat_minimalpair <- read_rds("../models/categorisation_by_min_pair.rds")
 } else {
   cat_minimalpair <- fit_mix %>%
   epred_draws(newdata = newdata,
               ndraws = 1000,
               re_formula = ~ (1 + sVOT | Item.MinimalPair))
-  write_rds("../model/categorisation_by_min_pair.rds")
+  write_rds("../models/categorisation_by_min_pair.rds")
 }
 ```
 
