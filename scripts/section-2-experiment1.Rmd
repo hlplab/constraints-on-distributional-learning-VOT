@@ -186,14 +186,14 @@ newdata <- expand_grid(
   ParticipantID = levels(factor(d.test.excluded$ParticipantID)),
   sTrial = 0)
 
-if (file.exists("../data/categorisation_by_min_pair.rds")) {
-  cat_minimalpair <- read_rds("../data/categorisation_by_min_pair.rds")
+if (file.exists("../model/categorisation_by_min_pair.rds")) {
+  cat_minimalpair <- read_rds("../model/categorisation_by_min_pair.rds")
 } else {
   cat_minimalpair <- fit_mix %>%
   epred_draws(newdata = newdata,
               ndraws = 1000,
               re_formula = ~ (1 + sVOT | Item.MinimalPair))
-  write_rds("../data/categorisation_by_min_pair.rds")
+  write_rds("../model/categorisation_by_min_pair.rds")
 }
 ```
 
