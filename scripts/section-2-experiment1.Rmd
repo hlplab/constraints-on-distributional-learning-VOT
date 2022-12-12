@@ -514,13 +514,65 @@ plot_IO_fit <- function(
 
 
 ```{r, fig.width=3.7, fig.height=2.5}
+get_diff_in_likelihood_from_io <- function(x, io, add_f0 = F) {
+  # Since we want to only consider cases that have F0 values that are in a certain linear relation to VOT 
+  # (the way we created our stimuli), we set the F0 based on the VOT.
+  if (add_f0) x <- c(x, predict_f0(x))
+  
+  abs(dmvnorm(x, io$mu[[1]], io$Sigma[[1]], log = T) - dmvnorm(x, io$mu[[2]], io$Sigma[[2]], log = T))
+}
+
+get_PSE_from_io <- function(io) {
+  # Set bounds for optimization to be the two category means
+  # and initialize optimization half-way between the two means
+  min.pars <- 
+    io$mu %>%
+    reduce(rbind) %>%
+    apply(., MARGIN = 2, min)
+  max.pars <- 
+    io$mu %>%
+    reduce(rbind) %>%
+    apply(., MARGIN = 2, max)
+  pars = (max.pars - min.pars) / 2
+  
+  # Find and return values that minimize the difference in log-likelihoods
+  optim(
+    par = pars[1], 
+    fn = get_diff_in_likelihood_from_io, 
+    method = "L-BFGS-B",
+    control = list(factr = 10^-10),
+    lower = min.pars[1], 
+    upper = max.pars[1], 
+    io = io,
+    add_f0 = length(io$mu[[1]]) > 1)$par
+}
+
+# TO DO: change this function to not calculate PSE OR change it to get PSE from above function
 talker.VOT.no.noise <- 
-  get_IO_categorization(cues = c("VOT"), 
-                        groups = c("Talker", "gender"), 
-                        with_noise = FALSE, 
-                        alpha = .1, 
-                        size = 0.3,
-                        io.type = "talker.VOT.no.noise")
+  get_IO_categorization(
+    cues = c("VOT"), 
+    groups = c("Talker", "gender"), 
+    with_noise = FALSE, 
+    alpha = .1, 
+    size = 0.3,
+    io.type = "talker.VOT.no.noise") 
+
+# Example calls:
+#
+# temp <- talker.VOT.no.noise %>%
+#   mutate(PSE = map(io, ~ get_PSE_from_io(.x)) %>% unlist())
+# 
+# 
+# temp <- talker.VOT_F0 %>%
+#   mutate(PSE = map(io, ~ get_PSE_from_io(.x)) %>% unlist())
+
+
+
+talker.VOT_F0 %>%
+  mutate(PSE = map(io, ~ get_PSE_from_io(.x)))
+
+
+
 
 PSE_VOT.no.noise <- 
   talker.VOT.no.noise %>%
