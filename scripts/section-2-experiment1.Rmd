@@ -57,6 +57,19 @@ We first present the behavioral analyses of participants' categorisation respons
 # load formatted dataframe from experiment 1
 d.test <- read_csv("../data/d.test.Exp1.csv", show_col_types = F)
 
+# load f0-5ms-into-vowel measurements of stimuli
+d.f0.5ms <- 
+  read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv", show_col_types = F) %>% 
+  select(filename, VOT, f0_5ms_into_vowel) %>% 
+  rename(Item.VOT = VOT,
+         f0_5ms = f0_5ms_into_vowel,
+         Item.Filename = filename) %>% 
+  mutate(Item.Filename = paste0(Item.Filename, ".wav"))
+
+d.test %<>% 
+ungroup() %>%
+  left_join(d.f0.5ms, by = c("Item.Filename", "Item.VOT"))
+
 # mark catch trials rows and check correct
 d.test %<>% 
   mutate(
@@ -423,131 +436,13 @@ d.chodroff_wilson.selected <-
 ```
 
 
-```{r IOs-univariate-predictions, fig.width=3.7, fig.height=2.5, cache=FALSE}
-plot_IO_fit <- function(
-    data,
-    PSEs
-) {
-  plot <- ggplot() + 
-  # geom_ribbon(
-  #   data =
-  #     data %>%
-  #     select(-x) %>%
-  #     unnest(categorization) %>%
-  #     group_by(gender, x) %>%
-  #     summarise(
-  #       VOT = map(x, ~ .x[1]) %>% unlist(),
-  #       across(response, list("lower" = ~ quantile(.x, .025), "upper" = ~ quantile(.x, .975)))),
-  #   mapping = aes(x = VOT, ymin = response_lower, ymax = response_upper, fill = gender),
-  #   alpha = .1) +
-  data$line + 
-  scale_x_continuous("VOT (msec)", breaks = scales::pretty_breaks(n = 3), limits = c(-15, 85), expand = c(0, 0)) +
-  scale_y_continuous('Proportion "t"-responses') +
-  scale_colour_manual("Model", 
-                      values = c(colours.sex), 
-                      labels = c("IO (female)", "IO (male)"),
-                      aesthetics = c("color", "fill")) +
-  geom_errorbarh(
-    data = PSEs %>%
-      mutate(y = ifelse(gender == "male", -.025, - .06)),
-    mapping = aes(xmin = PSE.lower, xmax = PSE.upper, y = y, color = gender),
-    height = 0, alpha = .5, size = 1) +
-  geom_point(
-    data = PSEs %>%
-      mutate(y = ifelse(gender == "male", -.025, - .06)),
-    mapping = aes(x = PSE.median, y = y, color = gender),
-    size = 1.2) +
-      annotate(geom = "text",
-           y = -.025, x = 65,
-           label = paste(PSEs[[1, 2]], "ms", "-", PSEs[[1, 4]], "ms"),
-           size = 1.8,
-           colour = "#87bdd8") +
-  annotate(geom = "text",
-           y = -.06, x = 65,
-           label = paste(PSEs[[2, 2]], "ms", "-", PSEs[[2, 4]], "ms"),
-           size = 1.8,
-           colour = "#c1502e") 
-  plot + 
-  geom_line(
-    data = psychometric_fit_data,
-    mapping = aes(x = descale(sVOT, VOT.mean_norm, VOT.sd_norm), 
-                   y = estimate__),
-    colour = "#333333", 
-    size = 1,
-    alpha = .8,
-    inherit.aes = F) +
-  geom_ribbon(
-    data = psychometric_fit_data, 
-    mapping = aes(x = descale(sVOT, VOT.mean_norm, VOT.sd_norm), 
-                  ymin = lower__, 
-                  ymax = upper__),
-    alpha = .08,
-    inherit.aes = F) +
-  geom_errorbarh(
-    data = post_sample_norm %>% 
-      mutate(y = .01),
-    mapping = aes(xmin = .lower, xmax = .upper, y = y), 
-    color = "#333333",
-    height = 0,
-    alpha = .5,
-    size = 1) +
-  geom_point(
-    data = post_sample_norm %>% 
-      mutate(y = .01),
-    mapping = aes(x = PSE, y = y), 
-    color = "#333333", size = 1.3) +
-   annotate(
-    geom = "text", 
-    y = .02, x = 65,
-    label = paste(round(post_sample_norm[[2]]), "ms", "-", round(post_sample_norm[[3]]), "ms"),
-    size = 1.8) +
-  geom_rug(
-    data = d.test.excluded %>% 
-      ungroup() %>% 
-      distinct(Item.VOT),
-    mapping = aes(x = Item.VOT),
-    colour = "grey",
-    alpha = .6,
-    inherit.aes = F)
-}  
-```
+
 
 
 ```{r, fig.width=3.7, fig.height=2.5}
-get_diff_in_likelihood_from_io <- function(x, io, add_f0 = F) {
-  # Since we want to only consider cases that have F0 values that are in a certain linear relation to VOT 
-  # (the way we created our stimuli), we set the F0 based on the VOT.
-  if (add_f0) x <- c(x, predict_f0(x))
-  
-  abs(dmvnorm(x, io$mu[[1]], io$Sigma[[1]], log = T) - dmvnorm(x, io$mu[[2]], io$Sigma[[2]], log = T))
-}
 
-get_PSE_from_io <- function(io) {
-  # Set bounds for optimization to be the two category means
-  # and initialize optimization half-way between the two means
-  min.pars <- 
-    io$mu %>%
-    reduce(rbind) %>%
-    apply(., MARGIN = 2, min)
-  max.pars <- 
-    io$mu %>%
-    reduce(rbind) %>%
-    apply(., MARGIN = 2, max)
-  pars = (max.pars - min.pars) / 2
-  
-  # Find and return values that minimize the difference in log-likelihoods
-  optim(
-    par = pars[1], 
-    fn = get_diff_in_likelihood_from_io, 
-    method = "L-BFGS-B",
-    control = list(factr = 10^-10),
-    lower = min.pars[1], 
-    upper = max.pars[1], 
-    io = io,
-    add_f0 = length(io$mu[[1]]) > 1)$par
-}
 
-# TO DO: change this function to not calculate PSE OR change it to get PSE from above function
+
 talker.VOT.no.noise <- 
   get_IO_categorization(
     cues = c("VOT"), 
@@ -559,19 +454,16 @@ talker.VOT.no.noise <-
 
 # Example calls:
 #
-# temp <- talker.VOT.no.noise %>%
-#   mutate(PSE = map(io, ~ get_PSE_from_io(.x)) %>% unlist())
-# 
+#temp <- talker.VOT.no.noise %>% 
+   #mutate(PSE = map2_dbl(x, io, ~ get_PSE_from_io(x = .x, io = .y)) %>% unlist())
+
 # 
 # temp <- talker.VOT_F0 %>%
 #   mutate(PSE = map(io, ~ get_PSE_from_io(.x)) %>% unlist())
 
 
-
-talker.VOT_F0 %>%
-  mutate(PSE = map(io, ~ get_PSE_from_io(.x)))
-
-
+#talker.VOT_F0 %>%
+  #mutate(PSE = map(io, ~ get_PSE_from_io(.x)) %>% unlist())
 
 
 PSE_VOT.no.noise <- 
@@ -720,6 +612,41 @@ ggdraw(add_sub(IO_grid4, "VOT (ms)", size = 10, fontface = "bold"))
 
 
 
+```{r}
+#prepare data for IO that centers input data before categorization
+d.chodroff_wilson.selected %>% 
+  group_by(category) %>% 
+  summarise(mean_VOT = mean(VOT),
+            mean_f0_Mel = mean(f0_Mel))
+
+# We need to give the IOs that are built on 2 cues, the F0 values of the stimuli. 
+d.f0.5ms <- 
+  read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv") %>% 
+  #filter(VOT %in% test.VOTs.positive) %>% 
+  select(filename, VOT, f0_5ms_into_vowel) %>% 
+  rename(Item.VOT = VOT,
+         f0_5ms = f0_5ms_into_vowel,
+         Item.Filename = filename) %>% 
+  mutate(Item.Filename = paste0(Item.Filename, ".wav"))
+
+d.test.excluded %>% 
+ungroup() %>%
+  select(Item.Filename, Item.VOT, Response, Response.Voicing) %>%
+  #filter(Item.VOT %in% test.VOTs.positive) %>%
+  left_join(d.f0.5ms, by = c("Item.Filename", "Item.VOT")) %>% 
+  # this incorporates the F0 measurements that align better with C&W
+  mutate(
+    Item.Mel_f0_5ms = normMel(f0_5ms),
+    VOT_F0 = map2(Item.VOT, Item.F0.5ms, ~ c(.x, .y)),
+    Response.category = ifelse(Response.Voicing == "voiced", "/d/", "/t/"),
+    Response.t = ifelse(Response.Voicing == "voiceless", 1, 0))
+```
+
+
+
+
+
+
 
 ### Comparing ideal observer accuracies
 Assess how well each of the four IOs fit human data. 
@@ -735,25 +662,16 @@ d.IOs <-
   rbind(talker.VOT.no.noise, talker.VOT, talker.VOT_F0, talker.VOT_F0.centered) %>% 
   select(Talker, gender, io, io.type)
 
-# We need to give the IOs that are built on 2 cues, the F0 values of the stimuli. T
-d.f0.5ms <- 
-  read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv") %>% 
-  filter(VOT %in% test.VOTs.positive) %>% 
-  select(filename, VOT, f0_5ms_into_vowel) %>% 
-  rename(Item.VOT = VOT,
-         f0_5ms = f0_5ms_into_vowel,
-         Item.Filename = filename) %>% 
-  mutate(Item.Filename = paste0(Item.Filename, ".wav"))
 
 d.temp <- 
   d.test.excluded %>%
   ungroup() %>%
   select(Item.Filename, Item.VOT, Response, Response.Voicing) %>%
-  filter(Item.VOT %in% test.VOTs.positive) %>%
+  #filter(Item.VOT %in% test.VOTs.positive) %>%
   left_join(d.f0.5ms, by = c("Item.Filename", "Item.VOT")) %>% 
   # this incorporates the F0 measurements that align better with C&W
   mutate(
-    Item.F0.5ms = normMel(f0_5ms),
+    Item.Mel_f0_5ms = normMel(f0_5ms),
     VOT_F0 = map2(Item.VOT, Item.F0.5ms, ~ c(.x, .y)),
     Response.category = ifelse(Response.Voicing == "voiced", "/d/", "/t/"),
     Response.t = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%

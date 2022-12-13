@@ -215,12 +215,55 @@ make_stop_VOTf0_ideal_adaptor <- function(m, kappa = 3, nu = 3) {
       S = get_S_from_expected_Sigma(S, nu))
 }
 
-## Get approximate f0 of synthesised stimuli from VOT values
+############################################################################
+# Get approximate f0 of synthesised stimuli from VOT values
+############################################################################
 predict_f0 <- function(VOT) {
   predict_f0 = 245.46968 + 0.03827 * (VOT)
   return(predict_f0)
 }
+############################################################################
 
+
+############################################################################
+# function to optimise minimal difference in likelihoods of 2 categories
+############################################################################
+get_diff_in_likelihood_from_io <- function(x, io, add_f0 = F) {
+  # Since we want to only consider cases that have F0 values that are in a certain linear relation to VOT 
+  # (the way we created our stimuli), we set the F0 based on the VOT.
+  if (add_f0) x <- c(x, normMel(predict_f0(x)))
+  
+  abs(dmvnorm(x, io$mu[[1]], io$Sigma[[1]], log = T) - dmvnorm(x, io$mu[[2]], io$Sigma[[2]], log = T))
+}
+
+get_PSE_from_io <- function(io) {
+  # Set bounds for optimization to be the two category means
+  # and initialize optimization half-way between the two means
+  min.pars <- 
+    io$mu %>%
+    reduce(rbind) %>%
+    apply(., MARGIN = 2, min)
+  max.pars <- 
+    io$mu %>%
+    reduce(rbind) %>%
+    apply(., MARGIN = 2, max)
+  pars = (max.pars - min.pars) / 2
+  
+  # Find and return values that minimize the difference in log-likelihoods
+  optim(
+    par = pars[1], 
+    fn = get_diff_in_likelihood_from_io, 
+    method = "L-BFGS-B",
+    control = list(factr = 10^-10),
+    lower = min.pars[1], 
+    upper = max.pars[1], 
+    io = io,
+    add_f0 = length(io$mu[[1]]) > 1)$par
+}
+############################################################################
+
+
+############################################################################
 # This can be used to implement different hypotheses about speech perception. There are quite a few choices for the researcher as to what specific hypothesis you want to test:
 # 
 # 1) currently uses VOT and f0, but could just use VOT (if you use f0, make sure to choose the relation between f0 and VOT in the arguments)
@@ -233,14 +276,15 @@ predict_f0 <- function(VOT) {
 # 3) were listeners' IOs based on centered or uncentered cues?
 # 
 # 4) do listeners center during experiment? one can plot this relative to the center of the cues in the experiment or not
+############################################################################
 get_IO_categorization <- function(
-    data = d.chodroff_wilson.selected, # <-- Check whether there's low count talkers that might have to be excluded (low count per category)
-    cues,                              # <-- could be centered or not
+    data = d.chodroff_wilson.selected, 
+    cues,                              
     groups,
-    lapse_rate = plogis(summary(fit_mix)$fixed[3, 1]),# <-- get from lapsing model fit to human data (Set to 0 for PSEs that are just based on posterior)
+    lapse_rate = plogis(summary(fit_mix)$fixed[3, 1]),
     with_noise = TRUE,
-    VOTs = seq(0, 100, .5),            # <-- select sequences of VOTs
-    F0s = normMel(predict_f0(VOTs)),                       # <-- Change f0_Mel formula to reflect what's going on in *your stimuli*
+    VOTs = seq(0, 100, .5),            
+    F0s = normMel(predict_f0(VOTs)),                      
     alpha = .2,
     size = .5,
     io.type
@@ -283,17 +327,9 @@ get_IO_categorization <- function(
     
     select(- all_of(cues)) %>% 
     nest(x = x) %>% 
-    mutate(likelihood = 
-             map2(x, io, ~ get_likelihood_from_MVG(x = .x$x, model = .y) %>%
-                 group_by(category) %>%
-                   mutate(VOT = VOTs) %>% 
-                   pivot_wider(names_from = category,
-                               values_from = log_likelihood,
-                               names_glue = "{.value}_{category}"))) %>% 
-    group_by(!! sym(groups[1])) %>% 
     mutate(
       PSE = map_dbl(
-        likelihood, ~ .x$VOT[which.min(abs(.x[[2]] - .x[[3]]))]),
+        io, ~ get_PSE_from_io(io = .x)),
       categorization = 
         map2(
           x, io, 
@@ -304,8 +340,12 @@ get_IO_categorization <- function(
       io.type = io.type
     )
 }  
-  
+############################################################################
+
+
+############################################################################
 # function to evaluate the IOs
+############################################################################
 get_average_accuracy_of_IO <- function(observations, responses, model, log = FALSE) {
   get_categorization_from_MVG_ideal_observer(x = observations, model = model, decision_rule = "proportional") %>% 
     # we only need one posterior since the other one is simply 1-that
@@ -316,9 +356,12 @@ get_average_accuracy_of_IO <- function(observations, responses, model, log = FAL
       likelihood = ifelse(category == human_response, response, 1 - response)) %>%
     summarize(likelihood_per_response = mean(likelihood))
 } 
+############################################################################
 
 
+############################################################################
 # function to plot IOs in experiment 1 (section 2.3) 
+############################################################################
 plot_IO_fit <- function(
     data,
     PSEs
@@ -405,4 +448,8 @@ plot_IO_fit <- function(
       alpha = .6,
       inherit.aes = F)
 }
+############################################################################
+
+
+ 
 
