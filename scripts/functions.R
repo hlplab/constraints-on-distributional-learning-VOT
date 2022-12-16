@@ -226,7 +226,7 @@ predict_f0 <- function(VOT) {
 
 
 ############################################################################
-# function to optimise minimal difference in likelihoods of 2 categories
+#  function to optimise minimal difference in likelihoods of 2 categories  #
 ############################################################################
 get_diff_in_likelihood_from_io <- function(x, io, add_f0 = F) {
   # Since we want to only consider cases that have F0 values that are in a certain linear relation to VOT 

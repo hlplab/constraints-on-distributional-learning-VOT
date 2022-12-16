@@ -18,7 +18,7 @@ author:
     affiliation   : "2,3"
     # role:
     #   - Conceptualization
-an    #   - Writing - Original Draft Preparation
+    #   - Writing - Original Draft Preparation
     #   - Writing - Review & Editing
     #   - Coding of analyses and visualization
   - name          : "YOUR OTHER CO-AUTHOR"
@@ -125,6 +125,7 @@ library(brms)
 library(phonR)
 library(tidybayes)
 library(posterior)
+library(rsample)
 
 if (has_internet()) remotes::install_github("hlplab/MVBeliefUpdatr")
 library(MVBeliefUpdatr)  # for generating Ideal Observers

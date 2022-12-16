@@ -46,13 +46,6 @@ Participants heard 192 target trials (four minimal pair continua, each with 24 V
 
 The order of trials was randomized for each participant with the only constraint that no stimulus was repeated before each stimulus had been heard at least once. Catch trials were distributed randomly throughout the experiment with the constraint that no more than two catch trials would occur in a row. <!-- TO DO: correct? --> Participants were given the opportunity to take breaks after every 60 trials. Participants took an average of 12 minutes (SD = 4.8) to complete the 204 trials, after which they answered a short survey about the experiment. 
 
-### Exclusions
-We excluded from analysis participants who committed more than 3 errors out of the 12 catch trials (<75% accuracy, N = 3), participants with an average reaction time (RT) more than three standard deviations from the mean of the by-participant means (N = 0), and participants who reported not to have used headphones (N = 0) or not to be native (L1) speakers of US English (N = 0). For the remaining participants, trials that were more than three SDs from the participant's mean RT were excluded from analysis (`r proportion.excluded * 100 `%). Finally, we excluded participants (N = 0) who had less than 50% data remaining after these exclusions. 
-
-
-## Behavioral results
-We first present the behavioral analyses of participants' categorisation responses. Then we compare participants' responses to the predictions of different models fit on the distribution of stop voicing cues in a large database of L1 US English productions of word-initial /d/s and /t/s [@chodroff-wilson2018].
-
 ```{r, echo=FALSE}
 # load formatted dataframe from experiment 1
 d.test <- read_csv("../data/d.test.Exp1.csv", show_col_types = F)
@@ -68,7 +61,8 @@ d.f0.5ms <-
 
 d.test %<>% 
 ungroup() %>%
-  left_join(d.f0.5ms, by = c("Item.Filename", "Item.VOT"))
+  left_join(d.f0.5ms, by = c("Item.Filename", "Item.VOT")) %>% 
+              mutate(Item.Mel_f0_5ms = normMel(f0_5ms))
 
 # mark catch trials rows and check correct
 d.test %<>% 
@@ -122,6 +116,14 @@ d.test.excluded <-
     Excluded.participant.due.to.RT == FALSE) %>% 
   mutate(Response.ProportionVoiceless = ifelse(Response.Voicing == "voiceless", 1, 0))
 ```
+
+
+### Exclusions
+We excluded from analysis participants who committed more than 3 errors out of the 12 catch trials (<75% accuracy, N = 3), participants with an average reaction time (RT) more than three standard deviations from the mean of the by-participant means (N = 0), and participants who reported not to have used headphones (N = 0) or not to be native (L1) speakers of US English (N = 0). For the remaining participants, trials that were more than three SDs from the participant's mean RT were excluded from analysis (`r proportion.excluded * 100 `%). Finally, we excluded participants (N = 0) who had less than 50% data remaining after these exclusions. 
+
+
+## Behavioral results
+We first present the behavioral analyses of participants' categorisation responses. Then we compare participants' responses to the predictions of different models fit on the distribution of stop voicing cues in a large database of L1 US English productions of word-initial /d/s and /t/s [@chodroff-wilson2018].
 
 ### Analysis approach
 The goal of our behavioral analyses was to address three methodological questions that are of relevance to Experiment 2: (1) whether our stimuli resulted in 'reasonable' categorisation functions, (2) whether these functions differed between the four minimal pair items, and (3) whether participants' categorisation functions changed throughout the 192 test trials.
@@ -237,7 +239,17 @@ p.psychometric.vot <-
              y = estimate__)) +
   scale_x_continuous("VOT (ms)", breaks = scales::pretty_breaks(n = 4), limits = c(-100, 130)) +
   scale_y_continuous("Fitted proportion of 't' responses") +
-  ## transformation of by-participant means into empirical logits
+  geom_line(size = 1.5, 
+            colour = "#333333",
+            alpha = .8)
+ 
+  
+
+p.vot <- p.psychometric.vot +
+  geom_ribbon(
+    aes(ymin = lower__, 
+        ymax = upper__), alpha = .08) +
+## transformation of by-participant means into empirical logits
    # stat_summary(
    #  data = d.test.excluded %>% 
    #    group_by(ParticipantID, Item.VOT) %>% 
@@ -250,7 +262,7 @@ p.psychometric.vot <-
    #  size = .4,
    #  colour = "#c4b7a6",
    #  alpha = .6,
-   #  inherit.aes = F)  
+   #  inherit.aes = F) 
   stat_summary(
     data = d.test.excluded %>% 
       group_by(ParticipantID, Item.VOT) %>% 
@@ -263,30 +275,7 @@ p.psychometric.vot <-
     size = .4,
     colour = "#c4b7a6",
     alpha = .6,
-    inherit.aes = F)
-
-p.vot <- p.psychometric.vot +
-  geom_ribbon(
-    aes(ymin = lower__, 
-        ymax = upper__), alpha = .08) +
-  geom_line(size = 1.5, 
-            colour = "#333333",
-            alpha = .8) +
-  # annotate(geom = "segment", 
-  #          y = .5, yend = 0, 
-  #          x = PSE.fit_mix, xend = PSE.fit_mix, 
-  #          arrow = arrow(angle = 15, length = unit(0.1, "inches"), 
-  #                        ends = "last", 
-  #                        type = "closed"), 
-  #          color = "darkgray", 
-  #          linetype = 1) +
-  # annotate(geom = "text", 
-  #          y = 0, 
-  #          x = PSE.fit_mix + 10, 
-  #          label = paste("PSE =", round(PSE.fit_mix, 1), "ms"), 
-  #          color = "darkgray", 
-  #          hjust = 0, 
-  #          vjust = 0, size = 3.5) +
+    inherit.aes = F) +
   geom_errorbarh(
     data = post_sample_norm %>% 
       mutate(y = .01),
@@ -341,6 +330,7 @@ grid2 <-
 ggdraw(add_sub(grid2, "VOT (ms)", size = 10, fontface = "bold"))
 ```
 
+
 ```{r by-participant-lapse-bias, fig.height=2.6, fig.width=6.5}
 # lapse_participant <- fit_mix %>% spread_draws(r_ParticipantID__theta1[ParticipantID, term], b_theta1_Intercept) %>%
 #   group_by(ParticipantID) %>%
@@ -366,6 +356,14 @@ ggdraw(add_sub(grid2, "VOT (ms)", size = 10, fontface = "bold"))
 #   mode_hdci(predicted_eff) %>%
 #   pivot_wider(names_from = term,
 #               values_from = c(predicted_eff, .lower, .upper))
+
+lapse_participant <- fit_mix %>% spread_draws(r_ParticipantID__theta1[ParticipantID, term], b_theta1_Intercept, ndraws = 10) %>%
+  group_by(ParticipantID) %>%
+  mutate(ParticipantID = factor(ParticipantID),
+         Participant_lapse = b_theta1_Intercept + r_ParticipantID__theta1,
+         estimated_lapse = plogis(Participant_lapse) * 100) %>%
+  select(ParticipantID, term, r_ParticipantID__theta1, Participant_lapse, estimated_lapse) %>%
+  mode_hdci(estimated_lapse)
 ```
 
 
@@ -440,9 +438,6 @@ d.chodroff_wilson.selected <-
 
 
 ```{r, fig.width=3.7, fig.height=2.5}
-
-
-
 talker.VOT.no.noise <- 
   get_IO_categorization(
     cues = c("VOT"), 
@@ -613,37 +608,25 @@ ggdraw(add_sub(IO_grid4, "VOT (ms)", size = 10, fontface = "bold"))
 
 
 ```{r}
-#prepare data for IO that centers input data before categorization
-d.chodroff_wilson.selected %>% 
-  group_by(category) %>% 
-  summarise(mean_VOT = mean(VOT),
-            mean_f0_Mel = mean(f0_Mel))
+# prepare data for IO that centers input data before categorization
 
-# We need to give the IOs that are built on 2 cues, the F0 values of the stimuli. 
-d.f0.5ms <- 
-  read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv") %>% 
-  #filter(VOT %in% test.VOTs.positive) %>% 
-  select(filename, VOT, f0_5ms_into_vowel) %>% 
-  rename(Item.VOT = VOT,
-         f0_5ms = f0_5ms_into_vowel,
-         Item.Filename = filename) %>% 
-  mutate(Item.Filename = paste0(Item.Filename, ".wav"))
+chodroff.mean_VOTs <- d.chodroff_wilson.selected %>% 
+  ungroup() %>% 
+  summarise(mean_VOT = mean(VOT)) %>% pull(mean_VOT) 
 
-d.test.excluded %>% 
-ungroup() %>%
-  select(Item.Filename, Item.VOT, Response, Response.Voicing) %>%
-  #filter(Item.VOT %in% test.VOTs.positive) %>%
-  left_join(d.f0.5ms, by = c("Item.Filename", "Item.VOT")) %>% 
-  # this incorporates the F0 measurements that align better with C&W
-  mutate(
-    Item.Mel_f0_5ms = normMel(f0_5ms),
-    VOT_F0 = map2(Item.VOT, Item.F0.5ms, ~ c(.x, .y)),
-    Response.category = ifelse(Response.Voicing == "voiced", "/d/", "/t/"),
-    Response.t = ifelse(Response.Voicing == "voiceless", 1, 0))
+# shift the fitted categorisation fn by the difference in mean VOTs
+p.psychometric.vot %+%
+  geom_line(data = psychometric_fit_data %>% 
+              mutate(VOT = descale(sVOT, VOT.mean_norm, VOT.sd_norm),
+                     cVOT =  VOT + (chodroff.mean_VOTs - VOT.mean_norm)),
+            mapping = aes(x = cVOT, 
+                          y = estimate__),
+            linetype = 2,
+            size = 1.5, 
+            colour = "#333333",
+            alpha = .8,
+            inherit.aes = F)
 ```
-
-
-
 
 
 
@@ -662,17 +645,13 @@ d.IOs <-
   rbind(talker.VOT.no.noise, talker.VOT, talker.VOT_F0, talker.VOT_F0.centered) %>% 
   select(Talker, gender, io, io.type)
 
-
 d.temp <- 
   d.test.excluded %>%
   ungroup() %>%
-  select(Item.Filename, Item.VOT, Response, Response.Voicing) %>%
-  #filter(Item.VOT %in% test.VOTs.positive) %>%
-  left_join(d.f0.5ms, by = c("Item.Filename", "Item.VOT")) %>% 
-  # this incorporates the F0 measurements that align better with C&W
+  select(Item.Filename, Item.VOT, Item.Mel_f0_5ms, Response, Response.Voicing) %>%
+  filter(Item.VOT %in% test.VOTs.positive) %>%  # filter to only the +ve for the time being may need to include the -ve values
   mutate(
-    Item.Mel_f0_5ms = normMel(f0_5ms),
-    VOT_F0 = map2(Item.VOT, Item.F0.5ms, ~ c(.x, .y)),
+    VOT_F0 = map2(Item.VOT, Item.Mel_f0_5ms, ~ c(.x, .y)),
     Response.category = ifelse(Response.Voicing == "voiced", "/d/", "/t/"),
     Response.t = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
   nest(d.perception = everything()) %>%
@@ -689,15 +668,67 @@ d.temp %<>%
           model = ..2,
           log = T)) %>% unlist())
 
-d.temp %>%
-  group_by(io.type) %>%
+d.temp %>% 
+  group_by(io.type) %>% 
   summarise(
-    # Here you could use bootstrap to get the lower and uppper CI within each group
+    # Here you could use bootstrap to get the lower and upper CI within each group
     mean_likelihood_per_response = mean(likelihood_per_response) 
   )
+
+# use bootstrap samples by io type
+d.bootstrap <- d.temp %>% 
+  droplevels() %>% 
+  select(-c(d.perception, io)) %>% 
+  mutate(io.type = factor(io.type)) %>% 
+  # nest so that we can sample from groups of rows corresponding to each io type
+  nest(-io.type) %>% 
+  mutate(samples = 
+           map(data, ~ bootstraps(.x, times = 100))) %>% 
+  unnest(samples) %>% 
+  mutate(splits = map(splits, ~ as.tibble(.x)),
+         mean_sample = map_dbl(splits, ~ mean(.x$likelihood_per_response)))
+
 ```
 
 
+
+```{r}
+# plot mean likelihood per response with bootstrapped 95% CI
+d.temp %>% 
+  group_by(io.type) %>% 
+  summarise(
+    mean_likelihood_per_response = mean(likelihood_per_response)) %>%
+  mutate(cues = ifelse(str_detect(io.type, "VOT_F0"), "VOT-F0", "VOT")) %>% 
+  filter(cues == "VOT-F0") %>% 
+  ggplot(aes(x = io.type, 
+             y = mean_likelihood_per_response, colour = io.type)) +
+  geom_point(size = 3) +
+  geom_errorbar(
+    data = d.bootstrap %>% 
+      group_by(io.type) %>% 
+      mutate(cues = ifelse(str_detect(io.type, "VOT_F0"), "VOT-F0", "VOT")) %>% 
+  filter(cues == "VOT-F0") %>% 
+      summarise(
+        mean.lower = quantile(mean_sample, probs = .025),
+        mean.upper = quantile(mean_sample, probs = .975)
+      ),
+    mapping = 
+      aes(x = io.type, ymin = mean.lower, ymax = mean.upper),
+    colour = c("#FCD900", "#E8630A"),
+    size = 1.5,
+    alpha = .6,
+  width = 0,
+    inherit.aes = F) +
+  scale_colour_manual(values = c("#FCD900", "#E8630A"), 
+                      labels = c("VOT-F0", "VOT-F0 (centered)")) 
+  
+  d.bootstrap %>% 
+      group_by(io.type) %>% 
+      summarise(
+        mean.lower = quantile(mean_sample, probs = .025),
+        mean.upper = quantile(mean_sample, probs = .975)
+      )
+```
 
 
 
