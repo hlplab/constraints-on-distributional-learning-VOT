@@ -11,24 +11,32 @@ source("functions.R")
 
 
 # EXPERIMENT 2: Listeners' adaptation to an unfamiliar talker
-The chief aim of experiment 2 was to investigate the incremental process of adapting expectations when listening to an atypical talker. We simulate atypical talkers by incrementally shifting the production statistics from the original distribution of our synthesised stimuli (as determined from the perceptual responses in experiment 1). This gave us a baseline talker (+0ms shift), a marginally shifted talker (+10ms), and a significantly shifted talker (+40ms shift). 
+The aim of experiment 2 was to investigate the incremental changes in listener categorization when perceiving speech of an unfamiliar talker with cue-to-category mappings characterised by varying degrees of typicality of an L1-US English talker. Listeners performed a task similar to that of experiment 1, that is, they heard isolated words on a /d/ - /t/ continuum and were required to select the word they heard. Unlike experiment 1 where all listeners categorised stimuli on a single uninformative continuum, listeners in experiment 2 were divided into 3 groups with each group exposed to different VOT distributions that were informative of the talker's realisations of /d/ and /t/. 
 
-The previous investigation of this question [@kleinschmidt2016you and @kleinschmidt2020constrains] found that while listeners do learn the statistics of a given exposure talker, adaptation tended to fall short of the ideal categorisation boundary when the talker displayed atypical distributional information. Crucially, the distance from the ideal boundary was larger, the more the statistics deviate from the distribution of a typical talker. 
+We approximated a "typical" talker through the combined parameters estimated from the perceptual responses in experiment 1 and a database of L1-US English /d/ and /t/ productions [@Xie]. From this estimated baseline distribution (+0ms), we shifted the distribution by +10ms, and by +40ms, yielding three exposure talker conditions. To investigate the state of listener expectations as they move from having no information about how a new talker realises /d/s and /t/s to progressively more information about the talker's pronunciations we implement identical test blocks (i.e. test stimuli in identical locations) across conditions before, during, and after informative exposure. Under Bayesian ideal adaptor inferential processes, listeners' weighting of their prior beliefs about the category means and variances will determine the speed at which adaptation occurs. Motivated by prior work in supervised and unsupervised learning within lab contexts that repeatedly show adaptation to be a rapid process [@clarke2004rapid; @bradlow2008perceptual; @xie2021cross; @liu2018inferring; @norris2003perceptual @kleinschmidt2012continuum] we made the decision to test our participants early on in the experiment and frequently throughout.
+
+Previous studies were not designed to investigate incremental adaptation in this manner as they lacked designated test blocks; listeners' categorisation functions were instead estimated over portions of the exposure trials which ignores the fact that not all participants had been exposed to the exact same items at the trial cut-off point (although that would have been the case by the end of the experiment). With our novel design we gain better resolution at every testing point, since each participant would have heard the same number of VOT items at the beginning of a given test block. The other advantage is that identical test blocks across conditions standardises the assessment of behavioural changes between groups yielding more accurate comparisons. We specifically included a pre-exposure test block with a similar aim to experiment 1 -- so that we could capture the implicit expectations of listeners about the cue-to-category mappings of US English /d/ and /t/.
+
+Previous studies found that listeners shift their categorization behaviour towards the category boundary implied by the exposure distribution but that adaptive shifts were incomplete, the further  the exposure talker's distribution from a typical talker. We therefore expected to see differences in categorizations between the +10ms and +40ms conditions such that listeners in the +40ms condition would shift more than those in the +10ms but to have an average categorization function that is leftwards of the ideal boundary implied by its exposure distribution. [@kleinschmidt2016you]. Nonetheless if adaptative behaviour involves rational updating we expect to find that the different shift conditions would induce changes in categorizations that are proportional to the distance between the shifts (i.e. +40ms being three times that of +10ms).
+
+Another notable innovation we bring to this study in conjunction with the use of qualitatively more human-sounding stimuli (as described in section 2.X) relates to the parameters of the exposure distributions. Prior studies of this type simulate the voiced-voiceless distributions by exposing listeners to symmetrical distributions between the categories or equivalent variances for both categories. It is however unlikely that listeners encounter this in real life as evidenced from production data [@chodroff]. By generating distributions that are closer in form to that of real data we hope to achieve greater ecological validity with the results we find. 
+
+
 
 ## Methods
 ### Participants
-Participants were recruited over the Prolific platform, and paid $8.00 each (for a targeted remuneration of \$19.40/hour). The experiment was only visible to Prolific participants who (1) had an IP address in the United States, (2) were US citizens and only knew English, and (3) had not previously participated in any experiment on stop voicing from our lab.
+Participants were recruited over the Prolific platform, and paid $8.00 each (for a targeted remuneration of \$9.60/hour). The experiment was visible to participants who (1) were located in the United States, (2) were US citizens and only knew English, and (3) had not previously participated in any experiment from our lab.
 
 122 L1 US English listeners (male = 60, female = 59, NA = 3; mean age = 38 years; SD age = 12 years) completed the experiment. To be eligible, participants had to confirm that they (1) spent at least the first 10 years of their life in the US speaking only English, (2) were in a quiet place and free from distractions, and (3) wore in-ear or over-the-ears headphones that cost at least \$15.
 
-Participants had to undergo a sound check designed to test that they were indeed wearing headphones [CITE headphone check study]
+Participants underwent a headphone test designed to test that they were indeed wearing headphones [CITE headphone test study]
 
 ### Materials
-A subset of the materials described in experiment 1 were used, in particular three continua of the minimal pairs dill-till, din-tin, and dip-tip. The dim-tim continuum was omitted in order to keep the pairs as distinguishable as possible. 
+A subset of the materials described in experiment 1 were used, in particular three continua of the minimal pairs, dill-till, din-tin, and dip-tip. The dim-tim continuum was omitted in order to keep the pairs as distinguishable as possible. 
 
 We employed a multi-block exposure-test design \@ref(fig:exp2-design-figure) which enabled the assessment of listener perception before informative exposure as well as incrementally at intervals during informative exposure. To have a comparable test of exposure, test blocks were made up of a uniform distribution of 12 VOT stimuli (-5, 5, 15, 25, 30, 35, 40, 45, 50, 55, 65, 70), identical across test blocks and between conditions. Each of the test tokens were presented once at random. 
 
-The conditions were created by first ascertaining the baseline distribution (+0ms shift) and then shifting that distribution by +10ms and by +40ms to obtain the remaining two conditions. We began by estimating the point of subjective equality (PSE) from the fitted categorisation function in experiment 1. The PSE is the stimulus along the continuum that was perceived to be the most ambiguous by listeners (i.e. the point that elicited equal probability of being categorised as /d/ or /t/) thus marking the categorical boundary. The PSE is where the likelihoods of both categories intersect and have equal density (we assumed Gaussian distributions and equal prior probability for each category). To limit the infinite combinations of likelihoods that meet this criterion we set the variances of the /d/ and /t/ categories based on parameter estimates (@Kurumada_Xie_Jaeger_2022) obtained from the production database of @chodroff2017structure. To each variance value we added 80ms noise following (@kronrod) because these likelihoods were estimated from perception data wherein listeners are expected to have perceived the target sound through a noisy channel. We took an additional degree of freedom of setting the distance between the means of the categories at 46ms; this too was based on the population parameter estimates. The means of both categories were then obtained through a grid-search process to find the posterior
+The conditions were created by first ascertaining the baseline distribution (+0ms shift) and then shifting that distribution by +10ms and by +40ms to obtain the remaining two conditions. We began with the fitted point of subjective equality (PSE) from in experiment 1. The PSE is the stimulus along the continuum that was perceived to be the most ambiguous by listeners (i.e. the point that elicited equal probability of being categorised as /d/ or /t/) thus marking the categorical boundary. The PSE is where the likelihoods of both categories intersect and have equal density (we assumed Gaussian distributions and equal prior probability for each category). To limit the infinite combinations of likelihoods that meet this criterion we set the variances of the /d/ and /t/ categories based on parameter estimates (@Kurumada_Xie_Jaeger_2022) obtained from the production database of @chodroff2017structure. To each variance value we added 80ms noise variance following (@kronrod) because these likelihoods were estimated from perceptual data to account of variability in perception due to perceptual noise. We took an additional degree of freedom of setting the distance between the means of the categories at 46ms; this too was based on the population parameter estimates. The means of both categories were then obtained through a grid-search process to find the posterior
 
 ```{r exp2-design-figure, fig.height=3, fig.width=5, fig.cap="Experiment 2 multi-block design. Test blocks in grey comprised identical stimuli within and between conditions"}
 knitr::include_graphics("../figures/experiment2_design_image.png")
@@ -50,73 +58,42 @@ knitr::include_graphics("../figures/experiment2_design_image.png")
 
 
 
-
-
-
-
-
 ```{r}
-# geom_line(
-#     data = p2[[1]] %>% 
-#       filter(Block == 1), 
-#     mapping = aes(x = descale(VOT_gs, VOT.mean_test, VOT.sd_test), 
-#                    y = estimate__),
-#     colour = "orange", 
-#     size = 2,
-#     inherit.aes = F) +
-#   geom_ribbon(
-#     data = p2[[1]] %>% 
-#       filter(Block == 1), 
-#     mapping = aes(x = descale(VOT_gs, VOT.mean_test, VOT.sd_test), 
-#                   ymin = lower__, 
-#                   ymax = upper__),
-#     alpha = .08,
-#     inherit.aes = F) +
-#   geom_errorbarh(
-#     data = post_sample_block1 %>% 
-#       summarise(
-#         PSE.lower = quantile(PSE, probs = c(.025)),
-#         PSE.median = quantile(PSE, probs = c(.5)),
-#         PSE.upper = quantile(PSE, probs = c(.975))) %>% 
-#       mutate(y = .01),
-#     mapping = aes(xmin = PSE.lower, xmax = PSE.upper, y = y), 
-#     color = "orange",
-#     height = 0,
-#     alpha = .5,
-#     size = 2) +
-#   geom_point(
-#     data = post_sample_block1 %>% 
-#       summarise(
-#         PSE.lower = quantile(PSE, probs = c(.025)),
-#         PSE.median = quantile(PSE, probs = c(.5)),
-#         PSE.upper = quantile(PSE, probs = c(.975))) %>% 
-#       mutate(y = .01),
-#     mapping = aes(x = PSE.median, y = y), 
-#     color = "orange", size = 1.8) +
-#    annotate(
-#     geom = "text", 
-#     y = .035, x = 60,
-#     label = paste("PSE pre-test range = ", 35, "-", 50),
-#     size = 3)
+# load formatted exposure and test data from experiment 2
+d.exposure_test <- read_rds("../data/exposure_test_experiment2.rds")
 
-# add layer of last 3 blocks, condition 40
-# p.IOs +
-#     geom_line(
-#     data = p[[1]] %>% 
-#       filter(Block %in% c(7, 8, 9) & Condition.Exposure == "Shift40"), 
-#     mapping = aes(x = descale(VOT_gs, VOT.mean_test, VOT.sd_test), 
-#                    y = estimate__),
-#     colour = "#0481F3", 
-#     size = 2,
-#     inherit.aes = F) +
-#   geom_ribbon(
-#     data = p[[1]] %>% 
-#       filter(Block %in% c(7, 8, 9) & Condition.Exposure == "Shift40"), 
-#     mapping = aes(x = descale(VOT_gs, VOT.mean_test, VOT.sd_test), 
-#                   ymin = lower__, 
-#                   ymax = upper__),
-#     alpha = .08,
-#     inherit.aes = F) 
+# load f0-5ms-into-vowel measurements of stimuli
+d.f0.5ms <- 
+  read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv", show_col_types = F) %>% 
+  select(filename, VOT, f0_5ms_into_vowel) %>% 
+  rename(Item.VOT = VOT,
+         f0_5ms = f0_5ms_into_vowel,
+         Item.Filename = filename) %>% 
+  mutate(Item.Filename = paste0(Item.Filename, ".wav"))
+
+# add f0-5ms data
+d.exposure_test %<>% 
+ungroup() %>%
+  left_join(d.f0.5ms, by = c("Item.Filename", "Item.VOT")) %>% 
+              mutate(Item.Mel_f0_5ms = normMel(f0_5ms)) 
+
+# mark catch trials rows and mark those to be excluded
+d.exposure_test %<>% 
+  mutate(
+    Is.CatchTrial = ifelse(Item.ExpectedResponse %in% c("flare", "rare", "share"), TRUE, FALSE),
+    CatchTrial.Correct = ifelse(Is.CatchTrial == TRUE, 
+                    ifelse(Item.ExpectedResponse == Response, TRUE, FALSE), NA),
+    Answer.sex.Correct = ifelse(sex == "woman", TRUE, FALSE)) %>% 
+  group_by(ParticipantID) %>% 
+  mutate(Exclude_participant.due_to_catch_trials = ifelse(sum(CatchTrial.Correct, na.rm = TRUE) < 17, TRUE, FALSE)) %>%
+  ungroup()
+
+# mark labeled trials
+d.exposure_test %<>% 
+  mutate(Response.Correct = ifelse(Item.ExpectedResponse == Response, TRUE, FALSE),
+         LabeledTrial.Correct = ifelse(Item.Labeled == TRUE, ifelse(Response.Correct == TRUE, TRUE, FALSE), NA)) %>% 
+  group_by(ParticipantID) %>% 
+  mutate(Exclude_participant.due_to_labeled_trials = ifelse(sum(LabeledTrial.Correct, na.rm = T) < 68, TRUE, FALSE))
 ```
 
 

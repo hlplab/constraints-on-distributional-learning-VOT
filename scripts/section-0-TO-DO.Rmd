@@ -5,19 +5,12 @@ TO-DO
 ## Highest priority
   * MARYANN
     * Continue describing Experiment 2
-    * Discuss with Florian for discussion 
-    * Fix any plot issues
 
 ### Priority
   * MARYANN
-    * Fill in the references
+    * Fix spread_draws bug
     
-  * FLORIAN:
-   * Review Introduction
-   * Review Experiment 1 -- comment on discussion of IO analysis
-   * Review plots
-   * Advise on how to adjust the text size of plot axis (theme() and element_text doesn't seem to work)
-   
+
 
 ## To do later
   

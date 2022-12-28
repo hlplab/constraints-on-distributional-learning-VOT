@@ -283,7 +283,7 @@ get_IO_categorization <- function(
     groups,
     lapse_rate = plogis(summary(fit_mix)$fixed[3, 1]),
     with_noise = TRUE,
-    VOTs = seq(0, 100, .5),            
+    VOTs = seq(0, 85, .5),            
     F0s = normMel(predict_f0(VOTs)),                      
     alpha = .2,
     size = .5,
@@ -364,7 +364,9 @@ get_average_accuracy_of_IO <- function(observations, responses, model, log = FAL
 ############################################################################
 plot_IO_fit <- function(
     data,
-    PSEs
+    PSEs,
+    x,
+    centered = FALSE
 ) {
   plot <- ggplot() + 
     # geom_ribbon(
@@ -396,27 +398,27 @@ plot_IO_fit <- function(
       mapping = aes(x = PSE.median, y = y, color = gender),
       size = 1.2) +
     annotate(geom = "text",
-             y = -.025, x = 65,
+             y = -.025, x = 70,
              label = paste(PSEs[[1, 2]], "ms", "-", PSEs[[1, 4]], "ms"),
              size = 1.8,
              colour = "#87bdd8") +
     annotate(geom = "text",
-             y = -.06, x = 65,
+             y = -.06, x = 70,
              label = paste(PSEs[[2, 2]], "ms", "-", PSEs[[2, 4]], "ms"),
              size = 1.8,
              colour = "#c1502e") 
   plot + 
-    geom_line(
-      data = psychometric_fit_data,
-      mapping = aes(x = descale(sVOT, VOT.mean_norm, VOT.sd_norm), 
-                    y = estimate__),
-      colour = "#333333", 
-      size = 1,
-      alpha = .8,
-      inherit.aes = F) +
+  geom_line(
+    data = psychometric_fit_data,
+    mapping = aes(x = x, 
+                  y = estimate__),
+    colour = "#333333", 
+    size = 1,
+    alpha = .8,
+    inherit.aes = F) +
     geom_ribbon(
       data = psychometric_fit_data, 
-      mapping = aes(x = descale(sVOT, VOT.mean_norm, VOT.sd_norm), 
+      mapping = aes(x = x, 
                     ymin = lower__, 
                     ymax = upper__),
       alpha = .08,
@@ -424,7 +426,9 @@ plot_IO_fit <- function(
     geom_errorbarh(
       data = post_sample_norm %>% 
         mutate(y = .01),
-      mapping = aes(xmin = .lower, xmax = .upper, y = y), 
+      mapping = aes(xmin =  if (centered != FALSE) .lower + (chodroff.mean_VOT - VOT.mean_norm) else .lower, 
+                    xmax =  if (centered != FALSE) .upper + (chodroff.mean_VOT - VOT.mean_norm) else .upper, 
+                    y = y), 
       color = "#333333",
       height = 0,
       alpha = .5,
@@ -432,12 +436,13 @@ plot_IO_fit <- function(
     geom_point(
       data = post_sample_norm %>% 
         mutate(y = .01),
-      mapping = aes(x = PSE, y = y), 
+      mapping = aes(x = if (centered != FALSE) PSE + (chodroff.mean_VOT - VOT.mean_norm) else PSE, y = y), 
       color = "#333333", size = 1.3) +
     annotate(
       geom = "text", 
-      y = .02, x = 65,
-      label = paste(round(post_sample_norm[[2]]), "ms", "-", round(post_sample_norm[[3]]), "ms"),
+      y = .02, x = 70,
+      label = if (centered != FALSE) paste(round(post_sample_norm[[2]] + (chodroff.mean_VOT - VOT.mean_norm)), "ms", "-", round(post_sample_norm[[3]] + (chodroff.mean_VOT - VOT.mean_norm)), "ms") else
+        paste(round(post_sample_norm[[2]]), "ms", "-", round(post_sample_norm[[3]]), "ms"),
       size = 1.8) +
     geom_rug(
       data = d.test.excluded %>% 
@@ -451,5 +456,12 @@ plot_IO_fit <- function(
 ############################################################################
 
 
- 
+get_PSE_quantiles <- function(data, group) {
+  data %>%
+  group_by(!!! syms(group)) %>%
+  summarise(
+    PSE.lower = round(quantile(PSE, probs = c(.025))),
+    PSE.median = round(quantile(PSE, probs = c(.5))),
+    PSE.upper = round(quantile(PSE, probs = c(.975))))
+}
 

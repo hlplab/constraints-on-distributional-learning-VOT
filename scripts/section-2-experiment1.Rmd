@@ -189,7 +189,7 @@ if (file.exists("../models/conditional_effects_VOT_Trial.rds")) {
 PSE.fit_mix <- descale(-(summary(fit_mix)$fixed["mu2_Intercept", 1] / summary(fit_mix)$fixed["mu2_sVOT", 1]), VOT.mean_norm, VOT.sd_norm) 
 
 # get posterior samples of intercept and slope, and median qi of the PSEs
-post_sample_norm <- spread_draws(fit_mix, b_mu2_Intercept, b_mu2_sVOT) %>% 
+post_sample_norm <- fit_mix %>% spread_draws(b_mu2_Intercept, b_mu2_sVOT) %>% 
   mutate(PSE = descale(-(b_mu2_Intercept/b_mu2_sVOT), VOT.mean_norm, VOT.sd_norm)) %>% 
   median_qi(PSE)
 ```
@@ -239,12 +239,11 @@ p.psychometric.vot <-
              y = estimate__)) +
   scale_x_continuous("VOT (ms)", breaks = scales::pretty_breaks(n = 4), limits = c(-100, 130)) +
   scale_y_continuous("Fitted proportion of 't' responses") +
-  geom_line(size = 1.5, 
+  geom_line(linewidth = 1.5, 
             colour = "#333333",
             alpha = .8)
  
   
-
 p.vot <- p.psychometric.vot +
   geom_ribbon(
     aes(ymin = lower__, 
@@ -331,39 +330,31 @@ ggdraw(add_sub(grid2, "VOT (ms)", size = 10, fontface = "bold"))
 ```
 
 
-```{r by-participant-lapse-bias, fig.height=2.6, fig.width=6.5}
-# lapse_participant <- fit_mix %>% spread_draws(r_ParticipantID__theta1[ParticipantID, term], b_theta1_Intercept) %>%
-#   group_by(ParticipantID) %>%
-#   mutate(ParticipantID = factor(ParticipantID),
-#          Participant_lapse = b_theta1_Intercept + r_ParticipantID__theta1,
-#          estimated_lapse = plogis(Participant_lapse) * 100) %>%
-#   select(ParticipantID, term, r_ParticipantID__theta1, Participant_lapse, estimated_lapse) %>%
-#   mode_hdci(estimated_lapse)
-# 
-# bias_participant <- fit_mix %>%
-#   spread_draws(r_ParticipantID__mu1[ParticipantID, term], b_mu1_Intercept) %>%
-#   group_by(ParticipantID) %>%
-#   mutate(ParticipantID = factor(ParticipantID),
-#          Participant_bias = b_mu1_Intercept + r_ParticipantID__mu1,
-#          estimated_bias = plogis(Participant_bias) * 100) %>%
-#   select(ParticipantID, term, r_ParticipantID__mu1, Participant_bias, estimated_bias) %>%
-#   mode_hdci(estimated_bias)
-# 
-# estimate_minpair <- fit_mix %>% spread_draws(r_Item.MinimalPair__mu2[Item.MinimalPair, term], b_mu2_Intercept, b_mu2_sVOT) %>%
-#   group_by(Item.MinimalPair) %>%
-#   mutate(predicted_eff = ifelse(term == "Intercept", r_Item.MinimalPair__mu2 + b_mu2_Intercept, r_Item.MinimalPair__mu2 + b_mu2_sVOT)) %>%
-#   group_by(Item.MinimalPair, term) %>%
-#   mode_hdci(predicted_eff) %>%
-#   pivot_wider(names_from = term,
-#               values_from = c(predicted_eff, .lower, .upper))
-
-lapse_participant <- fit_mix %>% spread_draws(r_ParticipantID__theta1[ParticipantID, term], b_theta1_Intercept, ndraws = 10) %>%
+```{r by-participant-lapse-bias, warning = FALSE, fig.height=2.6, fig.width=6.5}
+lapse_participant <- fit_mix %>% spread_draws(r_ParticipantID__theta1[ParticipantID, term], b_theta1_Intercept) %>%
   group_by(ParticipantID) %>%
   mutate(ParticipantID = factor(ParticipantID),
          Participant_lapse = b_theta1_Intercept + r_ParticipantID__theta1,
          estimated_lapse = plogis(Participant_lapse) * 100) %>%
   select(ParticipantID, term, r_ParticipantID__theta1, Participant_lapse, estimated_lapse) %>%
   mode_hdci(estimated_lapse)
+
+bias_participant <- fit_mix %>%
+  spread_draws(r_ParticipantID__mu1[ParticipantID, term], b_mu1_Intercept) %>%
+  group_by(ParticipantID) %>%
+  mutate(ParticipantID = factor(ParticipantID),
+         Participant_bias = b_mu1_Intercept + r_ParticipantID__mu1,
+         estimated_bias = plogis(Participant_bias) * 100) %>%
+  select(ParticipantID, term, r_ParticipantID__mu1, Participant_bias, estimated_bias) %>%
+  mode_hdci(estimated_bias)
+
+estimate_minpair <- fit_mix %>% spread_draws(r_Item.MinimalPair__mu2[Item.MinimalPair, term], b_mu2_Intercept, b_mu2_sVOT) %>%
+  group_by(Item.MinimalPair) %>%
+  mutate(predicted_eff = ifelse(term == "Intercept", r_Item.MinimalPair__mu2 + b_mu2_Intercept, r_Item.MinimalPair__mu2 + b_mu2_sVOT)) %>%
+  group_by(Item.MinimalPair, term) %>%
+  mode_hdci(predicted_eff) %>%
+  pivot_wider(names_from = term,
+              values_from = c(predicted_eff, .lower, .upper))
 ```
 
 
@@ -438,196 +429,253 @@ d.chodroff_wilson.selected <-
 
 
 ```{r, fig.width=3.7, fig.height=2.5}
-talker.VOT.no.noise <- 
+VOT.no.noise <- 
   get_IO_categorization(
     cues = c("VOT"), 
     groups = c("Talker", "gender"), 
     with_noise = FALSE, 
     alpha = .1, 
     size = 0.3,
-    io.type = "talker.VOT.no.noise") 
+    io.type = "VOT.no.noise") 
 
 # Example calls:
 #
-#temp <- talker.VOT.no.noise %>% 
+#temp <- VOT.no.noise %>% 
    #mutate(PSE = map2_dbl(x, io, ~ get_PSE_from_io(x = .x, io = .y)) %>% unlist())
 
 # 
-# temp <- talker.VOT_F0 %>%
+# temp <- VOT_F0 %>%
 #   mutate(PSE = map(io, ~ get_PSE_from_io(.x)) %>% unlist())
 
 
-#talker.VOT_F0 %>%
+#VOT_F0 %>%
   #mutate(PSE = map(io, ~ get_PSE_from_io(.x)) %>% unlist())
 
 
-PSE_VOT.no.noise <- 
-  talker.VOT.no.noise %>%
-  group_by(gender) %>%
-  summarise(
-    PSE.lower = round(quantile(PSE, probs = c(.025))),
-    PSE.median = round(quantile(PSE, probs = c(.5))),
-    PSE.upper = round(quantile(PSE, probs = c(.975))))
+PSE_VOT.no.noise <- get_PSE_quantiles(data = VOT.no.noise, group = "gender")
 
 p.IOs.VOT.no.noise <- plot_IO_fit(
-  data = talker.VOT.no.noise,
-  PSEs = PSE_VOT.no.noise)
+  data = VOT.no.noise,
+  PSEs = PSE_VOT.no.noise,
+  x = descale(psychometric_fit_data$sVOT, VOT.mean_norm, VOT.sd_norm))
 ```
 
 
 ```{r, fig.width=3.7, fig.height=2.5}
 # get IOs from VOT only
-talker.VOT <- 
+VOT <- 
   get_IO_categorization(
     cues = c("VOT"), 
     groups = c("Talker", "gender"), 
     alpha = .1, 
     size = 0.3,
-    io.type = "talker.VOT")
+    io.type = "VOT")
 
-PSE_talker.VOT <- 
-  talker.VOT %>%
-  group_by(gender) %>%
-  summarise(
-    PSE.lower = round(quantile(PSE, probs = c(.025))),
-    PSE.median = round(quantile(PSE, probs = c(.5))),
-    PSE.upper = round(quantile(PSE, probs = c(.975))))
+PSE_VOT <- get_PSE_quantiles(data = VOT, group = "gender")
 
 p.IOs.VOT <- 
   plot_IO_fit(
-    data = talker.VOT,
-    PSEs = PSE_talker.VOT)  
+    data = VOT,
+    PSEs = PSE_VOT,
+    x = descale(psychometric_fit_data$sVOT, VOT.mean_norm, VOT.sd_norm))  
 ```
 
 
 ```{r, warning=FALSE, fig.width=3.7, fig.height=2.5}
 # get IOs with multivariate cues
-talker.VOT_F0 <- 
+VOT_F0 <- 
   get_IO_categorization(
     cues = c("VOT", "f0_Mel"), 
     groups = c("Talker", "gender"), 
     alpha = .1, 
     size = .3,
-    io.type = "talker.VOT_F0") 
+    io.type = "VOT_F0") 
 
-PSE_VOT_F0 <- 
-  talker.VOT_F0 %>%
-  group_by(gender) %>%
-  summarise(
-    PSE.lower = round(quantile(PSE, probs = c(.025))),
-    PSE.median = round(quantile(PSE, probs = c(.5))),
-    PSE.upper = round(quantile(PSE, probs = c(.975))))
+PSE_VOT_F0 <- get_PSE_quantiles(data = VOT_F0, group = "gender")
 
 p.IOs.VOT_F0 <- 
   plot_IO_fit(
-    data = talker.VOT_F0,
-    PSEs = PSE_VOT_F0)
+    data = VOT_F0,
+    PSEs = PSE_VOT_F0,
+    x = descale(psychometric_fit_data$sVOT, VOT.mean_norm, VOT.sd_norm))
 ```
 
 
 ```{r, warning=FALSE, fig.width=3.7, fig.height=2.5}
 # using centered cues
-talker.VOT_F0.centered <- 
+VOT_F0.centered <- 
   get_IO_categorization(
     cues = c("VOT_centered", "f0_Mel_centered"), 
     groups = c("Talker", "gender"), alpha = .1, size = .3,
-    io.type = "talker.VOT_F0.centered") 
+    io.type = "VOT_F0.centered") 
 
-PSE_VOT_F0.centered <- talker.VOT_F0.centered %>%
-  group_by(gender) %>%
-  summarise(
-    PSE.lower = round(quantile(PSE, probs = c(.025))),
-    PSE.median = round(quantile(PSE, probs = c(.5))),
-    PSE.upper = round(quantile(PSE, probs = c(.975))))
+PSE_VOT_F0.centered <- get_PSE_quantiles(data = VOT_F0.centered, group = "gender")
 
 p.IOs.VOT_F0.centered <- 
   plot_IO_fit(
-    data = talker.VOT_F0.centered,
-    PSEs = PSE_VOT_F0.centered)
+    data = VOT_F0.centered,
+    PSEs = PSE_VOT_F0.centered,
+    x = descale(psychometric_fit_data$sVOT, VOT.mean_norm, VOT.sd_norm))
 ```
+
+```{r, warning=FALSE, fig.width=3.7, fig.height=2.5}
+# prepare data for IO that centers input data before categorization
+
+chodroff.mean_VOT <- d.chodroff_wilson.selected %>% 
+  group_by(Talker) %>% 
+  summarise(mean_VOT_by_talker = mean(VOT)) %>% 
+  ungroup() %>% 
+  summarise(mean_VOT = mean(mean_VOT_by_talker)) %>% 
+  pull(mean_VOT) 
+
+# shift the fitted categorisation fn by the difference in mean VOTs
+# p.psychometric.vot %+%
+#   geom_line(data = psychometric_fit_data %>% 
+#               mutate(VOT = descale(sVOT, VOT.mean_norm, VOT.sd_norm),
+#                      cVOT =  VOT + (chodroff.mean_VOT - VOT.mean_norm)),
+#             mapping = aes(x = cVOT, 
+#                           y = estimate__),
+#             linetype = 2,
+#             size = 1.5, 
+#             colour = "#333333",
+#             alpha = .8,
+#             inherit.aes = F)
+
+p.IOs.VOT_F0.centered.input <- plot_IO_fit(
+    data = VOT_F0.centered,
+    PSEs = PSE_VOT_F0.centered,
+    x = descale(psychometric_fit_data$sVOT, VOT.mean_norm, VOT.sd_norm) + (chodroff.mean_VOT - VOT.mean_norm),
+    centered = TRUE)
+```
+
+
 
 (ref:comparative-IO-plot) Comparing predicted vs. observed categorization functions for Experiment 1. The black line and interval show the psychometric fit and 95% CI for Experiment 1 marginalizing over all random effects. Each thin line shows the prediction of a single talker-specific ideal observers derived from a database of word-initial stop productions [data: @chodroff2017structure; data preparation & model code: @Kurumada_Xie_Jaeger_2022]. The lapse rate and response bias for the ideal observers was set to match the MAP estimates of the psychometric model. For ease of comparisons, horizontal point ranges show the PSE and its 95% CI after discounting lapses.
 
-```{r comparative-IO-plot, warning=FALSE, fig.width=6, fig.height=5, fig.cap="(ref:comparative-IO-plot)"}
+```{r comparative-IO-plot, warning=FALSE, fig.width=6, fig.height=4, fig.cap="(ref:comparative-IO-plot)"}
 p1 <- 
   p.IOs.VOT.no.noise + 
   theme(legend.position = "none", 
         axis.title.x = element_blank(),
         axis.text.x = element_blank(),
-        axis.ticks.x = element_blank())
+        axis.ticks.x = element_blank(),
+        axis.title.y = element_blank())
 p2 <- 
   p.IOs.VOT + 
   theme(legend.position = "none", 
-        axis.title.y = element_blank(), 
-        axis.text.y = element_blank(), 
-        axis.ticks.y = element_blank(),
         axis.title.x = element_blank(),
         axis.text.x = element_blank(),
-        axis.ticks.x = element_blank())
+        axis.ticks.x = element_blank(),
+        axis.title.y = element_blank())
 p3 <- 
   p.IOs.VOT_F0 + 
   theme(legend.position = "none",
-        axis.title.x = element_blank()) 
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.y = element_blank()) 
 p4 <- 
   p.IOs.VOT_F0.centered + 
   theme(legend.position = "none", 
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.y = element_blank())
+
+p5 <- 
+  p.IOs.VOT_F0.centered.input + 
+  theme(legend.position = "none", 
         axis.title.y = element_blank(), 
-        axis.text.y = element_blank(), 
-        axis.title.x = element_blank(), 
-        axis.ticks.y = element_blank())
+        axis.title.x = element_blank())
   
 legend <- get_legend(p.IOs.VOT_F0 + theme(legend.position = "top"))
 
 IO_grid1 <- 
   plot_grid(
-    p1, p3, 
-    ncol = 1, 
-    align = "v", 
-    labels = c("A", "C"), 
+    p1, p2, p3, p4, p5, NULL,
+    ncol = 3, 
+    align = "h", 
+    labels = c("A", "B", "C", "D", "E", " "), 
     label_size = 10, 
-    hjust = -7, 
-    vjust = 3,
-    rel_heights = c(0.90, 1))
+    hjust = -1.1, 
+    vjust = 1,
+    rel_widths = c(1, 1)) +
+  theme(plot.margin = margin(0, 0, 0, 40))
 
-IO_grid2 <- 
-  plot_grid(
-    p2, p4, 
-    ncol = 1, 
-    align = "v", 
-    labels = c("B", "D"), 
-    label_size = 10, 
-    hjust = -2.5, 
-    vjust = 3,
-    rel_heights = c(0.90, 1))
-
-IO_grid3 <- plot_grid(IO_grid1, IO_grid2, ncol = 2, align = "h", rel_widths = c(1.1, 1))
-IO_grid4 <- plot_grid(legend, IO_grid3, align = "h", ncol = 1, rel_heights = c(.1, 1))
-ggdraw(add_sub(IO_grid4, "VOT (ms)", size = 10, fontface = "bold"))
+IO_grid1 <- add_sub(IO_grid1, "VOT (ms)", x = .55, size = 10, fontface = "bold", vjust = -1)
+IO_grid1 <- add_sub(IO_grid1, "Proportion of 't'-responses", x = -0.03, y = 2.5, size = 10, fontface = "bold", angle = 90)
+IO_grid2 <- plot_grid(legend, IO_grid1, align = "h", ncol = 1, rel_heights = c(.08, 1))
+IO_grid2
 ```
 
 
+```{r temporary-chunk-poster-plotting, warning=FALSE, fig.height=2, fig.width=8}
+p1 <- 
+  p.IOs.VOT.no.noise + 
+  theme(legend.position = "none", 
+        axis.title.x = element_blank()) 
+p2 <- 
+  p.IOs.VOT + 
+  theme(legend.position = "none", 
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.y = element_blank(), 
+        axis.title.x = element_blank()) 
+p3 <- 
+  p.IOs.VOT_F0 + 
+  theme(legend.position = "none",
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.y = element_blank(), 
+        axis.title.x = element_blank()) 
+p4 <- 
+  p.IOs.VOT_F0.centered + 
+  theme(legend.position = "none", 
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.y = element_blank(), 
+        axis.title.x = element_blank()) 
 
-```{r}
-# prepare data for IO that centers input data before categorization
+p5 <- 
+  p.IOs.VOT_F0.centered.input + 
+  theme(legend.position = "none", 
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.y = element_blank(), 
+        axis.title.x = element_blank()) 
+  
+legend <- get_legend(p.IOs.VOT_F0 + theme(legend.position = "top"))
 
-chodroff.mean_VOTs <- d.chodroff_wilson.selected %>% 
-  ungroup() %>% 
-  summarise(mean_VOT = mean(VOT)) %>% pull(mean_VOT) 
+ 
+IO_grid1 <- plot_grid(p2, p3, p4, p5,
+    ncol = 4, 
+    align = "h", 
+    labels = c("B", "C", "D", "E"), 
+    label_size = 8, 
+    hjust = 0, 
+    vjust = 1)
 
-# shift the fitted categorisation fn by the difference in mean VOTs
-p.psychometric.vot %+%
-  geom_line(data = psychometric_fit_data %>% 
-              mutate(VOT = descale(sVOT, VOT.mean_norm, VOT.sd_norm),
-                     cVOT =  VOT + (chodroff.mean_VOTs - VOT.mean_norm)),
-            mapping = aes(x = cVOT, 
-                          y = estimate__),
-            linetype = 2,
-            size = 1.5, 
-            colour = "#333333",
-            alpha = .8,
-            inherit.aes = F)
+IO_grid2 <- plot_grid(
+  p1, IO_grid1,
+  nrow = 1,
+  align = "v",
+  labels = c("A", " "),
+  hjust = 0,
+  vjust = 1,
+  label_size = 8,
+  rel_widths = c(.30, 1.1)
+)
+
+
+IO_grid2 <- add_sub(IO_grid2, "VOT (ms)", x = .55, size = 10, fontface = "bold", vjust = 0)
+#IO_grid1 <- add_sub(IO_grid1, "Proportion of 't'-responses", x = -0.03, y = 0, size = 10, fontface = "bold", angle = 90)
+
+p <- ggdraw(IO_grid2)
+p
+leg <- ggdraw(legend)
+
+ggsave("../figures/IO_plot_exp1.png", plot = p, width = 25, height = 5, units = "cm", dpi = 300)
 ```
-
 
 
 
@@ -640,74 +688,121 @@ Assess how well each of the four IOs fit human data.
 # Specify sequence of postive VOTs
 test.VOTs.positive <- c(5, seq(15, 90, 5), seq(100, 130, 10))
 
-# prepare data of IO for joining
+# make VOT_F0_centered data set with centered perceptual stimuli for simulating centering of input
+VOT_F0.centered.input <- VOT_F0.centered %>% 
+  mutate(io.type = "VOT_F0.centered.input")
+
+# join all 5 IOs into one dataframe
 d.IOs <- 
-  rbind(talker.VOT.no.noise, talker.VOT, talker.VOT_F0, talker.VOT_F0.centered) %>% 
+  rbind(VOT.no.noise, VOT, VOT_F0, VOT_F0.centered, VOT_F0.centered.input) %>% 
   select(Talker, gender, io, io.type)
 
-d.temp <- 
+d.test.IO <- 
   d.test.excluded %>%
   ungroup() %>%
   select(Item.Filename, Item.VOT, Item.Mel_f0_5ms, Response, Response.Voicing) %>%
   filter(Item.VOT %in% test.VOTs.positive) %>%  # filter to only the +ve for the time being may need to include the -ve values
   mutate(
     VOT_F0 = map2(Item.VOT, Item.Mel_f0_5ms, ~ c(.x, .y)),
+    Item.VOT_centered = Item.VOT + (chodroff.mean_VOT - VOT.mean_norm),
+    Item.Mel_F0_centered = normMel(predict_f0(Item.VOT_centered)),
+    VOT_F0_centered = map2(Item.VOT_centered, Item.Mel_F0_centered, ~ c(.x, .y)),
     Response.category = ifelse(Response.Voicing == "voiced", "/d/", "/t/"),
     Response.t = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
   nest(d.perception = everything()) %>%
   crossing(d.IOs) 
 
-d.temp %<>%
+d.test.IO %<>%
   mutate(
     likelihood_per_response =
       pmap(
         list(d.perception, io, io.type), 
         ~ get_average_accuracy_of_IO(
-          observations = if (str_detect(..3, "VOT_F0")) ..1$VOT_F0 else ..1$Item.VOT, 
+          observations = if(str_detect(..3, "centered.input")) {..1$VOT_F0_centered}
+          else if (str_detect(..3, "VOT_F0")) {..1$VOT_F0} 
+          else {..1$Item.VOT}, 
           responses = ..1$Response.category, 
           model = ..2,
-          log = T)) %>% unlist())
+          log = T)) %>% 
+      unlist())
 
-d.temp %>% 
+d.test.IO %>% 
   group_by(io.type) %>% 
   summarise(
     # Here you could use bootstrap to get the lower and upper CI within each group
-    mean_likelihood_per_response = mean(likelihood_per_response) 
-  )
+    mean_log_likelihood_per_response = mean(likelihood_per_response) 
+  ) %>% 
+  mutate(mean_accuracy_per_response = exp(mean_log_likelihood_per_response))
 
-# use bootstrap samples by io type
-d.bootstrap <- d.temp %>% 
+# use bootstrap samples by io type to find the CI of the mean estimates
+d.bootstrap <- d.test.IO %>% 
   droplevels() %>% 
   select(-c(d.perception, io)) %>% 
   mutate(io.type = factor(io.type)) %>% 
   # nest so that we can sample from groups of rows corresponding to each io type
-  nest(-io.type) %>% 
+  nest(data = -io.type) %>% 
   mutate(samples = 
            map(data, ~ bootstraps(.x, times = 100))) %>% 
   unnest(samples) %>% 
-  mutate(splits = map(splits, ~ as.tibble(.x)),
+  mutate(splits = map(splits, ~ as_tibble(.x)),
          mean_sample = map_dbl(splits, ~ mean(.x$likelihood_per_response)))
-
 ```
 
 
 
-```{r}
+
+```{r, fig.width=3.5, fig.height=2.2}
 # plot mean likelihood per response with bootstrapped 95% CI
-d.temp %>% 
+d.test.IO %>% 
   group_by(io.type) %>% 
   summarise(
     mean_likelihood_per_response = mean(likelihood_per_response)) %>%
-  mutate(cues = ifelse(str_detect(io.type, "VOT_F0"), "VOT-F0", "VOT")) %>% 
-  filter(cues == "VOT-F0") %>% 
+  mutate(io_cues = ifelse(str_detect(io.type, "VOT_F0"), "VOT-F0", "VOT")) %>% 
+  filter(io_cues == "VOT-F0") %>% 
   ggplot(aes(x = io.type, 
              y = mean_likelihood_per_response, colour = io.type)) +
   geom_point(size = 3) +
   geom_errorbar(
     data = d.bootstrap %>% 
       group_by(io.type) %>% 
-      mutate(cues = ifelse(str_detect(io.type, "VOT_F0"), "VOT-F0", "VOT")) %>% 
-  filter(cues == "VOT-F0") %>% 
+      mutate(io_cues = ifelse(str_detect(io.type, "VOT_F0"), "VOT-F0", "VOT")) %>% 
+  filter(io_cues == "VOT-F0") %>% 
+      summarise(
+        mean.lower = quantile(mean_sample, probs = .025),
+        mean.upper = quantile(mean_sample, probs = .975)
+      ),
+    mapping = 
+      aes(x = io.type, ymin = mean.lower, ymax = mean.upper),
+    colour = c("#FCD900", "#E8630A", "#B22727"),
+    size = 1.5,
+    alpha = .6,
+  width = 0,
+    inherit.aes = F) +
+  scale_colour_manual("Model", values = c("#FCD900", "#E8630A", "#B22727"), 
+                      labels = c("VOT-F0", "VOT-F0-centered", "VOT-F0-input-centered")) +
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks = element_blank(),
+        legend.position = "top")
+```
+
+
+
+```{r, fig.width=3.5, fig.height=2.2}
+d.test.IO %>% 
+  group_by(io.type) %>% 
+  summarise(
+    mean_likelihood_per_response = mean(likelihood_per_response)) %>%
+  mutate(io_cues = ifelse(str_detect(io.type, "VOT_F0"), "VOT-F0", "VOT")) %>% 
+  filter(io_cues == "VOT") %>% 
+  ggplot(aes(x = io.type, 
+             y = mean_likelihood_per_response, colour = io.type)) +
+  geom_point(size = 3) +
+  geom_errorbar(
+    data = d.bootstrap %>% 
+      group_by(io.type) %>% 
+      mutate(io_cues = ifelse(str_detect(io.type, "VOT_F0"), "VOT-F0", "VOT")) %>% 
+  filter(io_cues == "VOT") %>% 
       summarise(
         mean.lower = quantile(mean_sample, probs = .025),
         mean.upper = quantile(mean_sample, probs = .975)
@@ -719,19 +814,14 @@ d.temp %>%
     alpha = .6,
   width = 0,
     inherit.aes = F) +
-  scale_colour_manual(values = c("#FCD900", "#E8630A"), 
-                      labels = c("VOT-F0", "VOT-F0 (centered)")) 
-  
-  d.bootstrap %>% 
-      group_by(io.type) %>% 
-      summarise(
-        mean.lower = quantile(mean_sample, probs = .025),
-        mean.upper = quantile(mean_sample, probs = .975)
-      )
+  scale_colour_manual("Model", values = c("#FCD900", "#E8630A"), 
+                      labels = c("VOT-no-noise", "VOT-noise")) +
+  theme(axis.title.x = element_blank(),
+        legend.position = "top")
 ```
 
 
-
+\newpage
 
 
 
