@@ -552,41 +552,44 @@ p.IOs.VOT_F0.centered.input <- plot_IO_fit(
 
 (ref:comparative-IO-plot) Comparing predicted vs. observed categorization functions for Experiment 1. The black line and interval show the psychometric fit and 95% CI for Experiment 1 marginalizing over all random effects. Each thin line shows the prediction of a single talker-specific ideal observers derived from a database of word-initial stop productions [data: @chodroff2017structure; data preparation & model code: @Kurumada_Xie_Jaeger_2022]. The lapse rate and response bias for the ideal observers was set to match the MAP estimates of the psychometric model. For ease of comparisons, horizontal point ranges show the PSE and its 95% CI after discounting lapses.
 
-```{r comparative-IO-plot, warning=FALSE, fig.width=6, fig.height=4, fig.cap="(ref:comparative-IO-plot)"}
+```{r comparative-IO-plot, warning=FALSE, fig.width=6, fig.height=5, fig.cap="(ref:comparative-IO-plot)"}
 p1 <- 
   p.IOs.VOT.no.noise + 
   theme(legend.position = "none", 
         axis.title.x = element_blank(),
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank(),
-        axis.title.y = element_blank())
+        axis.title.y = element_blank(),
+        plot.margin = unit(c(0.5, 0.5, 0, 0), "cm")) 
 p2 <- 
   p.IOs.VOT + 
   theme(legend.position = "none", 
         axis.title.x = element_blank(),
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank(),
-        axis.title.y = element_blank())
+        axis.title.y = element_blank(),
+        plot.margin = unit(c(0.5, 0.5, 0, 0), "cm")) 
 p3 <- 
   p.IOs.VOT_F0 + 
   theme(legend.position = "none",
         axis.title.x = element_blank(),
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank(),
-        axis.title.y = element_blank()) 
+        axis.title.y = element_blank(),
+        plot.margin = unit(c(0.5, 0.5, 0, 0), "cm"))  
 p4 <- 
   p.IOs.VOT_F0.centered + 
   theme(legend.position = "none", 
         axis.title.x = element_blank(),
-        axis.text.x = element_blank(),
-        axis.ticks.x = element_blank(),
-        axis.title.y = element_blank())
+        axis.title.y = element_blank(),
+        plot.margin = unit(c(0.5, 0.5, 0, 0), "cm"))  
 
 p5 <- 
   p.IOs.VOT_F0.centered.input + 
   theme(legend.position = "none", 
         axis.title.y = element_blank(), 
-        axis.title.x = element_blank())
+        axis.title.x = element_blank(),
+        plot.margin = unit(c(0.5, 0.5, 0, 0), "cm"))  
   
 legend <- get_legend(p.IOs.VOT_F0 + theme(legend.position = "top"))
 
@@ -602,79 +605,86 @@ IO_grid1 <-
     rel_widths = c(1, 1)) +
   theme(plot.margin = margin(0, 0, 0, 40))
 
-IO_grid1 <- add_sub(IO_grid1, "VOT (ms)", x = .55, size = 10, fontface = "bold", vjust = -1)
-IO_grid1 <- add_sub(IO_grid1, "Proportion of 't'-responses", x = -0.03, y = 2.5, size = 10, fontface = "bold", angle = 90)
+IO_grid1 <- add_sub(IO_grid1, "VOT (ms)", x = .55, size = 10, fontface = "bold", vjust = 0)
+IO_grid1 <- add_sub(IO_grid1, "Proportion of 't'-responses", x = -0.03, y = 2, size = 10, fontface = "bold", angle = 90)
 IO_grid2 <- plot_grid(legend, IO_grid1, align = "h", ncol = 1, rel_heights = c(.08, 1))
-IO_grid2
+ggdraw(IO_grid2)
 ```
 
 
-```{r temporary-chunk-poster-plotting, warning=FALSE, fig.height=2, fig.width=8}
-p1 <- 
-  p.IOs.VOT.no.noise + 
-  theme(legend.position = "none", 
-        axis.title.x = element_blank()) 
-p2 <- 
-  p.IOs.VOT + 
-  theme(legend.position = "none", 
-        axis.text.y = element_blank(),
-        axis.ticks.y = element_blank(),
-        axis.title.y = element_blank(), 
-        axis.title.x = element_blank()) 
-p3 <- 
-  p.IOs.VOT_F0 + 
-  theme(legend.position = "none",
-        axis.text.y = element_blank(),
-        axis.ticks.y = element_blank(),
-        axis.title.y = element_blank(), 
-        axis.title.x = element_blank()) 
-p4 <- 
-  p.IOs.VOT_F0.centered + 
-  theme(legend.position = "none", 
-        axis.text.y = element_blank(),
-        axis.ticks.y = element_blank(),
-        axis.title.y = element_blank(), 
-        axis.title.x = element_blank()) 
+```{r temporary-chunk-poster-plotting, warning=FALSE, fig.height=2, fig.width=8.5}
+# p1 <-
+#   p.IOs.VOT.no.noise +
+#   theme(legend.position = "none",
+#         axis.title.x = element_blank(),
+#         plot.margin = unit(c(0.5, 0, 0, 1), "cm"))
+# p2 <-
+#   p.IOs.VOT +
+#   theme(legend.position = "none",
+#         axis.text.y = element_blank(),
+#         axis.ticks.y = element_blank(),
+#         axis.title.y = element_blank(),
+#         axis.title.x = element_blank(),
+#         plot.margin = unit(c(0.5, 0.5, 0, 0), "cm"))
+# p3 <-
+#   p.IOs.VOT_F0 +
+#   theme(legend.position = "none",
+#         axis.text.y = element_blank(),
+#         axis.ticks.y = element_blank(),
+#         axis.title.y = element_blank(),
+#         axis.title.x = element_blank(),
+#         plot.margin = unit(c(0.5, 0.5, 0, 0), "cm"))
+# p4 <-
+#   p.IOs.VOT_F0.centered +
+#   theme(legend.position = "none",
+#         axis.text.y = element_blank(),
+#         axis.ticks.y = element_blank(),
+#         axis.title.y = element_blank(),
+#         axis.title.x = element_blank(),
+#         plot.margin = unit(c(0.5, 0.5, 0, 0), "cm"))
+# 
+# p5 <-
+#   p.IOs.VOT_F0.centered.input +
+#   theme(legend.position = "none",
+#         axis.text.y = element_blank(),
+#         axis.ticks.y = element_blank(),
+#         axis.title.y = element_blank(),
+#         axis.title.x = element_blank(),
+#         plot.margin = unit(c(0.5, 0.5, 0, 0), "cm"))
+# 
+# legend <- get_legend(p.IOs.VOT_F0 + theme(legend.position = "top"))
+# 
+# 
+# IO_grid1 <- plot_grid(p2, p3, p4, p5,
+#     nrow = 1,
+#     ncol = 4,
+#     align = "h",
+#     labels = c("B", "C", "D", "E"),
+#     label_size = 8,
+#     hjust = 0,
+#     vjust = 1)
+# 
+# IO_grid2 <- plot_grid(
+#   p1, IO_grid1,
+#   nrow = 1,
+#   ncol = 2,
+#   align = "v",
+#   labels = c("A", " "),
+#   hjust = 0,
+#   vjust = 1,
+#   label_size = 8,
+#   rel_widths = c(.31, 1.1)
+# )
+# 
+# 
+# IO_grid2 <- add_sub(IO_grid2, "VOT (ms)", x = .55, size = 10, fontface = "bold", vjust = 0)
+# #IO_grid1 <- add_sub(IO_grid1, "Proportion of 't'-responses", x = -0.03, y = 0, size = 10, fontface = "bold", angle = 90)
+# 
+# p <- ggdraw(IO_grid2)
+# p
+# leg <- ggdraw(legend)
 
-p5 <- 
-  p.IOs.VOT_F0.centered.input + 
-  theme(legend.position = "none", 
-        axis.text.y = element_blank(),
-        axis.ticks.y = element_blank(),
-        axis.title.y = element_blank(), 
-        axis.title.x = element_blank()) 
-  
-legend <- get_legend(p.IOs.VOT_F0 + theme(legend.position = "top"))
-
- 
-IO_grid1 <- plot_grid(p2, p3, p4, p5,
-    ncol = 4, 
-    align = "h", 
-    labels = c("B", "C", "D", "E"), 
-    label_size = 8, 
-    hjust = 0, 
-    vjust = 1)
-
-IO_grid2 <- plot_grid(
-  p1, IO_grid1,
-  nrow = 1,
-  align = "v",
-  labels = c("A", " "),
-  hjust = 0,
-  vjust = 1,
-  label_size = 8,
-  rel_widths = c(.30, 1.1)
-)
-
-
-IO_grid2 <- add_sub(IO_grid2, "VOT (ms)", x = .55, size = 10, fontface = "bold", vjust = 0)
-#IO_grid1 <- add_sub(IO_grid1, "Proportion of 't'-responses", x = -0.03, y = 0, size = 10, fontface = "bold", angle = 90)
-
-p <- ggdraw(IO_grid2)
-p
-leg <- ggdraw(legend)
-
-ggsave("../figures/IO_plot_exp1.png", plot = p, width = 25, height = 5, units = "cm", dpi = 300)
+# ggsave("../figures/IO_plot_exp1.png", plot = p, width = 25, height = 5, units = "cm", dpi = 300)
 ```
 
 
@@ -726,7 +736,7 @@ d.test.IO %<>%
           log = T)) %>% 
       unlist())
 
-d.test.IO %>% 
+IO.accuracy <- d.test.IO %>% 
   group_by(io.type) %>% 
   summarise(
     # Here you could use bootstrap to get the lower and upper CI within each group
@@ -751,7 +761,7 @@ d.bootstrap <- d.test.IO %>%
 
 
 
-```{r, fig.width=3.5, fig.height=2.2}
+```{r, fig.width=4.5, fig.height=2.2}
 # plot mean likelihood per response with bootstrapped 95% CI
 d.test.IO %>% 
   group_by(io.type) %>% 
@@ -778,6 +788,7 @@ d.test.IO %>%
     alpha = .6,
   width = 0,
     inherit.aes = F) +
+  scale_y_continuous("Mean log-likelihood \n per response") +
   scale_colour_manual("Model", values = c("#FCD900", "#E8630A", "#B22727"), 
                       labels = c("VOT-F0", "VOT-F0-centered", "VOT-F0-input-centered")) +
   theme(axis.title.x = element_blank(),
@@ -816,6 +827,7 @@ d.test.IO %>%
     inherit.aes = F) +
   scale_colour_manual("Model", values = c("#FCD900", "#E8630A"), 
                       labels = c("VOT-no-noise", "VOT-noise")) +
+  scale_y_continuous("Mean log-likelihood \n per response") +
   theme(axis.title.x = element_blank(),
         legend.position = "top")
 ```
