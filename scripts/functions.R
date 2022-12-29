@@ -346,16 +346,25 @@ get_IO_categorization <- function(
 ############################################################################
 # function to evaluate the IOs
 ############################################################################
-get_average_accuracy_of_IO <- function(observations, responses, model, log = FALSE) {
-  get_categorization_from_MVG_ideal_observer(x = observations, model = model, decision_rule = "proportional") %>% 
+get_average_accuracy_of_IO <- function(observations, responses, model) {
+  get_categorization_from_MVG_ideal_observer(x = observations, model = model, decision_rule = "proportional") %>%
     # we only need one posterior since the other one is simply 1-that
-    filter(category == "/t/") %>% 
+    filter(category == "/t/") %>%
     mutate(
-      human_response = .env$responses, 
-      response = if (log) log(response) else response,
+      human_response = .env$responses,
+      accuracy = ifelse(category == human_response, response, 1 - response)) %>%
+    summarize(mean_accuracy = mean(accuracy))
+}
+
+get_average_log_likelihood_of_perception_data_under_IO <- function(observations, responses, model) {
+  get_categorization_from_MVG_ideal_observer(x = observations, model = model, decision_rule = "proportional") %>%
+    # we only need one posterior since the other one is simply 1-that
+    filter(category == "/t/") %>%
+    mutate(
+      human_response = .env$responses,
       likelihood = ifelse(category == human_response, response, 1 - response)) %>%
-    summarize(likelihood_per_response = mean(likelihood))
-} 
+    summarize(log_likelihood_per_response = mean(log(likelihood), na.rm = T))
+}
 ############################################################################
 
 

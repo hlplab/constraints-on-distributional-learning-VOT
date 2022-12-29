@@ -727,22 +727,20 @@ d.test.IO %<>%
     likelihood_per_response =
       pmap(
         list(d.perception, io, io.type), 
-        ~ get_average_accuracy_of_IO(
+        ~ get_average_log_likelihood_of_perception_data_under_IO(
           observations = if(str_detect(..3, "centered.input")) {..1$VOT_F0_centered}
           else if (str_detect(..3, "VOT_F0")) {..1$VOT_F0} 
           else {..1$Item.VOT}, 
           responses = ..1$Response.category, 
-          model = ..2,
-          log = T)) %>% 
+          model = ..2)) %>% 
       unlist())
 
-IO.accuracy <- d.test.IO %>% 
+IO.likelihood <- d.test.IO %>% 
   group_by(io.type) %>% 
   summarise(
     # Here you could use bootstrap to get the lower and upper CI within each group
-    mean_log_likelihood_per_response = mean(likelihood_per_response) 
-  ) %>% 
-  mutate(mean_accuracy_per_response = exp(mean_log_likelihood_per_response))
+    median_log_likelihood_per_response = median(likelihood_per_response) 
+  )
 
 # use bootstrap samples by io type to find the CI of the mean estimates
 d.bootstrap <- d.test.IO %>% 
