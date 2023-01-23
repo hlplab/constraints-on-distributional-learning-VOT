@@ -219,6 +219,7 @@ d.for_RT_exclusion <- d.exposure_test %>%
   ungroup() %>% 
   mutate(Exclude_participant.due_to_RT = ifelse(abs(scale(Response.log_RT.mean)) > 3, TRUE, FALSE)) 
 
+# exclude the slow trials
 d.for_RT_exclusion %<>% 
   filter(Exclude_participant.due_to_catch_trials == FALSE &
            Exclude_participant.due_to_labeled_trials == FALSE &
@@ -237,6 +238,9 @@ excl.RT.trial <- d.for_RT_exclusion %>%
   filter(Exclude_trial.due_to_RT == TRUE) %>% 
   group_by(Condition.Exposure) %>% 
   summarise(RT.Trial = sum(Exclude_trial.due_to_RT)) 
+
+# proportion of trials excluded due to RT
+proportion.trials.excluded <- nrow(excl.RT.trial)/nrow(d.for_RT_exclusion)
 
 # get number of participants excluded due to catch trial
 excl.catch <- d.exposure_test %>% 
@@ -269,19 +273,19 @@ excl.VOT <- d.exposure_test %>%
 #   full_join(excl.RT.participant) %>% 
 #   mutate(across(.cols = c(VOT.Slope, Catch, Labeled, RT.Participant), .fns = ~ ifelse(is.na(.x), 0, .x))) 
 ```
+
 ### Exclusions
-We excluded from analysis participants who committed more than 3 errors out of the 18 catch trials (<84% accuracy, N = 1), participants who committed more than 4 errors out of the 72 catch trials (<94% accuracy, N = 0), participants with an average reaction time (RT) more than three standard deviations from the mean of the by-participant means (N = 0), and participants who reported not to have used headphones (N = 0) or not to be native (L1) speakers of US English (N = 0). In addition, participants' categorization during the early phase of the experiment were scrutinise for their slope direction and their
-For the remaining participants, trials that were more than three SDs from the participant's mean RT were excluded from analysis (`r proportion.excluded * 100 `%). Finally, we excluded participants (N = 0) who had less than 50% data remaining after these exclusions. 
+We excluded from analysis participants who committed more than 3 errors out of the 18 catch trials (<84% accuracy, N = 1), participants who committed more than 4 errors out of the 72 catch trials (<94% accuracy, N = 0), participants with an average reaction time (RT) more than three standard deviations from the mean of the by-participant means (N = 0), and participants who reported not to have used headphones (N = 0) or not to be native (L1) speakers of US English (N = 0). 
+
+In addition, participants' categorization during the early phase of the experiment were scrutinised for their slope orientation and their proportion of "t"-responses at the least ambiguous locations of the VOT continuum. The early phase of the experiment was defined as the first 36 trials and the least ambiguous locations were defined as -20ms from the empirical mean of the /d/ category and +20ms from the empirical mean of the /t/ category. These means were taken from the production data estimates by @Kurumada_Xie_Jaeger_2022.
+For the remaining participants, trials that were more than three SDs from the participant's mean RT were excluded from analysis (`r proportion.trials.excluded * 100 `%). Finally, we excluded participants (N = 0) who had less than 50% data remaining after these exclusions. 
 
 
 
 
 
 
-
-
-
-\end{equation}
+\newpage
 
 <!-- This is a markdown comment that will NOT show when you knit the document.  -->
 
