@@ -116,7 +116,10 @@ library(rlang)              # quosures (in functions)
 library(assertthat)         # asserts (in functions)
 
 library(cowplot)
+library(patchwork)
 library(magick)
+library(ggstance)
+library(kableExtra)
 
 library(linguisticsdown)    # IPA symbols
 library(latexdiffr)         # trackchanges

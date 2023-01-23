@@ -27,9 +27,125 @@ We used the following R packages to create this document: `r cite_r("latex-stuff
 ## Recording of audio stimuli
 ## Annotation of audio stimuli
 ## Synthesis of audio stimuli
+- acoustic plots
 
 # Web-based experiment design procedure
-## Making exposure conditions
+## Experiment 1
+### Making exposure conditions
+### Exclusions analysis
+
+
+## Experiment 2
+### Making exposure conditions
+### Exclusions analysis
+- reaction time plots
+- catch trial performance plots
+
+```{r catch-trial-performance, fig.height=4, fig.width=6}
+d.exposure_test %>% 
+  group_by(ParticipantID) %>% 
+  summarise(No.CatchTrial.Correct = sum(CatchTrial.Correct, na.rm = T)) %>%
+  ggplot(aes(x = No.CatchTrial.Correct)) +
+  geom_bar(width = .6) +
+  scale_x_continuous("Number of correct catch trials", breaks = seq(0, 18, 1)) +
+  scale_y_continuous("Number of participants") 
+```
+
+
+-labelled trial performance plots
+```{r labeled-trial-performance-group, fig.width=6, fig.height=4, message=F}
+p.labelled <- d.exposure_test %>% 
+  filter(Phase == "exposure") %>% 
+  group_by(ParticipantID, Condition.Exposure) %>% 
+  summarise(LabeledTrial.Correct = sum(LabeledTrial.Correct, na.rm = TRUE)) %>% 
+  group_by(Condition.Exposure, LabeledTrial.Correct) %>% 
+  summarise(freq = n()) %>% 
+  ggplot(aes(x = LabeledTrial.Correct, y = freq, fill = Condition.Exposure)) +
+  geom_bar(stat = "identity", position = position_dodge2(width = .5, preserve = "single"), width = .5) +
+  geom_text(aes(label = freq), position = position_dodge(width = .5), vjust = -.5) +
+  scale_colour_manual("Exposure condition", 
+                      aesthetics = c("colour", "fill"), 
+                      breaks = c("Shift0", "Shift10", "Shift40"), 
+                      values = c("#cc0000", "#12D432","#0481F3")) +
+  scale_x_continuous("Total labelled trials correct") +
+  scale_y_continuous("No. of participants", breaks  = seq(0, 115, 5)) +
+  theme(legend.position = "none") 
+```
+
+
+```{r labeled-trial-performance, fig.width=6, fig.height=4, message=F}
+p.labelled.group <- d.exposure_test %>% 
+  filter(Phase == "exposure") %>% 
+  group_by(ParticipantID, Condition.Exposure, Block) %>% 
+  summarise(LabeledTrial.Correct = sum(LabeledTrial.Correct, na.rm = TRUE)) %>% 
+  ggplot(aes(x = LabeledTrial.Correct, fill = Condition.Exposure)) +
+  geom_bar(position = position_dodge(width = .5, preserve = "single"), width = .5) +
+  scale_colour_manual("Exposure condition", 
+                      aesthetics = c("colour", "fill"), 
+                      breaks = c("Shift0", "Shift10", "Shift40"), 
+                      values = c("#cc0000", "#12D432","#0481F3")) +
+  scale_x_continuous("Total labelled trials correct") +
+  theme(legend.position = "top") +
+  facet_grid(Condition.Exposure ~ Block) 
+
+p.labelled + p.labelled.group + plot_layout(guides = "collect") & theme(legend.position = "top")
+```
+
+
+```{r, message=FALSE, fig.width=6, fig.height=5}
+d.exposure_test %>% 
+  filter(Is.CatchTrial == FALSE & Phase == "exposure") %>% 
+  mutate(Item.Labeled = factor(ifelse(Item.Labeled == TRUE, "labeled", "unlabeled"))) %>% 
+  summarise(Condition.Exposure, Block, Item.Labeled, Response.Correct) %>% 
+  ggplot(aes(x = Response.Correct, fill = Item.Labeled)) +
+  geom_bar(position = position_dodge2(width = .5, preserve = "single"), width = .5) +
+  scale_x_discrete("Response", labels = c("incorrect", "correct")) +
+  scale_colour_manual("Labelling", aesthetics = c("colour", "fill"), breaks = c("labeled", "unlabeled"), values = c("#f6546a", "#00ced1")) +
+  theme(legend.position = "top") +
+  facet_grid(Condition.Exposure ~ Block) 
+```
+
+
+```{r fig,width=8, fig.height=5, fig.width=6}
+d.exposure_test %>%
+  group_by(ParticipantID, Condition.Exposure, Block) %>%
+  filter(Is.CatchTrial == FALSE) %>%
+  mutate(Response.log_RT = log10(Response.RT)) %>%
+  summarise_at("Response.log_RT", .funs = list("mean" = mean, "sd" = sd)) %>%
+  ggplot(aes(x = mean, y = sd, label = ParticipantID)) +
+  geom_text(aes(colour = Condition.Exposure), alpha = .5) +
+  geom_rug(aes(colour = Condition.Exposure), alpha = .5) +
+  scale_x_continuous("mean log-RT (log10 of msec)") +
+  scale_y_continuous("SD of log-RT") +
+  scale_color_manual("Exposure condition", 
+                      aesthetics = c("colour", "fill"), 
+                      breaks = c("Shift0", "Shift10", "Shift40"), 
+                      values = c("#cc0000", "#12D432","#0481F3")) +
+  theme(legend.position = "top") +
+  facet_wrap( ~ Block )
+```
+
+
+
+
+```{r, fig.width=8, fig.height=3}
+d.exposure_test %>% 
+  group_by(Trial, Condition.Exposure, Block) %>%
+  mutate(Response.log_RT = log10(Response.RT)) %>%
+  summarise_at("Response.log_RT", .funs = list("mean" = mean, "sd" = sd)) %>% 
+  ggplot(aes(x = Trial, y = mean)) +
+  geom_ribbon(aes(ymin = mean - 2*sd, ymax = mean + 2*sd), colour = "lightgrey", alpha = .1) +
+  geom_line(aes(group = Condition.Exposure, color = Condition.Exposure), size = 1) +
+  scale_x_continuous("Trial", breaks = c(12, 24, 36, 48)) +
+  scale_y_continuous("mean log-RT (log10 of msec)") +
+  coord_trans(y = "log10") +
+      scale_color_manual("Exposure condition", 
+                      aesthetics = c("colour", "fill"), 
+                      breaks = c("Shift0", "Shift10", "Shift40"), 
+                      values = c("#cc0000", "#12D432","#0481F3")) +
+  facet_grid(Condition.Exposure~ Block, scales = "free_x", space = "free_x") +
+  theme(legend.position = "top")
+```
 
 
 ## Ideal observer training

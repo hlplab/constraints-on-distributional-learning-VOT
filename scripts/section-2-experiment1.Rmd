@@ -36,7 +36,7 @@ The code for the experiment is available as part of the OSF repository for this 
 
 On the next page, participants were informed about the task for the remainder of the experiment. They were informed that they would heard a female talker speak a single word on each trial, and had to select which word they heard. Participants were instructed to listen carefully and answer as quickly and as accurately as possible. They were also alerted to the fact that the recordings were subtly different and therefore may sound repetitive. This was done to encourage their full attention.
 
-Each trial started with a green fixation dot being displayed. At 500ms from trial onset, two minimal pair words appeared on the screen, as shown in Figure \@ref(fig:exp1-example-trial). At 1000ms from trial onset, an audio recording from the matching minimal pair continuum started playing. Participants were required to click on the word they heard. For each participant, /d/-initial words were either always displayed on the left side or always displayed on the right side. Across participants, this ordering was counter-balanced. After participants clicked on the word, the next trial began.
+Each trial started with a dark-shaded green fixation dot being displayed. At 500ms from trial onset, two minimal pair words appeared on the screen, as shown in Figure \@ref(fig:exp1-example-trial). At 1000ms from trial onset, the fixation dot would turn bright green and an audio recording from the matching minimal pair continuum started playing. Participants were required to click on the word they heard. For each participant, /d/-initial words were either always displayed on the left side or always displayed on the right side. Across participants, this ordering was counter-balanced. After participants clicked on the word, the next trial began.
 
 ```{r exp1-example-trial, fig.cap="Example trial display. The words were displayed 500ms after trial onset and the audio recording of the word was played 1000ms after trial onset"}
 knitr::include_graphics("../figures/exp1_trial_example.png")
@@ -84,12 +84,14 @@ d.test %<>%
   group_by(ParticipantID) %>%
   filter(Excluded.due.to.CatchTrial == FALSE) %>% 
   mutate(Response.log_RT = log10(ifelse(Response.RT <= 0, NA_real_, Response.RT)),
-         # deducts each value with subject's own mean, div by own SD
+         # scale the log RTs
          Response.log_RT.scaled = scale(Response.log_RT), 
          # this gives each subject's mean log_RT
-         Response.log_RT.mean = mean(Response.log_RT, na.rm = T), 
-         # Make distributional outliers
-         Excluded.participant.due.to.mean.RT = ifelse(abs(scale(Response.log_RT.mean)) > 3, TRUE, FALSE)) 
+         Response.log_RT.mean = mean(Response.log_RT, na.rm = T)) %>% 
+  ungroup() %>% 
+  mutate(Excluded.participant.due.to.mean.RT = ifelse(abs(scale(Response.log_RT.mean)) > 3, TRUE, FALSE))
+         # Get participants whose means are more than 3x sd of mean of participant means. Mean of means is the same as mean of all rows because each participant has the same number of rows.
+         
 
 excluded.participants.due.to.mean.RT <- 
   d.test %>% 
@@ -97,12 +99,13 @@ excluded.participants.due.to.mean.RT <-
 
 d.test %<>% 
   filter(Excluded.due.to.CatchTrial == FALSE | Excluded.participant.due.to.mean.RT == FALSE) %>% 
-  mutate(Excluded.participant.due.to.RT = ifelse(abs(Response.log_RT.scaled) > 3, TRUE, FALSE))
+  group_by(ParticipantID) %>% 
+  mutate(Excluded.trial.due.to.RT = ifelse(abs(Response.log_RT.scaled) > 3, TRUE, FALSE))
   
 # get the rows removed due to RT
 excluded.data.due.to.RT <- 
   d.test %>% 
-  filter(Excluded.participant.due.to.mean.RT == TRUE | Excluded.participant.due.to.RT == TRUE) 
+  filter(Excluded.participant.due.to.mean.RT == TRUE | Excluded.trial.due.to.RT == TRUE) 
 
 # get the proportion of rows excluded from analysis
 proportion.excluded <- (nrow(excluded.data.due.to.RT)) / (nrow(d.test))
@@ -113,13 +116,13 @@ d.test.excluded <-
   filter(
     Is.CatchTrial == FALSE, 
     Excluded.due.to.CatchTrial == FALSE, 
-    Excluded.participant.due.to.RT == FALSE) %>% 
+    Excluded.trial.due.to.RT == FALSE) %>% 
   mutate(Response.ProportionVoiceless = ifelse(Response.Voicing == "voiceless", 1, 0))
 ```
 
 
 ### Exclusions
-We excluded from analysis participants who committed more than 3 errors out of the 12 catch trials (<75% accuracy, N = 3), participants with an average reaction time (RT) more than three standard deviations from the mean of the by-participant means (N = 0), and participants who reported not to have used headphones (N = 0) or not to be native (L1) speakers of US English (N = 0). For the remaining participants, trials that were more than three SDs from the participant's mean RT were excluded from analysis (`r proportion.excluded * 100 `%). Finally, we excluded participants (N = 0) who had less than 50% data remaining after these exclusions. 
+We excluded from analysis participants who committed more than 2 errors out of the 12 catch trials (<83% accuracy, N = 3), participants with an average reaction time (RT) more than three standard deviations from the mean of the by-participant means (N = 0), and participants who reported not to have used headphones (N = 0) or not to be native (L1) speakers of US English (N = 0). For the remaining participants, trials that were more than three SDs from the participant's mean RT were excluded from analysis (`r proportion.excluded * 100 `%). Finally, we excluded participants (N = 0) who had less than 50% data remaining after these exclusions. 
 
 
 ## Behavioral results
@@ -330,7 +333,7 @@ ggdraw(add_sub(grid2, "VOT (ms)", size = 10, fontface = "bold"))
 ```
 
 
-```{r by-participant-lapse-bias, warning = FALSE, fig.height=2.6, fig.width=6.5}
+```{r by-participant-lapse-bias, warning=FALSE, fig.height=2.6, fig.width=6.5}
 lapse_participant <- fit_mix %>% spread_draws(r_ParticipantID__theta1[ParticipantID, term], b_theta1_Intercept) %>%
   group_by(ParticipantID) %>%
   mutate(ParticipantID = factor(ParticipantID),
@@ -372,18 +375,15 @@ Finally to accomplish the first goal of experiment 1, we look at the interaction
 Overall, there was little evidence that participants substantially changed their categorisation behaviour as the experiment progressed. Still, to err on the cautious side, Experiment 2 employs shorter test phases.
 
 ## Comparisons to model of adaptive speech perception
-We now turn to final aim of experiment 1 which is to make use of computational models to delve into the theoretical underpinnings that inform the assumptions we make in studies of this kind.
+We now turn to final aim of experiment 1 which is to make use of computational models to begin to understand the implicit expectations that listeners hold when perceiving input that is uninformative of a talker's cue-to-category-mappings. 
 
-Speakers' productions can act as a proxy for listeners' implicit knowledge of the distributional patterns of cues. This production-perception relationship within a phonological system was observed in early work by [@abramson1973voice] who found that production statistics of talkers along VOT aligned well with data from listeners who had categorised a separate set of synthesised VOT stimuli. This allows for the use of analytic models as tools for predicting categorisation behaviour from speech production [@nearey1986phonological].
+Speakers' productions can act as a proxy for listeners' implicit knowledge of the distributional patterns of cues. This production-perception relationship within a phonological system was observed in early work by [@abramson1973voice] who found that production statistics of talkers along VOT aligned well with data from listeners who had categorised a separate set of synthesised VOT stimuli. This allows for the use of analytic models as tools for predicting categorisation behaviour from speech production data [@nearey1986phonological]. 
 
-We apply this principle in  fitting ideal observer (IO) models by linking the distributional patterns of input to the categorisation behaviour that listeners make in the perception of our stimuli. We compare the categorisation behaviour against predictions of several IO models differentiated by the various assumptions they incorporate. These IOs are trained on cue measurements extracted from an annotated database of 92 L1 US-English talkers' productions [@chodroff2017structure] of word initial stops. By using IOs trained solely on production data to predict behaviour we avoid additional computational degrees of freedom and limit the risk of overfitting the model to the data thus reducing bias.
+We apply this principle when fitting ideal observer (IO) models by linking the distributional patterns of talker productions to the categorisation behaviour of listeners.  All models were trained on cue measurements extracted from an annotated database of 92 L1 US-English talkers' productions [@chodroff2017structure] of word initial /d/ and /t/. By using IOs trained solely on production data to predict behaviour we avoid additional computational degrees of freedom and limit the risk of overfitting the model to the data. We compare listener categorisation behaviour against the predictions of five IO models which reflect different assumptions about perceptual processes and the normalization (or lack thereof) of input. Beginning from the minimal assumption of using raw VOT cues to predict categorisation, each successive model builds up in complexity by cumulatively adding assumption over the previous model (Figure  \@ref(fig:comparative-IO-plot)).
 
-Hypotheses about the nature of long-term representations maintained by listeners continues to be debated and revised. On one hand there is the proposition that automatic processes that operate purely on the acoustic input is sufficient mechanism for listeners to cope with variation; this can be loosely referred to as normalization accounts. On the other hand are hypotheses that listeners learn and store cue distributions in memory for later retrieval --this does not however, preclude cue normalisation and may even happen in conjunction to it. Within this latter hypothesis, there is debate over the resolution of the input that is actually learned and stored, with exemplar models arguably, accounting for the greatest degree of granularity -- listeners could for instance store talker-specific statistics. A more parsimonious account would suggest that listeners store models of groups of talkers, according to a structure that is most informative for robust speech perception [@kleinschmidt2015robust; @kleinschmidt2019structure]. We thus compare listener categorisations to models that incorporate one or more of these hypotheses (see SI for details of IO fitting). 
+The first point that stands out from the visual comparisons is that models that incorporate perceptual noise fit the perceptual data better than those that do not. This itself indicates that perception of acoustic stimuli is not entirely faithful to the bottom-up signal but is inferred through a combination of what listeners actually perceived and their existing knowledge of the underlying linguistic category [@kronrod2016unified]. The second pattern is that models trained with multiple cues are better fits overall than models trained on a single cue. This trend is expected given the literature on 
 
-Each panel in figure \@ref(fig:comparative-IO-plot) shows 92 talker-specific ideal observer models colour-coded by talker sex, bearing different assumptions plotted against the psychometric fit of listener categorisations (thick black line). We focus mainly on comparing the points of subjective equality (PSEs) which represents the boundary between the two categories. While the functions are not simply described by their PSEs since their slope also matters, we focus on it here as this is most relevant to the design of experiment 2. All IO plots in figure \@ref(fig:comparative-IO-plot) except for (A) are integrated with a noise variance to simulate perceptual noise on the part of listeners [@kronrod2016unified]. The IOs were trained on unnormalised VOTs without noise (A); unnormalised VOTs (B); unnormalised bivariate cues of VOT and F0 (C); C-CuRE-normalised VOT and F0 (D) (@mcmurray2011information see SI section).
 
-Beginning with a qualitative assessment of the plots, IOs that incorporate perceptual noise in the models (B-D) appear to capture the uncertainty reflected in our data better. The slopes of the IOs in panel A are far steeper than the fitted categorisation function but with added noise, as with the IOs in B-D the IO slopes flatten out to better match the slope of the fitted line. This itself indicates that perception of acoustic stimuli is not entirely faithful to the bottom-up signal but is inferred through a combination of what listeners actually perceived and their existing knowledge of the underlying linguistic category [@kronrod2016unified].
-Noticeably, in all IO types the median estimated PSE from our participant data is located to the left of the IO-predicted median PSEs although the range of fitted estimates do overlap with the IOs in the upper region. 
 
 
 
@@ -552,7 +552,7 @@ p.IOs.VOT_F0.centered.input <- plot_IO_fit(
 
 (ref:comparative-IO-plot) Comparing predicted vs. observed categorization functions for Experiment 1. The black line and interval show the psychometric fit and 95% CI for Experiment 1 marginalizing over all random effects. Each thin line shows the prediction of a single talker-specific ideal observers derived from a database of word-initial stop productions [data: @chodroff2017structure; data preparation & model code: @Kurumada_Xie_Jaeger_2022]. The lapse rate and response bias for the ideal observers was set to match the MAP estimates of the psychometric model. For ease of comparisons, horizontal point ranges show the PSE and its 95% CI after discounting lapses.
 
-```{r comparative-IO-plot, warning=FALSE, fig.width=6, fig.height=5, fig.cap="(ref:comparative-IO-plot)"}
+```{r comparative-IO-plot, warning=FALSE, fig.width=7, fig.height=7, fig.cap="(ref:comparative-IO-plot)"}
 p1 <- 
   p.IOs.VOT.no.noise + 
   theme(legend.position = "none", 
@@ -602,90 +602,16 @@ IO_grid1 <-
     label_size = 10, 
     hjust = -1.1, 
     vjust = 1,
-    rel_widths = c(1, 1)) +
+    rel_widths = c(1.02, 1, 1)) +
   theme(plot.margin = margin(0, 0, 0, 40))
 
 IO_grid1 <- add_sub(IO_grid1, "VOT (ms)", x = .55, size = 10, fontface = "bold", vjust = 0)
-IO_grid1 <- add_sub(IO_grid1, "Proportion of 't'-responses", x = -0.03, y = 2, size = 10, fontface = "bold", angle = 90)
+IO_grid1 <- add_sub(IO_grid1, "Proportion of 't'-responses", x = -0.03, y = 3, size = 10, fontface = "bold", angle = 90)
 IO_grid2 <- plot_grid(legend, IO_grid1, align = "h", ncol = 1, rel_heights = c(.08, 1))
 ggdraw(IO_grid2)
 ```
 
 
-```{r temporary-chunk-poster-plotting, warning=FALSE, fig.height=2, fig.width=8.5}
-# p1 <-
-#   p.IOs.VOT.no.noise +
-#   theme(legend.position = "none",
-#         axis.title.x = element_blank(),
-#         plot.margin = unit(c(0.5, 0, 0, 1), "cm"))
-# p2 <-
-#   p.IOs.VOT +
-#   theme(legend.position = "none",
-#         axis.text.y = element_blank(),
-#         axis.ticks.y = element_blank(),
-#         axis.title.y = element_blank(),
-#         axis.title.x = element_blank(),
-#         plot.margin = unit(c(0.5, 0.5, 0, 0), "cm"))
-# p3 <-
-#   p.IOs.VOT_F0 +
-#   theme(legend.position = "none",
-#         axis.text.y = element_blank(),
-#         axis.ticks.y = element_blank(),
-#         axis.title.y = element_blank(),
-#         axis.title.x = element_blank(),
-#         plot.margin = unit(c(0.5, 0.5, 0, 0), "cm"))
-# p4 <-
-#   p.IOs.VOT_F0.centered +
-#   theme(legend.position = "none",
-#         axis.text.y = element_blank(),
-#         axis.ticks.y = element_blank(),
-#         axis.title.y = element_blank(),
-#         axis.title.x = element_blank(),
-#         plot.margin = unit(c(0.5, 0.5, 0, 0), "cm"))
-# 
-# p5 <-
-#   p.IOs.VOT_F0.centered.input +
-#   theme(legend.position = "none",
-#         axis.text.y = element_blank(),
-#         axis.ticks.y = element_blank(),
-#         axis.title.y = element_blank(),
-#         axis.title.x = element_blank(),
-#         plot.margin = unit(c(0.5, 0.5, 0, 0), "cm"))
-# 
-# legend <- get_legend(p.IOs.VOT_F0 + theme(legend.position = "top"))
-# 
-# 
-# IO_grid1 <- plot_grid(p2, p3, p4, p5,
-#     nrow = 1,
-#     ncol = 4,
-#     align = "h",
-#     labels = c("B", "C", "D", "E"),
-#     label_size = 8,
-#     hjust = 0,
-#     vjust = 1)
-# 
-# IO_grid2 <- plot_grid(
-#   p1, IO_grid1,
-#   nrow = 1,
-#   ncol = 2,
-#   align = "v",
-#   labels = c("A", " "),
-#   hjust = 0,
-#   vjust = 1,
-#   label_size = 8,
-#   rel_widths = c(.31, 1.1)
-# )
-# 
-# 
-# IO_grid2 <- add_sub(IO_grid2, "VOT (ms)", x = .55, size = 10, fontface = "bold", vjust = 0)
-# #IO_grid1 <- add_sub(IO_grid1, "Proportion of 't'-responses", x = -0.03, y = 0, size = 10, fontface = "bold", angle = 90)
-# 
-# p <- ggdraw(IO_grid2)
-# p
-# leg <- ggdraw(legend)
-
-# ggsave("../figures/IO_plot_exp1.png", plot = p, width = 25, height = 5, units = "cm", dpi = 300)
-```
 
 
 
@@ -724,7 +650,7 @@ d.test.IO <-
 
 d.test.IO %<>%
   mutate(
-    likelihood_per_response =
+    log_likelihood_per_response =
       pmap(
         list(d.perception, io, io.type), 
         ~ get_average_log_likelihood_of_perception_data_under_IO(
@@ -733,16 +659,18 @@ d.test.IO %<>%
           else {..1$Item.VOT}, 
           responses = ..1$Response.category, 
           model = ..2)) %>% 
-      unlist())
+      unlist(),
+    likelihood_per_response = exp(log_likelihood_per_response))
 
 IO.likelihood <- d.test.IO %>% 
   group_by(io.type) %>% 
   summarise(
-    # Here you could use bootstrap to get the lower and upper CI within each group
-    median_log_likelihood_per_response = median(likelihood_per_response) 
+    median_likelihood_per_response = median(likelihood_per_response),
+    mode_likelihood_per_response = max(likelihood_per_response, na.rm = T)
   )
 
-# use bootstrap samples by io type to find the CI of the mean estimates
+# use bootstrap samples by io type to find the CI of the median
+set.seed(356)
 d.bootstrap <- d.test.IO %>% 
   droplevels() %>% 
   select(-c(d.perception, io)) %>% 
@@ -753,82 +681,118 @@ d.bootstrap <- d.test.IO %>%
            map(data, ~ bootstraps(.x, times = 100))) %>% 
   unnest(samples) %>% 
   mutate(splits = map(splits, ~ as_tibble(.x)),
-         mean_sample = map_dbl(splits, ~ mean(.x$likelihood_per_response)))
+         median_sample = map_dbl(splits, ~ median(.x$likelihood_per_response)),
+         mode_sample = map_dbl(splits, ~ max(.x$likelihood_per_response)))
 ```
 
 
 
 
-```{r, fig.width=4.5, fig.height=2.2}
-# plot mean likelihood per response with bootstrapped 95% CI
-d.test.IO %>% 
+```{r, fig.width=6, fig.height=3, warning=FALSE}
+# plot median likelihood per response with bootstrapped 95% CI
+p.likelihood <- d.test.IO %>% 
   group_by(io.type) %>% 
   summarise(
-    mean_likelihood_per_response = mean(likelihood_per_response)) %>%
-  mutate(io_cues = ifelse(str_detect(io.type, "VOT_F0"), "VOT-F0", "VOT")) %>% 
-  filter(io_cues == "VOT-F0") %>% 
+    median_likelihood_per_response = median(likelihood_per_response)) %>%
+  mutate(io.type = fct_relevel(io.type, levels = c("VOT.no.noise", "VOT", "VOT_F0", "VOT_F0.centered",  "VOT_F0.centered.input"))) %>% 
   ggplot(aes(x = io.type, 
-             y = mean_likelihood_per_response, colour = io.type)) +
-  geom_point(size = 3) +
+             y = median_likelihood_per_response)) +
+  geom_point(size = 2, colour = "#333333") +
   geom_errorbar(
     data = d.bootstrap %>% 
       group_by(io.type) %>% 
-      mutate(io_cues = ifelse(str_detect(io.type, "VOT_F0"), "VOT-F0", "VOT")) %>% 
-  filter(io_cues == "VOT-F0") %>% 
+      mutate(io.type = fct_relevel(io.type, levels = c("VOT.no.noise", "VOT", "VOT_F0", "VOT_F0.centered",  "VOT_F0.centered.input"))) %>% 
       summarise(
-        mean.lower = quantile(mean_sample, probs = .025),
-        mean.upper = quantile(mean_sample, probs = .975)
+        median.lower = quantile(median_sample, probs = .025),
+        median.upper = quantile(median_sample, probs = .975)
       ),
     mapping = 
-      aes(x = io.type, ymin = mean.lower, ymax = mean.upper),
-    colour = c("#FCD900", "#E8630A", "#B22727"),
+      aes(x = io.type, ymin = median.lower, ymax = median.upper),
+    colour = "#333333",
+    size = 1.5,
+    alpha = .6,
+    width = 0,
+    inherit.aes = F) +
+  scale_y_continuous("Median likelihood per response") +
+   scale_x_discrete( 
+     limits = c("VOT.no.noise", "VOT", "VOT_F0", "VOT_F0.centered", "VOT_F0.centered.input"),
+     breaks = c("VOT.no.noise", "VOT", "VOT_F0", "VOT_F0.centered", "VOT_F0.centered.input"),
+     labels = c(VOT.no.noise = "VOT", VOT = "VOT\n(+perceptual noise)", VOT_F0 = "VOT-F0\n", VOT_F0.centered = "VOT-F0\n (+talker centered)", VOT_F0.centered.input = "VOT-F0 \n (+exposure-centered)")) +
+  theme(axis.title.x = element_blank(),
+        legend.position = "none") +
+  guides(x = guide_axis(angle = 45)) +
+  coord_trans(y = "log10")
+```
+
+
+```{r, fig.width=4, fig.height=3, warning=FALSE}
+# zoom in on multi-variate models
+p.likelihood.multivar <- d.test.IO %>% 
+  group_by(io.type) %>% 
+  summarise(
+    median_likelihood_per_response = median(likelihood_per_response),
+    mode_likelihood_per_response = max(likelihood_per_response)) %>%
+  mutate(io.type = fct_relevel(io.type, levels = c("VOT.no.noise", "VOT", "VOT_F0", "VOT_F0.centered",  "VOT_F0.centered.input"))) %>%
+  ggplot(aes(x = io.type, 
+             y = median_likelihood_per_response)) +
+  geom_point(size = 3,
+             colour = "#333333") +
+  geom_point(aes(x = io.type, 
+                 y = mode_likelihood_per_response), 
+             size = 3, 
+             shape = 17,
+             colour = "#333333") +
+  geom_errorbar(
+    data = d.bootstrap %>% 
+      group_by(io.type) %>%
+  mutate(io.type = fct_relevel(io.type, levels = c("VOT.no.noise", "VOT", "VOT_F0", "VOT_F0.centered",  "VOT_F0.centered.input"))) %>% 
+      summarise(
+        median.lower = quantile(median_sample, probs = .025),
+        median.upper = quantile(median_sample, probs = .975)
+      ),
+    mapping = 
+      aes(x = io.type, ymin = median.lower, ymax = median.upper),
+    colour = "#333333",
+    size = 1.5,
+    alpha = .6,
+  width = 0,
+    inherit.aes = F) + 
+    geom_errorbar(
+    data = d.bootstrap %>% 
+      group_by(io.type) %>%
+  mutate(io.type = fct_relevel(io.type, levels = c("VOT.no.noise", "VOT", "VOT_F0", "VOT_F0.centered",  "VOT_F0.centered.input"))) %>% 
+      summarise(
+        mode.lower = quantile(mode_sample, probs = .025),
+        mode.upper = quantile(mode_sample, probs = .975)
+      ),
+    mapping = 
+      aes(x = io.type, ymin = mode.lower, ymax = mode.upper),
+    colour = "#333333",
     size = 1.5,
     alpha = .6,
   width = 0,
     inherit.aes = F) +
-  scale_y_continuous("Mean log-likelihood \n per response") +
-  scale_colour_manual("Model", values = c("#FCD900", "#E8630A", "#B22727"), 
-                      labels = c("VOT-F0", "VOT-F0-centered", "VOT-F0-input-centered")) +
+  scale_y_continuous("Median log-likelihood \n per response", limits = c(.55, .67)) +
+  scale_x_discrete(expand = expansion(mult = c(0.09, 0.09)), 
+                   limits = c("VOT_F0", "VOT_F0.centered", "VOT_F0.centered.input"),
+                   breaks = c("VOT_F0", "VOT_F0.centered", "VOT_F0.centered.input"),
+                   labels = c(VOT_F0 = "VOT-F0\n", VOT_F0.centered = "VOT-F0\n (talker centered)", VOT_F0.centered.input = "VOT-F0 \n (exposure-centered)")) +
   theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.ticks.x = element_blank(),
         axis.text.x = element_blank(),
-        axis.ticks = element_blank(),
-        legend.position = "top")
+        legend.position = "none") +
+  guides(x = guide_axis(angle = 45)) +
+  coord_trans(y = "log10") 
 ```
 
 
 
-```{r, fig.width=3.5, fig.height=2.2}
-d.test.IO %>% 
-  group_by(io.type) %>% 
-  summarise(
-    mean_likelihood_per_response = mean(likelihood_per_response)) %>%
-  mutate(io_cues = ifelse(str_detect(io.type, "VOT_F0"), "VOT-F0", "VOT")) %>% 
-  filter(io_cues == "VOT") %>% 
-  ggplot(aes(x = io.type, 
-             y = mean_likelihood_per_response, colour = io.type)) +
-  geom_point(size = 3) +
-  geom_errorbar(
-    data = d.bootstrap %>% 
-      group_by(io.type) %>% 
-      mutate(io_cues = ifelse(str_detect(io.type, "VOT_F0"), "VOT-F0", "VOT")) %>% 
-  filter(io_cues == "VOT") %>% 
-      summarise(
-        mean.lower = quantile(mean_sample, probs = .025),
-        mean.upper = quantile(mean_sample, probs = .975)
-      ),
-    mapping = 
-      aes(x = io.type, ymin = mean.lower, ymax = mean.upper),
-    colour = c("#FCD900", "#E8630A"),
-    size = 1.5,
-    alpha = .6,
-  width = 0,
-    inherit.aes = F) +
-  scale_colour_manual("Model", values = c("#FCD900", "#E8630A"), 
-                      labels = c("VOT-no-noise", "VOT-noise")) +
-  scale_y_continuous("Mean log-likelihood \n per response") +
-  theme(axis.title.x = element_blank(),
-        legend.position = "top")
+```{r, fig.width=8, fig.height=5}
+p.likelihood + inset_element(p.likelihood.multivar, .406, .05, .935, .82, align_to = "panel")
 ```
+
+
 
 
 \newpage

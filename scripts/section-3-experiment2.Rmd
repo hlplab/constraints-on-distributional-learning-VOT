@@ -13,50 +13,109 @@ source("functions.R")
 # EXPERIMENT 2: Listeners' adaptation to an unfamiliar talker
 The aim of experiment 2 was to investigate the incremental changes in listener categorization when perceiving speech of an unfamiliar talker with cue-to-category mappings characterised by varying degrees of typicality of an L1-US English talker. Listeners performed a task similar to that of experiment 1, that is, they heard isolated words on a /d/ - /t/ continuum and were required to select the word they heard. Unlike experiment 1 where all listeners categorised stimuli on a single uninformative continuum, listeners in experiment 2 were divided into 3 groups with each group exposed to different VOT distributions that were informative of the talker's realisations of /d/ and /t/. 
 
-We approximated a "typical" talker through the combined parameters estimated from the perceptual responses in experiment 1 and a database of L1-US English /d/ and /t/ productions [@Xie]. From this estimated baseline distribution (+0ms), we shifted the distribution by +10ms, and by +40ms, yielding three exposure talker conditions. To investigate the state of listener expectations as they move from having no information about how a new talker realises /d/s and /t/s to progressively more information about the talker's pronunciations we implement identical test blocks (i.e. test stimuli in identical locations) across conditions before, during, and after informative exposure. Under Bayesian ideal adaptor inferential processes, listeners' weighting of their prior beliefs about the category means and variances will determine the speed at which adaptation occurs. Motivated by prior work in supervised and unsupervised learning within lab contexts that repeatedly show adaptation to be a rapid process [@clarke2004rapid; @bradlow2008perceptual; @xie2021cross; @liu2018inferring; @norris2003perceptual @kleinschmidt2012continuum] we made the decision to test our participants early on in the experiment and frequently throughout.
+We approximated a "typical" talker through the combined parameters estimated from the perceptual responses in experiment 1 and a database of L1-US English /d/ and /t/ productions [@Xie]. From this estimated baseline distribution (+0ms), we shifted the distribution by +10ms, and by +40ms, yielding three exposure talker conditions. To investigate the state of listener expectations as they move from having no information about how a new talker realises /d/s and /t/s to progressively more information about the talker's pronunciations we implement identical test blocks (i.e. test stimuli in identical locations) within and across conditions before, during, and after informative exposure. Under Bayesian ideal adaptor inferential processes, listeners' weighting of their prior beliefs about the category means and variances will determine the speed at which adaptation occurs. Motivated by prior work in supervised and unsupervised learning within lab contexts that repeatedly show adaptation to be a rapid process [@clarke2004rapid; @bradlow2008perceptual; @xie2021cross; @liu2018inferring; @norris2003perceptual @kleinschmidt2012continuum] we made the decision to test our participants early on in the experiment.
 
-Previous studies were not designed to investigate incremental adaptation in this manner as they lacked designated test blocks; listeners' categorisation functions were instead estimated over portions of the exposure trials which ignores the fact that not all participants had been exposed to the exact same items at the trial cut-off point (although that would have been the case by the end of the experiment). With our novel design we gain better resolution at every testing point, since each participant would have heard the same number of VOT items at the beginning of a given test block. The other advantage is that identical test blocks across conditions standardises the assessment of behavioural changes between groups yielding more accurate comparisons. We specifically included a pre-exposure test block with a similar aim to experiment 1 -- so that we could capture the implicit expectations of listeners about the cue-to-category mappings of US English /d/ and /t/.
+Previous studies were not designed to investigate incremental adaptation in this manner as they lacked designated test blocks; listeners' categorisation functions were instead estimated over portions of the exposure trials which ignores the fact that not all participants had been exposed to the exact same items at the trial cut-off point (although that would have been the case by the end of the experiment). With our novel design we gain better resolution at every testing point, since each participant would have heard the same number of VOT items at the beginning of a given test block. The other advantage is that identical test blocks across conditions standardises the assessment of behavioural changes between groups yielding more accurate comparisons. We specifically included a pre-exposure test block with a similar aim to experiment 1 -- in order to capture the implicit expectations of listeners about the cue-to-category mappings of US English /d/ and /t/. We later compare this block with the behavioural results of experiment 1. 
 
-Previous studies found that listeners shift their categorization behaviour towards the category boundary implied by the exposure distribution but that adaptive shifts were incomplete, the further  the exposure talker's distribution from a typical talker. We therefore expected to see differences in categorizations between the +10ms and +40ms conditions such that listeners in the +40ms condition would shift more than those in the +10ms but to have an average categorization function that is leftwards of the ideal boundary implied by its exposure distribution. [@kleinschmidt2016you]. Nonetheless if adaptative behaviour involves rational updating we expect to find that the different shift conditions would induce changes in categorizations that are proportional to the distance between the shifts (i.e. +40ms being three times that of +10ms).
+Previous studies found that listeners shift their categorization behaviour towards the category boundary implied by the exposure distribution but that adaptive shifts were incomplete, the further  the exposure talker's distribution from a typical talker. We therefore expected to see differences in categorizations between the +10ms and +40ms conditions such that listeners in the +40ms condition would shift more than those in the +10ms but to have an average categorization function located to the left of the categorisation function that fully converges on the statistics of the exposure distribution. [@kleinschmidt2016you]. Nonetheless if adaptative speech perception involves rational updating we expect to find that the different shift conditions would induce changes in categorizations that are proportional to the distance between the shifts (i.e. +40ms being three times that of +10ms).
 
-Another notable innovation we bring to this study in conjunction with the use of qualitatively more human-sounding stimuli (as described in section 2.X) relates to the parameters of the exposure distributions. Prior studies of this type simulate the voiced-voiceless distributions by exposing listeners to symmetrical distributions between the categories or equivalent variances for both categories. It is however unlikely that listeners encounter this in real life as evidenced from production data [@chodroff]. By generating distributions that are closer in form to that of real data we hope to achieve greater ecological validity with the results we find. 
+Another notable innovation we bring to this study in conjunction with the use of qualitatively more human-sounding stimuli (as described in section 2.X), relates to the parameters of the exposure distributions. Prior studies of this type simulate the voiced-voiceless distributions by exposing listeners to  category distributions that are symmetrical and equivalent between categories. It is however, unlikely that listeners encounter this in real life as evidenced from production data [@chodroff]. By generating distributions that are closer in form to that of real data we hope to improve the ecological validity of the results. 
 
 
 
 ## Methods
 ### Participants
-Participants were recruited over the Prolific platform, and paid $8.00 each (for a targeted remuneration of \$9.60/hour). The experiment was visible to participants who (1) were located in the United States, (2) were US citizens and only knew English, and (3) had not previously participated in any experiment from our lab.
+Participants were recruited over the Prolific platform and experiment data (but not participant profile data) were collected, stored, and via proliferate (@schuster). They were paid $8.00 each (for a targeted remuneration of \$9.60/hour). The experiment was visible to participants following a selection of Prolific's available pre-screening criteria. Participants had to (1) have US nationality, (2) report to only know English, and (3) had not previously participated in any experiment from our lab on Prolific.
 
-122 L1 US English listeners (male = 60, female = 59, NA = 3; mean age = 38 years; SD age = 12 years) completed the experiment. To be eligible, participants had to confirm that they (1) spent at least the first 10 years of their life in the US speaking only English, (2) were in a quiet place and free from distractions, and (3) wore in-ear or over-the-ears headphones that cost at least \$15.
-
-Participants underwent a headphone test designed to test that they were indeed wearing headphones [CITE headphone test study]
+126 L1 US English listeners (male = 60, female = 59, NA = 3; mean age = 38 years; SD age = 12 years) completed the experiment. Due to data transfer errors 4 participants' data were not stored and therefore not included in this analysis. To be eligible, participants had to confirm that they (1) spent at least the first 10 years of their life in the US speaking only English, (2) were in a quiet place and free from distractions, and (3) wore in-ear or over-the-ears headphones that cost at least \$15.
 
 ### Materials
 A subset of the materials described in experiment 1 were used, in particular three continua of the minimal pairs, dill-till, din-tin, and dip-tip. The dim-tim continuum was omitted in order to keep the pairs as distinguishable as possible. 
 
-We employed a multi-block exposure-test design \@ref(fig:exp2-design-figure) which enabled the assessment of listener perception before informative exposure as well as incrementally at intervals during informative exposure. To have a comparable test of exposure, test blocks were made up of a uniform distribution of 12 VOT stimuli (-5, 5, 15, 25, 30, 35, 40, 45, 50, 55, 65, 70), identical across test blocks and between conditions. Each of the test tokens were presented once at random. 
+We employed a multi-block exposure-test design \@ref(fig:exp2-design-figure) which enabled the assessment of listener perception before informative exposure as well as incrementally at intervals  during informative exposure (after every 48 exposure trials). To have a comparable test between blocks and across conditions, test blocks were made up of a uniform distribution of 12 VOT stimuli (-5, 5, 15, 25, 30, 35, 40, 45, 50, 55, 65, 70), identical across test blocks and between conditions. Each of the test tokens were presented once at random. The test blocks were kept short to avoid cancelling out any distributional learning effects after each exposure. After the final exposure block we tripled the number of test blocks to increase the statistical power to detect exposure induced changes. 
 
-The conditions were created by first ascertaining the baseline distribution (+0ms shift) and then shifting that distribution by +10ms and by +40ms to obtain the remaining two conditions. We began with the fitted point of subjective equality (PSE) from in experiment 1. The PSE is the stimulus along the continuum that was perceived to be the most ambiguous by listeners (i.e. the point that elicited equal probability of being categorised as /d/ or /t/) thus marking the categorical boundary. The PSE is where the likelihoods of both categories intersect and have equal density (we assumed Gaussian distributions and equal prior probability for each category). To limit the infinite combinations of likelihoods that meet this criterion we set the variances of the /d/ and /t/ categories based on parameter estimates (@Kurumada_Xie_Jaeger_2022) obtained from the production database of @chodroff2017structure. To each variance value we added 80ms noise variance following (@kronrod) because these likelihoods were estimated from perceptual data to account of variability in perception due to perceptual noise. We took an additional degree of freedom of setting the distance between the means of the categories at 46ms; this too was based on the population parameter estimates. The means of both categories were then obtained through a grid-search process to find the posterior
+The conditions were created by first obtaining the baseline distribution (+0ms shift) and then shifting that distribution by +10ms and by +40ms to create the remaining two conditions. 
+
+The +0ms shift condition was estimated from the fitted point of subjective equality (PSE) from experiment 1. The PSE corresponds to the VOT measurement that was perceived as the most ambiguous by participants in experiment 1 (i.e. the stimulus that elicited equal probability of being categorised as /d/ or /t/) thus marking the categorical boundary. The PSE is where the likelihoods of both categories intersect and have equal density (we assumed Gaussian distributions and equal prior probability for each category) [SOMETHING HERE ABOUT GAUSSIANS BEING A CONVENIENT ASSUMPTION?]. To limit the infinite combinations of likelihoods that could intersect at this value, we set the variances of the /d/ and /t/ categories based on parameter estimates (@Kurumada_Xie_Jaeger_2022) obtained from the production database of @chodroff2017structure. To each variance value we added an 80ms noise variance following (@kronrod) to account for variability in perception due to perceptual noise since these likelihoods were estimated from perceptual data. We took an additional degree of freedom of setting the *distance between the means* of the categories at 46ms; this too was based on the population parameter estimates from the production database. The means of both categories were then obtained through a grid-search process to find the likelihood distributions that crossed at 25ms VOT (see XX of SI for details on this procedure).
+
+The distributional make up was determined through a process of sampling tokens from a discrete normal distribution (available through the `extraDistr` package in R). [EXPLAIN WHAT DISCRETE NORMAL SAMPLING GIVES] discretised normal distributions are approximation... 
+
+For each exposure block 8 VOT tokens of each minimal pair item were sampled from discrete normal distributions of each category of the +0ms condition, giving 24 /d/ and 24 /t/ (48 critical trials) per block. Additionally, each exposure block contained 2 instances of 3 catch items, giving 6 catch trials per block. The sampled VOT tokens were increased by a margin of +10ms and +40 ms to create the remaining two conditions. Three variants of each condition list were created so that exposure blocks followed a latin-square order. 
+
+Lastly, half of the exposure trials were randomly assigned as labelled trials. In labelled trials, participants receive clear information of the word's category as both orthographic options will always begin with the intended sound. For example if a trial was intended to be "dill" then the two image options will either be "dill" and "dip" or "dill" and "din". Test trials were always unlabelled. 
+
 
 ```{r exp2-design-figure, fig.height=3, fig.width=5, fig.cap="Experiment 2 multi-block design. Test blocks in grey comprised identical stimuli within and between conditions"}
 knitr::include_graphics("../figures/experiment2_design_image.png")
 ```
 
-## Procedure
+
+```{r exp2-design-distribution, fig.height=3, fig.width=6, warning=FALSE, message=FALSE}
+# read in exposure block sampled tokens
+d.exposure <- read_csv("../data/exposure_block_tokens.csv", show_col_types = F)
+
+# set variances of categories
+var_d <- 80
+var_t <- 270
+
+d.means <- 
+  crossing(condition = c("+0ms", "+10ms", "+40ms"),
+         category = c("/d/", "/t/")) %>% 
+  mutate(mean = c(5, 50, 15, 60, 45, 90))
+
+d.exposure %>% 
+  na.omit() %>% 
+  filter(image_selection == "forward" & list_LSQ_variant == "A") %>% 
+  mutate(condition = case_when(condition == "Shift0" ~ "+0ms",
+                               condition == "Shift10" ~ "+10ms",
+                               condition == "Shift40" ~ "+40ms"),
+         labelling = as_factor(labelling)) %>% 
+  ggplot() +
+  geom_histogram(aes(x = VOT, fill = paste(category, labelling), 
+                     color = paste(category, labelling),
+                     linetype = labelling), 
+                 alpha = .6) +
+  scale_colour_manual(
+    "Labelling",
+    values = c(
+    "/d/ labeled" = "#404040", 
+    "/d/ unlabeled" = "#b3b3b3",
+    "/t/ labeled" = "#808080",
+    "/t/ unlabeled" = "#e6e6e6"),
+    aesthetics = c("color", "fill"),
+    labels = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled")) +
+  guides(colour = guide_legend(override.aes = list(
+    linetype = c(2, 1)))) +
+  stat_function(fun = function(x) 72 * 5 * dnorm(x, 5, sqrt(var_d)),
+                color = "black", size = .6, alpha = .7, linetype = 2) +
+  stat_function(
+    fun = function(x) 72 * 5 * dnorm(x, 50, sqrt(var_t)),
+    color = "black", size = .6, alpha = .5, linetype = 2) +
+  geom_rug(data = tibble(VOT = c(5, 50)), aes(x = VOT), sides = "t") +
+  scale_x_continuous("VOT (ms)", breaks = seq(-50, 150, 30)) +
+  scale_y_continuous("Count") +
+  geom_text(data = d.means,
+            aes(x = 103, 
+                y = 17,
+                label = paste("mean", category, "=", mean)),
+            size = 2,
+            position = position_dodge2v(height = -8),
+            inherit.aes = F) +
+  facet_wrap(~ condition, scales = "free_y") +
+  guides(linetype = "none") +
+  theme(legend.position = "top")
+```
 
 
 
+### Procedure
+The code for the experiment is available as part of the OSF repository for this article. A live version is available at (https://www.hlp.rochester.edu/FILLIN-FULL-URL). The first page of the experiment informed participants of their rights and the requirements for the experiment: that they had to be native listeners of English, wear headphones for the entire duration of the experiment, and be in a quiet room without distractions. Participants had to pass a headphone test, and were asked to keep the volume unchanged throughout the experiment. Participants could only advance to the start of the experiment by acknowledging each requirement and consenting to the guidelines of the Research Subjects Review Board of the University of Rochester. 
 
+On the next page, participants were informed about the task for the remainder of the experiment. They were informed that they would hear a female talker speak a single word on each trial, and had to select which word they heard. They were also informed that they needed to click a green button that would be displayed during each trial when it "lights up" in order to hear the recording of the speaker saying the word. Participants were instructed to listen carefully and answer as quickly and as accurately as possible. They were also alerted to the fact that the recordings were subtly different and therefore may sound repetitive. This was done to encourage their full attention.
 
+The trials were presented in the same way as in experiment 1 except that the audio playback was controlled by the participant. This additional step was implemented to increase participant attention to the stimuli. The placement of the image presentations were counter-balanced across participants.
 
-
-
-
-
-
-
-
-
+Participants underwent 234 trials which included 6 catch trials in each exposure block (18 in total). Participants were given the opportunity to take breaks after every 60 trials during exposure blocks. Participants took an average of 17 minutes (SD = 9) to complete the 234 trials, after which they answered a short survey about the experiment.
 
 ```{r}
 # load formatted exposure and test data from experiment 2
@@ -88,7 +147,7 @@ d.exposure_test %<>%
   mutate(Exclude_participant.due_to_catch_trials = ifelse(sum(CatchTrial.Correct, na.rm = TRUE) < 17, TRUE, FALSE)) %>%
   ungroup()
 
-# mark labeled trials
+# mark labelled trials
 d.exposure_test %<>% 
   mutate(Response.Correct = ifelse(Item.ExpectedResponse == Response, TRUE, FALSE),
          LabeledTrial.Correct = ifelse(Item.Labeled == TRUE, ifelse(Response.Correct == TRUE, TRUE, FALSE), NA)) %>% 
@@ -98,13 +157,130 @@ d.exposure_test %<>%
 
 
 
-You should use a verbose caption that is self-contained and clearly states the main points of the figure. When you look at the R markdown for this document, note that the caption is *outside* of the R-chunk but linked to the R-chunk through a reference in the chunk option fig.cap. Notice also how the reference in the main text uses the label fig:label, whereas the caption and the R chunk option fig.cap that generates the figure use the label ref:label. Finally, the R-chunk itself is called label. Make sure to follow this format in order to make sure that your figure references and captions knit correctly. This example also demonstrates how you can use a globally defined base width and height for all figures. In this example, the base height is multiplied by two because we're faceting the data into two rows.
+```{r warning=FALSE}
+# get data for exclusion due to categorisation slope of first 36 trials. 
+d.VOT_exclusion <- d.exposure_test %>% 
+  filter(Block == 1 | (Block == 2 & Trial %in% c(13:36))) %>% 
+  drop_na(c(ParticipantID, Response.Voicing, Item.VOT)) %>% 
+  mutate(Response.ProportionVoiceless = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
+  select(c(Experiment, ParticipantID, Condition.Exposure, Response.Voicing, Response.ProportionVoiceless, Item.VOT))
+
+# set the VOT criteria 
+empirical_means <- c(17, 62)
+VOT_for_targeted_proportion_t <- empirical_means + c(-20, 20)
+targeted_proportion_t <- c(.15, .80) 
 
 
-You can also make phonetic symbols, e.g., for the sound category [`r linguisticsdown::cond_cmpl("ʃ")`] [as in *ship*, Newman et al., -@newman2001]. And you can type equations like Equation \@ref(eq:posterior-probability-lapse), which describes Wichmann and Hill's psychometric model with parameters $\alpha$ and $\beta$ and more.  
+# Fit logistic regression by participant to get model predictions (REPLACE WITH LAPSE ESTIMATED NON-LINEAR FIT)
+d.VOT_exclusion %<>%
+  group_by(ParticipantID, Experiment, Condition.Exposure) %>%
+  nest() %>%
+  mutate(
+    CategorizationModel =
+      map(data, ~ glm(Response.ProportionVoiceless ~ 1 + Item.VOT, data = .x, family = binomial))) %>% 
+  # type = "response" in predict() gives the probability
+  summarise(Model.predicted.Reponse = 
+              map(CategorizationModel, ~ predict(object = .x, 
+                                                 newdata = tibble(Item.VOT = VOT_for_targeted_proportion_t), 
+                                                 type = "response"))) %>% 
+  mutate(Exclude_participant.due_to_VOT_slope = 
+           map(Model.predicted.Reponse, ~ ifelse(.x[1] > targeted_proportion_t[1] || .x[2] < targeted_proportion_t[2], TRUE, FALSE)),
+         Exclude_participant.due_to_lower_VOT = map(Model.predicted.Reponse, ~ ifelse(.x[1] > targeted_proportion_t[1], TRUE, FALSE)),
+         Exclude_participant.due_to_higher_VOT = map(Model.predicted.Reponse, ~ ifelse(.x[2] < targeted_proportion_t[2], TRUE, FALSE))) %>% 
+  select(ParticipantID, Experiment, Condition.Exposure, Exclude_participant.due_to_VOT_slope, Exclude_participant.due_to_lower_VOT, Exclude_participant.due_to_higher_VOT) %>% 
+  mutate(across(c(Exclude_participant.due_to_VOT_slope, 
+                  Exclude_participant.due_to_lower_VOT, 
+                  Exclude_participant.due_to_higher_VOT), .fns = unlist)) %>% 
+  ungroup()
 
-\begin{equation}\label{eq:posterior-probability-lapse}
-p(category | input) = (1 - \lambda) \frac{\mathcal{N}\!\left( input | \mu_c, \Sigma_c \right) \pi}{\Sigma_i \mathcal{N}\!\left( input | \mu_{c_i}, \Sigma_{c_i} \right) \pi_i} + \lambda \frac{\pi}{\Sigma_i \pi_i}
+# counting TRUEs
+d.VOT_exclusion %>% 
+  group_by(Exclude_participant.due_to_VOT_slope, Condition.Exposure) %>% 
+  summarise(n())
+  
+d.exposure_test %<>% left_join(d.VOT_exclusion)
+```
+
+
+
+```{r, message=FALSE}
+# calculate RT exclusion AFTER removing excluded participants due to other criteria
+d.for_RT_exclusion <- d.exposure_test %>%
+  filter(
+    Is.CatchTrial == FALSE &
+    Exclude_participant.due_to_catch_trials == FALSE &
+    Exclude_participant.due_to_labeled_trials == FALSE &
+    Exclude_participant.due_to_VOT_slope == FALSE) %>% 
+  group_by(ParticipantID) %>%
+  mutate(
+    Response.log_RT = log10(ifelse(Response.RT <= 0, NA_real_, Response.RT)),
+    Response.log_RT.scaled = scale(Response.log_RT), # deducts each value with subject's own mean, divide by own SD
+    Response.log_RT.mean = mean(Response.log_RT, na.rm = T)) %>% 
+  ungroup() %>% 
+  mutate(Exclude_participant.due_to_RT = ifelse(abs(scale(Response.log_RT.mean)) > 3, TRUE, FALSE)) 
+
+d.for_RT_exclusion %<>% 
+  filter(Exclude_participant.due_to_catch_trials == FALSE &
+           Exclude_participant.due_to_labeled_trials == FALSE &
+           Exclude_participant.due_to_VOT_slope == FALSE) %>% 
+  mutate(Exclude_trial.due_to_RT = ifelse(abs(Response.log_RT.scaled) > 3, TRUE, FALSE))
+
+# get number of participants excluded due to RT
+excl.RT.participant <- d.for_RT_exclusion %>% 
+  filter(Exclude_participant.due_to_RT == TRUE) %>% 
+  group_by(Condition.Exposure, ParticipantID) %>% 
+  summarise() %>% 
+  tally() %>% rename(RT.Participant = n)
+
+# get number of trials excluded due to RT
+excl.RT.trial <- d.for_RT_exclusion %>% 
+  filter(Exclude_trial.due_to_RT == TRUE) %>% 
+  group_by(Condition.Exposure) %>% 
+  summarise(RT.Trial = sum(Exclude_trial.due_to_RT)) 
+
+# get number of participants excluded due to catch trial
+excl.catch <- d.exposure_test %>% 
+  filter(Exclude_participant.due_to_catch_trials == TRUE) %>% 
+  group_by(Condition.Exposure, ParticipantID) %>% 
+  summarise() %>% 
+  tally() %>% 
+  rename(Catch = n) 
+
+# get number of participants excluded due to labelled trials
+excl.labeled <- d.exposure_test %>% 
+  filter(Exclude_participant.due_to_labeled_trials == TRUE) %>% 
+  group_by(Condition.Exposure, ParticipantID) %>% 
+  summarise() %>% 
+  tally() %>% 
+  rename(Labeled = n) 
+
+# count number of exclusions due to VOT slope
+excl.VOT <- d.exposure_test %>% 
+  filter(Exclude_participant.due_to_VOT_slope == TRUE) %>% 
+  group_by(Condition.Exposure, ParticipantID) %>% 
+  summarise() %>% 
+  tally() %>% rename(VOT.Slope = n)
+
+# table of exclusions
+# excl.VOT %>% 
+#   full_join(excl.catch) %>% 
+#   full_join(excl.labeled) %>% 
+#   full_join(excl.VOT) %>% 
+#   full_join(excl.RT.participant) %>% 
+#   mutate(across(.cols = c(VOT.Slope, Catch, Labeled, RT.Participant), .fns = ~ ifelse(is.na(.x), 0, .x))) 
+```
+### Exclusions
+We excluded from analysis participants who committed more than 3 errors out of the 18 catch trials (<84% accuracy, N = 1), participants who committed more than 4 errors out of the 72 catch trials (<94% accuracy, N = 0), participants with an average reaction time (RT) more than three standard deviations from the mean of the by-participant means (N = 0), and participants who reported not to have used headphones (N = 0) or not to be native (L1) speakers of US English (N = 0). In addition, participants' categorization during the early phase of the experiment were scrutinise for their slope direction and their
+For the remaining participants, trials that were more than three SDs from the participant's mean RT were excluded from analysis (`r proportion.excluded * 100 `%). Finally, we excluded participants (N = 0) who had less than 50% data remaining after these exclusions. 
+
+
+
+
+
+
+
+
+
 \end{equation}
 
 <!-- This is a markdown comment that will NOT show when you knit the document.  -->

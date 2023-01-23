@@ -473,4 +473,4 @@ get_PSE_quantiles <- function(data, group) {
     PSE.median = round(quantile(PSE, probs = c(.5))),
     PSE.upper = round(quantile(PSE, probs = c(.975))))
 }
-
+  
