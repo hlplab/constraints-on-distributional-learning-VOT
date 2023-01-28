@@ -205,7 +205,7 @@ d.exposure_test %<>% left_join(d.VOT_exclusion)
 
 ```{r, message=FALSE}
 # calculate RT exclusion AFTER removing excluded participants due to other criteria
-d.for_RT_exclusion <- d.exposure_test %>%
+d.test_exposure_for_analysis <- d.exposure_test %>%
   filter(
     Is.CatchTrial == FALSE &
     Exclude_participant.due_to_catch_trials == FALSE &
@@ -217,61 +217,46 @@ d.for_RT_exclusion <- d.exposure_test %>%
     Response.log_RT.scaled = scale(Response.log_RT), # deducts each value with subject's own mean, divide by own SD
     Response.log_RT.mean = mean(Response.log_RT, na.rm = T)) %>% 
   ungroup() %>% 
-  mutate(Exclude_participant.due_to_RT = ifelse(abs(scale(Response.log_RT.mean)) > 3, TRUE, FALSE)) 
-
-# exclude the slow trials
-d.for_RT_exclusion %<>% 
-  filter(Exclude_participant.due_to_catch_trials == FALSE &
-           Exclude_participant.due_to_labeled_trials == FALSE &
-           Exclude_participant.due_to_VOT_slope == FALSE) %>% 
+  mutate(Exclude_participant.due_to_RT = ifelse(abs(scale(Response.log_RT.mean)) > 3, TRUE, FALSE)) %>% 
+  filter(Exclude_participant.due_to_RT == FALSE) %>% 
   mutate(Exclude_trial.due_to_RT = ifelse(abs(Response.log_RT.scaled) > 3, TRUE, FALSE))
 
 # get number of participants excluded due to RT
-excl.RT.participant <- d.for_RT_exclusion %>% 
+excl.RT.participant <- d.test_exposure_for_analysis %>% 
   filter(Exclude_participant.due_to_RT == TRUE) %>% 
-  group_by(Condition.Exposure, ParticipantID) %>% 
-  summarise() %>% 
-  tally() %>% rename(RT.Participant = n)
+  tally()
 
 # get number of trials excluded due to RT
-excl.RT.trial <- d.for_RT_exclusion %>% 
+excl.RT.trial <- d.test_exposure_for_analysis %>%  
   filter(Exclude_trial.due_to_RT == TRUE) %>% 
-  group_by(Condition.Exposure) %>% 
-  summarise(RT.Trial = sum(Exclude_trial.due_to_RT)) 
+  tally()
 
 # proportion of trials excluded due to RT
-proportion.trials.excluded <- nrow(excl.RT.trial)/nrow(d.for_RT_exclusion)
+proportion.trials.excluded <- excl.RT.trial/nrow(d.test_exposure_for_analysis)
 
 # get number of participants excluded due to catch trial
 excl.catch <- d.exposure_test %>% 
   filter(Exclude_participant.due_to_catch_trials == TRUE) %>% 
-  group_by(Condition.Exposure, ParticipantID) %>% 
+  group_by(ParticipantID) %>% 
   summarise() %>% 
-  tally() %>% 
-  rename(Catch = n) 
+  tally() 
 
 # get number of participants excluded due to labelled trials
 excl.labeled <- d.exposure_test %>% 
   filter(Exclude_participant.due_to_labeled_trials == TRUE) %>% 
-  group_by(Condition.Exposure, ParticipantID) %>% 
+  group_by(ParticipantID) %>% 
   summarise() %>% 
-  tally() %>% 
-  rename(Labeled = n) 
+  tally() 
 
 # count number of exclusions due to VOT slope
 excl.VOT <- d.exposure_test %>% 
   filter(Exclude_participant.due_to_VOT_slope == TRUE) %>% 
-  group_by(Condition.Exposure, ParticipantID) %>% 
+  group_by(ParticipantID) %>% 
   summarise() %>% 
-  tally() %>% rename(VOT.Slope = n)
+  tally()
 
-# table of exclusions
-# excl.VOT %>% 
-#   full_join(excl.catch) %>% 
-#   full_join(excl.labeled) %>% 
-#   full_join(excl.VOT) %>% 
-#   full_join(excl.RT.participant) %>% 
-#   mutate(across(.cols = c(VOT.Slope, Catch, Labeled, RT.Participant), .fns = ~ ifelse(is.na(.x), 0, .x))) 
+# remove excluded trials due to slow RT
+d.test_exposure_for_analysis %<>% filter(Exclude_trial.due_to_RT == FALSE) 
 ```
 
 ### Exclusions
@@ -288,6 +273,92 @@ We first present participants' categorisation responses. Given that this experim
 
 
 ### Analysis approach
+
+
+```{r}
+# set the mean and SD values for scaling/unscaling purposes
+# make Block 1 subset
+d.block1 <- d.test_exposure_for_analysis %>% 
+  filter(Block == 1) 
+
+VOT.mean_exp2 <- mean(d.test_exposure_for_analysis$Item.VOT)
+VOT.sd_exp2 <- sd(d.test_exposure_for_analysis$Item.VOT)
+
+d.block1 %<>% 
+  mutate(
+    Response.Voiceless = ifelse(Response.Voicing == "voiceless", 1, 0),
+    VOT_gs = (Item.VOT - VOT.mean_exp2)/ (2 * VOT.sd_exp2))
+
+
+lapse_exp1 <- summary(fit_mix)$fixed["theta1_Intercept", 1]
+
+# run brms model of data for block 1
+fit_mix_block1 <- brm(
+  bf(
+    Response.Voiceless ~ 1,
+    mu1 ~ 1,
+    mu2 ~ 1 + VOT_gs + (1 + VOT_gs | ParticipantID),
+    theta1 ~ 1),
+  data = d.block1,
+  cores = 4,
+  iter = 3000, # iterations to run
+  warmup = 1500, # samples used to fit
+  chains = chains,
+  family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
+  control = list(adapt_delta = .999),
+  file = "../models/Block1-AEDLVOT-bysubject4-GLMM.rds")
+
+m.block1 <- lme4::lmer(Response.Voiceless ~ 1 + VOT_gs + (1 + VOT_gs | ParticipantID), data = d.block1)
+ranef(m.block1)[1]
+
+
+ranef(m.block1)[1] %>% 
+  bind_rows() %>% 
+  mutate(ParticipantID = unique(d.block1$ParticipantID)) %>% 
+  ggplot(aes(y = `(Intercept)`, x = VOT_gs)) + 
+  geom_text(aes(label = ParticipantID), alpha = .5, check_overlap = T) +
+  geom_hline(aes(yintercept = 0), alpha = .3, linetype = 2) +
+  geom_vline(aes(xintercept = 0), alpha = .3, linetype = 2) +
+  scale_y_continuous("Intercept") +
+  scale_x_continuous("Slope")
+```
+
+
+```{r}
+
+d.model <- read_rds("../models/Block1-AEDLVOT-bysubject4-GLMM.rds")
+d.ranef <- ranef(d.model)
+
+# plot r'ship between intercept and slope
+as_tibble(d.ranef[[1]]) %>% 
+  mutate(ParticipantID = unique(d.block1$ParticipantID)) %>% 
+  ggplot(aes(y = Estimate.mu2_Intercept, x = Estimate.mu2_VOT_gs)) + 
+  geom_text(aes(label = ParticipantID), alpha = .5, check_overlap = T) +
+  geom_hline(aes(yintercept = 0), alpha = .3, linetype = 2) +
+  geom_vline(aes(xintercept = 0), alpha = .3, linetype = 2) +
+  scale_y_continuous("Intercept") +
+  scale_x_continuous("Slope")
+```
+
+
+
+```{r}
+psychometric_fit_block1 <- 
+  conditional_effects(
+    fit_mix_block1, 
+    effects = "VOT_gs", 
+    plot = F)[[1]]
+
+# get the PSE from the fitted categorisation function
+PSE.fit_mix_uniform_bias_block1 <- descale(-(summary(fit_mix_block1)$fixed["mu2_Intercept", 1] / summary(fit_mix_block1)$fixed["mu2_VOT_gs", 1]), VOT.mean_exp2, VOT.sd_exp2) 
+
+# get posterior samples of intercept and slope, and median qi of the PSEs
+post_sample_norm <- fit_mix_block1 %>% 
+  spread_draws(b_mu2_Intercept, b_mu2_VOT_gs) %>% 
+  mutate(PSE = descale(-(b_mu2_Intercept/b_mu2_VOT_gs), VOT.mean_exp2, VOT.sd_exp2)) %>% 
+  median_qi(PSE)
+```
+
 
 Fig. XX summarizes participants’ categorization functions across the different test blocks. To analyse the incremental effects of exposure condition on the proportion of /t/ responses at test, we fitted a Bayesian mixed-effects psychometric model with lapse rate (cf. Wichmann & Hill, 2001). The perceptual model contained exposure condition (sliding difference coded, comparing the +10ms against the +0ms shift condition, and the +40ms against the +10ms shift condition), test block (sliding difference coded from the first to last test block), VOT (Gelman scaled), and their full factorial interaction. We also included the full random effect structure by participant and item. The lapse rate and response bias (.5 for both /d/ and /t/) were assumed to be constant across blocks and exposure condition. We used the same weakly regularizing priors as in Xie, Liu, and Jaeger (2021).
 Condition and test blocks were successive-difference coded. 

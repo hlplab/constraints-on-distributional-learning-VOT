@@ -286,7 +286,7 @@ get_IO_categorization <- function(
     VOTs = seq(0, 85, .5),            
     F0s = normMel(predict_f0(VOTs)),                      
     alpha = .2,
-    size = .5,
+    linewidth = .5,
     io.type
 ) {
   data %<>%
@@ -336,7 +336,7 @@ get_IO_categorization <- function(
           ~ get_categorization_from_MVG_ideal_observer(x = .x$x, model = .y, decision_rule = "proportional") %>%
             filter(category == "/t/") %>%
             mutate(VOT = map(x, ~ .x[1]) %>% unlist())),
-      line = map2(categorization, gender, ~ geom_line(data = .x, aes(x = VOT, y = response, color = .y), alpha = alpha, size = size)),
+      line = map2(categorization, gender, ~ geom_line(data = .x, aes(x = VOT, y = response, color = .y), alpha = alpha, linewidth = linewidth)),
       io.type = io.type
     )
 }  
@@ -400,7 +400,7 @@ plot_IO_fit <- function(
       data = PSEs %>%
         mutate(y = ifelse(gender == "male", -.025, - .06)),
       mapping = aes(xmin = PSE.lower, xmax = PSE.upper, y = y, color = gender),
-      height = 0, alpha = .5, size = 1) +
+      height = 0, alpha = .5, linewidth = 1) +
     geom_point(
       data = PSEs %>%
         mutate(y = ifelse(gender == "male", -.025, - .06)),
@@ -441,7 +441,7 @@ plot_IO_fit <- function(
       color = "#333333",
       height = 0,
       alpha = .5,
-      size = 1) +
+      linewidth = 1) +
     geom_point(
       data = post_sample_norm %>% 
         mutate(y = .01),

@@ -124,6 +124,7 @@ library(kableExtra)
 library(linguisticsdown)    # IPA symbols
 library(latexdiffr)         # trackchanges
 
+library(lme4)
 library(brms)
 library(phonR)
 library(tidybayes)
