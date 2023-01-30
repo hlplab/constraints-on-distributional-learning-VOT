@@ -348,7 +348,7 @@ get_IO_categorization <- function(
 ############################################################################
 get_average_accuracy_of_IO <- function(observations, responses, model) {
   get_categorization_from_MVG_ideal_observer(x = observations, model = model, decision_rule = "proportional") %>%
-    # we only need one posterior since the other one is simply 1-that
+    # we only need one posterior since the other one is simply 1 minus that
     filter(category == "/t/") %>%
     mutate(
       human_response = .env$responses,
@@ -400,7 +400,7 @@ plot_IO_fit <- function(
       data = PSEs %>%
         mutate(y = ifelse(gender == "male", -.025, - .06)),
       mapping = aes(xmin = PSE.lower, xmax = PSE.upper, y = y, color = gender),
-      height = 0, alpha = .5, linewidth = 1) +
+      height = 0, alpha = .5, size = 1) +
     geom_point(
       data = PSEs %>%
         mutate(y = ifelse(gender == "male", -.025, - .06)),
@@ -422,7 +422,7 @@ plot_IO_fit <- function(
     mapping = aes(x = x, 
                   y = estimate__),
     colour = "#333333", 
-    size = 1,
+    linewidth = 1,
     alpha = .8,
     inherit.aes = F) +
     geom_ribbon(
@@ -441,12 +441,12 @@ plot_IO_fit <- function(
       color = "#333333",
       height = 0,
       alpha = .5,
-      linewidth = 1) +
+      size = 1) +
     geom_point(
       data = post_sample_norm %>% 
         mutate(y = .01),
       mapping = aes(x = if (centered != FALSE) PSE + (chodroff.mean_VOT - VOT.mean_norm) else PSE, y = y), 
-      color = "#333333", size = 1.3) +
+      color = "#333333", size = 1.2) +
     annotate(
       geom = "text", 
       y = .02, x = 70,

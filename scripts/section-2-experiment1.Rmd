@@ -381,20 +381,19 @@ We now turn to final aim of experiment 1 which is to make use of computational m
 
 Speakers' productions can act as a proxy for listeners' implicit knowledge of the distributional patterns of cues. This production-perception relationship within a phonological system was observed in early work by [@abramson1973voice] who found that production statistics of talkers along VOT aligned well with data from listeners who had categorised a separate set of synthesised VOT stimuli. This allows for the use of analytic models as tools for predicting categorisation behaviour from speech production data [@nearey1986phonological]. 
 
-We apply this principle when fitting ideal observer (IO) models by linking the distributional patterns of talker productions to the categorisation behaviour of listeners.  All models were trained on cue measurements extracted from an annotated database of 92 L1 US-English talkers' productions [@chodroff2017structure] of word initial /d/ and /t/. By using IOs trained solely on production data to predict behaviour we avoid additional computational degrees of freedom and limit the risk of overfitting the model to the data. The IOs' predictions are optimised under Bayes' theorem where the posterior probability of recognising a token as the "t" category is function of its prior prior probability $$p(c = t)$$ and the probability of observing the token under the hypothesis that the talker intended the voiceless category $$p(cue | c = t)$$ taken as a proportion of the sum of probabilities of observing the token under all possible hypotheses.
+We apply this principle when fitting ideal observer (IO) models by linking the distributional patterns of talker productions to the categorisation behaviour of listeners.  All models were trained on cue measurements extracted from an annotated database of 92 L1 US-English talkers' productions [@chodroff2017structure] of word initial /d/ and /t/. By using IOs trained solely on production data to predict behaviour we avoid additional computational degrees of freedom and limit the risk of overfitting the model to the data. 
+
+The IOs' predictions apply Bayes' theorem to achieve optimal categorization; the posterior probability of recognising a token as the "t" category is function of its prior prior probability $p(c = t)$ and the probability of observing the token under the hypothesis that the talker intended the voiceless category $p(cue | c = t)$ taken as a proportion of the sum of probabilities of observing the token under all possible hypotheses.
 
 
-We compare listener categorisation behaviour against the predictions of five IO models which reflect different assumptions about perceptual processes and the normalization (or lack thereof) of input. Beginning from the minimal assumption of using raw VOT cues without added perceptual noise to predict categorisation, each successive model builds up in complexity with added assumptions over the previous model (Figure \@ref(fig:comparative-IO-plot)). Each of these models are then assessed for their goodness-of-fit to the categorisation data by comparing the likelihood of human responses if they were to have based categorisation decisions on the assumptions represented by the respective IO models (Figure \@ref(fig:comparative-IO-plot)).
-
-The first point that stands out from the visual comparisons is that models that incorporate perceptual noise fit the perceptual data better than those that do not. This itself indicates that perception of acoustic stimuli is not entirely faithful to the bottom-up signal but is inferred through a combination of what listeners actually perceived and their existing knowledge of the underlying linguistic category [@kronrod2016unified]. For the univariate VOT models, the difference is most noticeable from the flatter slopes of the IOs indicating greater uncertainty in listener categorisations. The second pattern is that models trained with VOT and F0 cues (multiple cues) are better fits overall than models trained on a single cue. This trend is expected given the literature that report F0 reliably covarying with the voicing of stop consonants [@houseandfairbanks1953;@hombert1975; @ohde1984]. When VOT fails to provide sufficient support to voicing status, F0 has been found to influence listeners' categorisation behaviour [@abramson1985; @whalen1993; @idemaru2011; @winn2013]. This further speaks to the advantage of multivariate ideal observers because they assess the likelihood of a cue observation under a given category relative to the joint distributions of all relevant cues. 
+We compare listener categorisation behaviour against the predictions of five IO models which reflect different assumptions about perceptual processes and the normalization (or lack thereof) of input. Beginning with a minimal model (raw VOT cues with no added perceptual noise), each successive model increased in complexity either with the addition the F0 cue or an assumption about speech encoding (Figure \@ref(fig:comparative-IO-plot)). All IO predictions were adjusted for participant lapses with the parameter estimate from the fit to the perceptual data while bias was held at .5. In models where perceptual noise was assumed we added a noise variance of 80ms [@kronrod2016unified]. In addition to transforming the F0 cue measurements from raw Hz into Mel [@stevens1940relation] to reflect the organisation of the auditory system, normalization was applied to cues to compare effects of hypothesised pre-linguistic processes. We applied C-CuRE (@mcmurray2011information; @toscano2015time), a general purpose normalization procedure which captures the hypothesis that listeners overcome multiple sources of variability by interpreting cues relative to the expected distribution of cues in the present context. This process centers talkers' cues relative to the mean across talkers and categories. In the final model we tested the assumption that normalization --[I'M NOT CLEAR ON THE THEORETICAL MOTIVATION BEHIND ADJUSTING THE PERCEPTUAL FIT BY THE DIFFERENCE IN  THE TALKER'S MEAN AND THE POPULATION MEAN]
 
 
+Each of these models are then assessed for their goodness-of-fit to the categorisation data by comparing the likelihood of human responses under the assumptions represented by the respective IO models (Figure \@ref(fig:comparative-IO-plot)). For this we applied Luce's choice axiom [@luce1959]; for each token categorised by each listener, the expected accuracy for that token is the model's posterior for the category selected by each listener. We took the average log posterior of all responses to get the average likelihood for the entire experiment under each model.
+
+The first point that stands out from the visual comparisons is that models that incorporate perceptual noise fit the perceptual data better than those that do not. This itself indicates that perception of acoustic stimuli is not entirely faithful to the bottom-up signal but is inferred through a combination of what listeners actually perceived and their existing knowledge of the underlying linguistic category [@kronrod2016unified]. For the univariate VOT models, the difference is most noticeable from the flatter slopes of the IOs indicating greater uncertainty in listener categorisations. The second pattern is that models trained with VOT and F0 cues (multiple cues) are better fits overall than models trained on a single cue. This trend is expected given the literature that report F0 reliably covarying with the voicing of stop consonants [@house1953influence; @ohde1984fundamental]. When VOT fails to provide sufficient support to voicing status, F0 has been found to influence listeners' categorisation behaviour [@abramson1985relative; @whalen1993f; @idemaru2011word; @winn2013]. This further speaks to the advantage of multivariate ideal observers because they assess the likelihood of a cue observation under a given category relative to the joint distributions of all relevant cues. 
 
 
-
-
-
-\newpage
 
 ```{r}
 # prepare production corpus from Chodroff & Wilson
@@ -442,7 +441,7 @@ VOT.no.noise <-
     groups = c("Talker", "gender"), 
     with_noise = FALSE, 
     alpha = .1, 
-    size = 0.3,
+    linewidth = 0.3,
     io.type = "VOT.no.noise") 
 
 # Example calls:
@@ -475,7 +474,7 @@ VOT <-
     cues = c("VOT"), 
     groups = c("Talker", "gender"), 
     alpha = .1, 
-    size = 0.3,
+    linewidth = 0.3,
     io.type = "VOT")
 
 PSE_VOT <- get_PSE_quantiles(data = VOT, group = "gender")
@@ -495,7 +494,7 @@ VOT_F0 <-
     cues = c("VOT", "f0_Mel"), 
     groups = c("Talker", "gender"), 
     alpha = .1, 
-    size = .3,
+    linewidth = .3,
     io.type = "VOT_F0") 
 
 PSE_VOT_F0 <- get_PSE_quantiles(data = VOT_F0, group = "gender")
@@ -513,7 +512,7 @@ p.IOs.VOT_F0 <-
 VOT_F0.centered <- 
   get_IO_categorization(
     cues = c("VOT_centered", "f0_Mel_centered"), 
-    groups = c("Talker", "gender"), alpha = .1, size = .3,
+    groups = c("Talker", "gender"), alpha = .1, linewidth = .3,
     io.type = "VOT_F0.centered") 
 
 PSE_VOT_F0.centered <- get_PSE_quantiles(data = VOT_F0.centered, group = "gender")
@@ -526,7 +525,7 @@ p.IOs.VOT_F0.centered <-
 ```
 
 ```{r, warning=FALSE, fig.width=3.7, fig.height=2.5}
-# prepare data for IO that centers input data before categorization
+# prepare data for IO that centers perceptual input relative to population mean before categorization
 chodroff.mean_VOT <- d.chodroff_wilson.selected %>% 
   group_by(Talker) %>% 
   summarise(mean_VOT_by_talker = mean(VOT)) %>% 
@@ -605,7 +604,7 @@ IO_grid1 <-
     ncol = 3, 
     align = "h", 
     labels = c("VOT", "VOT (+perceptual noise)", "VOT-F0", "VOT-F0 (+talker-centered)", "VOT-F0 (+exposure-centered)", " "), 
-    label_size = 10, 
+    label_size = 6, 
     hjust = -1.1, 
     vjust = 1,
     rel_widths = c(1.02, 1, 1)) +
@@ -715,11 +714,11 @@ p.likelihood <- d.test.IO %>%
     mapping = 
       aes(x = io.type, ymin = median.lower, ymax = median.upper),
     colour = "#333333",
-    size = 1.5,
+    linewidth = 1.5,
     alpha = .6,
     width = 0,
     inherit.aes = F) +
-  scale_y_continuous("Median likelihood per response") +
+  scale_y_continuous("Median likelihood per response (log base 10)") +
    scale_x_discrete( 
      limits = c("VOT.no.noise", "VOT", "VOT_F0", "VOT_F0.centered", "VOT_F0.centered.input"),
      breaks = c("VOT.no.noise", "VOT", "VOT_F0", "VOT_F0.centered", "VOT_F0.centered.input"),
@@ -759,7 +758,7 @@ p.likelihood.multivar <- d.test.IO %>%
     mapping = 
       aes(x = io.type, ymin = median.lower, ymax = median.upper),
     colour = "#333333",
-    size = 1.5,
+    linewidth = 1.5,
     alpha = .6,
   width = 0,
     inherit.aes = F) + 
@@ -794,9 +793,9 @@ p.likelihood.multivar <- d.test.IO %>%
 
 
 
-ref(fig:IO-likelihood-plot) Median likelihood estimates of the human behavioural data under the assumptions of each IO model. Inset: Triangles indicate the mode, error bars represent the 95% quantile intervals from 100 bootstrap samples of by-talker estimates of each IO type.
+(ref:IO-likelihood-plot) Median likelihood estimates of the human behavioural data under the assumptions of each IO model. Inset: Triangles indicate the mode, error bars represent the 95% quantile intervals from 100 bootstrap samples of by-talker estimates of each IO type.
 
-```{r IO-likelihood-plot, fig.width=8, fig.height=5}
+```{r IO-likelihood-plot, fig.width=8, fig.height=6.5, fig.cap="(ref:IO-likelihood-plot)", warning=FALSE}
 p.likelihood + inset_element(p.likelihood.multivar, .406, .05, .935, .82, align_to = "panel")
 ```
 

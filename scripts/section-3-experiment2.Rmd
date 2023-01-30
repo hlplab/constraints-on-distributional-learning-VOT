@@ -15,7 +15,7 @@ The aim of experiment 2 was to investigate the incremental changes in listener c
 
 We approximated a "typical" talker through the combined parameters estimated from the perceptual responses in experiment 1 and a database of L1-US English /d/ and /t/ productions [@Xie]. From this estimated baseline distribution (+0ms), we shifted the distribution by +10ms, and by +40ms, yielding three exposure talker conditions. To investigate the state of listener expectations as they move from having no information about how a new talker realises /d/s and /t/s to progressively more information about the talker's pronunciations we implement identical test blocks (i.e. test stimuli in identical locations) within and across conditions before, during, and after informative exposure. Under Bayesian ideal adaptor inferential processes, listeners' weighting of their prior beliefs about the category means and variances will determine the speed at which adaptation occurs. Motivated by prior work in supervised and unsupervised learning within lab contexts that repeatedly show adaptation to be a rapid process [@clarke2004rapid; @bradlow2008perceptual; @xie2021cross; @liu2018inferring; @norris2003perceptual @kleinschmidt2012continuum] we made the decision to test our participants early on in the experiment.
 
-Previous studies were not designed to investigate incremental adaptation in this manner as they lacked designated test blocks; listeners' categorisation functions were instead estimated over portions of the exposure trials which ignores the fact that not all participants had been exposed to the exact same items at the trial cut-off point (although that would have been the case by the end of the experiment). With our novel design we gain better resolution at every testing point, since each participant would have heard the same number of VOT items at the beginning of a given test block. The other advantage is that identical test blocks across conditions standardises the assessment of behavioural changes between groups yielding more accurate comparisons. We specifically included a pre-exposure test block with a similar aim to experiment 1 -- in order to capture the implicit expectations of listeners about the cue-to-category mappings of US English /d/ and /t/. We later compare this block with the behavioural results of experiment 1. 
+Previous studies were not designed to investigate incremental adaptation in this manner as they lacked designated test blocks; listeners' categorisation functions were instead estimated over portions of the exposure trials which ignores the possibility that not all participants had been exposed to the full distributional information at the trial cut-off point (although that would have been the case by the end of the experiment). With our novel design we gain better resolution at every testing point, since each participant would have heard the same number of VOT items at the beginning of a given test block. The other advantage is that identical test blocks across conditions standardises the assessment of behavioural changes between groups yielding more accurate comparisons. We specifically included a pre-exposure test block with a similar aim to experiment 1 -- in order to capture the implicit expectations of listeners about the cue-to-category mappings of US English /d/ and /t/. We later compare this block with the behavioural results of experiment 1. 
 
 Previous studies found that listeners shift their categorization behaviour towards the category boundary implied by the exposure distribution but that adaptive shifts were incomplete, the further  the exposure talker's distribution from a typical talker. We therefore expected to see differences in categorizations between the +10ms and +40ms conditions such that listeners in the +40ms condition would shift more than those in the +10ms but to have an average categorization function located to the left of the categorisation function that fully converges on the statistics of the exposure distribution. [@kleinschmidt2016you]. Nonetheless if adaptative speech perception involves rational updating we expect to find that the different shift conditions would induce changes in categorizations that are proportional to the distance between the shifts (i.e. +40ms being three times that of +10ms).
 
@@ -292,7 +292,7 @@ d.block1 %<>%
 
 lapse_exp1 <- summary(fit_mix)$fixed["theta1_Intercept", 1]
 
-# run brms model of data for block 1
+# run brms model of data for block 1. This is the only model that converged
 fit_mix_block1 <- brm(
   bf(
     Response.Voiceless ~ 1,
@@ -307,24 +307,11 @@ fit_mix_block1 <- brm(
   family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
   control = list(adapt_delta = .999),
   file = "../models/Block1-AEDLVOT-bysubject4-GLMM.rds")
-
-m.block1 <- lme4::lmer(Response.Voiceless ~ 1 + VOT_gs + (1 + VOT_gs | ParticipantID), data = d.block1)
-ranef(m.block1)[1]
-
-
-ranef(m.block1)[1] %>% 
-  bind_rows() %>% 
-  mutate(ParticipantID = unique(d.block1$ParticipantID)) %>% 
-  ggplot(aes(y = `(Intercept)`, x = VOT_gs)) + 
-  geom_text(aes(label = ParticipantID), alpha = .5, check_overlap = T) +
-  geom_hline(aes(yintercept = 0), alpha = .3, linetype = 2) +
-  geom_vline(aes(xintercept = 0), alpha = .3, linetype = 2) +
-  scale_y_continuous("Intercept") +
-  scale_x_continuous("Slope")
 ```
 
+(ref:mixture-model-block-1) Plot of by-participant intercepts and slopes estimated from the mixture model
 
-```{r}
+```{r, fig.width=6, fig.height=3, fig.cap="(ref:mixture-model-block-1)"}
 
 d.model <- read_rds("../models/Block1-AEDLVOT-bysubject4-GLMM.rds")
 d.ranef <- ranef(d.model)
@@ -342,22 +329,25 @@ as_tibble(d.ranef[[1]]) %>%
 
 
 
-```{r}
-psychometric_fit_block1 <- 
-  conditional_effects(
-    fit_mix_block1, 
-    effects = "VOT_gs", 
-    plot = F)[[1]]
+```{r, fig.width=6, fig.height=3, fig.cap="Plot of by participant intercepts and slopes estimated by the linear mixed-effects model"}
+m.block1 <- lme4::lmer(Response.Voiceless ~ 1 + VOT_gs + (1 + VOT_gs | ParticipantID), data = d.block1)
+summary(m.block1)
 
-# get the PSE from the fitted categorisation function
-PSE.fit_mix_uniform_bias_block1 <- descale(-(summary(fit_mix_block1)$fixed["mu2_Intercept", 1] / summary(fit_mix_block1)$fixed["mu2_VOT_gs", 1]), VOT.mean_exp2, VOT.sd_exp2) 
 
-# get posterior samples of intercept and slope, and median qi of the PSEs
-post_sample_norm <- fit_mix_block1 %>% 
-  spread_draws(b_mu2_Intercept, b_mu2_VOT_gs) %>% 
-  mutate(PSE = descale(-(b_mu2_Intercept/b_mu2_VOT_gs), VOT.mean_exp2, VOT.sd_exp2)) %>% 
-  median_qi(PSE)
+ranef(m.block1)[1] %>% 
+  bind_rows() %>% 
+  mutate(ParticipantID = unique(d.block1$ParticipantID)) %>% 
+  ggplot(aes(y = `(Intercept)`, x = VOT_gs)) + 
+  geom_text(aes(label = ParticipantID), alpha = .5, check_overlap = T) +
+  geom_hline(aes(yintercept = 0), alpha = .3, linetype = 2) +
+  geom_vline(aes(xintercept = 0), alpha = .3, linetype = 2) +
+  scale_y_continuous("Intercept") +
+  scale_x_continuous("Slope")
 ```
+
+
+
+
 
 
 Fig. XX summarizes participants’ categorization functions across the different test blocks. To analyse the incremental effects of exposure condition on the proportion of /t/ responses at test, we fitted a Bayesian mixed-effects psychometric model with lapse rate (cf. Wichmann & Hill, 2001). The perceptual model contained exposure condition (sliding difference coded, comparing the +10ms against the +0ms shift condition, and the +40ms against the +10ms shift condition), test block (sliding difference coded from the first to last test block), VOT (Gelman scaled), and their full factorial interaction. We also included the full random effect structure by participant and item. The lapse rate and response bias (.5 for both /d/ and /t/) were assumed to be constant across blocks and exposure condition. We used the same weakly regularizing priors as in Xie, Liu, and Jaeger (2021).
