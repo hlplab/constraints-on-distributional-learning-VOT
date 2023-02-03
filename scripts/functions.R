@@ -179,7 +179,8 @@ get_ChodroffWilson_data <- function(
 # NORMALIZATION -----------------------------------------------------------
 apply_ccure <- function(x, data) {
   require(lme4)
-  x - predict(lmer(x ~ 1 + (1 | Talker), data = data), random.only = T)
+  x - predict(lmer(x ~ 1 + (1 | Talker), data = data), random.only = T) 
+  # deducts only talker specific intercepts (more precisely, the offset value of each talker's mean from the grand mean) from each cue value
 }
 
 # MAKE IDEAL OBSERVERS ----------------------------------------------------
@@ -218,8 +219,9 @@ make_stop_VOTf0_ideal_adaptor <- function(m, kappa = 3, nu = 3) {
 ############################################################################
 # Get approximate f0 of synthesised stimuli from VOT values
 ############################################################################
-predict_f0 <- function(VOT) {
-  predict_f0 = 245.46968 + 0.03827 * (VOT)
+# set the linear prediction parameters for exposure stimuli 
+predict_f0 <- function(VOT, intercept = 245.46968, slope = 0.03827) {
+  predict_f0 = intercept + slope * (VOT)
   return(predict_f0)
 }
 ############################################################################
@@ -473,4 +475,81 @@ get_PSE_quantiles <- function(data, group) {
     PSE.median = round(quantile(PSE, probs = c(.5))),
     PSE.upper = round(quantile(PSE, probs = c(.975))))
 }
+
+
+plot_talker_UVGs <- function (data_production, data_perception, noise = FALSE) {
+  plot <- data_production %>% 
+    mutate(x = list(VOT = seq(-100, 130, .5)),
+           x = map(x, ~ as_tibble(.x) %>% rename("VOT (ms)" = value))) %>%
+    unnest(io) %>% 
+    mutate(
+      gaussian = pmap(
+        list(x, gender, category, mu, Sigma, Sigma_noise),
+        ~ geom_function(
+          data = ..1, 
+          aes(x = `VOT (ms)`, 
+              linetype = ..3, colour = ..2), 
+          fun = function(x) dnorm(x, mean = ..4[[1]][[1]], sd = if (noise == T) sqrt(..5[[1]][[1]]) + sqrt(..6[[1]][[1]]) else sqrt(..5[[1]][[1]])), alpha = .3))) 
   
+  plot %>% 
+    ggplot() +
+    plot$gaussian +
+    scale_colour_manual("Talker sex", values = colours.sex, labels = c("Female", "Male")) +
+    scale_linetype_discrete("Category") +
+    scale_y_continuous("Density") + 
+    scale_x_continuous(expand = expansion(0)) +
+    geom_rug(
+      data = data_perception %>%
+        ungroup() %>% 
+        distinct(Item.VOT),
+      mapping = aes(x = Item.VOT),
+      colour = "black",
+      alpha = .6,
+      inherit.aes = F) +
+    guides(colour = "none")
+}
+
+
+plot_talker_MVGs <- function(
+    data_production = d.chodroff_wilson.selected, 
+    cues, 
+    data_perception = d.test.excluded,
+    centered = F) {
+  
+  plot <- data_production %>% 
+    group_by(Talker) %>% 
+    nest(-Talker) %>% 
+    mutate(points = map(
+      data, ~ geom_point(data = .x, 
+                         aes(x = !! sym(cues[1]), y = !! sym(cues[2]), 
+                             colour = gender, 
+                             shape = category), 
+                         alpha = .1)), 
+      ellipse = map(
+        data, ~ stat_ellipse(data = .x,
+                             aes(x = !! sym(cues[1]), y = !! sym(cues[2]),
+                                 colour = gender,
+                                 linetype = category),
+                             alpha = .3)))
+  plot %>% 
+    ggplot() +
+    #plot$points +
+    plot$ellipse +
+    scale_colour_manual("Talker sex", values = colours.sex, labels = c("Female", "Male")) +
+    scale_linetype_discrete("Category") +
+    geom_point(
+      data = if (centered == T) data_perception %>% 
+        ungroup() %>% 
+        distinct(Item.VOT, Item.Mel_f0_5ms) %>% 
+        mutate(Item.VOT = Item.VOT + (39 - 48),
+               Item.Mel_f0_5ms = Item.Mel_f0_5ms + (238 - 341)) else
+        data_perception %>% 
+        ungroup() %>% 
+        distinct(Item.VOT, Item.Mel_f0_5ms),
+      aes(x = Item.VOT, y = Item.Mel_f0_5ms),
+      alpha = .1,
+      inherit.aes = F) +
+    geom_abline(intercept = if (centered == T) normMel(245.46968 + (238 - 341)) else normMel(245.46968 ), slope = 0.03827, alpha = .5) +
+    guides(colour = "none", category = "none")
+}
+

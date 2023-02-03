@@ -55,14 +55,14 @@ d.f0.5ms <-
   read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv", show_col_types = F) %>% 
   select(filename, VOT, f0_5ms_into_vowel) %>% 
   rename(Item.VOT = VOT,
-         f0_5ms = f0_5ms_into_vowel,
+         Item.f0_5ms = f0_5ms_into_vowel,
          Item.Filename = filename) %>% 
   mutate(Item.Filename = paste0(Item.Filename, ".wav"))
 
 d.test %<>% 
 ungroup() %>%
   left_join(d.f0.5ms, by = c("Item.Filename", "Item.VOT")) %>% 
-              mutate(Item.Mel_f0_5ms = normMel(f0_5ms))
+              mutate(Item.Mel_f0_5ms = normMel(Item.f0_5ms))
 
 # mark catch trials rows and check correct
 d.test %<>% 
@@ -386,7 +386,7 @@ We apply this principle when fitting ideal observer (IO) models by linking the d
 The IOs' predictions apply Bayes' theorem to achieve optimal categorization; the posterior probability of recognising a token as the "t" category is function of its prior prior probability $p(c = t)$ and the probability of observing the token under the hypothesis that the talker intended the voiceless category $p(cue | c = t)$ taken as a proportion of the sum of probabilities of observing the token under all possible hypotheses.
 
 
-We compare listener categorisation behaviour against the predictions of five IO models which reflect different assumptions about perceptual processes and the normalization (or lack thereof) of input. Beginning with a minimal model (raw VOT cues with no added perceptual noise), each successive model increased in complexity either with the addition the F0 cue or an assumption about speech encoding (Figure \@ref(fig:comparative-IO-plot)). All IO predictions were adjusted for participant lapses with the parameter estimate from the fit to the perceptual data while bias was held at .5. In models where perceptual noise was assumed we added a noise variance of 80ms [@kronrod2016unified]. In addition to transforming the F0 cue measurements from raw Hz into Mel [@stevens1940relation] to reflect the organisation of the auditory system, normalization was applied to cues to compare effects of hypothesised pre-linguistic processes. We applied C-CuRE (@mcmurray2011information; @toscano2015time), a general purpose normalization procedure which captures the hypothesis that listeners overcome multiple sources of variability by interpreting cues relative to the expected distribution of cues in the present context. This process centers talkers' cues relative to the mean across talkers and categories. In the final model we tested the assumption that normalization --[I'M NOT CLEAR ON THE THEORETICAL MOTIVATION BEHIND ADJUSTING THE PERCEPTUAL FIT BY THE DIFFERENCE IN  THE TALKER'S MEAN AND THE POPULATION MEAN]
+We compare listener categorisation behaviour against the predictions of five IO models which reflect different assumptions about perceptual processes and the normalization (or lack thereof) of input. Beginning with a minimal model (raw VOT cues with no added perceptual noise), each successive model increased in complexity either with the addition the F0 cue or an assumption about speech encoding (Figure \@ref(fig:comparative-IO-plot)). All IO models were adjusted by the estimated lapse-rate from the psychometric fit to the perceptual data while bias was held at .5. In models that included perceptual noise we added a noise variance of 80ms [cf. @kronrod2016unified] to the likelihoods. In addition to transforming the F0 cue measurements from raw Hz into Mel [@stevens1940relation] to reflect the tonotopy of the auditory system, normalization was applied to cues to compare effects of hypothesised pre-linguistic processes. We applied C-CuRE (@mcmurray2011information; @toscano2015time), a general purpose normalization procedure which captures the hypothesis that listeners overcome multiple sources of variability by interpreting cues relative to the expected distribution of cues in the present context. This process centers cues relative to their individual talker mean across categories. In the final model we tested the assumption that normalization --[I'M NOT CLEAR ON THE THEORETICAL MOTIVATION BEHIND ADJUSTING THE PERCEPTUAL FIT BY THE DIFFERENCE IN  THE TALKER'S MEAN AND THE POPULATION MEAN]
 
 
 Each of these models are then assessed for their goodness-of-fit to the categorisation data by comparing the likelihood of human responses under the assumptions represented by the respective IO models (Figure \@ref(fig:comparative-IO-plot)). For this we applied Luce's choice axiom [@luce1959]; for each token categorised by each listener, the expected accuracy for that token is the model's posterior for the category selected by each listener. We took the average log posterior of all responses to get the average likelihood for the entire experiment under each model.
@@ -426,8 +426,21 @@ d.chodroff_wilson.selected <-
   ungroup() %>%
   mutate_at(
       c("VOT", "f0", "f0_Mel", "f0_semitones"),
-      list("centered" = function(x) apply_ccure(x, data = .)))%>% 
+      list("centered" = function(x) apply_ccure(x, data = .))) %>% 
   mutate(category = factor(category))
+
+d.chodroff_wilson.selected %>% 
+  ungroup() %>% 
+  summarise(across(c("VOT", "f0_Mel", "VOT_centered", "f0_Mel_centered"), mean)) %>% 
+  pull(f0_Mel_centered)
+```
+
+
+
+```{r}
+d.test.excluded %>% 
+  ungroup() %>% 
+    summarise(across(c("Item.VOT", "Item.f0_5ms", "Item.Mel_f0_5ms"), mean))
 ```
 
 
@@ -444,26 +457,14 @@ VOT.no.noise <-
     linewidth = 0.3,
     io.type = "VOT.no.noise") 
 
-# Example calls:
-#
-#temp <- VOT.no.noise %>% 
-   #mutate(PSE = map2_dbl(x, io, ~ get_PSE_from_io(x = .x, io = .y)) %>% unlist())
-
-# 
-# temp <- VOT_F0 %>%
-#   mutate(PSE = map(io, ~ get_PSE_from_io(.x)) %>% unlist())
-
-
-#VOT_F0 %>%
-  #mutate(PSE = map(io, ~ get_PSE_from_io(.x)) %>% unlist())
-
-
 PSE_VOT.no.noise <- get_PSE_quantiles(data = VOT.no.noise, group = "gender")
 
 p.IOs.VOT.no.noise <- plot_IO_fit(
   data = VOT.no.noise,
   PSEs = PSE_VOT.no.noise,
   x = descale(psychometric_fit_data$sVOT, VOT.mean_norm, VOT.sd_norm))
+
+p.likelihoods.VOT <- plot_talker_UVGs(VOT.no.noise, d.test.excluded)
 ```
 
 
@@ -484,6 +485,9 @@ p.IOs.VOT <-
     data = VOT,
     PSEs = PSE_VOT,
     x = descale(psychometric_fit_data$sVOT, VOT.mean_norm, VOT.sd_norm))  
+
+
+p.likelihoods.VOT_noise <- plot_talker_UVGs(VOT, d.test.excluded, noise = TRUE)
 ```
 
 
@@ -504,6 +508,8 @@ p.IOs.VOT_F0 <-
     data = VOT_F0,
     PSEs = PSE_VOT_F0,
     x = descale(psychometric_fit_data$sVOT, VOT.mean_norm, VOT.sd_norm))
+
+p.likelihoods.VOT_F0 <- plot_talker_MVGs(cues = c("VOT", "f0_Mel"))
 ```
 
 
@@ -522,103 +528,104 @@ p.IOs.VOT_F0.centered <-
     data = VOT_F0.centered,
     PSEs = PSE_VOT_F0.centered,
     x = descale(psychometric_fit_data$sVOT, VOT.mean_norm, VOT.sd_norm))
+
+p.likelihoods.VOT_F0.centered <- plot_talker_MVGs(cues = c("VOT_centered", "f0_Mel_centered"))
 ```
 
 ```{r, warning=FALSE, fig.width=3.7, fig.height=2.5}
 # prepare data for IO that centers perceptual input relative to population mean before categorization
-chodroff.mean_VOT <- d.chodroff_wilson.selected %>% 
+chodroff.means <- d.chodroff_wilson.selected %>% 
   group_by(Talker) %>% 
-  summarise(mean_VOT_by_talker = mean(VOT)) %>% 
+  summarise(across(c(VOT, f0_Mel), mean)) %>% 
   ungroup() %>% 
-  summarise(mean_VOT = mean(mean_VOT_by_talker)) %>% 
-  pull(mean_VOT) 
+  summarise(across(c(VOT, f0_Mel), mean)) 
 
-# shift the fitted categorisation fn by the difference in mean VOTs
-# p.psychometric.vot %+%
-#   geom_line(data = psychometric_fit_data %>% 
-#               mutate(VOT = descale(sVOT, VOT.mean_norm, VOT.sd_norm),
-#                      cVOT =  VOT + (chodroff.mean_VOT - VOT.mean_norm)),
-#             mapping = aes(x = cVOT, 
-#                           y = estimate__),
-#             linetype = 2,
-#             size = 1.5, 
-#             colour = "#333333",
-#             alpha = .8,
-#             inherit.aes = F)
+chodroff.mean_VOT <- chodroff.means %>% pull(VOT)
+chodroff.mean_f0 <- chodroff.means %>% pull(f0_Mel)
 
 p.IOs.VOT_F0.centered.input <- plot_IO_fit(
     data = VOT_F0.centered,
     PSEs = PSE_VOT_F0.centered,
     x = descale(psychometric_fit_data$sVOT, VOT.mean_norm, VOT.sd_norm) + (chodroff.mean_VOT - VOT.mean_norm),
     centered = TRUE)
+
+p.likelihoods.exposure.centered <- plot_talker_MVGs(cues = c("VOT_centered", "f0_Mel_centered"), centered = T)
+
 ```
 
 
 
 (ref:comparative-IO-plot) Comparing predicted vs. observed categorization functions for Experiment 1. The black line and interval show the psychometric fit and 95% CI for Experiment 1 marginalizing over all random effects. Each thin line shows the prediction of a single talker-specific ideal observer derived from a database of word-initial stop productions [data: @chodroff2017structure; data preparation & model code: @Kurumada_Xie_Jaeger_2022]. The lapse rate and response bias for the ideal observers was set to match the MAP estimates of the psychometric model. For ease of comparisons, horizontal point ranges show the PSE and its 95% CI after discounting lapses. **Last panel:** the psychometric fit and PSE range of the perceptual responses are centered by adding the difference between the mean of talker-specific means and the mean VOT during exposure.
 
-```{r comparative-IO-plot, warning=FALSE, fig.width=7, fig.height=7, fig.cap="(ref:comparative-IO-plot)"}
-p1 <- 
-  p.IOs.VOT.no.noise + 
-  theme(legend.position = "none", 
-        axis.title.x = element_blank(),
-        axis.text.x = element_blank(),
-        axis.ticks.x = element_blank(),
-        axis.title.y = element_blank(),
-        plot.margin = unit(c(0.5, 0.5, 0, 0), "cm")) 
-p2 <- 
-  p.IOs.VOT + 
-  theme(legend.position = "none", 
-        axis.title.x = element_blank(),
-        axis.text.x = element_blank(),
-        axis.ticks.x = element_blank(),
-        axis.title.y = element_blank(),
-        plot.margin = unit(c(0.5, 0.5, 0, 0), "cm")) 
-p3 <- 
-  p.IOs.VOT_F0 + 
-  theme(legend.position = "none",
-        axis.title.x = element_blank(),
-        axis.text.x = element_blank(),
-        axis.ticks.x = element_blank(),
-        axis.title.y = element_blank(),
-        plot.margin = unit(c(0.5, 0.5, 0, 0), "cm"))  
-p4 <- 
-  p.IOs.VOT_F0.centered + 
-  theme(legend.position = "none", 
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        plot.margin = unit(c(0.5, 0.5, 0, 0), "cm"))  
+```{r}
+# make plot grid
+legend1 <- get_legend(p.likelihoods.exposure.centered)
+legend2 <- get_legend(p.IOs.VOT_F0.centered.input)
+theme_spec <- theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank()) 
+guide_spec <-  guides(linetype = "none")
 
-p5 <- 
-  p.IOs.VOT_F0.centered.input + 
-  theme(legend.position = "none", 
-        axis.title.y = element_blank(), 
-        axis.title.x = element_blank(),
-        plot.margin = unit(c(0.5, 0.5, 0, 0), "cm"))  
-  
-legend <- get_legend(p.IOs.VOT_F0 + theme(legend.position = "top"))
+p1 <- p.likelihoods.VOT +
+  theme_spec + guide_spec
 
-IO_grid1 <- 
-  plot_grid(
-    p1, p2, p3, p4, p5, NULL,
-    ncol = 3, 
-    align = "h", 
-    labels = c("VOT", "VOT (+perceptual noise)", "VOT-F0", "VOT-F0 (+talker-centered)", "VOT-F0 (+exposure-centered)", " "), 
-    label_size = 6, 
-    hjust = -1.1, 
-    vjust = 1,
-    rel_widths = c(1.02, 1, 1)) +
-  theme(plot.margin = margin(0, 0, 0, 40))
 
-IO_grid1 <- add_sub(IO_grid1, "VOT (ms)", x = .55, size = 10, fontface = "bold", vjust = 0)
-IO_grid1 <- add_sub(IO_grid1, "Proportion of 't'-responses", x = -0.03, y = 3, size = 10, fontface = "bold", angle = 90)
-IO_grid2 <- plot_grid(legend, IO_grid1, align = "h", ncol = 1, rel_heights = c(.08, 1))
-ggdraw(IO_grid2)
+p2 <- p.likelihoods.VOT_noise +
+   theme_spec + guide_spec
+
+p3 <- p.likelihoods.VOT_F0 +
+   theme_spec + guide_spec
+
+p4 <- p.likelihoods.VOT_F0.centered +
+   theme_spec + guide_spec
+
+p5 <- p.likelihoods.exposure.centered +
+  theme_spec
+
+p6 <- p.IOs.VOT.no.noise + 
+  theme_spec
+
+p7 <- p.IOs.VOT + 
+  theme_spec 
+
+p8 <- p.IOs.VOT_F0 + 
+  theme_spec 
+
+p9 <- p.IOs.VOT_F0.centered + 
+  theme_spec 
+
+p10 <- p.IOs.VOT_F0.centered.input + 
+  theme_spec  
 ```
 
+```{r, comparative-IO-plot, warning=FALSE, fig.width=6, fig.height=8, fig.cap="(ref:comparative-IO-plot)"}
 
+p.col1 <- p1 +p2 + p3 + p4 + p5 +
+  plot_layout(ncol = 1, byrow = F, guides = "collect") &
+  theme(legend.position = "top")  
 
+p.col2 <- p6 + p7 + p8 + p9 + p10 +
+  plot_layout(ncol = 1, byrow = F, guides = "collect") &
+  theme(legend.position = "top") 
 
+glob_lab1 <- "Density"
+glob_lab2 <- "Proportion 't'-responses"
+
+p_lab1 <- 
+  ggplot() + 
+  annotate(geom = "text", x = 1, y = 1, label = glob_lab1, angle = 90) +
+  coord_cartesian(clip = "off") +
+  theme_void()
+
+p_lab2 <- 
+  ggplot() + 
+  annotate(geom = "text", x = 1, y = 1, label = glob_lab2, angle = 90) +
+  coord_cartesian(clip = "off")+
+  theme_void()
+
+(p.col1 | p.col2) +
+  plot_layout(ncol = 2, guides = "collect") &
+  theme(legend.position = "top")
+```
 
 
 
