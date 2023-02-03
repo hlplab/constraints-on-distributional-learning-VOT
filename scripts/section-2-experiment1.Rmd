@@ -428,21 +428,7 @@ d.chodroff_wilson.selected <-
       c("VOT", "f0", "f0_Mel", "f0_semitones"),
       list("centered" = function(x) apply_ccure(x, data = .))) %>% 
   mutate(category = factor(category))
-
-d.chodroff_wilson.selected %>% 
-  ungroup() %>% 
-  summarise(across(c("VOT", "f0_Mel", "VOT_centered", "f0_Mel_centered"), mean)) %>% 
-  pull(f0_Mel_centered)
 ```
-
-
-
-```{r}
-d.test.excluded %>% 
-  ungroup() %>% 
-    summarise(across(c("Item.VOT", "Item.f0_5ms", "Item.Mel_f0_5ms"), mean))
-```
-
 
 
 
@@ -550,17 +536,14 @@ p.IOs.VOT_F0.centered.input <- plot_IO_fit(
     centered = TRUE)
 
 p.likelihoods.exposure.centered <- plot_talker_MVGs(cues = c("VOT_centered", "f0_Mel_centered"), centered = T)
-
 ```
 
 
 
-(ref:comparative-IO-plot) Comparing predicted vs. observed categorization functions for Experiment 1. The black line and interval show the psychometric fit and 95% CI for Experiment 1 marginalizing over all random effects. Each thin line shows the prediction of a single talker-specific ideal observer derived from a database of word-initial stop productions [data: @chodroff2017structure; data preparation & model code: @Kurumada_Xie_Jaeger_2022]. The lapse rate and response bias for the ideal observers was set to match the MAP estimates of the psychometric model. For ease of comparisons, horizontal point ranges show the PSE and its 95% CI after discounting lapses. **Last panel:** the psychometric fit and PSE range of the perceptual responses are centered by adding the difference between the mean of talker-specific means and the mean VOT during exposure.
+
 
 ```{r}
 # make plot grid
-legend1 <- get_legend(p.likelihoods.exposure.centered)
-legend2 <- get_legend(p.IOs.VOT_F0.centered.input)
 theme_spec <- theme(axis.title.x = element_blank(),
         axis.title.y = element_blank()) 
 guide_spec <-  guides(linetype = "none")
@@ -597,7 +580,11 @@ p10 <- p.IOs.VOT_F0.centered.input +
   theme_spec  
 ```
 
-```{r, comparative-IO-plot, warning=FALSE, fig.width=6, fig.height=8, fig.cap="(ref:comparative-IO-plot)"}
+
+
+(ref:comparative-IO-plot) **Right column:** Comparing predicted vs. observed categorization functions for Experiment 1. The black line and interval show the psychometric fit and 95% CI for Experiment 1 marginalizing over all random effects. Each thin line shows the prediction of a single talker-specific ideal observer derived from a database of word-initial stop productions [data: @chodroff2017structure; data preparation & model code: @Kurumada_Xie_Jaeger_2022]. The lapse rate and response bias for the ideal observers was set to match the MAP estimates of the psychometric model. For ease of comparisons, horizontal point ranges show the PSE and its 95% CI after discounting lapses. **Left column:** Gaussian distributions indicate talker likelihoods by category. Rug shows show exposure stimuli location along VOT and along VOT and F0 (points). Talker cues (second-to-last-row) and exposure stimuli (last row) are centered relative to overall cue means across categories.
+
+```{r, comparative-IO-plot, warning=FALSE, fig.width=6, fig.height=9, fig.cap="(ref:comparative-IO-plot)"}
 
 p.col1 <- p1 +p2 + p3 + p4 + p5 +
   plot_layout(ncol = 1, byrow = F, guides = "collect") &

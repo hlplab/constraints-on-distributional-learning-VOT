@@ -476,6 +476,9 @@ get_PSE_quantiles <- function(data, group) {
     PSE.upper = round(quantile(PSE, probs = c(.975))))
 }
 
+############################################################################
+# function to plot likelihoods in experiment 1 (section 2.3) 
+############################################################################
 
 plot_talker_UVGs <- function (data_production, data_perception, noise = FALSE) {
   plot <- data_production %>% 
@@ -489,7 +492,7 @@ plot_talker_UVGs <- function (data_production, data_perception, noise = FALSE) {
           data = ..1, 
           aes(x = `VOT (ms)`, 
               linetype = ..3, colour = ..2), 
-          fun = function(x) dnorm(x, mean = ..4[[1]][[1]], sd = if (noise == T) sqrt(..5[[1]][[1]]) + sqrt(..6[[1]][[1]]) else sqrt(..5[[1]][[1]])), alpha = .3))) 
+          fun = function(x) dnorm(x, mean = ..4[[1]][[1]], sd = if (noise == T) sqrt(..5[[1]][[1]]) + sqrt(..6[[1]][[1]]) else sqrt(..5[[1]][[1]])), alpha = .2))) 
   
   plot %>% 
     ggplot() +
@@ -497,7 +500,6 @@ plot_talker_UVGs <- function (data_production, data_perception, noise = FALSE) {
     scale_colour_manual("Talker sex", values = colours.sex, labels = c("Female", "Male")) +
     scale_linetype_discrete("Category") +
     scale_y_continuous("Density") + 
-    scale_x_continuous(expand = expansion(0)) +
     geom_rug(
       data = data_perception %>%
         ungroup() %>% 
@@ -530,7 +532,7 @@ plot_talker_MVGs <- function(
                              aes(x = !! sym(cues[1]), y = !! sym(cues[2]),
                                  colour = gender,
                                  linetype = category),
-                             alpha = .3)))
+                             alpha = .2)))
   plot %>% 
     ggplot() +
     #plot$points +
