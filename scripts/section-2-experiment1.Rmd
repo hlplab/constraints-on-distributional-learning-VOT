@@ -147,10 +147,19 @@ VOT.mean_norm <- mean(d.test.excluded$Item.VOT)
 VOT.sd_norm <- sd(d.test.excluded$Item.VOT)
 Trial.mean <- mean(d.test.excluded$Trial) 
 Trial.sd <- sd(d.test.excluded$Trial)
+
 d.test.excluded %<>%
   mutate(
     sVOT = (Item.VOT - VOT.mean_norm) / (2 * VOT.sd_norm),
     sTrial = (Trial - Trial.mean) / (2 * Trial.sd))
+
+# set priors for psychometric model
+my_priors <- c(
+  prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"), # prior 
+  prior(student_t(3, 0, 2.5), class = "b", dpar = "theta1"), 
+  prior(cauchy(0, 2.5), class = "sd"),
+  prior(lkj(1), class = "cor")
+)
 
 # load (or run) the psychometric model with interaction
 fit_mix <- brm(
@@ -167,6 +176,7 @@ fit_mix <- brm(
   control = list(adapt_delta = .99),
   file = "../models/Exp-NORM-lapsing-bias-GLMM")
 
+# get conditional effects from model
 psychometric_fit_data <- 
   conditional_effects(
     fit_mix, 
@@ -192,7 +202,8 @@ if (file.exists("../models/conditional_effects_VOT_Trial.rds")) {
 PSE.fit_mix <- descale(-(summary(fit_mix)$fixed["mu2_Intercept", 1] / summary(fit_mix)$fixed["mu2_sVOT", 1]), VOT.mean_norm, VOT.sd_norm) 
 
 # get posterior samples of intercept and slope, and median qi of the PSEs
-post_sample_norm <- fit_mix %>% spread_draws(b_mu2_Intercept, b_mu2_sVOT) %>% 
+post_sample_norm <- fit_mix %>% 
+  spread_draws(b_mu2_Intercept, b_mu2_sVOT) %>% 
   mutate(PSE = descale(-(b_mu2_Intercept/b_mu2_sVOT), VOT.mean_norm, VOT.sd_norm)) %>% 
   median_qi(PSE)
 ```
@@ -306,7 +317,7 @@ p.vot <- p.psychometric.vot +
     colour = "darkgray") 
 ```
 
-(ref:fitted-categorisation-plots) Categorisation functions and points of subjective equality (PSE) derived from the Bayesian mixed-effects psychometric model fit to listeners' responses in Experiment 1. The categorization functions include lapse rates and biases. The PSEs correct for lapse rates and lapse biases (i.e., they are the PSEs of the perceptual component of the psychometric model).\protect\footnote{Here and in Experiment 2, lapse biases were close to uniform (.5/.5). For such scenarios, bias-corrected PSEs will be very similar to uncorrected PSEs. This is also evident in Figure \ref{fig:fitted-categorisation-plots}.} **Panel A:** Effects of VOT, lapse rate, and lapse bias, while marginalizing over trial effects as well as all random effects. Vertical point ranges represent the mean proportion and 95% bootstrapped CIs of participants' "t"-responses at each VOT step. Horizontal point ranges denote the mean and 95% quantile interval of the points of subjective equality (PSE), derived from the 8000 posterior samples of the population parameters. **Panel B:** The same but showing the fitted categorization functions for each of the four minimal pair continua. Participants' responses are omitted to avoid clutter. **Panel C:** Joint effects of VOT and trial as well as lapse rate and bias, while marginalizing over random effects.   
+(ref:fitted-categorisation-plots) Categorisation functions and points of subjective equality (PSE) derived from the Bayesian mixed-effects psychometric model fit to listeners' responses in Experiment 1. The categorization functions include lapse rates and biases. The PSEs correct for lapse rates and lapse biases (i.e., they are the PSEs of the perceptual component of the psychometric model).\protect\footnote{Here and in Experiment 2, lapse biases were close to uniform (.5/.5). For such scenarios, bias-corrected PSEs will be very similar to uncorrected PSEs. This is also evident in Figure \ref{fig:fitted-categorisation-plots}.} **Left:** Effects of VOT, lapse rate, and lapse bias, while marginalizing over trial effects as well as all random effects. Vertical point ranges represent the mean proportion and 95% bootstrapped CIs of participants' "t"-responses at each VOT step. Horizontal point ranges denote the mean and 95% quantile interval of the points of subjective equality (PSE), derived from the 8000 posterior samples of the population parameters. **Right:** The same but showing the fitted categorization functions for each of the four minimal pair continua. Participants' responses are omitted to avoid clutter.   
 
 ```{r fitted-categorisation-plots, warning=FALSE, fig.width=6, fig.height = 3.3, fig.cap="(ref:fitted-categorisation-plots)"}
 legend1 <- get_legend(MinPair_plot + theme(legend.position = "top"))
@@ -386,12 +397,11 @@ We apply this principle when fitting ideal observer (IO) models by linking the d
 The IOs' predictions apply Bayes' theorem to achieve optimal categorization; the posterior probability of recognising a token as the "t" category is function of its prior prior probability $p(c = t)$ and the probability of observing the token under the hypothesis that the talker intended the voiceless category $p(cue | c = t)$ taken as a proportion of the sum of probabilities of observing the token under all possible hypotheses.
 
 
-We compare listener categorisation behaviour against the predictions of five IO models which reflect different assumptions about perceptual processes and the normalization (or lack thereof) of input. Beginning with a minimal model (raw VOT cues with no added perceptual noise), each successive model increased in complexity either with the addition the F0 cue or an assumption about speech encoding (Figure \@ref(fig:comparative-IO-plot)). All IO models were adjusted by the estimated lapse-rate from the psychometric fit to the perceptual data while bias was held at .5. In models that included perceptual noise we added a noise variance of 80ms [cf. @kronrod2016unified] to the likelihoods. In addition to transforming the F0 cue measurements from raw Hz into Mel [@stevens1940relation] to reflect the tonotopy of the auditory system, normalization was applied to cues to compare effects of hypothesised pre-linguistic processes. We applied C-CuRE (@mcmurray2011information; @toscano2015time), a general purpose normalization procedure which captures the hypothesis that listeners overcome multiple sources of variability by interpreting cues relative to the expected distribution of cues in the present context. This process centers cues relative to their individual talker mean across categories. In the final model we tested the assumption that normalization --[I'M NOT CLEAR ON THE THEORETICAL MOTIVATION BEHIND ADJUSTING THE PERCEPTUAL FIT BY THE DIFFERENCE IN  THE TALKER'S MEAN AND THE POPULATION MEAN]
-
+We compare listener categorisation behaviour against the predictions of five IO models which reflect different assumptions about perceptual processes and the normalization (or lack thereof) of input. Beginning with a minimal model (raw VOT cues with no added perceptual noise), each successive model increased in complexity either with the addition the F0 cue or an assumption about speech encoding (Figure \@ref(fig:comparative-IO-plot)). All IO models were adjusted by the estimated lapse-rate from the psychometric fit to the perceptual data while bias was held at .5. In models that included perceptual noise we added a noise variance of 80ms [cf. @kronrod2016unified] to the likelihoods. In addition to transforming the F0 cue measurements from raw Hz into Mel [@stevens1940relation] to reflect the tonotopy of the auditory system, normalization was applied to cues to compare effects of hypothesised pre-linguistic processes. We applied C-CuRE (@mcmurray2011information; @toscano2015time), a general purpose normalization procedure which captures the hypothesis that listeners overcome multiple sources of variability by interpreting cues relative to the expected distribution of cues given the present context. While C-CuRE has the potential to be applied in various ways depending on the context to be evaluated, we implemented it in its most basic form, which is to center the cues-- here VOT and F0 -- relative to the talker population means across categories. In the final model we extended this centering process to the cues in the exposure stimuli. This additional step fully implements the assumption of pre-linguistic normalization being an automatic process.
 
 Each of these models are then assessed for their goodness-of-fit to the categorisation data by comparing the likelihood of human responses under the assumptions represented by the respective IO models (Figure \@ref(fig:comparative-IO-plot)). For this we applied Luce's choice axiom [@luce1959]; for each token categorised by each listener, the expected accuracy for that token is the model's posterior for the category selected by each listener. We took the average log posterior of all responses to get the average likelihood for the entire experiment under each model.
 
-The first point that stands out from the visual comparisons is that models that incorporate perceptual noise fit the perceptual data better than those that do not. This itself indicates that perception of acoustic stimuli is not entirely faithful to the bottom-up signal but is inferred through a combination of what listeners actually perceived and their existing knowledge of the underlying linguistic category [@kronrod2016unified]. For the univariate VOT models, the difference is most noticeable from the flatter slopes of the IOs indicating greater uncertainty in listener categorisations. The second pattern is that models trained with VOT and F0 cues (multiple cues) are better fits overall than models trained on a single cue. This trend is expected given the literature that report F0 reliably covarying with the voicing of stop consonants [@house1953influence; @ohde1984fundamental]. When VOT fails to provide sufficient support to voicing status, F0 has been found to influence listeners' categorisation behaviour [@abramson1985relative; @whalen1993f; @idemaru2011word; @winn2013]. This further speaks to the advantage of multivariate ideal observers because they assess the likelihood of a cue observation under a given category relative to the joint distributions of all relevant cues. 
+The first point that stands out from the visual comparisons is that models that incorporate perceptual noise fit the perceptual data better than those that do not. This itself indicates that perception of acoustic stimuli is not entirely faithful to the bottom-up signal but is inferred through a combination of what listeners actually perceived and their existing knowledge of the underlying linguistic category [@kronrod2016unified]. For the univariate VOT models, the difference is most noticeable from the flatter slopes of the IOs indicating greater uncertainty in listener categorisations. The second pattern is that models trained with VOT and F0 cues (multiple cues) are better fits overall than models trained on a single cue. This trend is expected given the literature that report F0 reliably covarying with the voicing of stop consonants [@house1953influence; @ohde1984fundamental]. When VOT fails to provide sufficient support to voicing status, F0 has been found to influence listeners' categorisation behaviour [@abramson1985relative; @whalen1993f; @idemaru2011word; @winn2013 @burchilljaeger2023]. This further speaks to the advantage of multivariate ideal observers because they assess the likelihood of a cue observation under a given category relative to the joint distributions of all relevant cues. 
 
 
 
@@ -428,6 +438,30 @@ d.chodroff_wilson.selected <-
       c("VOT", "f0", "f0_Mel", "f0_semitones"),
       list("centered" = function(x) apply_ccure(x, data = .))) %>% 
   mutate(category = factor(category))
+```
+```{r}
+# run an alternative model with f0 as a predictor
+# get f0 mean and sd for scaling
+F0.mean <- mean(d.test.excluded$Item.Mel_f0_5ms)
+F0.sd <- sd(d.test.excluded$Item.Mel_f0_5ms)
+d.test.excluded %<>% 
+  mutate(sF0 = (Item.Mel_f0_5ms - F0.mean)/(2 * F0.sd))
+
+# specify new model formula (priors will be same as previous one without f0)
+# fit_mix_f0 <- brm(
+#   bf(
+#     Response.Voicing == "voiceless" ~ 1,
+#     mu1 ~ 1 + (1 | g | ParticipantID),
+#     mu2 ~ 1 + sVOT + sF0 + (1 + sVOT + sF0 | g | ParticipantID) + (1 + sVOT + sF0 | h | Item.MinimalPair),
+#     theta1 ~ 1 + (1 | g | ParticipantID)),
+#   data = d.test.excluded,
+#   cores = 4,
+#   iter = 4000,
+#   warmup = 2000,
+#   family = mixture(bernoulli("logit"), bernoulli("logit")),
+#   control = list(adapt_delta = .99),
+#   file = "../models/Exp-NORM-lapsing-bias-f0")
+  
 ```
 
 
@@ -529,6 +563,29 @@ chodroff.means <- d.chodroff_wilson.selected %>%
 chodroff.mean_VOT <- chodroff.means %>% pull(VOT)
 chodroff.mean_f0 <- chodroff.means %>% pull(f0_Mel)
 
+# center exposure data and
+d.test.excluded %>% 
+      mutate(Item.VOT = (Item.VOT + (chodroff.mean_VOT - VOT.mean_norm)),
+             sVOT = (Item.VOT - VOT.mean_norm_centered)/(2 * VOT.sd_norm))
+
+adjusted_line <- fit_mix %>% 
+  epred_draws(
+    newdata = d.test.excluded %>% 
+      mutate(Item.VOT = (Item.VOT + (chodroff.mean_VOT - VOT.mean_norm)),
+             sVOT = (Item.VOT - chodroff.mean_VOT)/(2 * VOT.sd_norm)),
+    re_formula = NA,
+    ndraws = 2000)
+
+adjusted_line %>% 
+  group_by(sVOT) %>% 
+  ggplot(aes(x = descale(sVOT, VOT.mean_norm_centered, VOT.sd_norm_centered), 
+             y = .epred)) +
+  stat_lineribbon(alpha = .9) +
+  scale_x_continuous("VOT (ms)") +
+  scale_y_continuous("Fitted proportion of 't'-responses") +
+  scale_fill_brewer("CI", palette = "Greys", type = "qual") 
+
+
 p.IOs.VOT_F0.centered.input <- plot_IO_fit(
     data = VOT_F0.centered,
     PSEs = PSE_VOT_F0.centered,
@@ -550,7 +607,6 @@ guide_spec <-  guides(linetype = "none")
 
 p1 <- p.likelihoods.VOT +
   theme_spec + guide_spec
-
 
 p2 <- p.likelihoods.VOT_noise +
    theme_spec + guide_spec

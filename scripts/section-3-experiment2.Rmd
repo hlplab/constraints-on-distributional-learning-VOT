@@ -1,10 +1,11 @@
-```{r}
+```{r, stand-alone-preamble}
 require(tidyverse)
 require(magrittr)
 
 require(brms)
 require(MVBeliefUpdatr)
 require(phonR)
+require(rsample)
 
 source("functions.R")
 ```
@@ -345,6 +346,31 @@ ranef(m.block1)[1] %>%
   scale_x_continuous("Slope")
 ```
 
+```{r}
+# bootstrapping the CI of the estimates of the block 1 model
+set.seed(9824)
+
+# group participants' data and nest df
+d.block1.boot <- d.block1 %>% 
+  group_by(ParticipantID) %>% 
+  nest(data = -ParticipantID) %>% 
+  # this samples with replacement, by participants so that each participant will have same number of rows in the final data set
+  mutate(samples = map(data, ~ bootstraps(.x, times = 500))) %>% 
+  select(ParticipantID, samples) %>% 
+  # extract the by participant bootstrapped samples and turn the col into tibble
+  unnest(samples) %>% 
+  mutate(splits = map(splits, ~ as_tibble(.x))) %>% 
+  unnest(splits) %>% 
+  # group the samples of each participant by the bootstrap sample id (should have n = number of bootstrap times specified)
+  group_by(id) %>% 
+  nest(data = -id) %>% 
+  mutate(model = map(data, ~ glmer(Response.Voiceless ~ 1 + VOT_gs + (1 + VOT_gs | ParticipantID), data = .x, family = "binomial"))) %>% 
+  mutate(Intercept = map_dbl(model, ~ tidy(.x)[[4]][[1]]),
+         slope = map_dbl(model, ~ tidy(.x)[[4]][[2]]),
+         PSE = descale(-(Intercept/slope), VOT.mean_exp2, VOT.sd_exp2))
+
+d.block1  
+```
 
 
 
