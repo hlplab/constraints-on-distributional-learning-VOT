@@ -448,20 +448,66 @@ d.test.excluded %<>%
   mutate(sF0 = (Item.Mel_f0_5ms - F0.mean)/(2 * F0.sd))
 
 # specify new model formula (priors will be same as previous one without f0)
-# fit_mix_f0 <- brm(
-#   bf(
-#     Response.Voicing == "voiceless" ~ 1,
-#     mu1 ~ 1 + (1 | g | ParticipantID),
-#     mu2 ~ 1 + sVOT + sF0 + (1 + sVOT + sF0 | g | ParticipantID) + (1 + sVOT + sF0 | h | Item.MinimalPair),
-#     theta1 ~ 1 + (1 | g | ParticipantID)),
-#   data = d.test.excluded,
-#   cores = 4,
-#   iter = 4000,
-#   warmup = 2000,
-#   family = mixture(bernoulli("logit"), bernoulli("logit")),
-#   control = list(adapt_delta = .99),
-#   file = "../models/Exp-NORM-lapsing-bias-f0")
-  
+fit_mix_f0 <- brm(
+  bf(
+    Response.Voicing == "voiceless" ~ 1,
+    mu1 ~ 1 + (1 | g | ParticipantID),
+    mu2 ~ 1 + sVOT + sF0 + (1 + sVOT + sF0 | g | ParticipantID) + (1 + sVOT + sF0 | h | Item.MinimalPair),
+    theta1 ~ 1 + (1 | g | ParticipantID)),
+  data = d.test.excluded,
+  cores = 4,
+  iter = 4000,
+  warmup = 2000,
+  family = mixture(bernoulli("logit"), bernoulli("logit")),
+  control = list(adapt_delta = .99),
+  file = "../models/Exp-NORM-lapsing-bias-f0")
+
+summary(fit_mix)
+summary(fit_mix_f0)  
+
+psychometric_fit_data %>% 
+     ggplot(aes(x = descale(sVOT, VOT.mean_norm, VOT.sd_norm), 
+             y = estimate__), linetype = 1, linewidth = 1.5) +
+    geom_ribbon(
+    data = conditional_effects(
+    fit_mix_f0, 
+    effects = c("sF0"), 
+    plot = F)[[1]], 
+    mapping = aes(ymin = lower__, 
+             ymax = upper__),
+    alpha = 0.08,
+    inherit.aes = T) +
+  geom_line(linewidth = 1.5, 
+            colour = "#333333",
+            alpha = .2) +
+    geom_line(
+      data = conditional_effects(
+    fit_mix_f0, 
+    effects = c("sVOT"), 
+    plot = F)[[1]], 
+      mapping = aes(x = descale(sVOT, VOT.mean_norm, VOT.sd_norm), 
+             y = estimate__), 
+      linetype = 2, 
+      colour = "red",
+      alpha = .5,
+      linewidth = 1.5,
+      inherit.aes = F
+    ) + 
+  scale_x_continuous("VOT (ms)", breaks = scales::pretty_breaks(n = 4), limits = c(-100, 130)) +
+  scale_y_continuous("Fitted proportion of 't' responses") 
+
+
+conditional_effects(
+    fit_mix_f0, 
+    effects = "sF0", 
+    plot = F)[[1]] %>% 
+     ggplot(aes(x = descale(sF0, F0.mean, F0.sd), 
+             y = estimate__), linetype = 1, linewidth = 1.5) + 
+  geom_line() +
+  scale_x_continuous("F0", breaks = scales::pretty_breaks(n = 8)) +
+  scale_y_continuous("Fitted proportion of 't' responses", limits = c(0, 1))
+
+conditional_effects(fit_mix_f0)
 ```
 
 

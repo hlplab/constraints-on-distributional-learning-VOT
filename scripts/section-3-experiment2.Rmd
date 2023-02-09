@@ -290,32 +290,34 @@ d.block1 %<>%
     Response.Voiceless = ifelse(Response.Voicing == "voiceless", 1, 0),
     VOT_gs = (Item.VOT - VOT.mean_exp2)/ (2 * VOT.sd_exp2))
 
+fit_mix_uniform_bias <- readRDS("../models/Exp-AE-DLVOT-labelled-lapsing-GLMM.rds")
+lapse_exp2 <- summary(fit_mix_uniform_bias)$fixed["theta1_Intercept", 1]
 
-lapse_exp1 <- summary(fit_mix)$fixed["theta1_Intercept", 1]
-
-# run brms model of data for block 1. This is the only model that converged
+# run brms model of data for block 1. 
 fit_mix_block1 <- brm(
   bf(
     Response.Voiceless ~ 1,
-    mu1 ~ 1,
+    mu1 ~ 0 + offset(0),
     mu2 ~ 1 + VOT_gs + (1 + VOT_gs | ParticipantID),
-    theta1 ~ 1),
-  data = d.block1,
+    theta1 ~ 0 + offset(lapse) + (1 | ParticipantID)),
+  data = d.block1 %>% 
+    mutate(lapse = lapse_exp2),
   cores = 4,
   iter = 3000, # iterations to run
   warmup = 1500, # samples used to fit
   chains = chains,
   family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
   control = list(adapt_delta = .999),
-  file = "../models/Block1-AEDLVOT-bysubject4-GLMM.rds")
+  file = "../models/Block1-AEDLVOT-lapse-exp2.rds")
+
+summary(fit_mix_block1)
+PSE.fit_mix_block1 <- descale(-(summary(fit_mix_block1)$fixed["mu2_Intercept", 1] / summary(fit_mix_block1)$fixed["mu2_VOT_gs", 1]), VOT.mean_exp2, VOT.sd_exp2)
 ```
 
 (ref:mixture-model-block-1) Plot of by-participant intercepts and slopes estimated from the mixture model
 
 ```{r, fig.width=6, fig.height=3, fig.cap="(ref:mixture-model-block-1)"}
-
-d.model <- read_rds("../models/Block1-AEDLVOT-bysubject4-GLMM.rds")
-d.ranef <- ranef(d.model)
+d.ranef <- ranef(fit_mix_block1)
 
 # plot r'ship between intercept and slope
 as_tibble(d.ranef[[1]]) %>% 
@@ -330,46 +332,27 @@ as_tibble(d.ranef[[1]]) %>%
 
 
 
-```{r, fig.width=6, fig.height=3, fig.cap="Plot of by participant intercepts and slopes estimated by the linear mixed-effects model"}
-m.block1 <- lme4::glmer(Response.Voiceless ~ 1 + VOT_gs + (1 + VOT_gs | ParticipantID), data = d.block1, family = "binomial")
-summary(m.block1)
-
-
-ranef(m.block1)[1] %>% 
-  bind_rows() %>% 
-  mutate(ParticipantID = unique(d.block1$ParticipantID)) %>% 
-  ggplot(aes(y = `(Intercept)`, x = VOT_gs)) + 
-  geom_text(aes(label = ParticipantID), alpha = .5, check_overlap = T) +
-  geom_hline(aes(yintercept = 0), alpha = .3, linetype = 2) +
-  geom_vline(aes(xintercept = 0), alpha = .3, linetype = 2) +
-  scale_y_continuous("Intercept") +
-  scale_x_continuous("Slope")
-```
 
 ```{r}
-# bootstrapping the CI of the estimates of the block 1 model
-set.seed(9824)
+psychometric_fit_block1 <- conditional_effects(
+    fit_mix_block1, 
+    effects = "VOT_gs", 
+    plot = F)[[1]]
 
-# group participants' data and nest df
-d.block1.boot <- d.block1 %>% 
-  group_by(ParticipantID) %>% 
-  nest(data = -ParticipantID) %>% 
-  # this samples with replacement, by participants so that each participant will have same number of rows in the final data set
-  mutate(samples = map(data, ~ bootstraps(.x, times = 500))) %>% 
-  select(ParticipantID, samples) %>% 
-  # extract the by participant bootstrapped samples and turn the col into tibble
-  unnest(samples) %>% 
-  mutate(splits = map(splits, ~ as_tibble(.x))) %>% 
-  unnest(splits) %>% 
-  # group the samples of each participant by the bootstrap sample id (should have n = number of bootstrap times specified)
-  group_by(id) %>% 
-  nest(data = -id) %>% 
-  mutate(model = map(data, ~ glmer(Response.Voiceless ~ 1 + VOT_gs + (1 + VOT_gs | ParticipantID), data = .x, family = "binomial"))) %>% 
-  mutate(Intercept = map_dbl(model, ~ tidy(.x)[[4]][[1]]),
-         slope = map_dbl(model, ~ tidy(.x)[[4]][[2]]),
-         PSE = descale(-(Intercept/slope), VOT.mean_exp2, VOT.sd_exp2))
-
-d.block1  
+psychometric_fit_block1 %>% 
+  ggplot(aes(x = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2), 
+             y = estimate__)) +
+  scale_x_continuous("VOT (ms)", limits = c(-5, 70)) +
+  scale_y_continuous("Fitted proportion of 't' responses") +
+  geom_ribbon(aes(ymin = lower__, ymax = upper__), alpha = .2) +
+  geom_line(linewidth = 1.5, 
+            colour = "#333333",
+            alpha = .8) +
+  geom_rug(
+    data = d.block1 %>% distinct(Item.VOT),
+    mapping = aes(x = Item.VOT),
+    alpha = .6,
+    inherit.aes = F)
 ```
 
 
