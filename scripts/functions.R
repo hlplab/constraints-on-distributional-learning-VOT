@@ -371,13 +371,79 @@ get_average_log_likelihood_of_perception_data_under_IO <- function(observations,
 
 
 ############################################################################
-# function to plot IOs in experiment 1 (section 2.3) 
+# function to plot IOs in exp1 (section 2.3) & exp2 Block 1
 ############################################################################
+add_psychometric_fit_CI <- function(data.perception){
+  geom_ribbon(
+    data = data.perception,
+    mapping = aes(
+      x = Item.VOT,
+      ymin = lower__, 
+      ymax = upper__), 
+    alpha = .08,
+    inherit.aes = F)
+}
+
+add_psychometric_fit <- function(data.perception) {
+  geom_line(
+    data = data.perception,
+    mapping = aes(x = Item.VOT, 
+                  y = estimate__),
+    linewidth = 1.2, 
+    colour = "#333333",
+    alpha = .8,
+    inherit.aes = F)
+}
+
+add_PSE_perception_CI <- function(posterior.sample){
+  geom_errorbarh(
+    data = posterior.sample %>% 
+      mutate(y = .01),
+    mapping = aes(xmin = .lower, xmax = .upper, y = y), 
+    color = "#333333",
+    height = 0,
+    alpha = .5,
+    size = .8, 
+    inherit.aes = F)
+}
+
+add_PSE_perception_median <- function(posterior.sample){
+  geom_point(
+    data = posterior.sample %>% 
+      median_qi(PSE) %>% 
+      mutate(y = 0.01),
+    mapping = aes(x = PSE, y = y), 
+    color = "#333333", 
+    size = 1,
+    alpha = .5)
+}
+
+add_rug <- function(data.test) {
+  geom_rug(data = data.test %>% 
+             ungroup() %>% 
+             distinct(Item.VOT),
+           mapping = aes(x = Item.VOT),
+           colour = "grey",
+           alpha = .6,
+           inherit.aes = F)
+}
+
+add_annotations <- function(posterior.sample){
+  annotate(
+    geom = "text",
+    x = 70,
+    y = 0.01, 
+    label = paste(round(posterior.sample[[2]]), "ms", "-", round(posterior.sample[[3]]), "ms"),
+    size = 1.8,
+    colour = "darkgray")
+}
+
 plot_IO_fit <- function(
-    data,
-    PSEs,
-    x,
-    centered = FALSE
+    data.production,
+    data.perception,
+    posterior.sample,
+    data.test,
+    PSEs
 ) {
   plot <- ggplot() + 
     # geom_ribbon(
@@ -391,7 +457,7 @@ plot_IO_fit <- function(
     #       across(response, list("lower" = ~ quantile(.x, .025), "upper" = ~ quantile(.x, .975)))),
     #   mapping = aes(x = VOT, ymin = response_lower, ymax = response_upper, fill = gender),
     #   alpha = .1) +
-  data$line + 
+  data.production$line + 
     scale_x_continuous("VOT (msec)", breaks = scales::pretty_breaks(n = 3), limits = c(-15, 85), expand = c(0, 0)) +
     scale_y_continuous('Proportion "t"-responses') +
     scale_colour_manual("Model", 
@@ -402,12 +468,12 @@ plot_IO_fit <- function(
       data = PSEs %>%
         mutate(y = ifelse(gender == "male", -.025, - .06)),
       mapping = aes(xmin = PSE.lower, xmax = PSE.upper, y = y, color = gender),
-      height = 0, alpha = .5, size = 1) +
+      height = 0, alpha = .5, size = .8) +
     geom_point(
       data = PSEs %>%
         mutate(y = ifelse(gender == "male", -.025, - .06)),
       mapping = aes(x = PSE.median, y = y, color = gender),
-      size = 1.2) +
+      size = 1) +
     annotate(geom = "text",
              y = -.025, x = 70,
              label = paste(PSEs[[1, 2]], "ms", "-", PSEs[[1, 4]], "ms"),
@@ -419,53 +485,16 @@ plot_IO_fit <- function(
              size = 1.8,
              colour = "#c1502e") 
   plot + 
-  geom_line(
-    data = psychometric_fit_data,
-    mapping = aes(x = x, 
-                  y = estimate__),
-    colour = "#333333", 
-    linewidth = 1,
-    alpha = .8,
-    inherit.aes = F) +
-    geom_ribbon(
-      data = psychometric_fit_data, 
-      mapping = aes(x = x, 
-                    ymin = lower__, 
-                    ymax = upper__),
-      alpha = .08,
-      inherit.aes = F) +
-    geom_errorbarh(
-      data = post_sample_norm %>% 
-        mutate(y = .01),
-      mapping = aes(xmin =  if (centered != FALSE) .lower + (chodroff.mean_VOT - VOT.mean_norm) else .lower, 
-                    xmax =  if (centered != FALSE) .upper + (chodroff.mean_VOT - VOT.mean_norm) else .upper, 
-                    y = y), 
-      color = "#333333",
-      height = 0,
-      alpha = .5,
-      size = 1) +
-    geom_point(
-      data = post_sample_norm %>% 
-        mutate(y = .01),
-      mapping = aes(x = if (centered != FALSE) PSE + (chodroff.mean_VOT - VOT.mean_norm) else PSE, y = y), 
-      color = "#333333", size = 1.2) +
-    annotate(
-      geom = "text", 
-      y = .02, x = 70,
-      label = if (centered != FALSE) paste(round(post_sample_norm[[2]] + (chodroff.mean_VOT - VOT.mean_norm)), "ms", "-", round(post_sample_norm[[3]] + (chodroff.mean_VOT - VOT.mean_norm)), "ms") else
-        paste(round(post_sample_norm[[2]]), "ms", "-", round(post_sample_norm[[3]]), "ms"),
-      size = 1.8) +
-    geom_rug(
-      data = d.test.excluded %>% 
-        ungroup() %>% 
-        distinct(Item.VOT),
-      mapping = aes(x = Item.VOT),
-      colour = "grey",
-      alpha = .6,
-      inherit.aes = F)
-}
+    # add plot specifics of the perception data
+    add_psychometric_fit_CI(data.perception) +
+    add_psychometric_fit(data.perception) +
+    add_PSE_perception_CI(posterior.sample) +
+    add_PSE_perception_median(posterior.sample) +
+    add_annotations(posterior.sample) +
+    add_rug(data.test) 
+}    
+ 
 ############################################################################
-
 
 get_PSE_quantiles <- function(data, group) {
   data %>%

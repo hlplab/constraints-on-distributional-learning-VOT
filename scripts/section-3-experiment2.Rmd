@@ -277,23 +277,22 @@ We first present participants' categorisation responses. Given that this experim
 
 
 ```{r}
-# set the mean and SD values for scaling/unscaling purposes
 # make Block 1 subset
 d.block1 <- d.test_exposure_for_analysis %>% 
   filter(Block == 1) 
-
+# set the mean and SD values for scaling/unscaling purposes
 VOT.mean_exp2 <- mean(d.test_exposure_for_analysis$Item.VOT)
 VOT.sd_exp2 <- sd(d.test_exposure_for_analysis$Item.VOT)
-
 d.block1 %<>% 
   mutate(
     Response.Voiceless = ifelse(Response.Voicing == "voiceless", 1, 0),
     VOT_gs = (Item.VOT - VOT.mean_exp2)/ (2 * VOT.sd_exp2))
 
+# load the full experiment fit to obtain lapse rate
 fit_mix_uniform_bias <- readRDS("../models/Exp-AE-DLVOT-labelled-lapsing-GLMM.rds")
 lapse_exp2 <- summary(fit_mix_uniform_bias)$fixed["theta1_Intercept", 1]
 
-# run brms model of data for block 1. 
+# run brms model of data for block 1 using lapse rate from full model (section X.X) 
 fit_mix_block1 <- brm(
   bf(
     Response.Voiceless ~ 1,
@@ -309,9 +308,6 @@ fit_mix_block1 <- brm(
   family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
   control = list(adapt_delta = .999),
   file = "../models/Block1-AEDLVOT-lapse-exp2.rds")
-
-summary(fit_mix_block1)
-PSE.fit_mix_block1 <- descale(-(summary(fit_mix_block1)$fixed["mu2_Intercept", 1] / summary(fit_mix_block1)$fixed["mu2_VOT_gs", 1]), VOT.mean_exp2, VOT.sd_exp2)
 ```
 
 (ref:mixture-model-block-1) Plot of by-participant intercepts and slopes estimated from the mixture model
@@ -334,28 +330,156 @@ as_tibble(d.ranef[[1]]) %>%
 
 
 ```{r}
+# get PSE of Block 1
+PSE.fit_mix_block1 <- descale(-(summary(fit_mix_block1)$fixed["mu2_Intercept", 1] / summary(fit_mix_block1)$fixed["mu2_VOT_gs", 1]), VOT.mean_exp2, VOT.sd_exp2)
+
+# get posterior samples of intercept and slope, and median qi of the PSE 
+post_sample_block1 <- fit_mix_block1 %>% 
+  spread_draws(b_mu2_Intercept, b_mu2_VOT_gs) %>% 
+  mutate(PSE = descale(-(b_mu2_Intercept/b_mu2_VOT_gs),VOT.mean_exp2, VOT.sd_exp2)) %>% 
+  median_qi(PSE)
+
+#plot the fitted psychometric function for Block 1
 psychometric_fit_block1 <- conditional_effects(
     fit_mix_block1, 
     effects = "VOT_gs", 
     plot = F)[[1]]
 
-psychometric_fit_block1 %>% 
+# make base plot
+p.fit_block1 <- psychometric_fit_block1 %>% 
   ggplot(aes(x = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2), 
              y = estimate__)) +
   scale_x_continuous("VOT (ms)", limits = c(-5, 70)) +
   scale_y_continuous("Fitted proportion of 't' responses") +
-  geom_ribbon(aes(ymin = lower__, ymax = upper__), alpha = .2) +
+  geom_ribbon(aes(ymin = lower__, ymax = upper__), alpha = .1) +
   geom_line(linewidth = 1.5, 
             colour = "#333333",
             alpha = .8) +
-  geom_rug(
+   geom_errorbarh(
+    data = post_sample_block1 %>% 
+      mutate(y = .01),
+    mapping = aes(xmin = .lower, xmax = .upper, y = y), 
+    color = "#333333",
+    height = 0,
+    alpha = .5,
+    size = 1, 
+    inherit.aes = F) +
+  geom_point(
+    data = post_sample_block1 %>% 
+      median_qi(PSE) %>% 
+      mutate(y = 0.01),
+    mapping = aes(x = PSE, y = y),
+    color = "#333333", 
+    size = 1.3,
+    alpha = .5) +
+  annotate(
+    geom = "text",
+    x = 55,
+    y = 0.02, 
+    label = paste(round(post_sample_block1[[2]]), "ms", "-", round(post_sample_block1[[3]]), "ms"),
+    size = 3.5,
+    colour = "darkgray") +
+   geom_rug(
     data = d.block1 %>% distinct(Item.VOT),
     mapping = aes(x = Item.VOT),
     alpha = .6,
+    inherit.aes = F) +
+   geom_errorbarh(
+    data = post_sample_block1 %>% 
+      mutate(y = .01),
+    mapping = aes(xmin = .lower, xmax = .upper, y = y), 
+    color = "#333333",
+    height = 0,
+    alpha = .5,
+    size = 1, 
     inherit.aes = F)
+
+p.fit_block1 +
+  stat_summary(
+    data = d.block1 %>% 
+      group_by(Item.VOT), 
+    mapping = aes(x = Item.VOT, 
+                  y = Response.Voiceless),
+    geom = "pointrange",
+    fun.data = "mean_cl_boot",
+    size = .4,
+    colour = "#c4b7a6",
+    alpha = .6,
+    inherit.aes = F) 
+
 ```
 
+```{r}
+VOT.no.noise <- 
+  get_IO_categorization(
+    cues = c("VOT"), 
+    groups = c("Talker", "gender"), 
+    lapse_rate = plogis(summary(fit_mix_uniform_bias)$fixed["theta1_Intercept", 1]),
+    with_noise = FALSE, 
+    alpha = .1, 
+    linewidth = 0.3,
+    io.type = "VOT.no.noise")
 
+PSE_VOT.no.noise <- get_PSE_quantiles(data = VOT.no.noise, group = "gender")
+
+plot_IO_fit(
+  data.production = VOT.no.noise, 
+  data.perception = psychometric_fit_block1 %>% 
+    mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2)),
+  data.test = d.block1 %>% 
+    ungroup() %>% distinct(Item.VOT),
+  posterior.sample = post_sample_block1,
+  PSE_VOT.no.noise
+)
+```
+
+```{r}
+VOT_F0 <- 
+  get_IO_categorization(
+    cues = c("VOT"), 
+    groups = c("Talker", "gender"), 
+    lapse_rate = plogis(summary(fit_mix_uniform_bias)$fixed["theta1_Intercept", 1]),
+    with_noise = T, 
+    alpha = .1, 
+    linewidth = 0.3,
+    io.type = "VOT_F0")
+
+PSE_VOT_F0 <- get_PSE_quantiles(data = VOT_F0, group = "gender")
+
+plot_IO_fit(
+  data.production = VOT, 
+  data.perception = psychometric_fit_block1 %>% 
+    mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2)),
+  data.test = d.block1 %>% 
+    ungroup() %>% distinct(Item.VOT),
+  posterior.sample = post_sample_block1,
+  PSE_VOT_F0
+)
+```
+
+```{r}
+VOT_F0 <- 
+  get_IO_categorization(
+    cues = c("VOT", "f0_Mel"), 
+    groups = c("Talker", "gender"), 
+    lapse_rate = plogis(summary(fit_mix_uniform_bias)$fixed["theta1_Intercept", 1]),
+    with_noise = T, 
+    alpha = .1, 
+    linewidth = 0.3,
+    io.type = "VOT_F0")
+
+PSE_VOT_F0 <- get_PSE_quantiles(data = VOT_F0, group = "gender")
+
+plot_IO_fit(
+  data.production = VOT_F0, 
+  data.perception = psychometric_fit_block1 %>% 
+    mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2)),
+  data.test = d.block1 %>% 
+    ungroup() %>% distinct(Item.VOT),
+  posterior.sample = post_sample_block1,
+  PSE_VOT
+)
+```
 
 
 

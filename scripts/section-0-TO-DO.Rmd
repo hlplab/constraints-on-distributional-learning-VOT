@@ -4,11 +4,12 @@ TO-DO
 
 ## Highest priority
   * MARYANN
-    * Continue describing Experiment 2
+    Check function for IO analysis plot
+    Fix MVG likelihood plots (figure 4)
 
 ### Priority
-  * MARYANN
-    * Fix spread_draws bug
+  * FLORIAN
+    * section-2-experiment1.Rmd: Review code for computing average likelihood (line 737)
     
 
 

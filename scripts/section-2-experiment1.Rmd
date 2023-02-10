@@ -249,21 +249,42 @@ MinPair_plot <-
 ```
 
 ```{r psychometric-plot, fig.width=3.8, fig.height =2.6, message=FALSE}
-p.psychometric.vot <- 
+p.vot <- 
   psychometric_fit_data %>% 
   ggplot(aes(x = descale(sVOT, VOT.mean_norm, VOT.sd_norm), 
              y = estimate__)) +
   scale_x_continuous("VOT (ms)", breaks = scales::pretty_breaks(n = 4), limits = c(-100, 130)) +
   scale_y_continuous("Fitted proportion of 't' responses") +
-  geom_line(linewidth = 1.5, 
-            colour = "#333333",
-            alpha = .8)
- 
-  
-p.vot <- p.psychometric.vot +
   geom_ribbon(
     aes(ymin = lower__, 
         ymax = upper__), alpha = .08) +
+  geom_line(linewidth = 1.5, 
+            colour = "#333333",
+            alpha = .8) +
+  geom_errorbarh(
+    data = post_sample_norm %>% 
+      mutate(y = .01),
+    mapping = aes(xmin = .lower, xmax = .upper, y = y), 
+    color = "#333333",
+    height = 0,
+    alpha = .5,
+    size = 1, 
+    inherit.aes = F) +
+  geom_point(
+    data = post_sample_norm %>% 
+      median_qi(PSE) %>% 
+      mutate(y = 0.01),
+    mapping = aes(x = PSE, y = y), 
+    color = "#333333", 
+    size = 1.3,
+    alpha = .5) +
+  annotate(
+    geom = "text",
+    x = 75,
+    y = 0.01, 
+    label = paste(round(post_sample_norm[[2]]), "ms", "-", round(post_sample_norm[[3]]), "ms"),
+    size = 2.5,
+    colour = "darkgray") +
 ## transformation of by-participant means into empirical logits
    # stat_summary(
    #  data = d.test.excluded %>% 
@@ -290,31 +311,7 @@ p.vot <- p.psychometric.vot +
     size = .4,
     colour = "#c4b7a6",
     alpha = .6,
-    inherit.aes = F) +
-  geom_errorbarh(
-    data = post_sample_norm %>% 
-      mutate(y = .01),
-    mapping = aes(xmin = .lower, xmax = .upper, y = y), 
-    color = "#333333",
-    height = 0,
-    alpha = .5,
-    size = 1, 
-    inherit.aes = F) +
-  geom_point(
-    data = post_sample_norm %>% 
-      median_qi(PSE) %>% 
-      mutate(y = 0.01),
-    mapping = aes(x = PSE, y = y), 
-    color = "#333333", 
-    size = 1.3,
-    alpha = .5) +
-  annotate(
-    geom = "text",
-    x = 75,
-    y = 0.01, 
-    label = paste(round(post_sample_norm[[2]]), "ms", "-", round(post_sample_norm[[3]]), "ms"),
-    size = 2.5,
-    colour = "darkgray") 
+    inherit.aes = F)
 ```
 
 (ref:fitted-categorisation-plots) Categorisation functions and points of subjective equality (PSE) derived from the Bayesian mixed-effects psychometric model fit to listeners' responses in Experiment 1. The categorization functions include lapse rates and biases. The PSEs correct for lapse rates and lapse biases (i.e., they are the PSEs of the perceptual component of the psychometric model).\protect\footnote{Here and in Experiment 2, lapse biases were close to uniform (.5/.5). For such scenarios, bias-corrected PSEs will be very similar to uncorrected PSEs. This is also evident in Figure \ref{fig:fitted-categorisation-plots}.} **Left:** Effects of VOT, lapse rate, and lapse bias, while marginalizing over trial effects as well as all random effects. Vertical point ranges represent the mean proportion and 95% bootstrapped CIs of participants' "t"-responses at each VOT step. Horizontal point ranges denote the mean and 95% quantile interval of the points of subjective equality (PSE), derived from the 8000 posterior samples of the population parameters. **Right:** The same but showing the fitted categorization functions for each of the four minimal pair continua. Participants' responses are omitted to avoid clutter.   
@@ -447,7 +444,7 @@ F0.sd <- sd(d.test.excluded$Item.Mel_f0_5ms)
 d.test.excluded %<>% 
   mutate(sF0 = (Item.Mel_f0_5ms - F0.mean)/(2 * F0.sd))
 
-# specify new model formula (priors will be same as previous one without f0)
+# specify new model formula (priors will be same as previous model without f0)
 fit_mix_f0 <- brm(
   bf(
     Response.Voicing == "voiceless" ~ 1,
@@ -507,7 +504,6 @@ conditional_effects(
   scale_x_continuous("F0", breaks = scales::pretty_breaks(n = 8)) +
   scale_y_continuous("Fitted proportion of 't' responses", limits = c(0, 1))
 
-conditional_effects(fit_mix_f0)
 ```
 
 
@@ -517,7 +513,8 @@ conditional_effects(fit_mix_f0)
 VOT.no.noise <- 
   get_IO_categorization(
     cues = c("VOT"), 
-    groups = c("Talker", "gender"), 
+    groups = c("Talker", "gender"),
+    lapse_rate = plogis(summary(fit_mix)$fixed[3, 1]),
     with_noise = FALSE, 
     alpha = .1, 
     linewidth = 0.3,
@@ -526,9 +523,14 @@ VOT.no.noise <-
 PSE_VOT.no.noise <- get_PSE_quantiles(data = VOT.no.noise, group = "gender")
 
 p.IOs.VOT.no.noise <- plot_IO_fit(
-  data = VOT.no.noise,
-  PSEs = PSE_VOT.no.noise,
-  x = descale(psychometric_fit_data$sVOT, VOT.mean_norm, VOT.sd_norm))
+  data.production = VOT.no.noise, 
+  data.perception = psychometric_fit_data %>% 
+    mutate(Item.VOT = descale(sVOT, VOT.mean_norm, VOT.sd_norm)),
+  data.test = d.test.excluded %>% 
+    ungroup() %>% distinct(Item.VOT),
+  posterior.sample = post_sample_norm,
+  PSE_VOT.no.noise
+)
 
 p.likelihoods.VOT <- plot_talker_UVGs(VOT.no.noise, d.test.excluded)
 ```
