@@ -283,7 +283,7 @@ get_IO_categorization <- function(
     data = d.chodroff_wilson.selected, 
     cues,                              
     groups,
-    lapse_rate = plogis(summary(fit_mix)$fixed[3, 1]),
+    lapse_rate = 0,
     with_noise = TRUE,
     VOTs = seq(0, 85, .5),            
     F0s = normMel(predict_f0(VOTs)),                      
@@ -305,8 +305,10 @@ get_IO_categorization <- function(
           lapse_rate = lapse_rate,
           lapse_bias = c(.5, .5),
           Sigma_noise = 
-            if(with_noise == FALSE) {
+            if(with_noise == FALSE & length(cues) == 1) {
               matrix(c(0), ncol = 1, dimnames = list(cues, cues))
+            } else if(with_noise == FALSE & length(cues) == 2) {
+              matrix(c(0, 0, 0, 0), ncol = 2, dimnames = list(cues, cues)) 
             } else if(with_noise == TRUE & length(cues) == 1) {
               matrix(c(80), ncol = 1, dimnames = list(cues, cues))
             } else if(with_noise == TRUE & length(cues) == 2) {
@@ -342,7 +344,6 @@ get_IO_categorization <- function(
       io.type = io.type
     )
 }  
-############################################################################
 
 
 ############################################################################
@@ -367,7 +368,6 @@ get_average_log_likelihood_of_perception_data_under_IO <- function(observations,
       likelihood = ifelse(category == human_response, response, 1 - response)) %>%
     summarize(log_likelihood_per_response = mean(log(likelihood), na.rm = T))
 }
-############################################################################
 
 
 ############################################################################
@@ -549,7 +549,7 @@ plot_talker_MVGs <- function(
   
   plot <- data_production %>% 
     group_by(Talker) %>% 
-    nest(-Talker) %>% 
+    nest(data = -Talker) %>% 
     mutate(points = map(
       data, ~ geom_point(data = .x, 
                          aes(x = !! sym(cues[1]), y = !! sym(cues[2]), 
@@ -580,7 +580,6 @@ plot_talker_MVGs <- function(
       aes(x = Item.VOT, y = Item.Mel_f0_5ms),
       alpha = .1,
       inherit.aes = F) +
-    geom_abline(intercept = if (centered == T) normMel(245.46968 + (238 - 341)) else normMel(245.46968 ), slope = 0.03827, alpha = .5) +
     guides(colour = "none", category = "none")
 }
 

@@ -120,7 +120,7 @@ Participants underwent 234 trials which included 6 catch trials in each exposure
 
 ```{r}
 # load formatted exposure and test data from experiment 2
-d.exposure_test <- read_rds("../data/exposure_test_experiment2.rds")
+d.exposure_test <- read_csv("../data/exposure_test_experiment2.csv", show_col_types = F)
 
 # load f0-5ms-into-vowel measurements of stimuli
 d.f0.5ms <- 
@@ -158,7 +158,7 @@ d.exposure_test %<>%
 
 
 
-```{r warning=FALSE}
+```{r set-exclusion-due-to-categorisation-slope, warning=FALSE}
 # get data for exclusion due to categorisation slope of first 36 trials. 
 d.VOT_exclusion <- d.exposure_test %>% 
   filter(Block == 1 | (Block == 2 & Trial %in% c(13:36))) %>% 
@@ -204,7 +204,7 @@ d.exposure_test %<>% left_join(d.VOT_exclusion)
 
 
 
-```{r, message=FALSE}
+```{r set-RT-exclusion-criteria, message=FALSE}
 # calculate RT exclusion AFTER removing excluded participants due to other criteria
 d.test_exposure_for_analysis <- d.exposure_test %>%
   filter(
@@ -276,7 +276,7 @@ We first present participants' categorisation responses. Given that this experim
 ### Analysis approach
 
 
-```{r}
+```{r load-br-model-block1}
 # make Block 1 subset
 d.block1 <- d.test_exposure_for_analysis %>% 
   filter(Block == 1) 
@@ -312,7 +312,7 @@ fit_mix_block1 <- brm(
 
 (ref:mixture-model-block-1) Plot of by-participant intercepts and slopes estimated from the mixture model
 
-```{r, fig.width=6, fig.height=3, fig.cap="(ref:mixture-model-block-1)"}
+```{r plot-intercepts-slopes-block1-model, fig.width=6, fig.height=3, fig.cap="(ref:mixture-model-block-1)"}
 d.ranef <- ranef(fit_mix_block1)
 
 # plot r'ship between intercept and slope
@@ -393,28 +393,16 @@ p.fit_block1 <- psychometric_fit_block1 %>%
     alpha = .5,
     size = 1, 
     inherit.aes = F)
-
-p.fit_block1 +
-  stat_summary(
-    data = d.block1 %>% 
-      group_by(Item.VOT), 
-    mapping = aes(x = Item.VOT, 
-                  y = Response.Voiceless),
-    geom = "pointrange",
-    fun.data = "mean_cl_boot",
-    size = .4,
-    colour = "#c4b7a6",
-    alpha = .6,
-    inherit.aes = F) 
-
 ```
 
 ```{r}
+lapse_exp2 = plogis(summary(fit_mix_uniform_bias)$fixed["theta1_Intercept", 1])
+
 VOT.no.noise <- 
   get_IO_categorization(
     cues = c("VOT"), 
     groups = c("Talker", "gender"), 
-    lapse_rate = plogis(summary(fit_mix_uniform_bias)$fixed["theta1_Intercept", 1]),
+    lapse_rate = lapse_exp2,
     with_noise = FALSE, 
     alpha = .1, 
     linewidth = 0.3,
@@ -432,19 +420,18 @@ plot_IO_fit(
   PSE_VOT.no.noise
 )
 ```
-
 ```{r}
-VOT_F0 <- 
+VOT <- 
   get_IO_categorization(
     cues = c("VOT"), 
     groups = c("Talker", "gender"), 
-    lapse_rate = plogis(summary(fit_mix_uniform_bias)$fixed["theta1_Intercept", 1]),
+    lapse_rate = lapse_exp2,
     with_noise = T, 
     alpha = .1, 
     linewidth = 0.3,
-    io.type = "VOT_F0")
+    io.type = "VOT.no.noise")
 
-PSE_VOT_F0 <- get_PSE_quantiles(data = VOT_F0, group = "gender")
+PSE_VOT <- get_PSE_quantiles(data = VOT.no.noise, group = "gender")
 
 plot_IO_fit(
   data.production = VOT, 
@@ -453,16 +440,15 @@ plot_IO_fit(
   data.test = d.block1 %>% 
     ungroup() %>% distinct(Item.VOT),
   posterior.sample = post_sample_block1,
-  PSE_VOT_F0
+  PSE_VOT
 )
 ```
-
 ```{r}
 VOT_F0 <- 
   get_IO_categorization(
     cues = c("VOT", "f0_Mel"), 
     groups = c("Talker", "gender"), 
-    lapse_rate = plogis(summary(fit_mix_uniform_bias)$fixed["theta1_Intercept", 1]),
+    lapse_rate = lapse_exp2,
     with_noise = T, 
     alpha = .1, 
     linewidth = 0.3,
@@ -477,10 +463,93 @@ plot_IO_fit(
   data.test = d.block1 %>% 
     ungroup() %>% distinct(Item.VOT),
   posterior.sample = post_sample_block1,
-  PSE_VOT
+  PSE_VOT_F0
 )
 ```
 
+```{r}
+VOT_F0.centered <- 
+  get_IO_categorization(
+    cues = c("VOT", "f0_Mel_centered"), 
+    groups = c("Talker", "gender"), 
+    lapse_rate = lapse_exp2,
+    with_noise = T, 
+    alpha = .1, 
+    linewidth = 0.3,
+    io.type = "VOT_F0")
+
+PSE_VOT_F0.centered <- get_PSE_quantiles(data = VOT_F0.centered, group = "gender")
+
+plot_IO_fit(
+  data.production = VOT_F0.centered, 
+  data.perception = psychometric_fit_block1 %>% 
+    mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2)),
+  data.test = d.block1 %>% 
+    ungroup() %>% distinct(Item.VOT),
+  posterior.sample = post_sample_block1,
+  PSE_VOT_F0.centered
+)
+```
+
+```{r}
+# prepare data for IO that centers perceptual input relative to population mean before categorization
+chodroff.means <- d.chodroff_wilson.selected %>% 
+  group_by(Talker) %>% 
+  summarise(across(c(VOT, f0_Mel), mean)) %>% 
+  ungroup() %>% 
+  summarise(across(c(VOT, f0_Mel), mean)) 
+
+chodroff.mean_VOT <- chodroff.means %>% pull(VOT)
+chodroff.mean_f0 <- chodroff.means %>% pull(f0_Mel)
+
+# center exposure data relative to database and Gelman-scale them
+d.block1 %>% 
+      mutate(Item.VOT = (Item.VOT + (chodroff.mean_VOT - VOT.mean_norm)),
+             VOT_gs = (Item.VOT - chodroff.mean_VOT)/(2 * VOT.sd_norm))
+
+# get expected values of the centered VOT under the model
+if (file.exists("../models/centered_exposure_block1_exp2.rds")) {
+  centered_block1 <- read_rds("../models/centered_exposure_block1_exp2.rds")
+} else {
+  centered_block1 <- fit_mix_block1 %>%
+    epred_draws(
+    newdata = d.block1 %>% 
+      mutate(Item.VOT = Item.VOT + (chodroff.mean_VOT - VOT.mean_norm),
+             VOT_gs = (Item.VOT - chodroff.mean_VOT)/(2 * VOT.sd_norm),
+             lapse = lapse_exp2),
+    re_formula = NA,
+    ndraws = 2000)
+  write_rds(centered_exposure, file = "../models/centered_exposure_block1_exp2.rds")
+}
+# get the expected CI based on the draws 
+centered_block1 %<>% 
+  group_by(VOT_gs) %>% 
+  summarise(
+    lower__ = quantile(.epred, probs = .025),
+    median = quantile(.epred, probs = .5),
+    upper__ = quantile(.epred, probs = .975),
+    estimate__ = mean(.epred)) 
+
+centered_block1 %>% 
+  ggplot(aes(x = descale(VOT_gs, chodroff.mean_VOT, VOT.sd_norm), 
+             y = estimate__)) +
+  geom_ribbon(aes(ymin = lower__, ymax = upper__), alpha = .1) +
+  geom_line(colour = "#333333", linewidth = 1.2) +
+  scale_x_continuous("VOT (ms)", limits = c(-55, 75)) +
+  scale_y_continuous("Fitted proportion of 't'-responses")
+```
+
+```{r}
+# plot predicted categorisation after centering exposure against IOs
+p.IOs.VOT_F0.centered.input <- plot_IO_fit(
+  data.production = VOT_F0.centered, 
+  data.perception = centered_exposure %>% 
+    mutate(Item.VOT = descale(VOT_gs, chodroff.mean_VOT, VOT.sd_norm)),
+  data.test = d.block1 %>%  
+    ungroup() %>% distinct(Item.VOT),
+  posterior.sample = post_sample_block1,
+  PSE_VOT_F0.centered) 
+```
 
 
 Fig. XX summarizes participants’ categorization functions across the different test blocks. To analyse the incremental effects of exposure condition on the proportion of /t/ responses at test, we fitted a Bayesian mixed-effects psychometric model with lapse rate (cf. Wichmann & Hill, 2001). The perceptual model contained exposure condition (sliding difference coded, comparing the +10ms against the +0ms shift condition, and the +40ms against the +10ms shift condition), test block (sliding difference coded from the first to last test block), VOT (Gelman scaled), and their full factorial interaction. We also included the full random effect structure by participant and item. The lapse rate and response bias (.5 for both /d/ and /t/) were assumed to be constant across blocks and exposure condition. We used the same weakly regularizing priors as in Xie, Liu, and Jaeger (2021).

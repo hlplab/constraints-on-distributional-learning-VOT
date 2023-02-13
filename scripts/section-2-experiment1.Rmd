@@ -402,7 +402,7 @@ The first point that stands out from the visual comparisons is that models that 
 
 
 
-```{r}
+```{r prepare-production-database}
 # prepare production corpus from Chodroff & Wilson
 d.chodroff_wilson <-
   get_ChodroffWilson_data(
@@ -436,13 +436,17 @@ d.chodroff_wilson.selected <-
       list("centered" = function(x) apply_ccure(x, data = .))) %>% 
   mutate(category = factor(category))
 ```
-```{r}
+
+
+
+
+```{r brms-model-with-f0}
 # run an alternative model with f0 as a predictor
 # get f0 mean and sd for scaling
-F0.mean <- mean(d.test.excluded$Item.Mel_f0_5ms)
-F0.sd <- sd(d.test.excluded$Item.Mel_f0_5ms)
+F0.mean_norm <- mean(d.test.excluded$Item.Mel_f0_5ms)
+F0.sd_norm <- sd(d.test.excluded$Item.Mel_f0_5ms)
 d.test.excluded %<>% 
-  mutate(sF0 = (Item.Mel_f0_5ms - F0.mean)/(2 * F0.sd))
+  mutate(sF0 = (Item.Mel_f0_5ms - F0.mean_norm)/(2 * F0.sd_norm))
 
 # specify new model formula (priors will be same as previous model without f0)
 fit_mix_f0 <- brm(
@@ -459,22 +463,23 @@ fit_mix_f0 <- brm(
   control = list(adapt_delta = .99),
   file = "../models/Exp-NORM-lapsing-bias-f0")
 
-summary(fit_mix)
-summary(fit_mix_f0)  
 
 psychometric_fit_data %>% 
      ggplot(aes(x = descale(sVOT, VOT.mean_norm, VOT.sd_norm), 
-             y = estimate__), linetype = 1, linewidth = 1.5) +
+             y = estimate__)) +
     geom_ribbon(
     data = conditional_effects(
     fit_mix_f0, 
-    effects = c("sF0"), 
+    effects = c("sVOT"), 
     plot = F)[[1]], 
-    mapping = aes(ymin = lower__, 
-             ymax = upper__),
-    alpha = 0.08,
-    inherit.aes = T) +
-  geom_line(linewidth = 1.5, 
+    mapping = aes(
+      x = descale(sVOT, VOT.mean_norm, VOT.sd_norm),
+      ymin = lower__, 
+      ymax = upper__),
+    alpha = 0.05,
+    inherit.aes = F) +
+  geom_line(linetype = 1, 
+            linewidth = 1.5, 
             colour = "#333333",
             alpha = .2) +
     geom_line(
@@ -490,31 +495,26 @@ psychometric_fit_data %>%
       linewidth = 1.5,
       inherit.aes = F
     ) + 
-  scale_x_continuous("VOT (ms)", breaks = scales::pretty_breaks(n = 4), limits = c(-100, 130)) +
-  scale_y_continuous("Fitted proportion of 't' responses") 
-
-
-conditional_effects(
-    fit_mix_f0, 
-    effects = "sF0", 
-    plot = F)[[1]] %>% 
-     ggplot(aes(x = descale(sF0, F0.mean, F0.sd), 
-             y = estimate__), linetype = 1, linewidth = 1.5) + 
-  geom_line() +
-  scale_x_continuous("F0", breaks = scales::pretty_breaks(n = 8)) +
-  scale_y_continuous("Fitted proportion of 't' responses", limits = c(0, 1))
-
+  scale_x_continuous("VOT (ms)", limits = c(-100, 130)) +
+  scale_y_continuous("Fitted proportion of 't' responses") +
+  scale_linetype_manual("Model", 
+                        values = c(1, 2),
+                        labels = c("fit without F0", "fit with F0"))
 ```
 
 
 
 
-```{r, fig.width=3.7, fig.height=2.5}
+```{r plot-IO-VOT-no-noise, fig.width=3.7, fig.height=2.5}
+# get lapse rate estimated from exp1 regression model
+lapse_exp1 <- plogis(summary(fit_mix)$fixed[3, 1])
+
+# train the IOs on production database using the same lapse rate
 VOT.no.noise <- 
   get_IO_categorization(
     cues = c("VOT"), 
     groups = c("Talker", "gender"),
-    lapse_rate = plogis(summary(fit_mix)$fixed[3, 1]),
+    lapse_rate = lapse_exp1,
     with_noise = FALSE, 
     alpha = .1, 
     linewidth = 0.3,
@@ -536,35 +536,40 @@ p.likelihoods.VOT <- plot_talker_UVGs(VOT.no.noise, d.test.excluded)
 ```
 
 
-```{r, fig.width=3.7, fig.height=2.5}
-# get IOs from VOT only
+```{r plot-IO-VOT-with-noise, fig.width=3.7, fig.height=2.5}
+# train IOs on VOT only
 VOT <- 
   get_IO_categorization(
     cues = c("VOT"), 
     groups = c("Talker", "gender"), 
+    lapse_rate = lapse_exp1,
     alpha = .1, 
     linewidth = 0.3,
     io.type = "VOT")
 
 PSE_VOT <- get_PSE_quantiles(data = VOT, group = "gender")
 
-p.IOs.VOT <- 
-  plot_IO_fit(
-    data = VOT,
-    PSEs = PSE_VOT,
-    x = descale(psychometric_fit_data$sVOT, VOT.mean_norm, VOT.sd_norm))  
-
+p.IOs.VOT <- plot_IO_fit(
+  data.production = VOT, 
+  data.perception = psychometric_fit_data %>% 
+    mutate(Item.VOT = descale(sVOT, VOT.mean_norm, VOT.sd_norm)),
+  data.test = d.test.excluded %>% 
+    ungroup() %>% distinct(Item.VOT),
+  posterior.sample = post_sample_norm,
+  PSE_VOT
+) 
 
 p.likelihoods.VOT_noise <- plot_talker_UVGs(VOT, d.test.excluded, noise = TRUE)
 ```
 
 
-```{r, warning=FALSE, fig.width=3.7, fig.height=2.5}
+```{r plot-IO-VOT-F0, warning=FALSE, fig.width=3.7, fig.height=2.5}
 # get IOs with multivariate cues
 VOT_F0 <- 
   get_IO_categorization(
     cues = c("VOT", "f0_Mel"), 
     groups = c("Talker", "gender"), 
+    lapse_rate = lapse_exp1,
     alpha = .1, 
     linewidth = .3,
     io.type = "VOT_F0") 
@@ -573,34 +578,45 @@ PSE_VOT_F0 <- get_PSE_quantiles(data = VOT_F0, group = "gender")
 
 p.IOs.VOT_F0 <- 
   plot_IO_fit(
-    data = VOT_F0,
-    PSEs = PSE_VOT_F0,
-    x = descale(psychometric_fit_data$sVOT, VOT.mean_norm, VOT.sd_norm))
+  data.production = VOT_F0, 
+  data.perception = psychometric_fit_data %>% 
+    mutate(Item.VOT = descale(sVOT, VOT.mean_norm, VOT.sd_norm)),
+  data.test = d.test.excluded %>% 
+    ungroup() %>% distinct(Item.VOT),
+  posterior.sample = post_sample_norm,
+  PSE_VOT_F0) 
 
 p.likelihoods.VOT_F0 <- plot_talker_MVGs(cues = c("VOT", "f0_Mel"))
 ```
 
 
-```{r, warning=FALSE, fig.width=3.7, fig.height=2.5}
+```{r plot-IO-VOT-F0-centered, warning=FALSE, fig.width=3.7, fig.height=2.5}
 # using centered cues
 VOT_F0.centered <- 
   get_IO_categorization(
     cues = c("VOT_centered", "f0_Mel_centered"), 
-    groups = c("Talker", "gender"), alpha = .1, linewidth = .3,
+    groups = c("Talker", "gender"),
+    lapse_rate = lapse_exp1,
+    alpha = .1, 
+    linewidth = .3,
     io.type = "VOT_F0.centered") 
 
 PSE_VOT_F0.centered <- get_PSE_quantiles(data = VOT_F0.centered, group = "gender")
 
 p.IOs.VOT_F0.centered <- 
   plot_IO_fit(
-    data = VOT_F0.centered,
-    PSEs = PSE_VOT_F0.centered,
-    x = descale(psychometric_fit_data$sVOT, VOT.mean_norm, VOT.sd_norm))
+  data.production = VOT_F0.centered, 
+  data.perception = psychometric_fit_data %>% 
+    mutate(Item.VOT = descale(sVOT, VOT.mean_norm, VOT.sd_norm)),
+  data.test = d.test.excluded %>% 
+    ungroup() %>% distinct(Item.VOT),
+  posterior.sample = post_sample_norm,
+  PSE_VOT_F0.centered) 
 
 p.likelihoods.VOT_F0.centered <- plot_talker_MVGs(cues = c("VOT_centered", "f0_Mel_centered"))
 ```
 
-```{r, warning=FALSE, fig.width=3.7, fig.height=2.5}
+```{r get-expected-predictions-exposure-centered-VOT, warning=FALSE, fig.width=3.7, fig.height=2.5}
 # prepare data for IO that centers perceptual input relative to population mean before categorization
 chodroff.means <- d.chodroff_wilson.selected %>% 
   group_by(Talker) %>% 
@@ -611,34 +627,49 @@ chodroff.means <- d.chodroff_wilson.selected %>%
 chodroff.mean_VOT <- chodroff.means %>% pull(VOT)
 chodroff.mean_f0 <- chodroff.means %>% pull(f0_Mel)
 
-# center exposure data and
-d.test.excluded %>% 
-      mutate(Item.VOT = (Item.VOT + (chodroff.mean_VOT - VOT.mean_norm)),
-             sVOT = (Item.VOT - VOT.mean_norm_centered)/(2 * VOT.sd_norm))
 
-adjusted_line <- fit_mix %>% 
-  epred_draws(
+# get expected values of the centered VOT under the model
+if (file.exists("../models/centered_exposure_exp1.rds")) {
+  centered_exposure <- read_rds("../models/centered_exposure_exp1.rds")
+} else {
+  centered_exposure <- fit_mix %>%
+    epred_draws(
     newdata = d.test.excluded %>% 
-      mutate(Item.VOT = (Item.VOT + (chodroff.mean_VOT - VOT.mean_norm)),
+      mutate(Item.VOT = Item.VOT + (chodroff.mean_VOT - VOT.mean_norm),
              sVOT = (Item.VOT - chodroff.mean_VOT)/(2 * VOT.sd_norm)),
     re_formula = NA,
-    ndraws = 2000)
+    ndraws = 1000)
+  write_rds(centered_exposure, file = "../models/centered_exposure_exp1.rds")
+}
 
-adjusted_line %>% 
+# plot the expected categorization function 
+centered_exposure %<>% 
   group_by(sVOT) %>% 
-  ggplot(aes(x = descale(sVOT, VOT.mean_norm_centered, VOT.sd_norm_centered), 
-             y = .epred)) +
-  stat_lineribbon(alpha = .9) +
-  scale_x_continuous("VOT (ms)") +
-  scale_y_continuous("Fitted proportion of 't'-responses") +
-  scale_fill_brewer("CI", palette = "Greys", type = "qual") 
+  summarise(
+    lower__ = quantile(.epred, probs = .025),
+    median = quantile(.epred, probs = .5),
+    upper__ = quantile(.epred, probs = .975),
+    estimate__ = mean(.epred)) 
+
+centered_exposure %>% 
+  ggplot(aes(x = descale(sVOT, chodroff.mean_VOT, VOT.sd_norm), 
+             y = estimate__)) +
+  geom_ribbon(aes(ymin = lower__, ymax = upper__), alpha = .1) +
+  geom_line(colour = "#333333", linewidth = 1.2) +
+  scale_x_continuous("VOT (ms)", limits = c(-15, 75)) +
+  scale_y_continuous("Fitted proportion of 't'-responses")
+```
 
 
+```{r plot-IO-VOT-F0-exposure-centered}
 p.IOs.VOT_F0.centered.input <- plot_IO_fit(
-    data = VOT_F0.centered,
-    PSEs = PSE_VOT_F0.centered,
-    x = descale(psychometric_fit_data$sVOT, VOT.mean_norm, VOT.sd_norm) + (chodroff.mean_VOT - VOT.mean_norm),
-    centered = TRUE)
+  data.production = VOT_F0.centered, 
+  data.perception = centered_exposure %>% 
+    mutate(Item.VOT = descale(sVOT, chodroff.mean_VOT, VOT.sd_norm)),
+  data.test = d.test.excluded %>% 
+    ungroup() %>% distinct(Item.VOT),
+  posterior.sample = post_sample_norm,
+  PSE_VOT_F0.centered) 
 
 p.likelihoods.exposure.centered <- plot_talker_MVGs(cues = c("VOT_centered", "f0_Mel_centered"), centered = T)
 ```
@@ -647,10 +678,9 @@ p.likelihoods.exposure.centered <- plot_talker_MVGs(cues = c("VOT_centered", "f0
 
 
 
-```{r}
+```{r prepare-plots-to-make-IO-plot-grid}
 # make plot grid
-theme_spec <- theme(axis.title.x = element_blank(),
-        axis.title.y = element_blank()) 
+theme_spec <- theme(axis.title.x = element_blank()) 
 guide_spec <-  guides(linetype = "none")
 
 p1 <- p.likelihoods.VOT +
@@ -724,7 +754,7 @@ p_lab2 <-
 
 
 ```{r}
-# Specify sequence of postive VOTs
+# Specify sequence of positive VOTs
 test.VOTs.positive <- c(5, seq(15, 90, 5), seq(100, 130, 10))
 
 # make VOT_F0_centered data set with centered perceptual stimuli for simulating centering of input
@@ -740,11 +770,11 @@ d.test.IO <-
   d.test.excluded %>%
   ungroup() %>%
   select(Item.Filename, Item.VOT, Item.Mel_f0_5ms, Response, Response.Voicing) %>%
-  filter(Item.VOT %in% test.VOTs.positive) %>%  # filter to only the +ve for the time being may need to include the -ve values
+  filter(Item.VOT %in% test.VOTs.positive) %>%  # filter to only the +ve for the time being; may need to include the -ve values
   mutate(
     VOT_F0 = map2(Item.VOT, Item.Mel_f0_5ms, ~ c(.x, .y)),
     Item.VOT_centered = Item.VOT + (chodroff.mean_VOT - VOT.mean_norm),
-    Item.Mel_F0_centered = normMel(predict_f0(Item.VOT_centered)),
+    Item.Mel_F0_centered = Item.Mel_f0_5ms - (chodroff.mean_f0 - F0.mean_norm), # should this calculation be
     VOT_F0_centered = map2(Item.VOT_centered, Item.Mel_F0_centered, ~ c(.x, .y)),
     Response.category = ifelse(Response.Voicing == "voiced", "/d/", "/t/"),
     Response.t = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
@@ -781,7 +811,7 @@ d.bootstrap <- d.test.IO %>%
   # nest so that we can sample from groups of rows corresponding to each io type
   nest(data = -io.type) %>% 
   mutate(samples = 
-           map(data, ~ bootstraps(.x, times = 100))) %>% 
+           map(data, ~ bootstraps(.x, times = 1000))) %>% 
   unnest(samples) %>% 
   mutate(splits = map(splits, ~ as_tibble(.x)),
          median_sample = map_dbl(splits, ~ median(.x$likelihood_per_response)),
