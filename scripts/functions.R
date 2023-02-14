@@ -262,8 +262,6 @@ get_PSE_from_io <- function(io) {
     io = io,
     add_f0 = length(io$mu[[1]]) > 1)$par
 }
-############################################################################
-
 
 ############################################################################
 # This can be used to implement different hypotheses about speech perception. There are quite a few choices for the researcher as to what specific hypothesis you want to test:
@@ -539,6 +537,41 @@ plot_talker_UVGs <- function (data_production, data_perception, noise = FALSE) {
       inherit.aes = F) +
     guides(colour = "none")
 }
+
+
+get_bivariate_normal_ellipse <- function(
+    mu = c(0, 0), 
+    Sigma = diag(2),
+    level = .95, 
+    segments = 51,
+    varnames = c("F1", "F2")
+) {
+  # Ths function is based on calculate_ellipse from ggplot2, with modification to 
+  # remove uncertainty about Sigma (since we're plotting the theoretical distribution,
+  # for which Sigma is known)
+  require(tidyverse)
+  
+  chol_decomp <- chol(Sigma) 
+  # Adapted from https://stats.stackexchange.com/questions/64680/how-to-determine-quantiles-isolines-of-a-multivariate-normal-distribution
+  # (tested)
+  radius <- sqrt(-2 * log(1 - level))
+  
+  # Make n + 1 point over unit circle
+  angles <- (0:segments) * 2 * pi/segments
+  unit.circle <- cbind(cos(angles), sin(angles))
+  
+  # Shape unit circle by covariance, scale by radius, and move it to mu
+  # (the t() calls are necessary since we allow mu to be a vector, so we
+  # need to transform the 2-col x segements-rows matrix into a segments-col 
+  # x 2-row matrix, and then---after adding mu---transforming the whole 
+  # thing back into a 2-col x segements-rows matrix)
+  ellipse <- as.data.frame(t(mu + radius * t(unit.circle %*% chol_decomp)))
+  names(ellipse) <- varnames
+  
+  return(ellipse)
+}
+
+
 
 
 plot_talker_MVGs <- function(

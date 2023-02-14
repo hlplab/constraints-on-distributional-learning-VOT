@@ -46,7 +46,7 @@ Participants heard 192 target trials (four minimal pair continua, each with 24 V
 
 The order of trials was randomized for each participant with the only constraint that no stimulus was repeated before each stimulus had been heard at least once. Catch trials were distributed randomly throughout the experiment with the constraint that no more than two catch trials would occur in a row. <!-- TO DO: correct? --> Participants were given the opportunity to take breaks after every 60 trials. Participants took an average of 12 minutes (SD = 4.8) to complete the 204 trials, after which they answered a short survey about the experiment. 
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, warning=FALSE}
 # load formatted dataframe from experiment 1
 d.test <- read_csv("../data/d.test.Exp1.csv", show_col_types = F)
 
@@ -440,13 +440,14 @@ d.chodroff_wilson.selected <-
 
 
 
-```{r brms-model-with-f0}
+```{r brms-model-with-f0, fig.width=3.5, fig.cap="temporary plot of effects of VOT on categorisation from model that includes F0. Red dashed line is model with F0."}
 # run an alternative model with f0 as a predictor
 # get f0 mean and sd for scaling
-F0.mean_norm <- mean(d.test.excluded$Item.Mel_f0_5ms)
-F0.sd_norm <- sd(d.test.excluded$Item.Mel_f0_5ms)
+F0_Mel.mean_norm <- mean(d.test.excluded$Item.Mel_f0_5ms)
+F0_Mel.sd_norm <- sd(d.test.excluded$Item.Mel_f0_5ms)
+F0.mean_norm <- mean(d.test.excluded$Item.f0_5ms)
 d.test.excluded %<>% 
-  mutate(sF0 = (Item.Mel_f0_5ms - F0.mean_norm)/(2 * F0.sd_norm))
+  mutate(sF0 = (Item.Mel_f0_5ms - F0_Mel.mean_norm)/(2 * F0_Mel.sd_norm))
 
 # specify new model formula (priors will be same as previous model without f0)
 fit_mix_f0 <- brm(
@@ -461,12 +462,12 @@ fit_mix_f0 <- brm(
   warmup = 2000,
   family = mixture(bernoulli("logit"), bernoulli("logit")),
   control = list(adapt_delta = .99),
-  file = "../models/Exp-NORM-lapsing-bias-f0")
+  file = "../models/Exp-NORM-lapsing-bias-f0.rds")
 
 
 psychometric_fit_data %>% 
      ggplot(aes(x = descale(sVOT, VOT.mean_norm, VOT.sd_norm), 
-             y = estimate__)) +
+             y = estimate__, linetype = "solid"))  + 
     geom_ribbon(
     data = conditional_effects(
     fit_mix_f0, 
@@ -478,7 +479,7 @@ psychometric_fit_data %>%
       ymax = upper__),
     alpha = 0.05,
     inherit.aes = F) +
-  geom_line(linetype = 1, 
+  geom_line(aes(linetype = "solid"),
             linewidth = 1.5, 
             colour = "#333333",
             alpha = .2) +
@@ -488,24 +489,21 @@ psychometric_fit_data %>%
     effects = c("sVOT"), 
     plot = F)[[1]], 
       mapping = aes(x = descale(sVOT, VOT.mean_norm, VOT.sd_norm), 
-             y = estimate__), 
-      linetype = 2, 
+             y = estimate__, linetype = "dashed"), 
       colour = "red",
+    linetype = 2,
       alpha = .5,
       linewidth = 1.5,
-      inherit.aes = F
-    ) + 
+      inherit.aes = F) + 
   scale_x_continuous("VOT (ms)", limits = c(-100, 130)) +
   scale_y_continuous("Fitted proportion of 't' responses") +
-  scale_linetype_manual("Model", 
-                        values = c(1, 2),
-                        labels = c("fit without F0", "fit with F0"))
+  scale_linetype_manual("Model", values = c("solid" = 1, "dashed" = 2), labels = c("fit without F0", "fit with F0"))
 ```
 
 
 
 
-```{r plot-IO-VOT-no-noise, fig.width=3.7, fig.height=2.5}
+```{r plot-IO-VOT-no-noise, fig.width=3.7, fig.height=2.5, message=FALSE}
 # get lapse rate estimated from exp1 regression model
 lapse_exp1 <- plogis(summary(fit_mix)$fixed[3, 1])
 
@@ -536,7 +534,7 @@ p.likelihoods.VOT <- plot_talker_UVGs(VOT.no.noise, d.test.excluded)
 ```
 
 
-```{r plot-IO-VOT-with-noise, fig.width=3.7, fig.height=2.5}
+```{r plot-IO-VOT-with-noise, fig.width=3.7, fig.height=2.5, message=FALSE}
 # train IOs on VOT only
 VOT <- 
   get_IO_categorization(
@@ -563,7 +561,7 @@ p.likelihoods.VOT_noise <- plot_talker_UVGs(VOT, d.test.excluded, noise = TRUE)
 ```
 
 
-```{r plot-IO-VOT-F0, warning=FALSE, fig.width=3.7, fig.height=2.5}
+```{r plot-IO-VOT-F0, warning=FALSE, fig.width=3.7, fig.height=2.5, message=FALSE}
 # get IOs with multivariate cues
 VOT_F0 <- 
   get_IO_categorization(
@@ -616,16 +614,19 @@ p.IOs.VOT_F0.centered <-
 p.likelihoods.VOT_F0.centered <- plot_talker_MVGs(cues = c("VOT_centered", "f0_Mel_centered"))
 ```
 
-```{r get-expected-predictions-exposure-centered-VOT, warning=FALSE, fig.width=3.7, fig.height=2.5}
+```{r get-expected-predictions-exposure-centered-VOT, warning=FALSE, fig.width=3.7, fig.height=2.5, fig.cap="temporary plot of expected categorization function under the model with F0 after centering exposure cues."}
 # prepare data for IO that centers perceptual input relative to population mean before categorization
 chodroff.means <- d.chodroff_wilson.selected %>% 
   group_by(Talker) %>% 
-  summarise(across(c(VOT, f0_Mel), mean)) %>% 
+  summarise(across(c(VOT, f0_Mel, f0), mean)) %>% 
   ungroup() %>% 
-  summarise(across(c(VOT, f0_Mel), mean)) 
+  summarise(across(c(VOT, f0_Mel, f0), mean)) 
 
+# get talker database means
 chodroff.mean_VOT <- chodroff.means %>% pull(VOT)
-chodroff.mean_f0 <- chodroff.means %>% pull(f0_Mel)
+chodroff.mean_f0_Mel <- chodroff.means %>% pull(f0_Mel)
+chodroff.mean_f0 <- chodroff.means %>% pull(f0)
+
 
 
 # get expected values of the centered VOT under the model
@@ -753,7 +754,7 @@ p_lab2 <-
 
 
 
-```{r}
+```{r computing-average-likelihood-of-IOs, message=FALSE}
 # Specify sequence of positive VOTs
 test.VOTs.positive <- c(5, seq(15, 90, 5), seq(100, 130, 10))
 
@@ -764,7 +765,8 @@ VOT_F0.centered.input <- VOT_F0.centered %>%
 # join all 5 IOs into one dataframe
 d.IOs <- 
   rbind(VOT.no.noise, VOT, VOT_F0, VOT_F0.centered, VOT_F0.centered.input) %>% 
-  select(Talker, gender, io, io.type)
+  select(Talker, gender, io, io.type) %>% 
+  mutate(io.type = factor(io.type))
 
 d.test.IO <- 
   d.test.excluded %>%
@@ -774,7 +776,7 @@ d.test.IO <-
   mutate(
     VOT_F0 = map2(Item.VOT, Item.Mel_f0_5ms, ~ c(.x, .y)),
     Item.VOT_centered = Item.VOT + (chodroff.mean_VOT - VOT.mean_norm),
-    Item.Mel_F0_centered = Item.Mel_f0_5ms - (chodroff.mean_f0 - F0.mean_norm), # should this calculation be
+    Item.Mel_F0_centered = Item.Mel_f0_5ms - (chodroff.mean_f0 - F0.mean_norm), 
     VOT_F0_centered = map2(Item.VOT_centered, Item.Mel_F0_centered, ~ c(.x, .y)),
     Response.category = ifelse(Response.Voicing == "voiced", "/d/", "/t/"),
     Response.t = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
@@ -821,20 +823,20 @@ d.bootstrap <- d.test.IO %>%
 
 
 
-```{r, fig.width=6, fig.height=3, warning=FALSE}
+```{r IO-likelihood-plot, fig.width=6, fig.height=3, warning=FALSE}
 # plot median likelihood per response with bootstrapped 95% CI
 p.likelihood <- d.test.IO %>% 
   group_by(io.type) %>% 
   summarise(
     median_likelihood_per_response = median(likelihood_per_response)) %>%
-  mutate(io.type = fct_relevel(io.type, levels = c("VOT.no.noise", "VOT", "VOT_F0", "VOT_F0.centered",  "VOT_F0.centered.input"))) %>% 
+  mutate(io.type = fct_relevel(io.type, "VOT.no.noise")) %>% 
   ggplot(aes(x = io.type, 
              y = median_likelihood_per_response)) +
   geom_point(size = 2, colour = "#333333") +
   geom_errorbar(
     data = d.bootstrap %>% 
       group_by(io.type) %>% 
-      mutate(io.type = fct_relevel(io.type, levels = c("VOT.no.noise", "VOT", "VOT_F0", "VOT_F0.centered",  "VOT_F0.centered.input"))) %>% 
+      mutate(io.type = fct_relevel(io.type, "VOT.no.noise")) %>% 
       summarise(
         median.lower = quantile(median_sample, probs = .025),
         median.upper = quantile(median_sample, probs = .975)
@@ -858,14 +860,14 @@ p.likelihood <- d.test.IO %>%
 ```
 
 
-```{r, fig.width=4, fig.height=3, warning=FALSE}
+```{r IO-likelihood-plot-enlarged, fig.width=4, fig.height=3, warning=FALSE}
 # zoom in on multi-variate models
 p.likelihood.multivar <- d.test.IO %>% 
   group_by(io.type) %>% 
   summarise(
     median_likelihood_per_response = median(likelihood_per_response),
     mode_likelihood_per_response = max(likelihood_per_response)) %>%
-  mutate(io.type = fct_relevel(io.type, levels = c("VOT.no.noise", "VOT", "VOT_F0", "VOT_F0.centered",  "VOT_F0.centered.input"))) %>%
+  mutate(io.type = fct_relevel(io.type, "VOT.no.noise")) %>%
   ggplot(aes(x = io.type, 
              y = median_likelihood_per_response)) +
   geom_point(size = 3,
@@ -878,34 +880,31 @@ p.likelihood.multivar <- d.test.IO %>%
   geom_errorbar(
     data = d.bootstrap %>% 
       group_by(io.type) %>%
-  mutate(io.type = fct_relevel(io.type, levels = c("VOT.no.noise", "VOT", "VOT_F0", "VOT_F0.centered",  "VOT_F0.centered.input"))) %>% 
+      mutate(io.type = fct_relevel(io.type, "VOT.no.noise")) %>% 
       summarise(
         median.lower = quantile(median_sample, probs = .025),
-        median.upper = quantile(median_sample, probs = .975)
-      ),
+        median.upper = quantile(median_sample, probs = .975)),
     mapping = 
       aes(x = io.type, ymin = median.lower, ymax = median.upper),
     colour = "#333333",
     linewidth = 1.5,
     alpha = .6,
-  width = 0,
+    width = 0,
     inherit.aes = F) + 
-    geom_errorbar(
+  geom_errorbar(
     data = d.bootstrap %>% 
       group_by(io.type) %>%
-  mutate(io.type = fct_relevel(io.type, levels = c("VOT.no.noise", "VOT", "VOT_F0", "VOT_F0.centered",  "VOT_F0.centered.input"))) %>% 
-      summarise(
-        mode.lower = quantile(mode_sample, probs = .025),
-        mode.upper = quantile(mode_sample, probs = .975)
-      ),
-    mapping = 
-      aes(x = io.type, ymin = mode.lower, ymax = mode.upper),
-    colour = "#333333",
-    size = 1.5,
-    alpha = .6,
-  width = 0,
-    inherit.aes = F) +
-  scale_y_continuous("Median log-likelihood \n per response", limits = c(.55, .67)) +
+      mutate(io.type = fct_relevel(io.type, "VOT.no.noise")) %>% 
+  summarise(
+    mode.lower = quantile(mode_sample, probs = .025),
+    mode.upper = quantile(mode_sample, probs = .975)),
+mapping = aes(x = io.type, ymin = mode.lower, ymax = mode.upper),
+colour = "#333333",
+size = 1.5,
+alpha = .6,
+width = 0,
+inherit.aes = F) +
+  scale_y_continuous("Median log-likelihood \n per response", limits = c(.51, .67)) +
   scale_x_discrete(expand = expansion(mult = c(0.09, 0.09)), 
                    limits = c("VOT_F0", "VOT_F0.centered", "VOT_F0.centered.input"),
                    breaks = c("VOT_F0", "VOT_F0.centered", "VOT_F0.centered.input"),
@@ -921,9 +920,9 @@ p.likelihood.multivar <- d.test.IO %>%
 
 
 
-(ref:IO-likelihood-plot) Median likelihood estimates of the human behavioural data under the assumptions of each IO model. Inset: Triangles indicate the mode, error bars represent the 95% quantile intervals from 100 bootstrap samples of by-talker estimates of each IO type.
+(ref:IO-likelihood-plot) Median likelihood estimates of the human behavioural data under the assumptions of each IO model. Inset: Triangles indicate the mode, error bars represent the 95% quantile intervals from 1000 bootstrap samples of by-talker estimates of each IO type.
 
-```{r IO-likelihood-plot, fig.width=8, fig.height=6.5, fig.cap="(ref:IO-likelihood-plot)", warning=FALSE}
+```{r combined-IO-likelihood-plots, fig.width=8, fig.height=6.5, fig.cap="(ref:IO-likelihood-plot)", warning=FALSE}
 p.likelihood + inset_element(p.likelihood.multivar, .406, .05, .935, .82, align_to = "panel")
 ```
 
