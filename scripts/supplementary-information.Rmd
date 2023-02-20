@@ -33,6 +33,86 @@ We used the following R packages to create this document: `r cite_r("latex-stuff
 ## Experiment 1
 ### Making exposure conditions
 ### Exclusions analysis
+### Regression analysis - model selection
+
+```{r comparing-regression-models, fig.height=3, fig.width=5.5, fig.cap="Expected effect of VOT interacting with trial on categorisation from model: 1 + (sVOT + sFO) * sTrial shown as red dashed line with pink shaded CI. Grey line and shaded area represents effects of VOT interacting with trial from model: 1 + sVOT * sTrial"}
+# run an alternative model with f0 as a predictor
+# get f0 mean and sd for scaling
+f0.mean_exp1 <- mean(d.test.excluded$Item.Mel_f0_5ms)
+f0.sd_exp1 <- sd(d.test.excluded$Item.Mel_f0_5ms)
+d.test.excluded %<>% 
+  mutate(sF0 = (Item.Mel_f0_5ms - f0.mean_exp1)/(2 * f0.sd_exp1))
+
+# specify new model formula (priors will be same as previous model without f0)
+fit_mix_f0 <- brm(
+  bf(
+    Response.Voicing == "voiceless" ~ 1,
+    mu1 ~ 1 + (1 | g | ParticipantID),
+    mu2 ~ 1 + (sVOT + sF0) * sTrial + (1 + (sVOT + sF0) * sTrial | g | ParticipantID) + (1 + (sVOT + sF0) * sTrial | h | Item.MinimalPair),
+    theta1 ~ 1 + (1 | g | ParticipantID)),
+  data = d.test.excluded,
+  cores = 4,
+  iter = 4000,
+  warmup = 2000,
+  family = mixture(bernoulli("logit"), bernoulli("logit")),
+  control = list(adapt_delta = .99),
+  file = "../models/Exp-NORM-lapsing-Trial-F0.rds")
+
+if (file.exists("../models/conditional_effects_fit_mix_f0.csv")){
+  fit_mix_f0_data <- read_rds("../models/conditional_effects_fit_mix_f0.csv")
+} else {
+  int_conditions <- list(sTrial = sort(unique((d.test.excluded$Trial - Trial.mean)) / (2 * Trial.sd)))
+  
+  fit_mix_f0_data <- conditional_effects(
+    fit_mix_f0, 
+    effects = "sVOT:sTrial", 
+    int_conditions = int_conditions,
+    ndraws = 1000,
+    plot = F)[[1]] # by default this does not include any group level effects
+  
+  write_rds(fit_mix_f0_data, "../models/conditional_effects_fit_mix_f0.rds")
+}
+
+
+
+# plotting conditional effects of VOT from the 2 models side-by-side
+psychometric_fit_exp1 %>% 
+  group_by(sVOT) %>% 
+  summarise(estimate__ = mean(estimate__),
+            lower__ = mean(lower__),
+            upper__ = mean(upper__)) %>% 
+     ggplot(aes(x = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1), 
+             y = estimate__, linetype = "solid")) + 
+    geom_ribbon(
+    data = fit_mix_f0_data, 
+    mapping = aes(
+      x = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1),
+      ymin = lower__, 
+      ymax = upper__),
+    fill = "red",
+    alpha = 0.05,
+    inherit.aes = F) +
+  geom_ribbon(aes(ymin = lower__, ymax = upper__),
+              fill = "#333333",
+              alpha = .1) +
+  geom_line(linewidth = 1.5, 
+            colour = "#333333",
+            alpha = .2) +
+    geom_line(
+      data = fit_mix_f0_data, 
+      mapping = aes(x = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1), 
+             y = estimate__, linetype = 2), 
+      colour = "red",
+    linetype = 2,
+      alpha = .5,
+      linewidth = 1.5,
+      inherit.aes = F) + 
+  scale_x_continuous("VOT (ms)", limits = c(-100, 130)) +
+  scale_y_continuous("Fitted proportion of 't' responses") +
+  scale_linetype_manual("Model", values = c("solid" = 1, "dashed" = 2), labels = c("1 + sVOT  * sTrial", "fit with F0"))
+
+```
+
 
 
 ## Experiment 2
@@ -40,6 +120,7 @@ We used the following R packages to create this document: `r cite_r("latex-stuff
 ### Exclusions analysis
 - reaction time plots
 - catch trial performance plots
+### Regression analysis - model selection
 
 ```{r catch-trial-performance, fig.height=4, fig.width=6}
 d.exposure_test %>% 

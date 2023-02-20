@@ -143,14 +143,16 @@ Previous studies with similar paradigms have typically found lapse rates of 0-10
 
 ```{r}
 # set the mean and SD values for scaling/unscaling purposes
-VOT.mean_norm <- mean(d.test.excluded$Item.VOT)
-VOT.sd_norm <- sd(d.test.excluded$Item.VOT)
+VOT.mean_exp1 <- mean(d.test.excluded$Item.VOT)
+VOT.sd_exp1 <- sd(d.test.excluded$Item.VOT)
 Trial.mean <- mean(d.test.excluded$Trial) 
 Trial.sd <- sd(d.test.excluded$Trial)
+f0.mean_exp1 <- mean(d.test.excluded$Item.Mel_f0_5ms)
+f0.sd_exp1 <- sd(d.test.excluded$Item.Mel_f0_5ms)
 
 d.test.excluded %<>%
   mutate(
-    sVOT = (Item.VOT - VOT.mean_norm) / (2 * VOT.sd_norm),
+    sVOT = (Item.VOT - VOT.mean_exp1) / (2 * VOT.sd_exp1),
     sTrial = (Trial - Trial.mean) / (2 * Trial.sd))
 
 # set priors for psychometric model
@@ -176,47 +178,44 @@ fit_mix <- brm(
   control = list(adapt_delta = .99),
   file = "../models/Exp-NORM-lapsing-bias-GLMM")
 
-# get conditional effects from model
-psychometric_fit_data <- 
-  conditional_effects(
-    fit_mix, 
-    effects = "sVOT", 
-    plot = F)[[1]]
-
+# get effects of psychometric fit conditioned on VOT interacting with trial
 if (file.exists("../models/conditional_effects_VOT_Trial.rds")) {
-  psychometric_fit_interaction <- read_rds("../models/conditional_effects_VOT_Trial.rds")
+  psychometric_fit_exp1 <- read_rds("../models/conditional_effects_VOT_Trial.rds")
 } else {
   int_conditions <- list(sTrial = sort(unique((d.test.excluded$Trial - Trial.mean)) / (2 * Trial.sd)))
   
-  psychometric_fit_interaction <-
+  psychometric_fit_exp1 <-
     conditional_effects(
       fit_mix,
       effects = "sVOT:sTrial",
       int_conditions = int_conditions,
+      ndraws = 1000,
       plot = F)[[1]]
   
-  write_rds(psychometric_fit_interaction, file = "../models/conditional_effects_VOT_Trial.rds")
+  write_rds(psychometric_fit_exp1, file = "../models/conditional_effects_VOT_Trial.rds")
 }
 
 # get the PSE from the fitted categorisation function
-PSE.fit_mix <- descale(-(summary(fit_mix)$fixed["mu2_Intercept", 1] / summary(fit_mix)$fixed["mu2_sVOT", 1]), VOT.mean_norm, VOT.sd_norm) 
+PSE.fit_mix <- descale(-(summary(fit_mix)$fixed["mu2_Intercept", 1] / summary(fit_mix)$fixed["mu2_sVOT", 1]), VOT.mean_exp1, VOT.sd_exp1) 
 
 # get posterior samples of intercept and slope, and median qi of the PSEs
 post_sample_norm <- fit_mix %>% 
   spread_draws(b_mu2_Intercept, b_mu2_sVOT) %>% 
-  mutate(PSE = descale(-(b_mu2_Intercept/b_mu2_sVOT), VOT.mean_norm, VOT.sd_norm)) %>% 
+  mutate(PSE = descale(-(b_mu2_Intercept/b_mu2_sVOT), VOT.mean_exp1, VOT.sd_exp1)) %>% 
   median_qi(PSE)
 ```
 
 
 
 ```{r}
+# prepare data for predicted categorisation by min pair
 newdata <- expand_grid(
-  sVOT = (seq(-100, 130, 1) - VOT.mean_norm) / (2 * VOT.sd_norm),
+  sVOT = (seq(-100, 130, 1) - VOT.mean_exp1) / (2 * VOT.sd_exp1),
   Item.MinimalPair = levels(factor(d.test.excluded$Item.MinimalPair)),
   ParticipantID = levels(factor(d.test.excluded$ParticipantID)),
   sTrial = 0)
 
+# get expectation values for categorisation by min pair through posterior predictions
 if (file.exists("../models/categorisation_by_min_pair.rds")) {
   cat_minimalpair <- read_rds("../models/categorisation_by_min_pair.rds")
 } else {
@@ -233,25 +232,27 @@ if (file.exists("../models/categorisation_by_min_pair.rds")) {
 MinPair_plot <- 
   cat_minimalpair %>% 
   group_by(sVOT, Item.MinimalPair) %>% 
-  ggplot(aes(x = descale(sVOT, VOT.mean_norm, VOT.sd_norm), 
+  ggplot(aes(x = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1), 
              y = .epred, colour = Item.MinimalPair)) +
   stat_lineribbon(alpha = .9, .width = 0.95) +
-  scale_x_continuous("VOT (ms)") +
   scale_y_continuous("Fitted proportion of 't'-responses") +
   scale_color_manual("Minimal Pair", breaks = c("dilltill", "dimtim", "dintin", "diptip"),  
                      values = c("#002699", "#0040ff", "#668cff", "#b3c6ff"), 
                      labels = c("dill/till", "dim/tim", "din/tin", "dip/tip")) +
   scale_fill_brewer("CI", palette = "Greys", type = "qual") +
-  theme(axis.title.y = element_blank(),
-        axis.title.x = element_blank(),
-        axis.text.y = element_blank(),
-        axis.ticks.y = element_blank())
+  remove_all_axes
 ```
+
+
 
 ```{r psychometric-plot, fig.width=3.8, fig.height =2.6, message=FALSE}
 p.vot <- 
-  psychometric_fit_data %>% 
-  ggplot(aes(x = descale(sVOT, VOT.mean_norm, VOT.sd_norm), 
+  psychometric_fit_exp1 %>% 
+  group_by(sVOT) %>% 
+  summarise(estimate__ = mean(estimate__),
+         lower__ = mean(lower__),
+         upper__ = mean(upper__)) %>% 
+  ggplot(aes(x = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1), 
              y = estimate__)) +
   scale_x_continuous("VOT (ms)", breaks = scales::pretty_breaks(n = 4), limits = c(-100, 130)) +
   scale_y_continuous("Fitted proportion of 't' responses") +
@@ -267,17 +268,16 @@ p.vot <-
     mapping = aes(xmin = .lower, xmax = .upper, y = y), 
     color = "#333333",
     height = 0,
-    alpha = .5,
+    alpha = .8,
     size = 1, 
     inherit.aes = F) +
-  geom_point(
-    data = post_sample_norm %>% 
-      median_qi(PSE) %>% 
-      mutate(y = 0.01),
-    mapping = aes(x = PSE, y = y), 
+  geom_label(data = post_sample_norm %>% 
+      mutate(y = 0.01, PSE = round(PSE)),
+    mapping = aes(x = PSE, y = y, label = PSE),
     color = "#333333", 
-    size = 1.3,
-    alpha = .5) +
+    size = 1.8,
+    label.padding = unit(0.18, "lines"),
+    inherit.aes = F) +
   annotate(
     geom = "text",
     x = 75,
@@ -311,35 +311,21 @@ p.vot <-
     size = .4,
     colour = "#c4b7a6",
     alpha = .6,
-    inherit.aes = F)
+    inherit.aes = F) +
+  labs(x = "VOT (ms)")
 ```
 
 (ref:fitted-categorisation-plots) Categorisation functions and points of subjective equality (PSE) derived from the Bayesian mixed-effects psychometric model fit to listeners' responses in Experiment 1. The categorization functions include lapse rates and biases. The PSEs correct for lapse rates and lapse biases (i.e., they are the PSEs of the perceptual component of the psychometric model).\protect\footnote{Here and in Experiment 2, lapse biases were close to uniform (.5/.5). For such scenarios, bias-corrected PSEs will be very similar to uncorrected PSEs. This is also evident in Figure \ref{fig:fitted-categorisation-plots}.} **Left:** Effects of VOT, lapse rate, and lapse bias, while marginalizing over trial effects as well as all random effects. Vertical point ranges represent the mean proportion and 95% bootstrapped CIs of participants' "t"-responses at each VOT step. Horizontal point ranges denote the mean and 95% quantile interval of the points of subjective equality (PSE), derived from the 8000 posterior samples of the population parameters. **Right:** The same but showing the fitted categorization functions for each of the four minimal pair continua. Participants' responses are omitted to avoid clutter.   
 
 ```{r fitted-categorisation-plots, warning=FALSE, fig.width=6, fig.height = 3.3, fig.cap="(ref:fitted-categorisation-plots)"}
-legend1 <- get_legend(MinPair_plot + theme(legend.position = "top"))
+MinPair_plot <- MinPair_plot + labs(x = "VOT (ms)")
 
-MinPair_plot <- MinPair_plot + theme(legend.position = "none")
+xlab <- p.vot$labels$x
+p.vot$labels$x <- MinPair_plot$labels$x <- " "
 
-grid1 <- 
-  plot_grid(
-    p.vot + theme(axis.title.x = element_blank()),
-    MinPair_plot,
-    ncol = 2, 
-    align = "h", 
-    labels = NULL, 
-    label_size = 10,
-    hjust = .1, 
-    rel_widths = c(0.95, 0.8))
-
-grid2 <- 
-  plot_grid(
-    legend1, 
-    grid1,
-    ncol = 1,
-    rel_heights = c(0.1, 1))
-
-ggdraw(add_sub(grid2, "VOT (ms)", size = 10, fontface = "bold"))
+(p.vot | MinPair_plot) + 
+  plot_layout(ncol = 2, guides = "collect") &
+  theme(legend.position = "top")
 ```
 
 
@@ -378,7 +364,7 @@ The lapse rate was estimated to be on the slightly larger side, but within the e
 The response bias were estimated to slightly favor "t"-responses (`r make_CI(fit_mix, "mu1_Intercept", "mu1_Intercept > 0")`), as also visible in Figure \@ref(fig:fitted-categorisation-plots) (left).
 Unsurprisingly, the psychometric model suggests high uncertainty about the participant-specific response biases, as it is difficult to reliably estimate participant-specific biases while also accounting for trial and VOT effects (range of by-participant MAP estimates: XX). For all but four participants, the 95% CI includes the hypothesis that responses were unbiased. Of the remaining four participants, three were biased towards "t"-responses and one was biased toward "d"-responses.
 
-There was no convincing evidence of a main effect of trial ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sTrial", "mu2_sTrial < 0")`). Given the slight overall bias towards "t"-responses, the direction of this effect indicates that participants converged towards a 50/50 bias as the test phase proceeded. This is also evident in Figure \@ref(fig:fitted-categorisation-plots) (right). In contrast, there was clear evidence for a positive main effect of VOT on the proportion of "t"-responses ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sVOT", "mu2_sVOT > 0")`). The effect of VOT was consistent across all minimal pair words as evident from the slopes of the fitted lines by minimal pair \@ref(fig:fitted-categorisation-plots) (left). MAP estimates of by minimal pair slopes ranged from . The by minimal-pair intercepts were more varied (MAP estimates: ) with one of the pairs, dim/tim having a slightly lower intercept resulting in fewer 't'-responses on average. In all, this justifies our assumptions that word pair would not have a substantial effect on categorisation behaviour. From the parameter estimates of the overall fit we obtained the category boundary from the point of subjective equality (PSE) (`r descale(-(summary(fit_mix)$fixed["mu2_Intercept", 1] / summary(fit_mix)$fixed["mu2_sVOT", 1]), VOT.mean_norm, VOT.sd_norm)`ms) which we use for the design of Experiment 2.
+There was no convincing evidence of a main effect of trial ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sTrial", "mu2_sTrial < 0")`). Given the slight overall bias towards "t"-responses, the direction of this effect indicates that participants converged towards a 50/50 bias as the test phase proceeded. This is also evident in Figure \@ref(fig:fitted-categorisation-plots) (right). In contrast, there was clear evidence for a positive main effect of VOT on the proportion of "t"-responses ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sVOT", "mu2_sVOT > 0")`). The effect of VOT was consistent across all minimal pair words as evident from the slopes of the fitted lines by minimal pair \@ref(fig:fitted-categorisation-plots) (left). MAP estimates of by minimal pair slopes ranged from . The by minimal-pair intercepts were more varied (MAP estimates: ) with one of the pairs, dim/tim having a slightly lower intercept resulting in fewer 't'-responses on average. In all, this justifies our assumptions that word pair would not have a substantial effect on categorisation behaviour. From the parameter estimates of the overall fit we obtained the category boundary from the point of subjective equality (PSE) (`r descale(-(summary(fit_mix)$fixed["mu2_Intercept", 1] / summary(fit_mix)$fixed["mu2_sVOT", 1]), VOT.mean_exp1, VOT.sd_exp1)`ms) which we use for the design of Experiment 2.
 
 Finally to accomplish the first goal of experiment 1, we look at the interaction between VOT and trial. There was weak evidence that the effect of VOT decreased across trials ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sVOT:sTrial", "mu2_sVOT:sTrial < 0")`). The direction of this change---towards more shallow VOT slopes as the experiment progressed---makes sense since the test stimuli were not informative about the talker's pronunciation. Similar changes throughout prolonged testing have been reported in previous work. [@liu-jaeger2018; @liu-jaeger2019; @REFS].
 
@@ -398,7 +384,7 @@ We compare listener categorisation behaviour against the predictions of five IO 
 
 Each of these models are then assessed for their goodness-of-fit to the categorisation data by comparing the likelihood of human responses under the assumptions represented by the respective IO models (Figure \@ref(fig:comparative-IO-plot)). For this we applied Luce's choice axiom [@luce1959]; for each token categorised by each listener, the expected accuracy for that token is the model's posterior for the category selected by each listener. We took the average log posterior of all responses to get the average likelihood for the entire experiment under each model.
 
-The first point that stands out from the visual comparisons is that models that incorporate perceptual noise fit the perceptual data better than those that do not. This itself indicates that perception of acoustic stimuli is not entirely faithful to the bottom-up signal but is inferred through a combination of what listeners actually perceived and their existing knowledge of the underlying linguistic category [@kronrod2016unified]. For the univariate VOT models, the difference is most noticeable from the flatter slopes of the IOs indicating greater uncertainty in listener categorisations. The second pattern is that models trained with VOT and F0 cues (multiple cues) are better fits overall than models trained on a single cue. This trend is expected given the literature that report F0 reliably covarying with the voicing of stop consonants [@house1953influence; @ohde1984fundamental]. When VOT fails to provide sufficient support to voicing status, F0 has been found to influence listeners' categorisation behaviour [@abramson1985relative; @whalen1993f; @idemaru2011word; @winn2013 @burchilljaeger2023]. This further speaks to the advantage of multivariate ideal observers because they assess the likelihood of a cue observation under a given category relative to the joint distributions of all relevant cues. 
+The first point that stands out from the visual comparisons is that models that incorporate perceptual noise fit the perceptual data better than those that do not. This itself indicates that perception of acoustic stimuli is not entirely faithful to the bottom-up signal but is inferred through a combination of what listeners actually perceived and their existing knowledge of the underlying linguistic category [@kronrod2016unified]. For the univariate VOT models, the difference is most noticeable from the flatter slopes of the IOs indicating greater uncertainty in listener categorisations. The second pattern is that models trained with VOT and F0 cues (multiple cues) are better fits overall than models trained on a single cue. This trend is expected given the literature that report F0 reliably covarying with the voicing of stop consonants [@house1953influence; @ohde1984fundamental]. When VOT fails to provide sufficient support to voicing status, F0 has been found to influence listeners' categorisation behaviour [@abramson1985relative; @whalen1993f; @idemaru2011word; @winn2013; @burchilljaeger2023]. This further speaks to the advantage of multivariate ideal observers because they assess the likelihood of a cue observation under a given category relative to the joint distributions of all relevant cues. 
 
 
 
@@ -440,65 +426,7 @@ d.chodroff_wilson.selected <-
 
 
 
-```{r brms-model-with-f0, fig.width=3.5, fig.cap="temporary plot of effects of VOT on categorisation from model that includes F0. Red dashed line is model with F0."}
-# run an alternative model with f0 as a predictor
-# get f0 mean and sd for scaling
-F0_Mel.mean_norm <- mean(d.test.excluded$Item.Mel_f0_5ms)
-F0_Mel.sd_norm <- sd(d.test.excluded$Item.Mel_f0_5ms)
-F0.mean_norm <- mean(d.test.excluded$Item.f0_5ms)
-d.test.excluded %<>% 
-  mutate(sF0 = (Item.Mel_f0_5ms - F0_Mel.mean_norm)/(2 * F0_Mel.sd_norm))
 
-# specify new model formula (priors will be same as previous model without f0)
-fit_mix_f0 <- brm(
-  bf(
-    Response.Voicing == "voiceless" ~ 1,
-    mu1 ~ 1 + (1 | g | ParticipantID),
-    mu2 ~ 1 + sVOT + sF0 + (1 + sVOT + sF0 | g | ParticipantID) + (1 + sVOT + sF0 | h | Item.MinimalPair),
-    theta1 ~ 1 + (1 | g | ParticipantID)),
-  data = d.test.excluded,
-  cores = 4,
-  iter = 4000,
-  warmup = 2000,
-  family = mixture(bernoulli("logit"), bernoulli("logit")),
-  control = list(adapt_delta = .99),
-  file = "../models/Exp-NORM-lapsing-bias-f0.rds")
-
-
-psychometric_fit_data %>% 
-     ggplot(aes(x = descale(sVOT, VOT.mean_norm, VOT.sd_norm), 
-             y = estimate__, linetype = "solid"))  + 
-    geom_ribbon(
-    data = conditional_effects(
-    fit_mix_f0, 
-    effects = c("sVOT"), 
-    plot = F)[[1]], 
-    mapping = aes(
-      x = descale(sVOT, VOT.mean_norm, VOT.sd_norm),
-      ymin = lower__, 
-      ymax = upper__),
-    alpha = 0.05,
-    inherit.aes = F) +
-  geom_line(aes(linetype = "solid"),
-            linewidth = 1.5, 
-            colour = "#333333",
-            alpha = .2) +
-    geom_line(
-      data = conditional_effects(
-    fit_mix_f0, 
-    effects = c("sVOT"), 
-    plot = F)[[1]], 
-      mapping = aes(x = descale(sVOT, VOT.mean_norm, VOT.sd_norm), 
-             y = estimate__, linetype = "dashed"), 
-      colour = "red",
-    linetype = 2,
-      alpha = .5,
-      linewidth = 1.5,
-      inherit.aes = F) + 
-  scale_x_continuous("VOT (ms)", limits = c(-100, 130)) +
-  scale_y_continuous("Fitted proportion of 't' responses") +
-  scale_linetype_manual("Model", values = c("solid" = 1, "dashed" = 2), labels = c("fit without F0", "fit with F0"))
-```
 
 
 
@@ -522,11 +450,15 @@ PSE_VOT.no.noise <- get_PSE_quantiles(data = VOT.no.noise, group = "gender")
 
 p.IOs.VOT.no.noise <- plot_IO_fit(
   data.production = VOT.no.noise, 
-  data.perception = psychometric_fit_data %>% 
-    mutate(Item.VOT = descale(sVOT, VOT.mean_norm, VOT.sd_norm)),
+  data.perception = psychometric_fit_exp1 %>% 
+  group_by(sVOT) %>% 
+  summarise(estimate__ = mean(estimate__),
+         lower__ = mean(lower__),
+         upper__ = mean(upper__)) %>% 
+    mutate(Item.VOT = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1)),
   data.test = d.test.excluded %>% 
     ungroup() %>% distinct(Item.VOT),
-  posterior.sample = post_sample_norm,
+  data.percept.PSE = post_sample_norm,
   PSE_VOT.no.noise
 )
 
@@ -549,11 +481,15 @@ PSE_VOT <- get_PSE_quantiles(data = VOT, group = "gender")
 
 p.IOs.VOT <- plot_IO_fit(
   data.production = VOT, 
-  data.perception = psychometric_fit_data %>% 
-    mutate(Item.VOT = descale(sVOT, VOT.mean_norm, VOT.sd_norm)),
+  data.perception = psychometric_fit_exp1 %>% 
+  group_by(sVOT) %>% 
+  summarise(estimate__ = mean(estimate__),
+         lower__ = mean(lower__),
+         upper__ = mean(upper__)) %>% 
+    mutate(Item.VOT = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1)),
   data.test = d.test.excluded %>% 
     ungroup() %>% distinct(Item.VOT),
-  posterior.sample = post_sample_norm,
+  data.percept.PSE = post_sample_norm,
   PSE_VOT
 ) 
 
@@ -577,14 +513,18 @@ PSE_VOT_F0 <- get_PSE_quantiles(data = VOT_F0, group = "gender")
 p.IOs.VOT_F0 <- 
   plot_IO_fit(
   data.production = VOT_F0, 
-  data.perception = psychometric_fit_data %>% 
-    mutate(Item.VOT = descale(sVOT, VOT.mean_norm, VOT.sd_norm)),
+  data.perception = psychometric_fit_exp1 %>% 
+  group_by(sVOT) %>% 
+  summarise(estimate__ = mean(estimate__),
+         lower__ = mean(lower__),
+         upper__ = mean(upper__)) %>% 
+    mutate(Item.VOT = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1)),
   data.test = d.test.excluded %>% 
     ungroup() %>% distinct(Item.VOT),
-  posterior.sample = post_sample_norm,
+  data.percept.PSE = post_sample_norm,
   PSE_VOT_F0) 
 
-p.likelihoods.VOT_F0 <- plot_talker_MVGs(cues = c("VOT", "f0_Mel"))
+p.likelihoods.VOT_F0 <- plot_talker_MVGs(VOT_F0, d.test.excluded, cues = c("VOT", "f0_Mel"))
 ```
 
 
@@ -604,17 +544,23 @@ PSE_VOT_F0.centered <- get_PSE_quantiles(data = VOT_F0.centered, group = "gender
 p.IOs.VOT_F0.centered <- 
   plot_IO_fit(
   data.production = VOT_F0.centered, 
-  data.perception = psychometric_fit_data %>% 
-    mutate(Item.VOT = descale(sVOT, VOT.mean_norm, VOT.sd_norm)),
+  data.perception = psychometric_fit_exp1 %>% 
+  group_by(sVOT) %>% 
+  summarise(estimate__ = mean(estimate__),
+         lower__ = mean(lower__),
+         upper__ = mean(upper__)) %>% 
+    mutate(Item.VOT = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1)),
   data.test = d.test.excluded %>% 
     ungroup() %>% distinct(Item.VOT),
-  posterior.sample = post_sample_norm,
+  data.percept.PSE = post_sample_norm,
   PSE_VOT_F0.centered) 
 
-p.likelihoods.VOT_F0.centered <- plot_talker_MVGs(cues = c("VOT_centered", "f0_Mel_centered"))
+p.likelihoods.VOT_F0.centered <- plot_talker_MVGs(VOT_F0.centered, cues = c("VOT_centered", "f0_Mel_centered"))
 ```
 
-```{r get-expected-predictions-exposure-centered-VOT, warning=FALSE, fig.width=3.7, fig.height=2.5, fig.cap="temporary plot of expected categorization function under the model with F0 after centering exposure cues."}
+
+
+```{r get-expected-predictions-exposure-centered-VOT, warning=FALSE, fig.width=4.5, fig.height=2.5, fig.cap="temporary plot of expected categorization function under the model: 1 + (sVOT + sF0) * sTrial after centering exposure cues."}
 # prepare data for IO that centers perceptual input relative to population mean before categorization
 chodroff.means <- d.chodroff_wilson.selected %>% 
   group_by(Talker) %>% 
@@ -625,54 +571,90 @@ chodroff.means <- d.chodroff_wilson.selected %>%
 # get talker database means
 chodroff.mean_VOT <- chodroff.means %>% pull(VOT)
 chodroff.mean_f0_Mel <- chodroff.means %>% pull(f0_Mel)
-chodroff.mean_f0 <- chodroff.means %>% pull(f0)
 
-
+psychometric_fit_exp1_centered <- psychometric_fit_exp1 %>% 
+  mutate(Item.VOT = (descale(sVOT, VOT.mean_exp1, VOT.sd_exp1)) + (chodroff.mean_VOT - VOT.mean_exp1),
+         sVOT = (Item.VOT - VOT.mean_exp1) / (2 * VOT.sd_exp1))
 
 # get expected values of the centered VOT under the model
 if (file.exists("../models/centered_exposure_exp1.rds")) {
   centered_exposure <- read_rds("../models/centered_exposure_exp1.rds")
 } else {
-  centered_exposure <- fit_mix %>%
-    epred_draws(
-    newdata = d.test.excluded %>% 
-      mutate(Item.VOT = Item.VOT + (chodroff.mean_VOT - VOT.mean_norm),
-             sVOT = (Item.VOT - chodroff.mean_VOT)/(2 * VOT.sd_norm)),
+  centered_exposure <- epred_draws(
+      object = fit_mix,
+    newdata = psychometric_fit_exp1_centered, 
     re_formula = NA,
     ndraws = 1000)
   write_rds(centered_exposure, file = "../models/centered_exposure_exp1.rds")
 }
 
 # plot the expected categorization function 
-centered_exposure %<>% 
+centered_exposure %>% 
   group_by(sVOT) %>% 
   summarise(
     lower__ = quantile(.epred, probs = .025),
     median = quantile(.epred, probs = .5),
     upper__ = quantile(.epred, probs = .975),
-    estimate__ = mean(.epred)) 
-
-centered_exposure %>% 
-  ggplot(aes(x = descale(sVOT, chodroff.mean_VOT, VOT.sd_norm), 
-             y = estimate__)) +
-  geom_ribbon(aes(ymin = lower__, ymax = upper__), alpha = .1) +
-  geom_line(colour = "#333333", linewidth = 1.2) +
-  scale_x_continuous("VOT (ms)", limits = c(-15, 75)) +
-  scale_y_continuous("Fitted proportion of 't'-responses")
+    estimate__ = median(.epred)) %>% 
+  ggplot(aes(x = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1) - (chodroff.mean_VOT - VOT.mean_exp1), #ensures x-value for the y-value is same as bef
+             y = estimate__, linetype = "solid")) +
+  geom_ribbon(aes(ymin = lower__, ymax = upper__), alpha = .05, fill = "#333333") +
+  geom_line(colour = "#333333",
+            linewidth = 1.2,
+            alpha = .5) +
+  geom_ribbon(
+    data = psychometric_fit_exp1 %>% 
+  group_by(sVOT) %>% 
+  summarise(estimate__ = mean(estimate__),
+         lower__ = mean(lower__),
+         upper__ = mean(upper__)) %>% 
+    mutate(Item.VOT = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1)),
+    mapping = aes(x = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1),
+                  ymin = lower__,
+                  ymax = upper__),
+    fill = "red",
+    alpha = .05,
+    inherit.aes = F) +
+  geom_line(
+    data = psychometric_fit_exp1 %>% 
+  group_by(sVOT) %>% 
+  summarise(estimate__ = mean(estimate__),
+         lower__ = mean(lower__),
+         upper__ = mean(upper__)) %>% 
+    mutate(Item.VOT = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1)), 
+      mapping = aes(x = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1), 
+             y = estimate__), 
+      colour = "red",
+      alpha = .5,
+    linetype = "dashed",
+      linewidth = 1.2,
+      inherit.aes = F) +
+  scale_x_continuous("VOT (ms)", limits = c(-100, 130)) +
+  scale_y_continuous("Fitted proportion of 't'-responses") +
+  scale_linetype_manual("Predictions", values = c("solid", "dashed"), labels = c("dashed"= "uncentered", "solid" = "centered"))
 ```
 
 
-```{r plot-IO-VOT-F0-exposure-centered}
+```{r plot-IO-VOT-F0-exposure-centered, fig.height=2.5, fig.width=3.7, warning=FALSE}
 p.IOs.VOT_F0.centered.input <- plot_IO_fit(
   data.production = VOT_F0.centered, 
   data.perception = centered_exposure %>% 
-    mutate(Item.VOT = descale(sVOT, chodroff.mean_VOT, VOT.sd_norm)),
+  group_by(sVOT) %>% 
+  summarise(
+    lower__ = quantile(.epred, probs = .025),
+    median = quantile(.epred, probs = .5),
+    upper__ = quantile(.epred, probs = .975),
+    estimate__ = quantile(.epred, probs = .5)) %>% 
+    mutate(Item.VOT = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1) - (chodroff.mean_VOT - VOT.mean_exp1)),
   data.test = d.test.excluded %>% 
     ungroup() %>% distinct(Item.VOT),
-  posterior.sample = post_sample_norm,
+  data.percept.PSE = post_sample_norm %>% 
+    mutate(PSE = PSE - (chodroff.mean_VOT - VOT.mean_exp1),
+           .lower = .lower - (chodroff.mean_VOT - VOT.mean_exp1),
+           .upper = .upper - (chodroff.mean_VOT - VOT.mean_exp1)),
   PSE_VOT_F0.centered) 
 
-p.likelihoods.exposure.centered <- plot_talker_MVGs(cues = c("VOT_centered", "f0_Mel_centered"), centered = T)
+p.likelihoods.exposure.centered <- plot_talker_MVGs(VOT_F0.centered, cues = c("VOT_centered", "f0_Mel_centered"), centered = T)
 ```
 
 
@@ -681,38 +663,42 @@ p.likelihoods.exposure.centered <- plot_talker_MVGs(cues = c("VOT_centered", "f0
 
 ```{r prepare-plots-to-make-IO-plot-grid}
 # make plot grid
-theme_spec <- theme(axis.title.x = element_blank()) 
+remove_axes_titles <- theme(axis.title.x = element_blank(),
+                            axis.title.y = element_blank())
+remove_x_title <- theme(axis.title.x = element_blank())
+remove_y_title <- theme(axis.title.y = element_blank()) 
+
 guide_spec <-  guides(linetype = "none")
 
 p1 <- p.likelihoods.VOT +
-  theme_spec + guide_spec
+  remove_x_title + guide_spec
 
 p2 <- p.likelihoods.VOT_noise +
-   theme_spec + guide_spec
+   remove_x_title + guide_spec
 
 p3 <- p.likelihoods.VOT_F0 +
-   theme_spec + guide_spec
+   remove_axes_titles + guide_spec
 
 p4 <- p.likelihoods.VOT_F0.centered +
-   theme_spec + guide_spec
+   remove_x_title + guide_spec
 
 p5 <- p.likelihoods.exposure.centered +
-  theme_spec
+  remove_y_title
 
 p6 <- p.IOs.VOT.no.noise + 
-  theme_spec
+  remove_axes_titles
 
 p7 <- p.IOs.VOT + 
-  theme_spec 
+  remove_axes_titles 
 
 p8 <- p.IOs.VOT_F0 + 
-  theme_spec 
+  remove_x_title 
 
 p9 <- p.IOs.VOT_F0.centered + 
-  theme_spec 
+  remove_axes_titles
 
 p10 <- p.IOs.VOT_F0.centered.input + 
-  theme_spec  
+  remove_y_title 
 ```
 
 
@@ -775,9 +761,9 @@ d.test.IO <-
   filter(Item.VOT %in% test.VOTs.positive) %>%  # filter to only the +ve for the time being; may need to include the -ve values
   mutate(
     VOT_F0 = map2(Item.VOT, Item.Mel_f0_5ms, ~ c(.x, .y)),
-    Item.VOT_centered = Item.VOT + (chodroff.mean_VOT - VOT.mean_norm),
-    Item.Mel_F0_centered = Item.Mel_f0_5ms - (chodroff.mean_f0 - F0.mean_norm), 
-    VOT_F0_centered = map2(Item.VOT_centered, Item.Mel_F0_centered, ~ c(.x, .y)),
+    Item.VOT_centered = Item.VOT + (chodroff.mean_VOT - VOT.mean_exp1),
+    Item.Mel_f0_centered = Item.Mel_f0_5ms - (chodroff.mean_f0_Mel - f0.mean_exp1), 
+    VOT_F0_centered = map2(Item.VOT_centered, Item.Mel_f0_centered, ~ c(.x, .y)),
     Response.category = ifelse(Response.Voicing == "voiced", "/d/", "/t/"),
     Response.t = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
   nest(d.perception = everything()) %>%
@@ -798,7 +784,7 @@ d.test.IO %<>%
     likelihood_per_response = exp(log_likelihood_per_response))
 
 IO.likelihood <- d.test.IO %>% 
-  group_by(io.type) %>% 
+  group_by(io.type, gender) %>% 
   summarise(
     median_likelihood_per_response = median(likelihood_per_response),
     mode_likelihood_per_response = max(likelihood_per_response, na.rm = T)
@@ -811,7 +797,7 @@ d.bootstrap <- d.test.IO %>%
   select(-c(d.perception, io)) %>% 
   mutate(io.type = factor(io.type)) %>% 
   # nest so that we can sample from groups of rows corresponding to each io type
-  nest(data = -io.type) %>% 
+  nest(data = -c(gender, io.type)) %>% 
   mutate(samples = 
            map(data, ~ bootstraps(.x, times = 1000))) %>% 
   unnest(samples) %>% 
@@ -823,99 +809,128 @@ d.bootstrap <- d.test.IO %>%
 
 
 
-```{r IO-likelihood-plot, fig.width=6, fig.height=3, warning=FALSE}
+```{r IO-likelihood-plot, fig.width=4, fig.height=4, warning=FALSE}
 # plot median likelihood per response with bootstrapped 95% CI
 p.likelihood <- d.test.IO %>% 
-  group_by(io.type) %>% 
-  summarise(
-    median_likelihood_per_response = median(likelihood_per_response)) %>%
-  mutate(io.type = fct_relevel(io.type, "VOT.no.noise")) %>% 
-  ggplot(aes(x = io.type, 
-             y = median_likelihood_per_response)) +
-  geom_point(size = 2, colour = "#333333") +
-  geom_errorbar(
-    data = d.bootstrap %>% 
-      group_by(io.type) %>% 
-      mutate(io.type = fct_relevel(io.type, "VOT.no.noise")) %>% 
-      summarise(
-        median.lower = quantile(median_sample, probs = .025),
-        median.upper = quantile(median_sample, probs = .975)
-      ),
-    mapping = 
-      aes(x = io.type, ymin = median.lower, ymax = median.upper),
-    colour = "#333333",
-    linewidth = 1.5,
-    alpha = .6,
-    width = 0,
-    inherit.aes = F) +
-  scale_y_continuous("Median likelihood per response (log base 10)") +
-   scale_x_discrete( 
-     limits = c("VOT.no.noise", "VOT", "VOT_F0", "VOT_F0.centered", "VOT_F0.centered.input"),
-     breaks = c("VOT.no.noise", "VOT", "VOT_F0", "VOT_F0.centered", "VOT_F0.centered.input"),
-     labels = c(VOT.no.noise = "VOT", VOT = "VOT\n(+perceptual noise)", VOT_F0 = "VOT-F0\n", VOT_F0.centered = "VOT-F0\n (+talker centered)", VOT_F0.centered.input = "VOT-F0 \n (+exposure-centered)")) +
-  theme(axis.title.x = element_blank(),
-        legend.position = "none") +
-  guides(x = guide_axis(angle = 45)) +
-  coord_trans(y = "log10")
-```
-
-
-```{r IO-likelihood-plot-enlarged, fig.width=4, fig.height=3, warning=FALSE}
-# zoom in on multi-variate models
-p.likelihood.multivar <- d.test.IO %>% 
-  group_by(io.type) %>% 
+  group_by(io.type, gender) %>% 
   summarise(
     median_likelihood_per_response = median(likelihood_per_response),
     mode_likelihood_per_response = max(likelihood_per_response)) %>%
-  mutate(io.type = fct_relevel(io.type, "VOT.no.noise")) %>%
+  mutate(io.type = fct_relevel(io.type, "VOT.no.noise"),
+         gender = fct_relevel(gender, "female")) %>% 
   ggplot(aes(x = io.type, 
-             y = median_likelihood_per_response)) +
-  geom_point(size = 3,
-             colour = "#333333") +
-  geom_point(aes(x = io.type, 
+             y = median_likelihood_per_response, colour = gender)) +
+  geom_point(size = 2, position = position_dodge2(.2)) +
+   geom_point(aes(x = io.type, 
                  y = mode_likelihood_per_response), 
              size = 3, 
              shape = 17,
-             colour = "#333333") +
+             position = position_dodge(.2)) +
   geom_errorbar(
     data = d.bootstrap %>% 
-      group_by(io.type) %>%
-      mutate(io.type = fct_relevel(io.type, "VOT.no.noise")) %>% 
+      group_by(io.type, gender) %>%
+      mutate(io.type = fct_relevel(io.type, "VOT.no.noise"),
+         gender = fct_relevel(gender, "female")) %>% 
       summarise(
         median.lower = quantile(median_sample, probs = .025),
         median.upper = quantile(median_sample, probs = .975)),
     mapping = 
-      aes(x = io.type, ymin = median.lower, ymax = median.upper),
-    colour = "#333333",
+      aes(x = io.type, ymin = median.lower, ymax = median.upper, colour = gender),
+    colours = colours.sex,
     linewidth = 1.5,
     alpha = .6,
     width = 0,
+    position = position_dodge(.2),
     inherit.aes = F) + 
   geom_errorbar(
     data = d.bootstrap %>% 
-      group_by(io.type) %>%
-      mutate(io.type = fct_relevel(io.type, "VOT.no.noise")) %>% 
+      group_by(io.type, gender) %>%
+      mutate(io.type = fct_relevel(io.type, "VOT.no.noise"),
+         gender = fct_relevel(gender, "female")) %>% 
+      summarise(
+        mode.lower = quantile(mode_sample, probs = .025),
+        mode.upper = quantile(mode_sample, probs = .975)),
+    mapping = aes(x = io.type, ymin = mode.lower, ymax = mode.upper, colour = gender),
+    size = 1.5,
+    alpha = .6,
+    width = 0,
+    position = position_dodge(.2),
+    inherit.aes = F) +
+  scale_y_continuous("Median likelihood per response", limits = c(.081, .0813)) +
+   scale_x_discrete( 
+     limits = c("VOT.no.noise", "VOT"),
+     breaks = c("VOT.no.noise", "VOT"),
+     labels = c(VOT.no.noise = "VOT", VOT = "VOT\n(+perceptual noise)")) +
+  scale_colour_manual("Gender", values = colours.sex, labels = c("Female", "Male")) +
+  theme(axis.title.x = element_blank(),
+        legend.position = "top") +
+  guides(x = guide_axis(angle = 45)) +
+  coord_trans(y = "log10")
+
+p.likelihood
+```
+
+
+```{r IO-likelihood-plot-enlarged, fig.width=5, fig.height=3, warning=FALSE}
+# zoom in on multi-variate models
+p.likelihood.multivar <- d.test.IO %>% 
+  group_by(io.type, gender) %>% 
   summarise(
-    mode.lower = quantile(mode_sample, probs = .025),
-    mode.upper = quantile(mode_sample, probs = .975)),
-mapping = aes(x = io.type, ymin = mode.lower, ymax = mode.upper),
-colour = "#333333",
-size = 1.5,
-alpha = .6,
-width = 0,
-inherit.aes = F) +
-  scale_y_continuous("Median log-likelihood \n per response", limits = c(.51, .67)) +
+    median_likelihood_per_response = median(likelihood_per_response),
+    mode_likelihood_per_response = max(likelihood_per_response)) %>%
+  mutate(io.type = fct_relevel(io.type, "VOT.no.noise"),
+         gender = fct_relevel(gender, "female")) %>%
+  ggplot(aes(x = io.type, 
+             y = median_likelihood_per_response, colour = gender)) +
+  geom_point(size = 3,
+             position = position_dodge(.2)) +
+  geom_point(aes(x = io.type, 
+                 y = mode_likelihood_per_response), 
+             size = 3, 
+             shape = 17,
+             position = position_dodge(.2)) +
+  geom_errorbar(
+    data = d.bootstrap %>% 
+      group_by(io.type, gender) %>%
+      mutate(io.type = fct_relevel(io.type, "VOT.no.noise"),
+         gender = fct_relevel(gender, "female")) %>% 
+      summarise(
+        median.lower = quantile(median_sample, probs = .025),
+        median.upper = quantile(median_sample, probs = .975)),
+    mapping = 
+      aes(x = io.type, ymin = median.lower, ymax = median.upper, colour = gender),
+    colours = colours.sex,
+    linewidth = 1.5,
+    alpha = .6,
+    width = 0,
+    position = position_dodge(.2),
+    inherit.aes = F) + 
+  geom_errorbar(
+    data = d.bootstrap %>% 
+      group_by(io.type, gender) %>%
+      mutate(io.type = fct_relevel(io.type, "VOT.no.noise"),
+         gender = fct_relevel(gender, "female")) %>% 
+      summarise(
+        mode.lower = quantile(mode_sample, probs = .025),
+        mode.upper = quantile(mode_sample, probs = .975)),
+    mapping = aes(x = io.type, ymin = mode.lower, ymax = mode.upper, colour = gender),
+    size = 1.5,
+    alpha = .6,
+    width = 0,
+    position = position_dodge(.2),
+    inherit.aes = F) +
+  scale_y_continuous("Median log-likelihood \n per response", limits = c(.48, .67)) +
   scale_x_discrete(expand = expansion(mult = c(0.09, 0.09)), 
                    limits = c("VOT_F0", "VOT_F0.centered", "VOT_F0.centered.input"),
                    breaks = c("VOT_F0", "VOT_F0.centered", "VOT_F0.centered.input"),
                    labels = c(VOT_F0 = "VOT-F0\n", VOT_F0.centered = "VOT-F0\n (talker centered)", VOT_F0.centered.input = "VOT-F0 \n (exposure-centered)")) +
+  scale_colour_manual("Gender", values = colours.sex, labels = c("Female", "Male")) +
   theme(axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        axis.ticks.x = element_blank(),
-        axis.text.x = element_blank(),
-        legend.position = "none") +
+        legend.position = "top") +
   guides(x = guide_axis(angle = 45)) +
   coord_trans(y = "log10") 
+
+p.likelihood.multivar
 ```
 
 
@@ -923,7 +938,7 @@ inherit.aes = F) +
 (ref:IO-likelihood-plot) Median likelihood estimates of the human behavioural data under the assumptions of each IO model. Inset: Triangles indicate the mode, error bars represent the 95% quantile intervals from 1000 bootstrap samples of by-talker estimates of each IO type.
 
 ```{r combined-IO-likelihood-plots, fig.width=8, fig.height=6.5, fig.cap="(ref:IO-likelihood-plot)", warning=FALSE}
-p.likelihood + inset_element(p.likelihood.multivar, .406, .05, .935, .82, align_to = "panel")
+#p.likelihood + inset_element(p.likelihood.multivar, .406, .05, .935, .82, align_to = "panel")
 ```
 
 

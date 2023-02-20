@@ -281,15 +281,16 @@ We first present participants' categorisation responses. Given that this experim
 d.block1 <- d.test_exposure_for_analysis %>% 
   filter(Block == 1) 
 # set the mean and SD values for scaling/unscaling purposes
-VOT.mean_exp2 <- mean(d.test_exposure_for_analysis$Item.VOT)
-VOT.sd_exp2 <- sd(d.test_exposure_for_analysis$Item.VOT)
-F0.mean_exp2 <- mean(d.test_exposure_for_analysis$Item.Mel_F0_5ms)
-F0.sd_exp2 <- sd(d.test_exposure_for_analysis$Item.Mel_F0_5ms)
+VOT.mean_exp2 <- mean(d.block1$Item.VOT)
+VOT.sd_exp2 <- sd(d.block1$Item.VOT)
+F0.mean_exp2 <- mean(d.block1$Item.Mel_F0_5ms)
+F0.sd_exp2 <- sd(d.block1$Item.Mel_F0_5ms)
 
 d.block1 %<>% 
   mutate(
     Response.Voiceless = ifelse(Response.Voicing == "voiceless", 1, 0),
-    VOT_gs = (Item.VOT - VOT.mean_exp2)/ (2 * VOT.sd_exp2))
+    VOT_gs = (Item.VOT - VOT.mean_exp2)/ (2 * VOT.sd_exp2),
+    F0_gs = (Item.Mel_F0_5ms - F0.mean_exp2) /(2 * F0.sd_exp2))
 
 # load the full experiment fit to obtain lapse rate
 fit_mix_uniform_bias <- readRDS("../models/Exp-AE-DLVOT-labelled-lapsing-GLMM.rds")
@@ -318,11 +319,13 @@ fit_mix_block1 <- brm(
 ```{r plot-intercepts-slopes-block1-model, fig.width=6, fig.height=3, fig.cap="(ref:mixture-model-block-1)"}
 d.ranef <- ranef(fit_mix_block1)
 
+d.ranef <- as_tibble(d.ranef[[1]]) %>% 
+  mutate(ParticipantID = unique(d.block1$ParticipantID))
+
 # plot r'ship between intercept and slope
-as_tibble(d.ranef[[1]]) %>% 
-  mutate(ParticipantID = unique(d.block1$ParticipantID)) %>% 
+d.ranef %>%
   ggplot(aes(y = Estimate.mu2_Intercept, x = Estimate.mu2_VOT_gs)) + 
-  geom_text(aes(label = ParticipantID), alpha = .5, check_overlap = T) +
+  geom_text(aes(label = ParticipantID), alpha = .2) +
   geom_hline(aes(yintercept = 0), alpha = .3, linetype = 2) +
   geom_vline(aes(xintercept = 0), alpha = .3, linetype = 2) +
   scale_y_continuous("Intercept") +
@@ -396,6 +399,9 @@ p.fit_block1 <- psychometric_fit_block1 %>%
     alpha = .5,
     size = 1, 
     inherit.aes = F)
+
+psychometric_fit_block1 %>% group_by(VOT_gs) %>% 
+  mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2)) %>% summarise(Item.VOT)
 ```
 
 ```{r IO-categorization-VOT-no-noise-block1, message=F}
@@ -419,7 +425,10 @@ p.IOs.VOT.no.noise_block1 <- plot_IO_fit(
     mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2)),
   data.test = d.block1 %>% 
     ungroup() %>% distinct(Item.VOT),
-  posterior.sample = post_sample_block1,
+  data.percept.PSE = post_sample_block1 %>% 
+    mutate(PSE = PSE - (chodroff.mean_VOT - VOT.mean_exp2),
+           .lower = .lower - (chodroff.mean_VOT - VOT.mean_exp2),
+           .upper = .upper - (chodroff.mean_VOT - VOT.mean_exp2)),
   PSE_VOT.no.noise_block1
 )
 ```
@@ -444,7 +453,10 @@ p.IOs.VOT_block1 <- plot_IO_fit(
     mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2)),
   data.test = d.block1 %>% 
     ungroup() %>% distinct(Item.VOT),
-  posterior.sample = post_sample_block1,
+  data.percept.PSE = post_sample_block1 %>% 
+    mutate(PSE = PSE - (chodroff.mean_VOT - VOT.mean_exp2),
+           .lower = .lower - (chodroff.mean_VOT - VOT.mean_exp2),
+           .upper = .upper - (chodroff.mean_VOT - VOT.mean_exp2)),
   PSE_VOT_block1
 )
 ```
@@ -469,7 +481,10 @@ p.IOs.VOT_F0_block1 <- plot_IO_fit(
     mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2)),
   data.test = d.block1 %>% 
     ungroup() %>% distinct(Item.VOT),
-  posterior.sample = post_sample_block1,
+  data.percept.PSE = post_sample_block1 %>% 
+    mutate(PSE = PSE - (chodroff.mean_VOT - VOT.mean_exp2),
+           .lower = .lower - (chodroff.mean_VOT - VOT.mean_exp2),
+           .upper = .upper - (chodroff.mean_VOT - VOT.mean_exp2)),
   PSE_VOT_F0_block1
 )
 ```
@@ -479,7 +494,7 @@ p.IOs.VOT_F0_block1 <- plot_IO_fit(
 ```{r IO-categorisation-VOT-F0-centered-block1, message=FALSE}
 VOT_F0.centered_block1 <- 
   get_IO_categorization(
-    cues = c("VOT", "f0_Mel_centered"), 
+    cues = c("VOT_centered", "f0_Mel_centered"), 
     groups = c("Talker", "gender"), 
     lapse_rate = lapse_exp2,
     with_noise = T, 
@@ -495,12 +510,17 @@ p.IOs.VOT_F0.centered_block1 <- plot_IO_fit(
     mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2)),
   data.test = d.block1 %>% 
     ungroup() %>% distinct(Item.VOT),
-  posterior.sample = post_sample_block1,
+  data.percept.PSE = post_sample_block1 %>% 
+    mutate(PSE = PSE - (chodroff.mean_VOT - VOT.mean_exp2),
+           .lower = .lower - (chodroff.mean_VOT - VOT.mean_exp2),
+           .upper = .upper - (chodroff.mean_VOT - VOT.mean_exp2)),
   PSE_VOT_F0.centered_block1
 )
 ```
 
-```{r, message=F, fig.cap="Temporary plot to show the expected fit after centering the cues. Note: predicted responses are roughly between .2 and .8"}
+
+
+```{r, message=F, fig.cap="Temporary plot to show the expected fit after centering the cues. "}
 # prepare data for IO that centers perceptual input relative to population mean before categorization
 chodroff.means <- d.chodroff_wilson.selected %>% 
   group_by(Talker) %>% 
@@ -512,24 +532,19 @@ chodroff.mean_VOT <- chodroff.means %>% pull(VOT)
 chodroff.mean_f0 <- chodroff.means %>% pull(f0_Mel)
 
 # center exposure data relative to database mean
-d.block1_centered <- d.block1 %>% 
-      mutate(Item.VOT = Item.VOT + (chodroff.mean_VOT - VOT.mean_exp2)) 
+psychometric_fit_block1_centered <- psychometric_fit_block1 %>% 
+  mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2),
+         Item.VOT = Item.VOT + (chodroff.mean_VOT - VOT.mean_exp2),
+         VOT_gs = (Item.VOT - VOT.mean_exp2)/(2 * VOT.sd_exp2))
 
-# get new means and SDs of centered items
-VOT.mean_exp2_centered <- mean(d.block1_centered$Item.VOT)
-VOT.sd_exp2_centered <- sd(d.block1_centered$Item.VOT)   
-
-# Gelman-scale VOT values
-d.block1_centered %<>% mutate(VOT_gs = (Item.VOT - VOT.mean_exp2_centered)/(2 * VOT.sd_exp2_centered),
-             lapse = lapse_exp2)
 
 # get expected values of the centered VOT under the model
 if (file.exists("../models/centered_exposure_block1_exp2.rds")) {
   epred_centered_block1 <- read_rds("../models/epred_centered_exposure_block1_exp2.rds")
 } else {
-  epred_centered_block1 <- fit_mix_block1 %>%
-    epred_draws(
-    newdata = d.block1_centered,
+  epred_centered_block1 <- epred_draws(
+    object = fit_mix_block1,
+    newdata = psychometric_fit_block1_centered,
     re_formula = NA,
     ndraws = 2000)
   write_rds(epred_centered_block1, file = "../models/epred_centered_exposure_block1_exp2.rds")
@@ -538,16 +553,15 @@ if (file.exists("../models/centered_exposure_block1_exp2.rds")) {
 # plot and view the expected CI based on the draws 
 epred_centered_block1 %>% 
   group_by(VOT_gs) %>% 
-  summarise(
-    lower__ = quantile(.epred, probs = .025),
+  summarise(lower__ = quantile(.epred, probs = .025),
     median = quantile(.epred, probs = .5),
     upper__ = quantile(.epred, probs = .975),
-    estimate__ = mean(.epred)) %>% 
-  ggplot(aes(x = descale(VOT_gs, VOT.mean_exp2_centered, VOT.sd_exp2_centered), 
+    estimate__ = median(.epred)) %>% 
+  ggplot(aes(x = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2) - (chodroff.mean_VOT - VOT.mean_exp2), 
              y = estimate__)) +
   geom_ribbon(aes(ymin = lower__, ymax = upper__), alpha = .1) +
   geom_line(colour = "#333333", linewidth = 1.2) +
-  scale_x_continuous("VOT (ms)", limits = c(-55, 75)) +
+  scale_x_continuous("VOT (ms)", limits = c(-10, 75)) +
   scale_y_continuous("Fitted proportion of 't'-responses")
 ```
 
@@ -557,24 +571,26 @@ epred_centered_block1 %>%
 ```{r IO-categorisation-VOT-F0-exposure-centered}
 # plot predicted categorisation after centering exposure, against IOs
 p.IOs.VOT_F0.centered.input_block1 <- plot_IO_fit(
-  data.production = VOT_F0.centered, 
+  data.production = VOT_F0.centered_block1, 
   data.perception = epred_centered_block1 %>% 
-    group_by(VOT_gs) %>% 
-  summarise(
-    lower__ = quantile(.epred, probs = .025),
+  group_by(VOT_gs) %>% 
+  summarise(lower__ = quantile(.epred, probs = .025),
     median = quantile(.epred, probs = .5),
     upper__ = quantile(.epred, probs = .975),
-    estimate__ = mean(.epred)) %>% 
-    mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2_centered, VOT.sd_exp2_centered)),
+    estimate__ = median(.epred)) %>% 
+    mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2) - (chodroff.mean_VOT - VOT.mean_exp2)),
   data.test = d.block1 %>%  
     ungroup() %>% distinct(Item.VOT),
-  posterior.sample = post_sample_block1,
+  data.percept.PSE = post_sample_block1 %>% 
+    mutate(PSE = PSE - (chodroff.mean_VOT - VOT.mean_exp2),
+           .lower = .lower - (chodroff.mean_VOT - VOT.mean_exp2),
+           .upper = .upper - (chodroff.mean_VOT - VOT.mean_exp2)),
   PSE_VOT_F0.centered_block1) 
 ```
 
 
 
-```{r prepare-plots-to-make-IO-plot-grid-block1, fig.width=5, fig.height=8.5}
+```{r prepare-plots-to-make-IO-plot-grid-block1, fig.width=4, fig.height=8.5}
 # make plot grid
 theme_spec <- theme(axis.title.x = element_blank()) 
 guide_spec <-  guides(linetype = "none")
@@ -698,11 +714,11 @@ p.likelihood_block1 <- d.test.IO_block1 %>%
     alpha = .6,
     width = 0,
     inherit.aes = F) +
-  scale_y_continuous("Median likelihood per response (log base 10)", limits = c(.10, .65)) +
+  scale_y_continuous("Median likelihood per response", limits = c(.10, .65)) +
    scale_x_discrete( 
      limits = c("VOT.no.noise_block1", "VOT_block1", "VOT_F0_block1", "VOT_F0.centered_block1", "VOT_F0.centered.input_block1"),
      breaks = c("VOT.no.noise_block1", "VOT_block1", "VOT_F0_block1", "VOT_F0.centered_block1", "VOT_F0.centered.input_block1"),
-     labels = c(VOT.no.noise_block1 = "VOT", VOT_block1 = "VOT\n(+perceptual noise)", VOT_F0_block1 = "VOT-F0\n", VOT_F0.centered_block1 = "VOT-F0\n (+talker centered)", VOT_F0.centered.input_block1 = "VOT-F0 \n (+exposure-centered)")) +
+     labels = c(VOT.no.noise_block1 = "VOT", VOT_block1 = "VOT\n(+perceptual noise)", VOT_F0_block1 = "VOT-F0\n", VOT_F0.centered_block1 = "VOT-F0\n (+talker-centered)", VOT_F0.centered.input_block1 = "VOT-F0 \n (+exposure-centered)")) +
   theme(axis.title.x = element_blank(),
         legend.position = "none") +
   guides(x = guide_axis(angle = 45)) +
@@ -755,11 +771,11 @@ p.likelihood.multivar_block1 <- d.test.IO_block1 %>%
     alpha = .6,
     width = 0,
     inherit.aes = F) +
-  scale_y_continuous("Median log-likelihood \n per response", limits = c(.5, .76)) +
+  scale_y_continuous("Median likelihood per response", limits = c(.5, .76)) +
   scale_x_discrete( 
                    limits = c("VOT_F0_block1", "VOT_F0.centered_block1", "VOT_F0.centered.input_block1"),
                    breaks = c("VOT_F0_block1", "VOT_F0.centered_block1", "VOT_F0.centered.input_block1"),
-                   labels = c(VOT_F0_block1 = "VOT-F0\n", VOT_F0.centered_block1 = "VOT-F0\n (talker centered)", VOT_F0.centered.input_block1 = "VOT-F0 \n (exposure-centered)")) +
+                   labels = c(VOT_F0_block1 = "VOT-F0\n", VOT_F0.centered_block1 = "VOT-F0\n (talker-centered)", VOT_F0.centered.input_block1 = "VOT-F0 \n (exposure-centered)")) +
   # theme(axis.title.x = element_blank(),
   #       axis.title.y = element_blank(),
   #       axis.ticks.x = element_blank(),

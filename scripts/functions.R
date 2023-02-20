@@ -393,9 +393,9 @@ add_psychometric_fit <- function(data.perception) {
     inherit.aes = F)
 }
 
-add_PSE_perception_CI <- function(posterior.sample){
+add_PSE_perception_CI <- function(data = posterior.sample){
   geom_errorbarh(
-    data = posterior.sample %>% 
+    data = data %>% 
       mutate(y = .01),
     mapping = aes(xmin = .lower, xmax = .upper, y = y), 
     color = "#333333",
@@ -405,15 +405,15 @@ add_PSE_perception_CI <- function(posterior.sample){
     inherit.aes = F)
 }
 
-add_PSE_perception_median <- function(posterior.sample){
+add_PSE_perception_median <- function(data = posterior.sample){
   geom_point(
-    data = posterior.sample %>% 
-      median_qi(PSE) %>% 
+    data = data %>% 
       mutate(y = 0.01),
     mapping = aes(x = PSE, y = y), 
     color = "#333333", 
     size = 1,
-    alpha = .5)
+    alpha = .5,
+    inherit.aes = F)
 }
 
 add_rug <- function(data.test) {
@@ -426,12 +426,12 @@ add_rug <- function(data.test) {
            inherit.aes = F)
 }
 
-add_annotations <- function(posterior.sample){
+add_annotations <- function(data = posterior.sample){
   annotate(
     geom = "text",
     x = 70,
     y = 0.01, 
-    label = paste(round(posterior.sample[[2]]), "ms", "-", round(posterior.sample[[3]]), "ms"),
+    label = paste(round(data[[2]]), "ms", "-", round(data[[3]]), "ms"),
     size = 1.8,
     colour = "darkgray")
 }
@@ -439,7 +439,7 @@ add_annotations <- function(posterior.sample){
 plot_IO_fit <- function(
     data.production,
     data.perception,
-    posterior.sample,
+    data.percept.PSE = posterior.sample,
     data.test,
     PSEs
 ) {
@@ -456,7 +456,7 @@ plot_IO_fit <- function(
     #   mapping = aes(x = VOT, ymin = response_lower, ymax = response_upper, fill = gender),
     #   alpha = .1) +
   data.production$line + 
-    scale_x_continuous("VOT (msec)", breaks = scales::pretty_breaks(n = 3), limits = c(-15, 85), expand = c(0, 0)) +
+    scale_x_continuous("VOT (ms)", breaks = c(0, 25, 50), limits = c(-15, 85), expand = c(0, 0)) +
     scale_y_continuous('Proportion "t"-responses') +
     scale_colour_manual("Model", 
                         values = c(colours.sex), 
@@ -486,9 +486,9 @@ plot_IO_fit <- function(
     # add plot specifics of the perception data
     add_psychometric_fit_CI(data.perception) +
     add_psychometric_fit(data.perception) +
-    add_PSE_perception_CI(posterior.sample) +
-    add_PSE_perception_median(posterior.sample) +
-    add_annotations(posterior.sample) +
+    add_PSE_perception_CI(data.percept.PSE) +
+    add_PSE_perception_median(data.percept.PSE) +
+    add_annotations(data.percept.PSE) +
     add_rug(data.test) 
 }    
  
@@ -544,7 +544,7 @@ get_bivariate_normal_ellipse <- function(
     Sigma = diag(2),
     level = .95, 
     segments = 51,
-    varnames = c("F1", "F2")
+    varnames = c("VOT", "F0")
 ) {
   # Ths function is based on calculate_ellipse from ggplot2, with modification to 
   # remove uncertainty about Sigma (since we're plotting the theoretical distribution,
@@ -572,47 +572,57 @@ get_bivariate_normal_ellipse <- function(
 }
 
 
-
-
 plot_talker_MVGs <- function(
-    data_production = d.chodroff_wilson.selected, 
-    cues, 
-    data_perception = d.test.excluded,
-    centered = F) {
-  
+  data_production,
+  prod_means = c(chodroff.mean_VOT, chodroff.mean_f0_Mel),
+  cues,
+  data_perception = d.test.excluded,
+  percept_means = c(VOT.mean_exp1, f0.mean_exp1),
+  centered = F
+) {
   plot <- data_production %>% 
+    unnest(io) %>% 
+    select(-c(x, PSE, categorization, line)) %>% 
+    mutate(ellipse_points = pmap(
+      list(mu, Sigma, Sigma_noise), 
+      ~ get_bivariate_normal_ellipse(..1, Sigma = ..2 + ..3))) %>% 
     group_by(Talker) %>% 
-    nest(data = -Talker) %>% 
-    mutate(points = map(
-      data, ~ geom_point(data = .x, 
-                         aes(x = !! sym(cues[1]), y = !! sym(cues[2]), 
-                             colour = gender, 
-                             shape = category), 
-                         alpha = .1)), 
-      ellipse = map(
-        data, ~ stat_ellipse(data = .x,
-                             aes(x = !! sym(cues[1]), y = !! sym(cues[2]),
-                                 colour = gender,
-                                 linetype = category),
-                             alpha = .2)))
+    mutate(ellipse = pmap(
+      list(gender, category, ellipse_points), 
+      ~ geom_path(data = ..3, mapping = aes(x = ..3[[1]], y = ..3[[2]], colour = ..1, linetype = ..2), alpha = .1)))
+  
   plot %>% 
     ggplot() +
-    #plot$points +
     plot$ellipse +
+    scale_x_continuous("VOT (ms)") +
+    scale_y_continuous("F0") +
     scale_colour_manual("Talker sex", values = colours.sex, labels = c("Female", "Male")) +
     scale_linetype_discrete("Category") +
     geom_point(
-      data = if (centered == T) data_perception %>% 
-        ungroup() %>% 
-        distinct(Item.VOT, Item.Mel_f0_5ms) %>% 
-        mutate(Item.VOT = Item.VOT + (39 - 48),
-               Item.Mel_f0_5ms = Item.Mel_f0_5ms + (238 - 341)) else
-        data_perception %>% 
-        ungroup() %>% 
+      data = if (centered == T) data_perception %>%
+        ungroup() %>%
+        distinct(Item.VOT, Item.Mel_f0_5ms) %>%
+        mutate(Item.VOT = Item.VOT + (prod_means[1] - percept_means[1]),
+               Item.Mel_f0_5ms = Item.Mel_f0_5ms + (prod_means[2] - percept_means[2])) else
+                 data_perception %>%
+        ungroup() %>%
         distinct(Item.VOT, Item.Mel_f0_5ms),
       aes(x = Item.VOT, y = Item.Mel_f0_5ms),
-      alpha = .1,
+      shape = 4,
+      alpha = .2,
       inherit.aes = F) +
     guides(colour = "none", category = "none")
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
