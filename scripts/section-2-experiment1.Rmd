@@ -757,10 +757,10 @@ d.test.IO %<>%
       pmap(
         list(d.perception, io, io.type), 
         ~ get_average_log_likelihood_of_perception_data_under_IO(
-          observations = if(str_detect(..3, "centered.input")) {..1$VOT_F0_centered}
+          observed_inputs = if(str_detect(..3, "centered.input")) {..1$VOT_F0_centered}
           else if (str_detect(..3, "VOT_F0")) {..1$VOT_F0} 
           else {..1$Item.VOT}, 
-          responses = ..1$Response.category, 
+          observed_responses = ..1$Response.category, 
           model = ..2)) %>% 
       unlist(),
     likelihood_per_response = exp(log_likelihood_per_response))

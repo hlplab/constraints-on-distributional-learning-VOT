@@ -1,25 +1,25 @@
-# It is recommended to put all your functions that are used across reports for this project in one place. 
+# It is recommended to put all your functions that are used across reports for this project in one place.
 # Try hard to assure backward compatibility.
 
 myGplot.defaults = function(
   type = c("paper","poster","slides")[1],
-  base_size = if (type == "paper") { 10 } else if (type == "slides") { 32 } else if (type == "poster") { 36 } else { 10 }, 
+  base_size = if (type == "paper") { 10 } else if (type == "slides") { 32 } else if (type == "poster") { 36 } else { 10 },
   margin=c("t" = 0.6, "r" = 0.5, "b" = 0.5, "l" = 0.3),
   set_theme = T
 )
 {
   require(ggplot2)
-  
+
   if (set_theme) {
     theme_set(theme_bw(base_size=base_size))
     theme_update(
       axis.text.x = element_text(size=base_size, vjust=1),
       axis.text.y = element_text(size=base_size, hjust=1, vjust=.5),
-      axis.title.x = element_text(size=base_size , vjust=0, hjust=0.5, face = "bold"), 
-      axis.title.y = element_text(size=base_size, hjust= 0.5, vjust=0.5, face = "bold"), 
+      axis.title.x = element_text(size=base_size , vjust=0, hjust=0.5, face = "bold"),
+      axis.title.y = element_text(size=base_size, hjust= 0.5, vjust=0.5, face = "bold"),
       strip.text = element_text(size=base_size, color = "white"),
       strip.background = element_rect(fill = "black", color = "black"),
-      legend.title = element_text(size=base_size, face = "bold", hjust= 0), 
+      legend.title = element_text(size=base_size, face = "bold", hjust= 0),
       legend.text = element_text(size=base_size),
       plot.margin = unit(margin, "lines")
     )
@@ -28,11 +28,11 @@ myGplot.defaults = function(
       theme(
         axis.text.x = element_text(size=base_size, vjust=1),
         axis.text.y = element_text(size=base_size, hjust=1, vjust=.5),
-        axis.title.x = element_text(size=base_size , vjust=0, hjust=0.5, face = "bold"), 
-        axis.title.y = element_text(size=base_size, hjust= 0.5, vjust=0.5, face = "bold"), 
+        axis.title.x = element_text(size=base_size , vjust=0, hjust=0.5, face = "bold"),
+        axis.title.y = element_text(size=base_size, hjust= 0.5, vjust=0.5, face = "bold"),
         strip.text = element_text(size=base_size, color = "white"),
         strip.background = element_rect(fill = "black", color = "black"),
-        legend.title = element_text(size=base_size, face = "bold", hjust= 0), 
+        legend.title = element_text(size=base_size, face = "bold", hjust= 0),
         legend.text = element_text(size=base_size),
         plot.margin = unit(margin, "lines")))
   }
@@ -47,33 +47,33 @@ get_PSE <- function(model, y) {
 
 # function to get posterior probability
 get_posterior <- function(
-    x, 
+    x,
     mu_1 = mu_d, sigma_1 = var_d^.5, prior_1 = .5,
     mu_2 = mu_t, sigma_2 = var_t^.5, prior_2 = .5,
-    # perceptual noise 
+    # perceptual noise
     sigma_noise = sqrt(var_noise),
     # lapse rate: proportion of trials on which participants do not respond based on stimulus. Take the lapse rate that was fitted in the data
     lapse = plogis(as.numeric(summary(fit_mix)$fixed["theta1_Intercept", 1]))
 ) {
   density_1 <- dnorm(x, mu_1, sqrt(sigma_1^2 + sigma_noise^2))
   density_2 <- dnorm(x, mu_2, sqrt(sigma_2^2 + sigma_noise^2))
-  
+
   p_2_based_on_stimulus <- (density_2  * prior_2) / (density_1 * prior_1 + density_2 * prior_2) # Bayes theorem
   p_2_during_lapse <- prior_2 / (prior_1 + prior_2)
   p_2 <- lapse * p_2_during_lapse + (1 - lapse) * p_2_based_on_stimulus
-  
+
   return(p_2)
 }
 
 # Function for calculating CI from logits of a model summary
 make_CI <- function(model, coef, hypothesis) {
-  paste0(paste(round(plogis(as.numeric(summary(model)$fixed[coef, 1])) * 100, 1), "%, "), " 95%-CI: ", 
+  paste0(paste(round(plogis(as.numeric(summary(model)$fixed[coef, 1])) * 100, 1), "%, "), " 95%-CI: ",
          paste(round(plogis(as.numeric(summary(model)$fixed[coef, 3:4])) * 100, 1), collapse = " to "), "%", "; ", get_bf(model = model, hypothesis = hypothesis))
 }
 
 # Function to get identity CI of a model summary
 get_CI <- function(model, coef, hypothesis) {
-  paste0(round(as.numeric(summary(model)$fixed[coef, 1]), 1), " 95%-CI: ", 
+  paste0(round(as.numeric(summary(model)$fixed[coef, 1]), 1), " 95%-CI: ",
          paste(round(as.numeric(summary(model)$fixed[coef, 3:4]), 1), collapse = " to "),
          "; ",
          get_bf(model = model, hypothesis = hypothesis))
@@ -104,7 +104,7 @@ get_ChodroffWilson_data <- function(
   require(tidyverse)
   require(magrittr)
   require(diptest)
-  
+
   d.chodroff_wilson <-
     read_csv(database_filename, show_col_types = FALSE) %>%
     rename(category = stop, VOT = vot, f0 = usef0, Talker = subj, Word = word, Trial = trial, Vowel = vowel) %>%
@@ -131,13 +131,13 @@ get_ChodroffWilson_data <- function(
         levels = c("yes", "no"))) %>%
     mutate(across(c(Talker, Word, gender, category), factor)) %>%
     select(Talker, Word, Trial, Vowel, gender, category, poa, voicing, VOT, f0)
-  
+
   # Filter VOT and f0 for absolute values to deal with outliers
   d.chodroff_wilson %<>%
     filter(
       between(VOT, min(limits.VOT), max(limits.VOT)),
       between(f0, min(limits.f0), max(limits.f0)))
-  
+
   # Keep only talkers with at last n.min observations for each stop
   # (this is done both prior to and after the multimodality test in order to avoid low N warnings)
   d.chodroff_wilson %<>%
@@ -147,7 +147,7 @@ get_ChodroffWilson_data <- function(
     mutate(n = ifelse(any(is.na(n)), 0, min(n))) %>%
     ungroup() %>%
     filter(n > min.n_per_talker_and_stop)
-  
+
   # Identify and remove talkers with bimodal f0 distributions
   # (indicating pitch halving/doubling)
   d.chodroff_wilson %<>%
@@ -158,7 +158,7 @@ get_ChodroffWilson_data <- function(
       f0_Mel.multimodal = dip.test(f0_Mel)$p.value < max.p_for_multimodality) %>%
     filter(!f0_Mel.multimodal) %>%
     droplevels()
-  
+
   # Keep only talkers with at least n.min observations for each stop
   d.chodroff_wilson %<>%
     group_by(Talker, category) %>%
@@ -167,7 +167,7 @@ get_ChodroffWilson_data <- function(
     mutate(n = ifelse(any(is.na(n)), 0, min(n))) %>%
     ungroup() %>%
     filter(n > min.n_per_talker_and_stop)
-  
+
   # Get Mel and Semitones, then C-CuRE
   d.chodroff_wilson %<>%
     group_by(Talker) %>%
@@ -179,7 +179,7 @@ get_ChodroffWilson_data <- function(
 # NORMALIZATION -----------------------------------------------------------
 apply_ccure <- function(x, data) {
   require(lme4)
-  x - predict(lmer(x ~ 1 + (1 | Talker), data = data), random.only = T) 
+  x - predict(lmer(x ~ 1 + (1 | Talker), data = data), random.only = T)
   # deducts only talker specific intercepts (more precisely, the offset value of each talker's mean from the grand mean) from each cue value
 }
 
@@ -205,7 +205,7 @@ make_stop_VOTf0_ideal_observer <- function(
 ## Capturing prior beliefs of perceiver
 make_stop_VOTf0_ideal_adaptor <- function(m, kappa = 3, nu = 3) {
   assert_that(all(nu >= 3))
-  
+
   m %>%
     rename(
       m = mu,
@@ -219,7 +219,7 @@ make_stop_VOTf0_ideal_adaptor <- function(m, kappa = 3, nu = 3) {
 ############################################################################
 # Get approximate f0 of synthesised stimuli from VOT values
 ############################################################################
-# set the linear prediction parameters for exposure stimuli 
+# set the linear prediction parameters for exposure stimuli
 predict_f0 <- function(VOT, intercept = 245.46968, slope = 0.03827) {
   predict_f0 = intercept + slope * (VOT)
   return(predict_f0)
@@ -231,34 +231,34 @@ predict_f0 <- function(VOT, intercept = 245.46968, slope = 0.03827) {
 #  function to optimise minimal difference in likelihoods of 2 categories  #
 ############################################################################
 get_diff_in_likelihood_from_io <- function(x, io, add_f0 = F) {
-  # Since we want to only consider cases that have F0 values that are in a certain linear relation to VOT 
+  # Since we want to only consider cases that have F0 values that are in a certain linear relation to VOT
   # (the way we created our stimuli), we set the F0 based on the VOT.
   if (add_f0) x <- c(x, normMel(predict_f0(x)))
-  
+
   abs(dmvnorm(x, io$mu[[1]], io$Sigma[[1]], log = T) - dmvnorm(x, io$mu[[2]], io$Sigma[[2]], log = T))
 }
 
 get_PSE_from_io <- function(io) {
   # Set bounds for optimization to be the two category means
   # and initialize optimization half-way between the two means
-  min.pars <- 
+  min.pars <-
     io$mu %>%
     reduce(rbind) %>%
     apply(., MARGIN = 2, min)
-  max.pars <- 
+  max.pars <-
     io$mu %>%
     reduce(rbind) %>%
     apply(., MARGIN = 2, max)
   pars = (max.pars - min.pars) / 2
-  
+
   # Find and return values that minimize the difference in log-likelihoods
   optim(
-    par = pars[1], 
-    fn = get_diff_in_likelihood_from_io, 
+    par = pars[1],
+    fn = get_diff_in_likelihood_from_io,
     method = "L-BFGS-B",
     control = list(factr = 10^-10),
-    lower = min.pars[1], 
-    upper = max.pars[1], 
+    lower = min.pars[1],
+    upper = max.pars[1],
     io = io,
     add_f0 = length(io$mu[[1]]) > 1)$par
 }
@@ -267,26 +267,26 @@ get_PSE_from_io <- function(io) {
 
 ############################################################################
 # This can be used to implement different hypotheses about speech perception. There are quite a few choices for the researcher as to what specific hypothesis you want to test:
-# 
+#
 # 1) currently uses VOT and f0, but could just use VOT (if you use f0, make sure to choose the relation between f0 and VOT in the arguments)
-# 
+#
 # 2) what knowledge do listeners have?
 # grouping by talker makes talker-specific IOs
 # grouping by (only) gender makes gender-specific IOs over all data from that gender
 # grouping by talker and gender and then aggregating down to gender (not yet implemented, but would just require adding aggregate_models_by_group_structure()) give 'typical' (average) gender-specific IOs
-# 
+#
 # 3) were listeners' IOs based on centered or uncentered cues?
-# 
+#
 # 4) do listeners center during experiment? one can plot this relative to the center of the cues in the experiment or not
 ############################################################################
 get_IO_categorization <- function(
-    data = d.chodroff_wilson.selected, 
-    cues,                              
+    data = d.chodroff_wilson.selected,
+    cues,
     groups,
     lapse_rate = plogis(summary(fit_mix)$fixed[3, 1]),
     with_noise = TRUE,
-    VOTs = seq(0, 85, .5),            
-    F0s = normMel(predict_f0(VOTs)),                      
+    VOTs = seq(0, 85, .5),
+    F0s = normMel(predict_f0(VOTs)),
     alpha = .2,
     linewidth = .5,
     io.type
@@ -297,14 +297,14 @@ get_IO_categorization <- function(
     nest(mvg = -all_of(groups)) %>%
     mutate(
       io = map(
-        mvg, 
+        mvg,
         ~ lift_MVG_to_MVG_ideal_observer(
-          .x, 
+          .x,
           group = NULL,
           prior = c(.5, .5),
           lapse_rate = lapse_rate,
           lapse_bias = c(.5, .5),
-          Sigma_noise = 
+          Sigma_noise =
             if(with_noise == FALSE) {
               matrix(c(0), ncol = 1, dimnames = list(cues, cues))
             } else if(with_noise == TRUE & length(cues) == 1) {
@@ -312,36 +312,36 @@ get_IO_categorization <- function(
             } else if(with_noise == TRUE & length(cues) == 2) {
               matrix(c(80, 0, 0, 878), ncol = 2, dimnames = list(cues, cues))
             })))
-  
+
   {if(length(cues) == 1) {
-    crossing(data, 
+    crossing(data,
              tibble(
-               !! sym(cues[1]) := VOTs, 
+               !! sym(cues[1]) := VOTs,
                x = map(!! sym(cues[1]), ~ c(.x))))
   } else {
-    crossing(data, 
+    crossing(data,
              tibble(
                !! sym(cues[1]) := VOTs,
                !! sym(cues[2]) := F0s,
-               x = map2(!! sym(cues[1]), 
+               x = map2(!! sym(cues[1]),
                         !! sym(cues[2]), ~ c(.x, .y))))
-  }} %>% 
-    
-    select(- all_of(cues)) %>% 
-    nest(x = x) %>% 
+  }} %>%
+
+    select(- all_of(cues)) %>%
+    nest(x = x) %>%
     mutate(
       PSE = map_dbl(
         io, ~ get_PSE_from_io(io = .x)),
-      categorization = 
+      categorization =
         map2(
-          x, io, 
+          x, io,
           ~ get_categorization_from_MVG_ideal_observer(x = .x$x, model = .y, decision_rule = "proportional") %>%
             filter(category == "/t/") %>%
             mutate(VOT = map(x, ~ .x[1]) %>% unlist())),
       line = map2(categorization, gender, ~ geom_line(data = .x, aes(x = VOT, y = response, color = .y), alpha = alpha, linewidth = linewidth)),
       io.type = io.type
     )
-}  
+}
 ############################################################################
 
 
@@ -358,13 +358,42 @@ get_average_accuracy_of_IO <- function(observations, responses, model) {
     summarize(mean_accuracy = mean(accuracy))
 }
 
-get_average_log_likelihood_of_perception_data_under_IO <- function(observations, responses, model) {
-  get_categorization_from_MVG_ideal_observer(x = observations, model = model, decision_rule = "proportional") %>%
+get_average_log_likelihood_of_perception_data_under_IO <- function(observed_inputs, observed_responses, model) {
+  require(assertthat)
+
+  d.likelihood <-
+    get_categorization_from_MVG_ideal_observer(x = observed_inputs, model = model, decision_rule = "proportional") %>%
     # we only need one posterior since the other one is simply 1-that
-    filter(category == "/t/") %>%
-    mutate(
-      human_response = .env$responses,
-      likelihood = ifelse(category == human_response, response, 1 - response)) %>%
+    filter(category == "/t/")
+
+  if (is.character(observed_responses)) {
+    message("Observed responses seems to be a vector of categories. Proceeding under that assumption.")
+    assert_that(
+      all(unique(observed_responses) %in% model$category),
+      msg = "If observed_responses is a character vector, each of its elements must be one of the categories in the model.")
+
+    d.likelihood %<>%
+      mutate(
+        human_response = .env$observed_responses,
+        likelihood = case_when(
+          human_response == "/t/" ~ response,
+          human_response == "/d/" ~ 1 - response,
+          T ~ NA_real_))
+  } else if (is.numeric(observed_responses)) {
+    message("Observed responses seems to be a vector of numbers. Proceeding under the assumption that these numbers indicate the probability of /t/-responses.")
+    assert_that(
+      all(between(observed_responses, 0, 1)),
+      msg = "If observed_responses is a numeric vector, each of its elements must be a number between 0 and 1.")
+
+    d.likelihood %<>%
+      mutate(
+        probability_of_human_t_response = .env$observed_responses,
+        likelihood = probability_of_human_t_response * response + ((1 - probability_of_human_t_response) * (1 - response)))
+  } else {
+    stop("Unrecognized type of observed_responses.")
+  }
+
+ d.likelihood %>%
     summarize(log_likelihood_per_response = mean(log(likelihood), na.rm = T))
 }
 ############################################################################
@@ -378,8 +407,8 @@ add_psychometric_fit_CI <- function(data.perception){
     data = data.perception,
     mapping = aes(
       x = Item.VOT,
-      ymin = lower__, 
-      ymax = upper__), 
+      ymin = lower__,
+      ymax = upper__),
     alpha = .08,
     inherit.aes = F)
 }
@@ -387,9 +416,9 @@ add_psychometric_fit_CI <- function(data.perception){
 add_psychometric_fit <- function(data.perception) {
   geom_line(
     data = data.perception,
-    mapping = aes(x = Item.VOT, 
+    mapping = aes(x = Item.VOT,
                   y = estimate__),
-    linewidth = 1.2, 
+    linewidth = 1.2,
     colour = "#333333",
     alpha = .8,
     inherit.aes = F)
@@ -397,30 +426,30 @@ add_psychometric_fit <- function(data.perception) {
 
 add_PSE_perception_CI <- function(posterior.sample){
   geom_errorbarh(
-    data = posterior.sample %>% 
+    data = posterior.sample %>%
       mutate(y = .01),
-    mapping = aes(xmin = .lower, xmax = .upper, y = y), 
+    mapping = aes(xmin = .lower, xmax = .upper, y = y),
     color = "#333333",
     height = 0,
     alpha = .5,
-    size = .8, 
+    size = .8,
     inherit.aes = F)
 }
 
 add_PSE_perception_median <- function(posterior.sample){
   geom_point(
-    data = posterior.sample %>% 
-      median_qi(PSE) %>% 
+    data = posterior.sample %>%
+      median_qi(PSE) %>%
       mutate(y = 0.01),
-    mapping = aes(x = PSE, y = y), 
-    color = "#333333", 
+    mapping = aes(x = PSE, y = y),
+    color = "#333333",
     size = 1,
     alpha = .5)
 }
 
 add_rug <- function(data.test) {
-  geom_rug(data = data.test %>% 
-             ungroup() %>% 
+  geom_rug(data = data.test %>%
+             ungroup() %>%
              distinct(Item.VOT),
            mapping = aes(x = Item.VOT),
            colour = "grey",
@@ -432,7 +461,7 @@ add_annotations <- function(posterior.sample){
   annotate(
     geom = "text",
     x = 70,
-    y = 0.01, 
+    y = 0.01,
     label = paste(round(posterior.sample[[2]]), "ms", "-", round(posterior.sample[[3]]), "ms"),
     size = 1.8,
     colour = "darkgray")
@@ -445,7 +474,7 @@ plot_IO_fit <- function(
     data.test,
     PSEs
 ) {
-  plot <- ggplot() + 
+  plot <- ggplot() +
     # geom_ribbon(
     #   data =
     #     data %>%
@@ -457,11 +486,11 @@ plot_IO_fit <- function(
     #       across(response, list("lower" = ~ quantile(.x, .025), "upper" = ~ quantile(.x, .975)))),
     #   mapping = aes(x = VOT, ymin = response_lower, ymax = response_upper, fill = gender),
     #   alpha = .1) +
-  data.production$line + 
+  data.production$line +
     scale_x_continuous("VOT (msec)", breaks = scales::pretty_breaks(n = 3), limits = c(-15, 85), expand = c(0, 0)) +
     scale_y_continuous('Proportion "t"-responses') +
-    scale_colour_manual("Model", 
-                        values = c(colours.sex), 
+    scale_colour_manual("Model",
+                        values = c(colours.sex),
                         labels = c("IO (female)", "IO (male)"),
                         aesthetics = c("color", "fill")) +
     geom_errorbarh(
@@ -483,17 +512,17 @@ plot_IO_fit <- function(
              y = -.06, x = 70,
              label = paste(PSEs[[2, 2]], "ms", "-", PSEs[[2, 4]], "ms"),
              size = 1.8,
-             colour = "#c1502e") 
-  plot + 
+             colour = "#c1502e")
+  plot +
     # add plot specifics of the perception data
     add_psychometric_fit_CI(data.perception) +
     add_psychometric_fit(data.perception) +
     add_PSE_perception_CI(posterior.sample) +
     add_PSE_perception_median(posterior.sample) +
     add_annotations(posterior.sample) +
-    add_rug(data.test) 
-}    
- 
+    add_rug(data.test)
+}
+
 ############################################################################
 
 get_PSE_quantiles <- function(data, group) {
@@ -506,32 +535,32 @@ get_PSE_quantiles <- function(data, group) {
 }
 
 ############################################################################
-# function to plot likelihoods in experiment 1 (section 2.3) 
+# function to plot likelihoods in experiment 1 (section 2.3)
 ############################################################################
 
 plot_talker_UVGs <- function (data_production, data_perception, noise = FALSE) {
-  plot <- data_production %>% 
+  plot <- data_production %>%
     mutate(x = list(VOT = seq(-100, 130, .5)),
            x = map(x, ~ as_tibble(.x) %>% rename("VOT (ms)" = value))) %>%
-    unnest(io) %>% 
+    unnest(io) %>%
     mutate(
       gaussian = pmap(
         list(x, gender, category, mu, Sigma, Sigma_noise),
         ~ geom_function(
-          data = ..1, 
-          aes(x = `VOT (ms)`, 
-              linetype = ..3, colour = ..2), 
-          fun = function(x) dnorm(x, mean = ..4[[1]][[1]], sd = if (noise == T) sqrt(..5[[1]][[1]]) + sqrt(..6[[1]][[1]]) else sqrt(..5[[1]][[1]])), alpha = .2))) 
-  
-  plot %>% 
+          data = ..1,
+          aes(x = `VOT (ms)`,
+              linetype = ..3, colour = ..2),
+          fun = function(x) dnorm(x, mean = ..4[[1]][[1]], sd = if (noise == T) sqrt(..5[[1]][[1]]) + sqrt(..6[[1]][[1]]) else sqrt(..5[[1]][[1]])), alpha = .2)))
+
+  plot %>%
     ggplot() +
     plot$gaussian +
     scale_colour_manual("Talker sex", values = colours.sex, labels = c("Female", "Male")) +
     scale_linetype_discrete("Category") +
-    scale_y_continuous("Density") + 
+    scale_y_continuous("Density") +
     geom_rug(
       data = data_perception %>%
-        ungroup() %>% 
+        ungroup() %>%
         distinct(Item.VOT),
       mapping = aes(x = Item.VOT),
       colour = "black",
@@ -542,40 +571,40 @@ plot_talker_UVGs <- function (data_production, data_perception, noise = FALSE) {
 
 
 plot_talker_MVGs <- function(
-    data_production = d.chodroff_wilson.selected, 
-    cues, 
+    data_production = d.chodroff_wilson.selected,
+    cues,
     data_perception = d.test.excluded,
     centered = F) {
-  
-  plot <- data_production %>% 
-    group_by(Talker) %>% 
-    nest(-Talker) %>% 
+
+  plot <- data_production %>%
+    group_by(Talker) %>%
+    nest(-Talker) %>%
     mutate(points = map(
-      data, ~ geom_point(data = .x, 
-                         aes(x = !! sym(cues[1]), y = !! sym(cues[2]), 
-                             colour = gender, 
-                             shape = category), 
-                         alpha = .1)), 
+      data, ~ geom_point(data = .x,
+                         aes(x = !! sym(cues[1]), y = !! sym(cues[2]),
+                             colour = gender,
+                             shape = category),
+                         alpha = .1)),
       ellipse = map(
         data, ~ stat_ellipse(data = .x,
                              aes(x = !! sym(cues[1]), y = !! sym(cues[2]),
                                  colour = gender,
                                  linetype = category),
                              alpha = .2)))
-  plot %>% 
+  plot %>%
     ggplot() +
     #plot$points +
     plot$ellipse +
     scale_colour_manual("Talker sex", values = colours.sex, labels = c("Female", "Male")) +
     scale_linetype_discrete("Category") +
     geom_point(
-      data = if (centered == T) data_perception %>% 
-        ungroup() %>% 
-        distinct(Item.VOT, Item.Mel_f0_5ms) %>% 
+      data = if (centered == T) data_perception %>%
+        ungroup() %>%
+        distinct(Item.VOT, Item.Mel_f0_5ms) %>%
         mutate(Item.VOT = Item.VOT + (39 - 48),
                Item.Mel_f0_5ms = Item.Mel_f0_5ms + (238 - 341)) else
-        data_perception %>% 
-        ungroup() %>% 
+        data_perception %>%
+        ungroup() %>%
         distinct(Item.VOT, Item.Mel_f0_5ms),
       aes(x = Item.VOT, y = Item.Mel_f0_5ms),
       alpha = .1,
