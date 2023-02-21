@@ -262,8 +262,6 @@ get_PSE_from_io <- function(io) {
     io = io,
     add_f0 = length(io$mu[[1]]) > 1)$par
 }
-############################################################################
-
 
 ############################################################################
 # This can be used to implement different hypotheses about speech perception. There are quite a few choices for the researcher as to what specific hypothesis you want to test:
@@ -283,7 +281,7 @@ get_IO_categorization <- function(
     data = d.chodroff_wilson.selected,
     cues,
     groups,
-    lapse_rate = plogis(summary(fit_mix)$fixed[3, 1]),
+    lapse_rate = 0,
     with_noise = TRUE,
     VOTs = seq(0, 85, .5),
     F0s = normMel(predict_f0(VOTs)),
@@ -305,8 +303,10 @@ get_IO_categorization <- function(
           lapse_rate = lapse_rate,
           lapse_bias = c(.5, .5),
           Sigma_noise =
-            if(with_noise == FALSE) {
+            if(with_noise == FALSE & length(cues) == 1) {
               matrix(c(0), ncol = 1, dimnames = list(cues, cues))
+            } else if(with_noise == FALSE & length(cues) == 2) {
+              matrix(c(0, 0, 0, 0), ncol = 2, dimnames = list(cues, cues))
             } else if(with_noise == TRUE & length(cues) == 1) {
               matrix(c(80), ncol = 1, dimnames = list(cues, cues))
             } else if(with_noise == TRUE & length(cues) == 2) {
@@ -342,7 +342,6 @@ get_IO_categorization <- function(
       io.type = io.type
     )
 }
-############################################################################
 
 
 ############################################################################
@@ -396,7 +395,6 @@ get_average_log_likelihood_of_perception_data_under_IO <- function(observed_inpu
  d.likelihood %>%
     summarize(log_likelihood_per_response = mean(log(likelihood), na.rm = T))
 }
-############################################################################
 
 
 ############################################################################
@@ -424,9 +422,9 @@ add_psychometric_fit <- function(data.perception) {
     inherit.aes = F)
 }
 
-add_PSE_perception_CI <- function(posterior.sample){
+add_PSE_perception_CI <- function(data = posterior.sample){
   geom_errorbarh(
-    data = posterior.sample %>%
+    data = data %>%
       mutate(y = .01),
     mapping = aes(xmin = .lower, xmax = .upper, y = y),
     color = "#333333",
@@ -436,15 +434,15 @@ add_PSE_perception_CI <- function(posterior.sample){
     inherit.aes = F)
 }
 
-add_PSE_perception_median <- function(posterior.sample){
+add_PSE_perception_median <- function(data = posterior.sample){
   geom_point(
-    data = posterior.sample %>%
-      median_qi(PSE) %>%
+    data = data %>%
       mutate(y = 0.01),
     mapping = aes(x = PSE, y = y),
     color = "#333333",
     size = 1,
-    alpha = .5)
+    alpha = .5,
+    inherit.aes = F)
 }
 
 add_rug <- function(data.test) {
@@ -457,12 +455,12 @@ add_rug <- function(data.test) {
            inherit.aes = F)
 }
 
-add_annotations <- function(posterior.sample){
+add_annotations <- function(data = posterior.sample){
   annotate(
     geom = "text",
     x = 70,
     y = 0.01,
-    label = paste(round(posterior.sample[[2]]), "ms", "-", round(posterior.sample[[3]]), "ms"),
+    label = paste(round(data[[2]]), "ms", "-", round(data[[3]]), "ms"),
     size = 1.8,
     colour = "darkgray")
 }
@@ -470,7 +468,7 @@ add_annotations <- function(posterior.sample){
 plot_IO_fit <- function(
     data.production,
     data.perception,
-    posterior.sample,
+    data.percept.PSE = posterior.sample,
     data.test,
     PSEs
 ) {
@@ -487,7 +485,7 @@ plot_IO_fit <- function(
     #   mapping = aes(x = VOT, ymin = response_lower, ymax = response_upper, fill = gender),
     #   alpha = .1) +
   data.production$line +
-    scale_x_continuous("VOT (msec)", breaks = scales::pretty_breaks(n = 3), limits = c(-15, 85), expand = c(0, 0)) +
+    scale_x_continuous("VOT (ms)", breaks = c(0, 25, 50), limits = c(-15, 85), expand = c(0, 0)) +
     scale_y_continuous('Proportion "t"-responses') +
     scale_colour_manual("Model",
                         values = c(colours.sex),
@@ -517,9 +515,9 @@ plot_IO_fit <- function(
     # add plot specifics of the perception data
     add_psychometric_fit_CI(data.perception) +
     add_psychometric_fit(data.perception) +
-    add_PSE_perception_CI(posterior.sample) +
-    add_PSE_perception_median(posterior.sample) +
-    add_annotations(posterior.sample) +
+    add_PSE_perception_CI(data.percept.PSE) +
+    add_PSE_perception_median(data.percept.PSE) +
+    add_annotations(data.percept.PSE) +
     add_rug(data.test)
 }
 
@@ -570,46 +568,77 @@ plot_talker_UVGs <- function (data_production, data_perception, noise = FALSE) {
 }
 
 
-plot_talker_MVGs <- function(
-    data_production = d.chodroff_wilson.selected,
-    cues,
-    data_perception = d.test.excluded,
-    centered = F) {
+get_bivariate_normal_ellipse <- function(
+    mu = c(0, 0),
+    Sigma = diag(2),
+    level = .95,
+    segments = 51,
+    varnames = c("VOT", "F0")
+) {
+  # Ths function is based on calculate_ellipse from ggplot2, with modification to
+  # remove uncertainty about Sigma (since we're plotting the theoretical distribution,
+  # for which Sigma is known)
+  require(tidyverse)
 
+  chol_decomp <- chol(Sigma)
+  # Adapted from https://stats.stackexchange.com/questions/64680/how-to-determine-quantiles-isolines-of-a-multivariate-normal-distribution
+  # (tested)
+  radius <- sqrt(-2 * log(1 - level))
+
+  # Make n + 1 point over unit circle
+  angles <- (0:segments) * 2 * pi/segments
+  unit.circle <- cbind(cos(angles), sin(angles))
+
+  # Shape unit circle by covariance, scale by radius, and move it to mu
+  # (the t() calls are necessary since we allow mu to be a vector, so we
+  # need to transform the 2-col x segements-rows matrix into a segments-col
+  # x 2-row matrix, and then---after adding mu---transforming the whole
+  # thing back into a 2-col x segements-rows matrix)
+  ellipse <- as.data.frame(t(mu + radius * t(unit.circle %*% chol_decomp)))
+  names(ellipse) <- varnames
+
+  return(ellipse)
+}
+
+
+plot_talker_MVGs <- function(
+  data_production,
+  prod_means = c(chodroff.mean_VOT, chodroff.mean_f0_Mel),
+  cues,
+  data_perception = d.test.excluded,
+  percept_means = c(VOT.mean_exp1, f0.mean_exp1),
+  centered = F
+) {
   plot <- data_production %>%
+    unnest(io) %>%
+    select(-c(x, PSE, categorization, line)) %>%
+    mutate(ellipse_points = pmap(
+      list(mu, Sigma, Sigma_noise),
+      ~ get_bivariate_normal_ellipse(..1, Sigma = ..2 + ..3))) %>%
     group_by(Talker) %>%
-    nest(-Talker) %>%
-    mutate(points = map(
-      data, ~ geom_point(data = .x,
-                         aes(x = !! sym(cues[1]), y = !! sym(cues[2]),
-                             colour = gender,
-                             shape = category),
-                         alpha = .1)),
-      ellipse = map(
-        data, ~ stat_ellipse(data = .x,
-                             aes(x = !! sym(cues[1]), y = !! sym(cues[2]),
-                                 colour = gender,
-                                 linetype = category),
-                             alpha = .2)))
+    mutate(ellipse = pmap(
+      list(gender, category, ellipse_points),
+      ~ geom_path(data = ..3, mapping = aes(x = ..3[[1]], y = ..3[[2]], colour = ..1, linetype = ..2), alpha = .1)))
+
   plot %>%
     ggplot() +
-    #plot$points +
     plot$ellipse +
+    scale_x_continuous("VOT (ms)") +
+    scale_y_continuous("F0") +
     scale_colour_manual("Talker sex", values = colours.sex, labels = c("Female", "Male")) +
     scale_linetype_discrete("Category") +
     geom_point(
       data = if (centered == T) data_perception %>%
         ungroup() %>%
         distinct(Item.VOT, Item.Mel_f0_5ms) %>%
-        mutate(Item.VOT = Item.VOT + (39 - 48),
-               Item.Mel_f0_5ms = Item.Mel_f0_5ms + (238 - 341)) else
-        data_perception %>%
+        mutate(Item.VOT = Item.VOT + (prod_means[1] - percept_means[1]),
+               Item.Mel_f0_5ms = Item.Mel_f0_5ms + (prod_means[2] - percept_means[2])) else
+                 data_perception %>%
         ungroup() %>%
         distinct(Item.VOT, Item.Mel_f0_5ms),
       aes(x = Item.VOT, y = Item.Mel_f0_5ms),
-      alpha = .1,
+      shape = 4,
+      alpha = .2,
       inherit.aes = F) +
-    geom_abline(intercept = if (centered == T) normMel(245.46968 + (238 - 341)) else normMel(245.46968 ), slope = 0.03827, alpha = .5) +
     guides(colour = "none", category = "none")
 }
-

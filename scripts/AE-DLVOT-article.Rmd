@@ -144,7 +144,11 @@ options(
   mc.cores = min(chains, parallel::detectCores()))
 
 colours.voicing <- c("#7EC8E3", "#990033")
-colours.sex <- c("#c1502e", "#87bdd8")
+colours.sex <- c("#c1502e", "#2F9FC2")
+remove_all_axes <- theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
 ```
 
 ```{r functions-general, include=FALSE}
