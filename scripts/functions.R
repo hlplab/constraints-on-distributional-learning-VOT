@@ -224,7 +224,6 @@ predict_f0 <- function(VOT, intercept = 245.46968, slope = 0.03827) {
   predict_f0 = intercept + slope * (VOT)
   return(predict_f0)
 }
-############################################################################
 
 
 ############################################################################
@@ -411,7 +410,7 @@ add_psychometric_fit_CI <- function(data.perception){
     inherit.aes = F)
 }
 
-add_psychometric_fit <- function(data.perception) {
+add_psychometric_fit <- function(data.perception){
   geom_line(
     data = data.perception,
     mapping = aes(x = Item.VOT,
@@ -422,10 +421,10 @@ add_psychometric_fit <- function(data.perception) {
     inherit.aes = F)
 }
 
-add_PSE_perception_CI <- function(data = posterior.sample){
+add_PSE_perception_CI <- function(data.percept.PSE){
   geom_errorbarh(
-    data = data %>%
-      mutate(y = .01),
+    data = data.percept.PSE %>%
+      mutate(y = .018),
     mapping = aes(xmin = .lower, xmax = .upper, y = y),
     color = "#333333",
     height = 0,
@@ -434,10 +433,10 @@ add_PSE_perception_CI <- function(data = posterior.sample){
     inherit.aes = F)
 }
 
-add_PSE_perception_median <- function(data = posterior.sample){
+add_PSE_perception_median <- function(data.percept.PSE){
   geom_point(
-    data = data %>%
-      mutate(y = 0.01),
+    data = data.percept.PSE %>%
+      mutate(y = .018),
     mapping = aes(x = PSE, y = y),
     color = "#333333",
     size = 1,
@@ -455,12 +454,12 @@ add_rug <- function(data.test) {
            inherit.aes = F)
 }
 
-add_annotations <- function(data = posterior.sample){
+add_annotations <- function(data.percept.PSE){
   annotate(
     geom = "text",
     x = 70,
-    y = 0.01,
-    label = paste(round(data[[2]]), "ms", "-", round(data[[3]]), "ms"),
+    y = .02,
+    label = paste(round(data.percept.PSE[[2]]), "ms", "-", round(data.percept.PSE[[3]]), "ms"),
     size = 1.8,
     colour = "darkgray")
 }
@@ -493,12 +492,12 @@ plot_IO_fit <- function(
                         aesthetics = c("color", "fill")) +
     geom_errorbarh(
       data = PSEs %>%
-        mutate(y = ifelse(gender == "male", -.025, - .06)),
+        mutate(y = ifelse(gender == "male", -.025, - .068)),
       mapping = aes(xmin = PSE.lower, xmax = PSE.upper, y = y, color = gender),
       height = 0, alpha = .5, size = .8) +
     geom_point(
       data = PSEs %>%
-        mutate(y = ifelse(gender == "male", -.025, - .06)),
+        mutate(y = ifelse(gender == "male", -.025, - .068)),
       mapping = aes(x = PSE.median, y = y, color = gender),
       size = 1) +
     annotate(geom = "text",
@@ -507,7 +506,7 @@ plot_IO_fit <- function(
              size = 1.8,
              colour = "#87bdd8") +
     annotate(geom = "text",
-             y = -.06, x = 70,
+             y = -.068, x = 70,
              label = paste(PSEs[[2, 2]], "ms", "-", PSEs[[2, 4]], "ms"),
              size = 1.8,
              colour = "#c1502e")
@@ -533,7 +532,7 @@ get_PSE_quantiles <- function(data, group) {
 }
 
 ############################################################################
-# function to plot likelihoods in experiment 1 (section 2.3)
+# function to plot talker likelihoods in experiment 1 (section 2.3)
 ############################################################################
 
 plot_talker_UVGs <- function (data_production, data_perception, noise = FALSE) {
@@ -638,6 +637,7 @@ plot_talker_MVGs <- function(
         distinct(Item.VOT, Item.Mel_f0_5ms),
       aes(x = Item.VOT, y = Item.Mel_f0_5ms),
       shape = 4,
+      size = .8,
       alpha = .2,
       inherit.aes = F) +
     guides(colour = "none", category = "none")

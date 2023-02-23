@@ -592,23 +592,25 @@ p.IOs.VOT_F0.centered.input_block1 <- plot_IO_fit(
 
 ```{r prepare-plots-to-make-IO-plot-grid-block1, fig.width=4, fig.height=8.5}
 # make plot grid
-theme_spec <- theme(axis.title.x = element_blank()) 
+remove_all_titles <- 
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank())
 guide_spec <-  guides(linetype = "none")
 
 p11 <- p.IOs.VOT.no.noise_block1 + 
-  theme_spec
+  remove_all_titles
 
 p12 <- p.IOs.VOT_block1 + 
-  theme_spec 
+  remove_all_titles 
 
 p13 <- p.IOs.VOT_F0_block1 + 
-  theme_spec 
+  remove_x_title
 
 p14 <- p.IOs.VOT_F0.centered_block1 + 
-  theme_spec 
+  remove_all_titles
 
 p15 <- p.IOs.VOT_F0.centered.input_block1 + 
-  theme_spec  
+  remove_y_title  
 
 
 p11 + p12 + p13 + p14 + p15 + 
@@ -653,10 +655,10 @@ d.test.IO_block1 %<>%
       pmap(
         list(d.perception, io, io.type), 
         ~ get_average_log_likelihood_of_perception_data_under_IO(
-          observations = if(str_detect(..3, "centered.input")) {..1$VOT_F0_centered}
+          observed_inputs = if(str_detect(..3, "centered.input")) {..1$VOT_F0_centered}
           else if (str_detect(..3, "VOT_F0")) {..1$VOT_F0} 
           else {..1$Item.VOT}, 
-          responses = ..1$Response.category, 
+          observed_responses = ..1$Response.category, 
           model = ..2)) %>% 
       unlist(),
     likelihood_per_response = exp(log_likelihood_per_response))
@@ -695,14 +697,14 @@ p.likelihood_block1 <- d.test.IO_block1 %>%
   group_by(io.type) %>% 
   summarise(
     median_likelihood_per_response = median(likelihood_per_response)) %>%
-  mutate(io.type = fct_relevel(io.type, "VOT.no.noise_block1")) %>% 
+  mutate(io.type = fct_relevel(io.type, c("VOT.no.noise_block1", "VOT_block1"))) %>% 
   ggplot(aes(x = io.type, 
              y = median_likelihood_per_response)) +
   geom_point(size = 2, colour = "#333333") +
   geom_errorbar(
     data = d.bootstrap_block1 %>% 
       group_by(io.type) %>% 
-      mutate(io.type = fct_relevel(io.type, "VOT.no.noise_block1")) %>% 
+      mutate(io.type = fct_relevel(io.type, c("VOT.no.noise_block1", "VOT_block1"))) %>% 
       summarise(
         median.lower = quantile(median_sample, probs = .025),
         median.upper = quantile(median_sample, probs = .975)
@@ -726,6 +728,8 @@ p.likelihood_block1 <- d.test.IO_block1 %>%
 
 p.likelihood_block1
 ```
+
+
 
 ```{r, fig.width=4, fig.height=4}
 # zoom in on multi-variate models
