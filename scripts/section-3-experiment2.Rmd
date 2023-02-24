@@ -425,10 +425,7 @@ p.IOs.VOT.no.noise_block1 <- plot_IO_fit(
     mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2)),
   data.test = d.block1 %>% 
     ungroup() %>% distinct(Item.VOT),
-  data.percept.PSE = post_sample_block1 %>% 
-    mutate(PSE = PSE - (chodroff.mean_VOT - VOT.mean_exp2),
-           .lower = .lower - (chodroff.mean_VOT - VOT.mean_exp2),
-           .upper = .upper - (chodroff.mean_VOT - VOT.mean_exp2)),
+  data.percept.PSE = post_sample_block1,
   PSE_VOT.no.noise_block1
 )
 ```
@@ -445,7 +442,7 @@ VOT_block1 <-
     linewidth = 0.3,
     io.type = "VOT_block1")
 
-PSE_VOT_block1 <- get_PSE_quantiles(data = VOT.no.noise_block1, group = "gender")
+PSE_VOT_block1 <- get_PSE_quantiles(data = VOT_block1, group = "gender")
 
 p.IOs.VOT_block1 <- plot_IO_fit(
   data.production = VOT_block1, 
@@ -453,13 +450,61 @@ p.IOs.VOT_block1 <- plot_IO_fit(
     mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2)),
   data.test = d.block1 %>% 
     ungroup() %>% distinct(Item.VOT),
-  data.percept.PSE = post_sample_block1 %>% 
-    mutate(PSE = PSE - (chodroff.mean_VOT - VOT.mean_exp2),
-           .lower = .lower - (chodroff.mean_VOT - VOT.mean_exp2),
-           .upper = .upper - (chodroff.mean_VOT - VOT.mean_exp2)),
+  data.percept.PSE = post_sample_block1,
   PSE_VOT_block1
 )
 ```
+
+
+```{r IO-categorization-VOT-centered-block1, message=FALSE}
+VOT.centered_block1 <- 
+  get_IO_categorization(
+    cues = c("VOT_centered"), 
+    groups = c("Talker", "gender"), 
+    lapse_rate = lapse_exp2,
+    with_noise = T, 
+    alpha = .1, 
+    linewidth = 0.3,
+    io.type = "VOT.centered_block1")
+
+PSE_VOT.centered_block1 <- get_PSE_quantiles(data = VOT.centered_block1, group = "gender")
+
+p.IOs.VOT.centered_block1 <- plot_IO_fit(
+  data.production = VOT.centered_block1, 
+  data.perception = psychometric_fit_block1 %>% 
+    mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2)),
+  data.test = d.block1 %>% 
+    ungroup() %>% distinct(Item.VOT),
+  data.percept.PSE = post_sample_block1,
+  PSE_VOT.centered_block1
+)
+```
+
+
+```{r IO-categorization-VOT-F0-block1, message=FALSE}
+VOT_F0.no.noise_block1 <- 
+  get_IO_categorization(
+    cues = c("VOT", "f0_Mel"), 
+    groups = c("Talker", "gender"), 
+    lapse_rate = lapse_exp2,
+    with_noise = F, 
+    alpha = .1, 
+    linewidth = 0.3,
+    io.type = "VOT_F0.no.noise_block1")
+
+PSE_VOT_F0.no.noise_block1 <- get_PSE_quantiles(data = VOT_F0.no.noise_block1, group = "gender")
+
+p.IOs.VOT_F0.no.noise_block1 <- plot_IO_fit(
+  data.production = VOT_F0.no.noise_block1, 
+  data.perception = psychometric_fit_block1 %>% 
+    mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2)),
+  data.test = d.block1 %>% 
+    ungroup() %>% distinct(Item.VOT),
+  data.percept.PSE = post_sample_block1,
+  PSE_VOT_F0.no.noise_block1
+)
+```
+
 
 
 ```{r IO-categorization-VOT-F0-block1, message=FALSE}
@@ -481,10 +526,7 @@ p.IOs.VOT_F0_block1 <- plot_IO_fit(
     mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2)),
   data.test = d.block1 %>% 
     ungroup() %>% distinct(Item.VOT),
-  data.percept.PSE = post_sample_block1 %>% 
-    mutate(PSE = PSE - (chodroff.mean_VOT - VOT.mean_exp2),
-           .lower = .lower - (chodroff.mean_VOT - VOT.mean_exp2),
-           .upper = .upper - (chodroff.mean_VOT - VOT.mean_exp2)),
+  data.percept.PSE = post_sample_block1,
   PSE_VOT_F0_block1
 )
 ```
@@ -510,10 +552,7 @@ p.IOs.VOT_F0.centered_block1 <- plot_IO_fit(
     mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2)),
   data.test = d.block1 %>% 
     ungroup() %>% distinct(Item.VOT),
-  data.percept.PSE = post_sample_block1 %>% 
-    mutate(PSE = PSE - (chodroff.mean_VOT - VOT.mean_exp2),
-           .lower = .lower - (chodroff.mean_VOT - VOT.mean_exp2),
-           .upper = .upper - (chodroff.mean_VOT - VOT.mean_exp2)),
+  data.percept.PSE = post_sample_block1,
   PSE_VOT_F0.centered_block1
 )
 ```
@@ -549,23 +588,27 @@ if (file.exists("../models/centered_exposure_block1_exp2.rds")) {
     ndraws = 2000)
   write_rds(epred_centered_block1, file = "../models/epred_centered_exposure_block1_exp2.rds")
 }
+```
 
-# plot and view the expected CI based on the draws 
-epred_centered_block1 %>% 
+```{r IO-categorization-VOT-centered-block1, message=FALSE}
+p.IOs.VOT.centered_block1 <- plot_IO_fit(
+  data.production = VOT.centered_block1, 
+  data.perception = epred_centered_block1 %>% 
   group_by(VOT_gs) %>% 
   summarise(lower__ = quantile(.epred, probs = .025),
     median = quantile(.epred, probs = .5),
     upper__ = quantile(.epred, probs = .975),
     estimate__ = median(.epred)) %>% 
-  ggplot(aes(x = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2) - (chodroff.mean_VOT - VOT.mean_exp2), 
-             y = estimate__)) +
-  geom_ribbon(aes(ymin = lower__, ymax = upper__), alpha = .1) +
-  geom_line(colour = "#333333", linewidth = 1.2) +
-  scale_x_continuous("VOT (ms)", limits = c(-10, 75)) +
-  scale_y_continuous("Fitted proportion of 't'-responses")
+    mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2) - (chodroff.mean_VOT - VOT.mean_exp2)),
+  data.test = d.block1 %>% 
+    ungroup() %>% distinct(Item.VOT),
+  data.percept.PSE = post_sample_block1 %>% 
+    mutate(PSE = PSE - (chodroff.mean_VOT - VOT.mean_exp2),
+           .lower = .lower - (chodroff.mean_VOT - VOT.mean_exp2),
+           .upper = .upper - (chodroff.mean_VOT - VOT.mean_exp2)),
+  PSE_VOT.centered_block1
+)
 ```
-
-
 
 
 ```{r IO-categorisation-VOT-F0-exposure-centered}
@@ -625,12 +668,15 @@ p11 + p12 + p13 + p14 + p15 +
 
 ```{r compute-average-likelihood-of-IOs-block1, message=FALSE}
 # make VOT_F0_centered data set with centered perceptual stimuli for simulating centering of input
+VOT.centered.input_block1 <- VOT.centered_block1 %>% 
+  mutate(io.type = "VOT_F0.centered.input_block1")
+
 VOT_F0.centered.input_block1 <- VOT_F0.centered_block1 %>% 
   mutate(io.type = "VOT_F0.centered.input_block1")
 
-# join all 5 IOs into one dataframe
+# join all 8 IOs into one dataframe
 d.IOs_block1 <- 
-  rbind(VOT.no.noise_block1, VOT_block1, VOT_F0_block1, VOT_F0.centered_block1, VOT_F0.centered.input_block1) %>% 
+  rbind(VOT.no.noise_block1, VOT_block1, VOT.centered_block1, VOT.centered.input_block1, VOT_F0.no.noise_block1, VOT_F0_block1, VOT_F0.centered_block1, VOT_F0.centered.input_block1) %>% 
   select(Talker, gender, io, io.type) %>% 
   mutate(io.type = factor(io.type))
 
@@ -655,7 +701,8 @@ d.test.IO_block1 %<>%
       pmap(
         list(d.perception, io, io.type), 
         ~ get_average_log_likelihood_of_perception_data_under_IO(
-          observed_inputs = if(str_detect(..3, "centered.input")) {..1$VOT_F0_centered}
+          observed_inputs = if(str_detect(..3, "VOT.centered.input")) {..1$Item.VOT_centered}
+          else if (str_detect(..3, "VOT_F0.centered.input")) {..1$VOT_F0_centered}
           else if (str_detect(..3, "VOT_F0")) {..1$VOT_F0} 
           else {..1$Item.VOT}, 
           observed_responses = ..1$Response.category, 
@@ -693,7 +740,7 @@ Qualitatively, the results indicate listeners adjust their expectations to align
 
 ```{r, fig.width=6, fig.height=3, warning=FALSE}
 # plot median likelihood per response with bootstrapped 95% CI
-p.likelihood_block1 <- d.test.IO_block1 %>% 
+p.likelihood.univar_block1 <- d.test.IO_block1 %>% 
   group_by(io.type) %>% 
   summarise(
     median_likelihood_per_response = median(likelihood_per_response)) %>%
@@ -726,7 +773,7 @@ p.likelihood_block1 <- d.test.IO_block1 %>%
   guides(x = guide_axis(angle = 45)) +
   coord_trans(y = "log10")
 
-p.likelihood_block1
+p.likelihood.univar_block1
 ```
 
 

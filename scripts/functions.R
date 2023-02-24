@@ -484,7 +484,7 @@ plot_IO_fit <- function(
     #   mapping = aes(x = VOT, ymin = response_lower, ymax = response_upper, fill = gender),
     #   alpha = .1) +
   data.production$line +
-    scale_x_continuous("VOT (ms)", breaks = c(0, 25, 50), limits = c(-15, 85), expand = c(0, 0)) +
+    scale_x_continuous("VOT (ms)", breaks = c(0, 25, 50, 100), limits = c(-15, 85), expand = c(0, 0)) +
     scale_y_continuous('Proportion "t"-responses') +
     scale_colour_manual("Model",
                         values = c(colours.sex),

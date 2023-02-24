@@ -885,7 +885,7 @@ d.bootstrap <- d.test.IO %>%
 
 
 
-```{r IO-univar-likelihood-plot, fig.width=4, fig.height=4, warning=FALSE}
+```{r IO-univar-likelihood-plot, fig.width=5.5, fig.height=4.5, warning=FALSE}
 # plot median likelihood per response with bootstrapped 95% CI
 p.likelihood <- d.test.IO %>% 
   group_by(io.type, gender) %>% 
