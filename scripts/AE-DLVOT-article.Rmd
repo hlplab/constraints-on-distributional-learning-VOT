@@ -159,7 +159,6 @@ myGplot.defaults("paper")
 
 # Get citation information
 r_refs(file = "latex-stuff/r-references.bib")
-
 ```
 
 ```{r knitr-setup, include=FALSE}

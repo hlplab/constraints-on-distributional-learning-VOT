@@ -250,8 +250,8 @@ get_PSE_from_io <- function(io) {
     apply(., MARGIN = 2, max)
   pars = (max.pars - min.pars) / 2
 
-  # Find and return values that minimize the difference in log-likelihoods
-  optim(
+  # Find and return VOT values that minimize the difference in log-likelihoods
+  o <- optim(
     par = pars[1],
     fn = get_diff_in_likelihood_from_io,
     method = "L-BFGS-B",
@@ -259,7 +259,9 @@ get_PSE_from_io <- function(io) {
     lower = min.pars[1],
     upper = max.pars[1],
     io = io,
-    add_f0 = length(io$mu[[1]]) > 1)$par
+    add_f0 = length(pars) > 1)
+
+  return(o$par)
 }
 
 ############################################################################
