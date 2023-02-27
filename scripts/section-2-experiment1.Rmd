@@ -240,7 +240,9 @@ MinPair_plot <-
                      values = c("#002699", "#0040ff", "#668cff", "#b3c6ff"), 
                      labels = c("dill/till", "dim/tim", "din/tin", "dip/tip")) +
   scale_fill_brewer("CI", palette = "Greys", type = "qual") +
-  remove_all_axes
+  remove_axes_titles +
+  theme(axis.text.y = element_blank())
+  
 ```
 
 
@@ -851,7 +853,9 @@ d.test.IO %<>%
         ~ get_average_log_likelihood_of_perception_data_under_IO(
           observed_inputs = if(str_detect(..3, "VOT.centered.input")) {..1$Item.VOT_centered}
           else if (str_detect(..3, "VOT_F0.centered.input")) {..1$VOT_F0_centered}
-          else if (str_detect(..3, "VOT_F0")) {..1$VOT_F0} 
+          else if (str_detect(..3, "VOT_F0$")) {..1$VOT_F0}
+          else if (str_detect(..3, "VOT_F0.no.noise")) {..1$VOT_F0} 
+          else if (str_detect(..3, "VOT_F0.centered")) {..1$VOT_F0}
           else {..1$Item.VOT}, 
           observed_responses = ..1$Response.category, 
           model = ..2)) %>% 
@@ -932,7 +936,7 @@ p.likelihood <- d.test.IO %>%
     width = 0,
     position = position_dodge(.2),
     inherit.aes = F) +
-  scale_y_continuous("Median likelihood per response", limits = c(0.07385, 0.073915)) +
+  scale_y_continuous("Median likelihood per response", limits = c(0.07385, 0.07392)) +
    scale_x_discrete( 
      limits = c("VOT.no.noise", "VOT", "VOT.centered", "VOT.centered.input"),
      breaks = c("VOT.no.noise", "VOT", "VOT.centered", "VOT.centered.input"),

@@ -577,7 +577,7 @@ psychometric_fit_block1_centered <- psychometric_fit_block1 %>%
          VOT_gs = (Item.VOT - VOT.mean_exp2)/(2 * VOT.sd_exp2))
 
 
-# get expected values of the centered VOT under the model
+# get expected values of the centered EXPOSURE VOT under the linear model
 if (file.exists("../models/centered_exposure_block1_exp2.rds")) {
   epred_centered_block1 <- read_rds("../models/epred_centered_exposure_block1_exp2.rds")
 } else {
@@ -666,10 +666,10 @@ p11 + p12 + p13 + p14 + p15 +
 
 
 
-```{r compute-average-likelihood-of-IOs-block1, message=FALSE}
+```{r compute-average-likelihood-of-IOs-block1}
 # make VOT_F0_centered data set with centered perceptual stimuli for simulating centering of input
 VOT.centered.input_block1 <- VOT.centered_block1 %>% 
-  mutate(io.type = "VOT_F0.centered.input_block1")
+  mutate(io.type = "VOT.centered.input_block1")
 
 VOT_F0.centered.input_block1 <- VOT_F0.centered_block1 %>% 
   mutate(io.type = "VOT_F0.centered.input_block1")
@@ -701,14 +701,19 @@ d.test.IO_block1 %<>%
       pmap(
         list(d.perception, io, io.type), 
         ~ get_average_log_likelihood_of_perception_data_under_IO(
-          observed_inputs = if(str_detect(..3, "VOT.centered.input")) {..1$Item.VOT_centered}
-          else if (str_detect(..3, "VOT_F0.centered.input")) {..1$VOT_F0_centered}
-          else if (str_detect(..3, "VOT_F0")) {..1$VOT_F0} 
+          observed_inputs = if(str_detect(..3, "VOT.centered.input")) {..1$Item.VOT_centered} 
+          else if (str_detect(..3, "VOT_F0.centered.input")) {..1$VOT_F0_centered} 
+          else if (str_detect(..3, "VOT_F0_block1$")) {..1$VOT_F0} 
+          else if (str_detect(..3, "VOT_F0.no.noise")) {..1$VOT_F0} 
+          else if (str_detect(..3, "VOT_F0.centered")) {..1$VOT_F0}
           else {..1$Item.VOT}, 
           observed_responses = ..1$Response.category, 
           model = ..2)) %>% 
       unlist(),
-    likelihood_per_response = exp(log_likelihood_per_response))
+    likelihood_per_response = exp(log_likelihood_per_response)) %>% 
+  mutate(
+    io.type = fct_relevel(io.type, c("VOT.no.noise_block1", "VOT_block1", "VOT.centered_block1", "VOT.centered.input_block1", "VOT_F0.no.noise_block1", "VOT_F0_block1", "VOT_F0.centered_block1", "VOT_F0.centered.input_block1")),
+    gender = fct_relevel(gender, c("female", "male")))
 
 IO.likelihood_block1 <- d.test.IO_block1 %>% 
   group_by(io.type) %>% 
@@ -724,13 +729,17 @@ d.bootstrap_block1 <- d.test.IO_block1 %>%
   select(-c(d.perception, io)) %>% 
   mutate(io.type = factor(io.type)) %>% 
   # nest so that we can sample from groups of rows corresponding to each io type
-  nest(data = -io.type) %>% 
+  nest(data = -c(gender, io.type)) %>% 
   mutate(samples = 
            map(data, ~ bootstraps(.x, times = 1000))) %>% 
   unnest(samples) %>% 
   mutate(splits = map(splits, ~ as_tibble(.x)),
          median_sample = map_dbl(splits, ~ median(.x$likelihood_per_response)),
-         mode_sample = map_dbl(splits, ~ max(.x$likelihood_per_response)))
+         mode_sample = map_dbl(splits, ~ max(.x$likelihood_per_response))) %>% 
+   mutate(
+    io.type = fct_relevel(io.type, c("VOT.no.noise_block1", "VOT_block1", "VOT.centered_block1", "VOT.centered.input_block1", "VOT_F0.no.noise_block1", "VOT_F0_block1", "VOT_F0.centered_block1", "VOT_F0.centered.input_block1")),
+    gender = fct_relevel(gender, c("female", "male")))
+  
 ```
 
 Fig. XX summarizes participants’ categorization functions across the different test blocks. To analyse the incremental effects of exposure condition on the proportion of /t/ responses at test, we fitted a Bayesian mixed-effects psychometric model with lapse rate (cf. Wichmann & Hill, 2001). The perceptual model contained exposure condition (sliding difference coded, comparing the +10ms against the +0ms shift condition, and the +40ms against the +10ms shift condition), test block (sliding difference coded from the first to last test block), VOT (Gelman scaled), and their full factorial interaction. We also included the full random effect structure by participant and item. The lapse rate and response bias (.5 for both /d/ and /t/) were assumed to be constant across blocks and exposure condition. We used the same weakly regularizing priors as in Xie, Liu, and Jaeger (2021).
@@ -738,101 +747,113 @@ Condition and test blocks were successive-difference coded.
 There was a main effect of VOT; participants were more likely to give voiceless responses as VOT increased. Condition had a main effect on responses such that with larger shifts, participants on average responded with fewer /t/s.  Additionally, the difference in average /t/ responses between the +40 and +10 conditions (-2.4 reduction in log-odds) was larger than the difference between the +10 and +0 conditions (-1.05 in log-odds).
 Qualitatively, the results indicate listeners adjust their expectations to align with the statistics of the exposure talker, consonant with previous findings of studies employing this paradigm (e.g., Clayards et al.; K&J16). 
 
-```{r, fig.width=6, fig.height=3, warning=FALSE}
+```{r, fig.width=4.5, fig.height=4.5, warning=FALSE}
 # plot median likelihood per response with bootstrapped 95% CI
 p.likelihood.univar_block1 <- d.test.IO_block1 %>% 
-  group_by(io.type) %>% 
+  group_by(io.type, gender) %>% 
   summarise(
-    median_likelihood_per_response = median(likelihood_per_response)) %>%
-  mutate(io.type = fct_relevel(io.type, c("VOT.no.noise_block1", "VOT_block1"))) %>% 
-  ggplot(aes(x = io.type, 
-             y = median_likelihood_per_response)) +
-  geom_point(size = 2, colour = "#333333") +
+    median_likelihood_per_response = median(likelihood_per_response),
+    mode_likelihood_per_response = max(likelihood_per_response)) %>% 
+  ggplot(aes(x = io.type,
+             colour = gender)) +
+  geom_point(aes(y = median_likelihood_per_response),
+             size = 2, 
+             position = position_dodge(.2)) +
+  geom_point(aes(y = mode_likelihood_per_response), 
+             size = 2,
+             position = position_dodge(.2),
+             shape = 17) +
   geom_errorbar(
     data = d.bootstrap_block1 %>% 
-      group_by(io.type) %>% 
-      mutate(io.type = fct_relevel(io.type, c("VOT.no.noise_block1", "VOT_block1"))) %>% 
-      summarise(
-        median.lower = quantile(median_sample, probs = .025),
-        median.upper = quantile(median_sample, probs = .975)
-      ),
-    mapping = 
-      aes(x = io.type, ymin = median.lower, ymax = median.upper),
-    colour = "#333333",
-    linewidth = 1.5,
-    alpha = .6,
-    width = 0,
-    inherit.aes = F) +
-  scale_y_continuous("Median likelihood per response", limits = c(.10, .65)) +
-   scale_x_discrete( 
-     limits = c("VOT.no.noise_block1", "VOT_block1", "VOT_F0_block1", "VOT_F0.centered_block1", "VOT_F0.centered.input_block1"),
-     breaks = c("VOT.no.noise_block1", "VOT_block1", "VOT_F0_block1", "VOT_F0.centered_block1", "VOT_F0.centered.input_block1"),
-     labels = c(VOT.no.noise_block1 = "VOT", VOT_block1 = "VOT\n(+perceptual noise)", VOT_F0_block1 = "VOT-F0\n", VOT_F0.centered_block1 = "VOT-F0\n (+talker-centered)", VOT_F0.centered.input_block1 = "VOT-F0 \n (+exposure-centered)")) +
-  theme(axis.title.x = element_blank(),
-        legend.position = "none") +
-  guides(x = guide_axis(angle = 45)) +
-  coord_trans(y = "log10")
+      group_by(io.type, gender) %>% 
+               summarise(
+                 median.lower = quantile(median_sample, probs = .025),
+                 median.upper = quantile(median_sample, probs = .975)),
+             mapping = 
+               aes(x = io.type, ymin = median.lower, ymax = median.upper, colour = gender),
+             position = position_dodge(.2),
+             linewidth = 1.5,
+             alpha = .6,
+             width = 0,
+             inherit.aes = F) +
+      geom_errorbar(
+        data = d.bootstrap_block1 %>% 
+          group_by(io.type, gender) %>% 
+          summarise(
+            mode.lower = quantile(mode_sample, probs = .025),
+            mode.upper = quantile(mode_sample, probs = .975)),
+        mapping = aes(x = io.type, ymin = mode.lower, ymax = mode.upper, colour = gender),
+        position = position_dodge(.2),
+        linewidth = 1.5,
+        alpha = .6,
+        width = 0,
+        inherit.aes = F) +
+     scale_y_continuous("Median likelihood per response", limits = c(.10736, .10994)) + 
+     scale_x_discrete( 
+       limits = c("VOT.no.noise_block1", "VOT_block1", "VOT.centered_block1", "VOT.centered.input_block1"),
+       breaks = c("VOT.no.noise_block1", "VOT_block1", "VOT.centered_block1", "VOT.centered.input_block1"),
+       labels = c(VOT.no.noise_block1 = "VOT", 
+                  VOT_block1 = "VOT\n(+perceptual noise)", 
+                  VOT.centered_block1 = "VOT\n(talker-centered)", 
+                  VOT.centered.input_block1 = "VOT\n(+exposure-centered)")) +
+     scale_colour_manual("Gender", values = colours.sex, labels = c("Female", "Male")) +
+     theme(legend.position = "top") +
+     guides(x = guide_axis(angle = 45)) +
+     coord_trans(y = "log10")
 
 p.likelihood.univar_block1
 ```
 
 
 
-```{r, fig.width=4, fig.height=4}
+```{r, fig.width=5.5, fig.height=4.5}
 # zoom in on multi-variate models
 p.likelihood.multivar_block1 <- d.test.IO_block1 %>% 
-  group_by(io.type) %>% 
+  group_by(gender, io.type) %>% 
   summarise(
     median_likelihood_per_response = median(likelihood_per_response),
     mode_likelihood_per_response = max(likelihood_per_response)) %>%
-  mutate(io.type = fct_relevel(io.type, "VOT.no.noise_block1")) %>%
-  ggplot(aes(x = io.type)) +
+  ggplot(aes(x = io.type, colour = gender)) +
   geom_point(aes(y = median_likelihood_per_response),
-             size = 3,
-             colour = "#333333") +
+             size = 3, position = position_dodge(.2)) +
   geom_point(aes(x = io.type, 
                  y = mode_likelihood_per_response), 
-             size = 3, 
-             shape = 17,
-             colour = "#333333") +
+             size = 3,
+             position = position_dodge(.2),
+             shape = 17) +
   geom_errorbar(
     data = d.bootstrap_block1 %>% 
-      group_by(io.type) %>%
-      mutate(io.type = fct_relevel(io.type, "VOT.no.noise_block1")) %>% 
+      group_by(gender, io.type) %>% 
       summarise(
         median.lower = round(quantile(median_sample, probs = .025), 3),
         median.upper = round(quantile(median_sample, probs = .975), 3)),
     mapping = 
-      aes(x = io.type, ymin = median.lower, ymax = median.upper),
-    colour = "#333333",
+      aes(x = io.type, ymin = median.lower, ymax = median.upper, colour = gender),
     linewidth = 1.5,
+    position = position_dodge(.2),
     alpha = .6,
     width = 0,
     inherit.aes = F) + 
   geom_errorbar(
     data = d.bootstrap_block1 %>% 
-      group_by(io.type) %>%
-      mutate(io.type = fct_relevel(io.type, "VOT.no.noise_block1")) %>% 
+      group_by(gender, io.type) %>%
       summarise(
         mode.lower = quantile(mode_sample, probs = .025),
         mode.upper = quantile(mode_sample, probs = .975)),
-    mapping = aes(x = io.type, ymin = mode.lower, ymax = mode.upper),
-    colour = "#333333",
+    mapping = aes(x = io.type, ymin = mode.lower, ymax = mode.upper, colour = gender),
     size = 1.5,
+    position = position_dodge(.2),
     alpha = .6,
     width = 0,
     inherit.aes = F) +
-  scale_y_continuous("Median likelihood per response", limits = c(.5, .76)) +
+  scale_y_continuous("Median likelihood per response", limits = c(.168, .746)) +
   scale_x_discrete( 
-                   limits = c("VOT_F0_block1", "VOT_F0.centered_block1", "VOT_F0.centered.input_block1"),
-                   breaks = c("VOT_F0_block1", "VOT_F0.centered_block1", "VOT_F0.centered.input_block1"),
-                   labels = c(VOT_F0_block1 = "VOT-F0\n", VOT_F0.centered_block1 = "VOT-F0\n (talker-centered)", VOT_F0.centered.input_block1 = "VOT-F0 \n (exposure-centered)")) +
-  # theme(axis.title.x = element_blank(),
-  #       axis.title.y = element_blank(),
-  #       axis.ticks.x = element_blank(),
-  #       axis.text.x = element_blank(),
-  #       legend.position = "none") +
+    limits = c("VOT_F0.no.noise_block1", "VOT_F0_block1", "VOT_F0.centered_block1", "VOT_F0.centered.input_block1"),
+    breaks = c("VOT_F0.no.noise_block1", "VOT_F0_block1", "VOT_F0.centered_block1", "VOT_F0.centered.input_block1"),
+    labels = c(VOT_F0.no.noise_block1 = "VOT_F0", VOT_F0_block1 = "VOT-F0\n(+perceptual noise)", VOT_F0.centered_block1 = "VOT-F0\n (talker-centered)", VOT_F0.centered.input_block1 = "VOT-F0 \n (exposure-centered)")) +
+  scale_colour_manual("Gender", values = colours.sex, labels = c("Female", "Male")) +
   guides(x = guide_axis(angle = 45)) + 
+  theme(legend.position = "top") +
   coord_trans(y = "log10")
 
 p.likelihood.multivar_block1
