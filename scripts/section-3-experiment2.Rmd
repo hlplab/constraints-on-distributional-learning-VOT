@@ -37,7 +37,7 @@ We employed a multi-block exposure-test design \@ref(fig:exp2-design-figure) whi
 
 The conditions were created by first obtaining the baseline distribution (+0ms shift) and then shifting that distribution by +10ms and by +40ms to create the remaining two conditions. 
 
-The +0ms shift condition was estimated from the fitted point of subjective equality (PSE) from experiment 1. The PSE corresponds to the VOT measurement that was perceived as the most ambiguous by participants in experiment 1 (i.e. the stimulus that elicited equal probability of being categorised as /d/ or /t/) thus marking the categorical boundary. The PSE is where the likelihoods of both categories intersect and have equal density (we assumed Gaussian distributions and equal prior probability for each category) [SOMETHING HERE ABOUT GAUSSIANS BEING A CONVENIENT ASSUMPTION?]. To limit the infinite combinations of likelihoods that could intersect at this value, we set the variances of the /d/ and /t/ categories based on parameter estimates (@Kurumada_Xie_Jaeger_2022) obtained from the production database of @chodroff2017structure. To each variance value we added an 80ms noise variance following (@kronrod) to account for variability in perception due to perceptual noise since these likelihoods were estimated from perceptual data. We took an additional degree of freedom of setting the *distance between the means* of the categories at 46ms; this too was based on the population parameter estimates from the production database. The means of both categories were then obtained through a grid-search process to find the likelihood distributions that crossed at 25ms VOT (see XX of SI for details on this procedure).
+The +0ms shift condition was estimated from the fitted point of subjective equality (PSE) from experiment 1. The PSE corresponds to the VOT measurement that was perceived as the most ambiguous by participants in experiment 1 (i.e. the stimulus that elicited equal probability of being categorised as /d/ or /t/) thus marking the categorical boundary. The PSE is where the likelihoods of both categories intersect and have equal density (we assumed Gaussian distributions and equal prior probability for each category) [SOMETHING HERE ABOUT GAUSSIANS BEING A CONVENIENT ASSUMPTION?]. To limit the infinite combinations of likelihoods that could intersect at this value, we set the variances of the /d/ and /t/ categories based on parameter estimates (@Kurumada_Xie_Jaeger_2022) obtained from the production database of @chodroff2017structure. To each variance value we added an 80ms noise variance following (@kronrod2016unified) to account for variability in perception due to perceptual noise since these likelihoods were estimated from perceptual data. We took an additional degree of freedom of setting the *distance between the means* of the categories at 46ms; this too was based on the population parameter estimates from the production database. The means of both categories were then obtained through a grid-search process to find the likelihood distributions that crossed at 25ms VOT (see XX of SI for details on this procedure).
 
 The distributional make up was determined through a process of sampling tokens from a discrete normal distribution (available through the `extraDistr` package in R). [EXPLAIN WHAT DISCRETE NORMAL SAMPLING GIVES] discretised normal distributions are approximation... 
 
@@ -404,7 +404,9 @@ psychometric_fit_block1 %>% group_by(VOT_gs) %>%
   mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2)) %>% summarise(Item.VOT)
 ```
 
-```{r IO-categorization-VOT-no-noise-block1, message=F}
+
+
+```{r IO-categorization-VOT-no-noise-block1}
 lapse_exp2 = plogis(summary(fit_mix_uniform_bias)$fixed["theta1_Intercept", 1])
 
 VOT.no.noise_block1 <- 
@@ -431,7 +433,7 @@ p.IOs.VOT.no.noise_block1 <- plot_IO_fit(
 ```
 
 
-```{r IO-categorization-VOT-block1, message=FALSE}
+```{r IO-categorization-VOT-block1}
 VOT_block1 <- 
   get_IO_categorization(
     cues = c("VOT"), 
@@ -481,7 +483,7 @@ p.IOs.VOT.centered_block1 <- plot_IO_fit(
 ```
 
 
-```{r IO-categorization-VOT-F0-block1, message=FALSE}
+```{r IO-categorization-VOT-F0-no-noise-block1, message=FALSE}
 VOT_F0.no.noise_block1 <- 
   get_IO_categorization(
     cues = c("VOT", "f0_Mel"), 
@@ -533,7 +535,7 @@ p.IOs.VOT_F0_block1 <- plot_IO_fit(
 
 
 
-```{r IO-categorisation-VOT-F0-centered-block1, message=FALSE}
+```{r IO-categorisation-VOT-F0-centered-block1}
 VOT_F0.centered_block1 <- 
   get_IO_categorization(
     cues = c("VOT_centered", "f0_Mel_centered"), 
@@ -559,7 +561,7 @@ p.IOs.VOT_F0.centered_block1 <- plot_IO_fit(
 
 
 
-```{r, message=F, fig.cap="Temporary plot to show the expected fit after centering the cues. "}
+```{r, message=FALSE}
 # prepare data for IO that centers perceptual input relative to population mean before categorization
 chodroff.means <- d.chodroff_wilson.selected %>% 
   group_by(Talker) %>% 
@@ -590,7 +592,9 @@ if (file.exists("../models/centered_exposure_block1_exp2.rds")) {
 }
 ```
 
-```{r IO-categorization-VOT-centered-block1, message=FALSE}
+
+
+```{r IO-categorization-VOT-f0-centered-input-block1, message=FALSE}
 p.IOs.VOT.centered_block1 <- plot_IO_fit(
   data.production = VOT.centered_block1, 
   data.perception = epred_centered_block1 %>% 
@@ -666,7 +670,7 @@ p11 + p12 + p13 + p14 + p15 +
 
 
 
-```{r compute-average-likelihood-of-IOs-block1}
+```{r compute-average-likelihood-of-IOs-block1, message=FALSE}
 # make VOT_F0_centered data set with centered perceptual stimuli for simulating centering of input
 VOT.centered.input_block1 <- VOT.centered_block1 %>% 
   mutate(io.type = "VOT.centered.input_block1")
@@ -757,10 +761,10 @@ p.likelihood.univar_block1 <- d.test.IO_block1 %>%
   ggplot(aes(x = io.type,
              colour = gender)) +
   geom_point(aes(y = median_likelihood_per_response),
-             size = 2, 
+             size = 3, 
              position = position_dodge(.2)) +
   geom_point(aes(y = mode_likelihood_per_response), 
-             size = 2,
+             size = 3,
              position = position_dodge(.2),
              shape = 17) +
   geom_errorbar(

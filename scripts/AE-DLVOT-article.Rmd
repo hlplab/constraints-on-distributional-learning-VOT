@@ -187,7 +187,7 @@ base.height = 2.15
 
 animate = T         # switch on/off to replace animations with facets (not yet implemented for all instances)
 TODO = T            # switch on/off to get to do list.
-RESET_FIGURES = T   # switch on/off whether figures that exist as files are regenerated
+RESET_FIGURES = F   # switch on/off whether figures that exist as files are regenerated
 ```
 
 ```{r analysis-preferences}
