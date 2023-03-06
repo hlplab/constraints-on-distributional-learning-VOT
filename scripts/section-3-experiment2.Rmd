@@ -37,11 +37,11 @@ We employed a multi-block exposure-test design \@ref(fig:exp2-design-figure) whi
 
 The conditions were created by first obtaining the baseline distribution (+0ms shift) and then shifting that distribution by +10ms and by +40ms to create the remaining two conditions. 
 
-The +0ms shift condition was estimated from the fitted point of subjective equality (PSE) from experiment 1. The PSE corresponds to the VOT measurement that was perceived as the most ambiguous by participants in experiment 1 (i.e. the stimulus that elicited equal probability of being categorised as /d/ or /t/) thus marking the categorical boundary. The PSE is where the likelihoods of both categories intersect and have equal density (we assumed Gaussian distributions and equal prior probability for each category) [SOMETHING HERE ABOUT GAUSSIANS BEING A CONVENIENT ASSUMPTION?]. To limit the infinite combinations of likelihoods that could intersect at this value, we set the variances of the /d/ and /t/ categories based on parameter estimates (@Kurumada_Xie_Jaeger_2022) obtained from the production database of @chodroff2017structure. To each variance value we added an 80ms noise variance following (@kronrod2016unified) to account for variability in perception due to perceptual noise since these likelihoods were estimated from perceptual data. We took an additional degree of freedom of setting the *distance between the means* of the categories at 46ms; this too was based on the population parameter estimates from the production database. The means of both categories were then obtained through a grid-search process to find the likelihood distributions that crossed at 25ms VOT (see XX of SI for details on this procedure).
+The +0ms shift condition was estimated from the fitted point of subjective equality (PSE) from experiment 1. The PSE corresponds to the VOT measurement that was perceived as the most ambiguous by participants in experiment 1 (i.e. the stimulus that elicited equal probability of being categorised as /d/ or /t/) thus marking the categorical boundary. The PSE is where the likelihoods of both categories intersect and have equal density (we assumed Gaussian distributions and equal prior probability for each category) [SOMETHING HERE ABOUT GAUSSIANS BEING A CONVENIENT ASSUMPTION?]. To limit the infinite combinations of likelihoods that could intersect at this value, we set the variances of the /d/ and /t/ categories based on parameter estimates (@Kurumada_Xie_Jaeger_2022) obtained from the production database of @chodroff2017structure. To each variance value we added an 80ms noise variance following (@kronrod2016unified) to account for variability due to perceptual noise since these likelihoods were estimated from perceptual data. We took an additional degree of freedom of setting the *distance between the means* of the categories at 46ms; this too was based on the population parameter estimates derived from analyses of the production database. The means of both categories were then obtained through a grid-search process to find the likelihood distributions that crossed at 25ms VOT (see XX of SI for details on this procedure).
 
 The distributional make up was determined through a process of sampling tokens from a discrete normal distribution (available through the `extraDistr` package in R). [EXPLAIN WHAT DISCRETE NORMAL SAMPLING GIVES] discretised normal distributions are approximation... 
 
-For each exposure block 8 VOT tokens of each minimal pair item were sampled from discrete normal distributions of each category of the +0ms condition, giving 24 /d/ and 24 /t/ (48 critical trials) per block. Additionally, each exposure block contained 2 instances of 3 catch items, giving 6 catch trials per block. The sampled VOT tokens were increased by a margin of +10ms and +40 ms to create the remaining two conditions. Three variants of each condition list were created so that exposure blocks followed a latin-square order. 
+For each exposure block 8 VOT tokens of each minimal pair item were sampled from discrete normal distributions of each category of the +0ms condition, giving 24 /d/ and 24 /t/ (48 critical trials) per block. Additionally, each exposure block contained 2 instances of 3 catch items, giving 6 catch trials per block. The sampled VOT tokens were increased by a margin of +10ms and +40 ms for the remaining two conditions. Three variants of each condition list were created so that exposure blocks followed a latin-square order. 
 
 Lastly, half of the exposure trials were randomly assigned as labelled trials. In labelled trials, participants receive clear information of the word's category as both orthographic options will always begin with the intended sound. For example if a trial was intended to be "dill" then the two image options will either be "dill" and "dip" or "dill" and "din". Test trials were always unlabelled. 
 
@@ -281,16 +281,16 @@ We first present participants' categorisation responses. Given that this experim
 d.block1 <- d.test_exposure_for_analysis %>% 
   filter(Block == 1) 
 # set the mean and SD values for scaling/unscaling purposes
-VOT.mean_exp2 <- mean(d.block1$Item.VOT)
-VOT.sd_exp2 <- sd(d.block1$Item.VOT)
-F0.mean_exp2 <- mean(d.block1$Item.Mel_F0_5ms)
-F0.sd_exp2 <- sd(d.block1$Item.Mel_F0_5ms)
+VOT.mean_exp2 <- mean(d.test_exposure_for_analysis$Item.VOT)
+VOT.sd_exp2 <- sd(d.test_exposure_for_analysis$Item.VOT)
+f0.mean_exp2 <- mean(d.test_exposure_for_analysis$Item.Mel_F0_5ms)
+f0.sd_exp2 <- sd(d.test_exposure_for_analysis$Item.Mel_F0_5ms)
 
 d.block1 %<>% 
   mutate(
     Response.Voiceless = ifelse(Response.Voicing == "voiceless", 1, 0),
     VOT_gs = (Item.VOT - VOT.mean_exp2)/ (2 * VOT.sd_exp2),
-    F0_gs = (Item.Mel_F0_5ms - F0.mean_exp2) /(2 * F0.sd_exp2))
+    F0_gs = (Item.Mel_F0_5ms - f0.mean_exp2) /(2 * f0.sd_exp2))
 
 # load the full experiment fit to obtain lapse rate
 fit_mix_uniform_bias <- readRDS("../models/Exp-AE-DLVOT-labelled-lapsing-GLMM.rds")
@@ -314,23 +314,7 @@ fit_mix_block1 <- brm(
   file = "../models/Block1-AEDLVOT-lapse-exp2.rds")
 ```
 
-(ref:mixture-model-block-1) Plot of by-participant intercepts and slopes estimated from the mixture model
 
-```{r plot-intercepts-slopes-block1-model, fig.width=6, fig.height=3, fig.cap="(ref:mixture-model-block-1)"}
-d.ranef <- ranef(fit_mix_block1)
-
-d.ranef <- as_tibble(d.ranef[[1]]) %>% 
-  mutate(ParticipantID = unique(d.block1$ParticipantID))
-
-# plot r'ship between intercept and slope
-d.ranef %>%
-  ggplot(aes(y = Estimate.mu2_Intercept, x = Estimate.mu2_VOT_gs)) + 
-  geom_text(aes(label = ParticipantID), alpha = .2) +
-  geom_hline(aes(yintercept = 0), alpha = .3, linetype = 2) +
-  geom_vline(aes(xintercept = 0), alpha = .3, linetype = 2) +
-  scale_y_continuous("Intercept") +
-  scale_x_continuous("Slope")
-```
 
 
 
@@ -348,7 +332,8 @@ post_sample_block1 <- fit_mix_block1 %>%
 #plot the fitted psychometric function for Block 1
 psychometric_fit_block1 <- conditional_effects(
     fit_mix_block1, 
-    effects = "VOT_gs", 
+    effects = "VOT_gs",
+    method = "posterior_epred",
     plot = F)[[1]]
 
 # make base plot
@@ -389,19 +374,12 @@ p.fit_block1 <- psychometric_fit_block1 %>%
     data = d.block1 %>% distinct(Item.VOT),
     mapping = aes(x = Item.VOT),
     alpha = .6,
-    inherit.aes = F) +
-   geom_errorbarh(
-    data = post_sample_block1 %>% 
-      mutate(y = .01),
-    mapping = aes(xmin = .lower, xmax = .upper, y = y), 
-    color = "#333333",
-    height = 0,
-    alpha = .5,
-    size = 1, 
     inherit.aes = F)
 
 psychometric_fit_block1 %>% group_by(VOT_gs) %>% 
-  mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2)) %>% summarise(Item.VOT)
+  summarise() %>% 
+  mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2)) %>% 
+  summarise(across(c(VOT_gs, Item.VOT), range))
 ```
 
 
@@ -464,7 +442,6 @@ VOT.centered_block1 <-
     cues = c("VOT_centered"), 
     groups = c("Talker", "gender"), 
     lapse_rate = lapse_exp2,
-    with_noise = T, 
     alpha = .1, 
     linewidth = 0.3,
     io.type = "VOT.centered_block1")
@@ -481,6 +458,8 @@ p.IOs.VOT.centered_block1 <- plot_IO_fit(
   PSE_VOT.centered_block1
 )
 ```
+
+
 
 
 ```{r IO-categorization-VOT-F0-no-noise-block1, message=FALSE}
@@ -515,7 +494,6 @@ VOT_F0_block1 <-
     cues = c("VOT", "f0_Mel"), 
     groups = c("Talker", "gender"), 
     lapse_rate = lapse_exp2,
-    with_noise = T, 
     alpha = .1, 
     linewidth = 0.3,
     io.type = "VOT_F0_block1")
@@ -541,7 +519,6 @@ VOT_F0.centered_block1 <-
     cues = c("VOT_centered", "f0_Mel_centered"), 
     groups = c("Talker", "gender"), 
     lapse_rate = lapse_exp2,
-    with_noise = T, 
     alpha = .1, 
     linewidth = 0.3,
     io.type = "VOT_F0.centered_block1")
@@ -593,32 +570,23 @@ if (file.exists("../models/centered_exposure_block1_exp2.rds")) {
 ```
 
 
+```{r IO-categorisation-VOT-F0-exposure-centered, warning=FALSE}
+VOT_F0.centered.input_block1 <- 
+  get_IO_categorization(
+    cues = c("VOT_centered", "f0_Mel_centered"), 
+    groups = c("Talker", "gender"), 
+    VOTs = seq(0, 85, .5) + (chodroff.mean_VOT - VOT.mean_exp2),
+    F0s = normMel(predict_f0(VOTs)) + (chodroff.mean_f0_Mel - f0.mean_exp2),
+    lapse_rate = lapse_exp2,
+    alpha = .1, 
+    linewidth = 0.3,
+    io.type = "VOT_F0.centered.input_block1")
 
-```{r IO-categorization-VOT-f0-centered-input-block1, message=FALSE}
-p.IOs.VOT.centered_block1 <- plot_IO_fit(
-  data.production = VOT.centered_block1, 
-  data.perception = epred_centered_block1 %>% 
-  group_by(VOT_gs) %>% 
-  summarise(lower__ = quantile(.epred, probs = .025),
-    median = quantile(.epred, probs = .5),
-    upper__ = quantile(.epred, probs = .975),
-    estimate__ = median(.epred)) %>% 
-    mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2) - (chodroff.mean_VOT - VOT.mean_exp2)),
-  data.test = d.block1 %>% 
-    ungroup() %>% distinct(Item.VOT),
-  data.percept.PSE = post_sample_block1 %>% 
-    mutate(PSE = PSE - (chodroff.mean_VOT - VOT.mean_exp2),
-           .lower = .lower - (chodroff.mean_VOT - VOT.mean_exp2),
-           .upper = .upper - (chodroff.mean_VOT - VOT.mean_exp2)),
-  PSE_VOT.centered_block1
-)
-```
+PSE_VOT_F0.centered.input_block1 <- get_PSE_quantiles(data = VOT_F0.centered.input_block1, group = "gender")
 
-
-```{r IO-categorisation-VOT-F0-exposure-centered}
 # plot predicted categorisation after centering exposure, against IOs
 p.IOs.VOT_F0.centered.input_block1 <- plot_IO_fit(
-  data.production = VOT_F0.centered_block1, 
+  data.production = VOT_F0.centered.input_block1, 
   data.perception = epred_centered_block1 %>% 
   group_by(VOT_gs) %>% 
   summarise(lower__ = quantile(.epred, probs = .025),
@@ -632,12 +600,50 @@ p.IOs.VOT_F0.centered.input_block1 <- plot_IO_fit(
     mutate(PSE = PSE - (chodroff.mean_VOT - VOT.mean_exp2),
            .lower = .lower - (chodroff.mean_VOT - VOT.mean_exp2),
            .upper = .upper - (chodroff.mean_VOT - VOT.mean_exp2)),
-  PSE_VOT_F0.centered_block1) 
+  PSE_VOT_F0.centered.input_block1) 
+```
+
+
+```{r IO-categorization-VOT-f0-centered-input-block1, warning=FALSE}
+VOT.centered.input_block1 <- 
+  get_IO_categorization(
+    cues = c("VOT_centered"), 
+    groups = c("Talker", "gender"), 
+    VOTs = seq(0, 85, .5) + (chodroff.mean_VOT - VOT.mean_exp2),
+    F0s = normMel(predict_f0(VOTs)) + (chodroff.mean_f0_Mel - f0.mean_exp2),
+    lapse_rate = lapse_exp2,
+    alpha = .1, 
+    linewidth = 0.3,
+    io.type = "VOT.centered.input_block1")
+
+PSE_VOT.centered.input_block1 <- get_PSE_quantiles(data = VOT.centered.input_block1, group = "gender")
+
+p.IOs.VOT.centered.input_block1 <- plot_IO_fit(
+  data.production = VOT.centered.input_block1, 
+  data.perception = epred_centered_block1 %>% 
+  group_by(VOT_gs) %>% 
+  summarise(lower__ = quantile(.epred, probs = .025),
+    median = quantile(.epred, probs = .5),
+    upper__ = quantile(.epred, probs = .975),
+    estimate__ = median(.epred)) %>% 
+    mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2) - (chodroff.mean_VOT - VOT.mean_exp2)),
+  data.test = d.block1 %>% 
+    ungroup() %>% 
+    distinct(Item.VOT),
+  data.percept.PSE = post_sample_block1 %>% 
+    mutate(PSE = PSE - (chodroff.mean_VOT - VOT.mean_exp2),
+           .lower = .lower - (chodroff.mean_VOT - VOT.mean_exp2),
+           .upper = .upper - (chodroff.mean_VOT - VOT.mean_exp2)),
+  PSE_VOT.centered.input_block1
+)
 ```
 
 
 
-```{r prepare-plots-to-make-IO-plot-grid-block1, fig.width=4, fig.height=8.5}
+
+
+
+```{r prepare-plots-to-make-IO-plot-grid-block1, fig.width=4, fig.height=8.5, warning=FALSE}
 # make plot grid
 remove_all_titles <- 
   theme(axis.title.y = element_blank(),
@@ -671,13 +677,6 @@ p11 + p12 + p13 + p14 + p15 +
 
 
 ```{r compute-average-likelihood-of-IOs-block1, message=FALSE}
-# make VOT_F0_centered data set with centered perceptual stimuli for simulating centering of input
-VOT.centered.input_block1 <- VOT.centered_block1 %>% 
-  mutate(io.type = "VOT.centered.input_block1")
-
-VOT_F0.centered.input_block1 <- VOT_F0.centered_block1 %>% 
-  mutate(io.type = "VOT_F0.centered.input_block1")
-
 # join all 8 IOs into one dataframe
 d.IOs_block1 <- 
   rbind(VOT.no.noise_block1, VOT_block1, VOT.centered_block1, VOT.centered.input_block1, VOT_F0.no.noise_block1, VOT_F0_block1, VOT_F0.centered_block1, VOT_F0.centered.input_block1) %>% 
@@ -692,7 +691,7 @@ d.test.IO_block1 <-
   mutate(
     VOT_F0 = map2(Item.VOT, Item.Mel_F0_5ms, ~ c(.x, .y)),
     Item.VOT_centered = Item.VOT + (chodroff.mean_VOT - VOT.mean_exp2),
-    Item.Mel_F0_centered = Item.Mel_F0_5ms + (chodroff.mean_f0 - F0.mean_exp2), 
+    Item.Mel_F0_centered = Item.Mel_F0_5ms + (chodroff.mean_f0 - f0.mean_exp2), 
     VOT_F0_centered = map2(Item.VOT_centered, Item.Mel_F0_centered, ~ c(.x, .y)),
     Response.category = ifelse(Response.Voicing == "voiced", "/d/", "/t/"),
     Response.t = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
@@ -739,11 +738,7 @@ d.bootstrap_block1 <- d.test.IO_block1 %>%
   unnest(samples) %>% 
   mutate(splits = map(splits, ~ as_tibble(.x)),
          median_sample = map_dbl(splits, ~ median(.x$likelihood_per_response)),
-         mode_sample = map_dbl(splits, ~ max(.x$likelihood_per_response))) %>% 
-   mutate(
-    io.type = fct_relevel(io.type, c("VOT.no.noise_block1", "VOT_block1", "VOT.centered_block1", "VOT.centered.input_block1", "VOT_F0.no.noise_block1", "VOT_F0_block1", "VOT_F0.centered_block1", "VOT_F0.centered.input_block1")),
-    gender = fct_relevel(gender, c("female", "male")))
-  
+         mode_sample = map_dbl(splits, ~ max(.x$likelihood_per_response))) 
 ```
 
 Fig. XX summarizes participants’ categorization functions across the different test blocks. To analyse the incremental effects of exposure condition on the proportion of /t/ responses at test, we fitted a Bayesian mixed-effects psychometric model with lapse rate (cf. Wichmann & Hill, 2001). The perceptual model contained exposure condition (sliding difference coded, comparing the +10ms against the +0ms shift condition, and the +40ms against the +10ms shift condition), test block (sliding difference coded from the first to last test block), VOT (Gelman scaled), and their full factorial interaction. We also included the full random effect structure by participant and item. The lapse rate and response bias (.5 for both /d/ and /t/) were assumed to be constant across blocks and exposure condition. We used the same weakly regularizing priors as in Xie, Liu, and Jaeger (2021).
@@ -792,7 +787,7 @@ p.likelihood.univar_block1 <- d.test.IO_block1 %>%
         alpha = .6,
         width = 0,
         inherit.aes = F) +
-     scale_y_continuous("Median likelihood per response", limits = c(.10736, .10994)) + 
+     scale_y_continuous("Median likelihood per response", limits = c(.10736, .11005)) + 
      scale_x_discrete( 
        limits = c("VOT.no.noise_block1", "VOT_block1", "VOT.centered_block1", "VOT.centered.input_block1"),
        breaks = c("VOT.no.noise_block1", "VOT_block1", "VOT.centered_block1", "VOT.centered.input_block1"),
@@ -810,7 +805,7 @@ p.likelihood.univar_block1
 
 
 
-```{r, fig.width=5.5, fig.height=4.5}
+```{r, fig.width=5.5, fig.height=4.5, warning=FALSE}
 # zoom in on multi-variate models
 p.likelihood.multivar_block1 <- d.test.IO_block1 %>% 
   group_by(gender, io.type) %>% 
@@ -850,7 +845,7 @@ p.likelihood.multivar_block1 <- d.test.IO_block1 %>%
     alpha = .6,
     width = 0,
     inherit.aes = F) +
-  scale_y_continuous("Median likelihood per response", limits = c(.168, .746)) +
+  scale_y_continuous("Median likelihood per response", limits = c(.156, .746)) +
   scale_x_discrete( 
     limits = c("VOT_F0.no.noise_block1", "VOT_F0_block1", "VOT_F0.centered_block1", "VOT_F0.centered.input_block1"),
     breaks = c("VOT_F0.no.noise_block1", "VOT_F0_block1", "VOT_F0.centered_block1", "VOT_F0.centered.input_block1"),
@@ -863,6 +858,113 @@ p.likelihood.multivar_block1 <- d.test.IO_block1 %>%
 p.likelihood.multivar_block1
 ```
 
+
+```{r}
+# set condition levels
+levels_Condition.Exposure = c("Shift0", "Shift10", "Shift40")
+
+my_priors <- c(
+  prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),
+  prior(student_t(3, 0, 2.5), class = "b", dpar = "theta1"),
+  prior(cauchy(0, 2.5), class = "sd"),
+  prior(lkj(1), class = "cor"))
+
+# simplifying model with uniform bias
+fit_mix_uniform_bias <- brm(
+  bf(
+    Response.Voiceless ~ 1,
+    mu1 ~ 0 + offset(0),
+    mu2 ~ 1 + VOT_gs * Condition.Exposure * Block + (1 + VOT_gs * Block | ParticipantID) + (1 + VOT_gs * Condition.Exposure * Block | Item.MinimalPair),
+    theta1 ~ 1),
+  data = d.test_exposure_for_analysis %>% 
+    filter(Phase == "test") %>% 
+    prepVars(levels.Condition = levels_Condition.Exposure),
+  cores = 4,
+  chains = chains,
+  init = 0,
+  iter = 4000, # iterations to run
+  warmup = 2000, # samples used to fit
+  family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
+  control = list(adapt_delta = .99),
+  file = "../models/Exp-AE-DLVOT-labelled-lapsing-GLMM.rds")
+
+#summary(fit_mix_uniform_bias)
+```
+
+
+
+
+```{r}
+# get fits by condition for plotting
+cond_fit <- conditional_effects(
+    fit_mix_uniform_bias,
+    effects = "VOT_gs:Condition.Exposure",
+    conditions = make_conditions(
+      d.test_exposure_for_analysis %>% 
+        filter(Phase == "test") %>% 
+        prepVars(levels.Condition = levels_Condition.Exposure), 
+      vars = c("Block")),
+    method = "posterior_epred",
+    ndraws = 500,
+    re_formula = NA)
+
+cond_fit[[1]] %>%
+  mutate(Condition.Exposure = case_when(Condition.Exposure == "Shift0" ~ "+0ms",
+            Condition.Exposure == "Shift10" ~ "+10ms",
+            Condition.Exposure == "Shift40" ~ "+40ms")) %>% 
+    filter(Block %in% c(1, 3, 5, 7, 8, 9)) %>% 
+  mutate(Block_relabelled = factor(case_when(Block == 1 ~ "Test 1",
+                                      Block == 3 ~ "Test 2",
+                                      Block == 5 ~ "Test 3",
+                                      Block == 7 ~ "Test 4",
+                                      Block == 8 ~ "Test 5",
+                                      Block == 9 ~ "Test 6"))) %>% 
+  ggplot(aes(x = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2), 
+             y = estimate__, 
+             group = Condition.Exposure)) +
+  geom_ribbon(aes(ymin = lower__, ymax = upper__, fill = Condition.Exposure), alpha = .1) +
+  geom_line(aes(color = Condition.Exposure), 
+            size = 1.3) +
+  geom_rug(data = d.test_exposure_for_analysis %>%
+             distinct(Item.VOT),
+           aes(x = Item.VOT),
+           alpha = 0.2,
+           colour = "lightgrey",
+           inherit.aes = F) +
+  stat_summary(
+    data = d.test_exposure_for_analysis %>% 
+            filter(Block %in% c(1, 3, 5, 7, 8, 9)) %>% 
+            mutate(Condition.Exposure = 
+               case_when(Condition.Exposure == "Shift0" ~ "+0ms",
+            Condition.Exposure == "Shift10" ~ "+10ms",
+            Condition.Exposure == "Shift40" ~ "+40ms"), 
+            Block_relabelled = factor(case_when(Block == 1 ~ "Test 1",
+                                      Block == 3 ~ "Test 2",
+                                      Block == 5 ~ "Test 3",
+                                      Block == 7 ~ "Test 4",
+                                      Block == 8 ~ "Test 5",
+                                      Block == 9 ~ "Test 6"))) %>% 
+      group_by(Condition.Exposure, ParticipantID, Block_relabelled), 
+               fun.data = mean_cl_boot,
+               mapping = aes(x = Item.VOT,
+                             y = Response.Voiceless,
+                             colour = Condition.Exposure),
+                geom = "pointrange",
+                 size = 0.2,
+               position = position_dodge2(width = 2),
+                  inherit.aes = F) +
+  scale_x_continuous("VOT (msec)", limits = c(-5, 75), breaks = c(-5, 5, 15, 25, 35,45, 55, 70)) +
+  scale_y_continuous("Proportion \"t\"-responses") +
+  scale_color_manual(
+    "Condition",
+    labels = c("+0ms", "+10ms", "+40ms"),
+    values = c("#cc0000", "#12D432","#0481F3"),
+    aesthetics = c("color", "fill")) +
+  facet_wrap(
+    . ~ Block_relabelled,
+    nrow = 2) + 
+  theme(legend.position = "top")
+```
 
 
 

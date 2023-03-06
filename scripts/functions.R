@@ -216,6 +216,18 @@ make_stop_VOTf0_ideal_adaptor <- function(m, kappa = 3, nu = 3) {
       S = get_S_from_expected_Sigma(S, nu))
 }
 
+
+# defining experiment cue means and SDs. This is necessary for the following functions to work
+chodroff.mean_VOT <- 38.6103
+chodroff.mean_f0_Mel <- 237.997
+VOT.mean_exp1 <- 47.6304
+VOT.sd_exp1 <- 51.7727
+f0.mean_exp1 <- 340.923
+f0.sd_exp1 <- 2.58267
+VOT.mean_exp2 <- 35.6597
+VOT.sd_exp2 <- 28.6042
+f0.mean_exp2 <- 340.242
+f0.sd_exp2 <- 1.65449
 ############################################################################
 # Get approximate f0 of synthesised stimuli from VOT values
 ############################################################################
@@ -229,15 +241,21 @@ predict_f0 <- function(VOT, intercept = 245.46968, slope = 0.03827) {
 ############################################################################
 #  function to optimise minimal difference in likelihoods of 2 categories  #
 ############################################################################
-get_diff_in_likelihood_from_io <- function(x, io, add_f0 = F) {
+get_diff_in_likelihood_from_io <- function(x, io, add_f0 = F, io.type) {
   # Since we want to only consider cases that have F0 values that are in a certain linear relation to VOT
   # (the way we created our stimuli), we set the F0 based on the VOT.
-  if (add_f0) x <- c(x, normMel(predict_f0(x)))
-
-  abs(dmvnorm(x, io$mu[[1]], io$Sigma[[1]], log = T) - dmvnorm(x, io$mu[[2]], io$Sigma[[2]], log = T))
+  if (add_f0) x <- c(x, normMel(predict_f0(x))) 
+  else if (add_f0 & io.type == "VOT_F0.centered.input") x <- c(x, normMel(predict_f0(x)) + (chodroff.mean_f0_Mel - f0.mean_exp1)) 
+  else if (add_f0 & io.type == "VOT_F0.centered.input_block1") x <- c(x, normMel(predict_f0(x)) + (chodroff.mean_f0_Mel - f0.mean_exp2))
+  
+  # abs(dmvnorm(x, io$mu[[1]], io$Sigma[[1]], log = T) - dmvnorm(x, io$mu[[2]], io$Sigma[[2]], log = T))
+  y <- abs(dmvnorm(x, io$mu[[2]], io$Sigma[[2]] + io$Sigma_noise[[2]], log = F) / (dmvnorm(x, io$mu[[1]], io$Sigma[[1]] + io$Sigma_noise[[1]], log = F) + dmvnorm(x, io$mu[[2]], io$Sigma[[2]] + io$Sigma_noise[[2]], log = F)) - .5)
+  
+  # message(paste("Explored VOT =", x, "and found p(t) of", y, "\n"))
+  return(y)
 }
 
-get_PSE_from_io <- function(io) {
+get_PSE_from_io <- function(io, io.type) {
   # Set bounds for optimization to be the two category means
   # and initialize optimization half-way between the two means
   min.pars <-
@@ -259,6 +277,7 @@ get_PSE_from_io <- function(io) {
     lower = min.pars[1],
     upper = max.pars[1],
     io = io,
+    io.type = io.type,
     add_f0 = length(pars) > 1)
 
   return(o$par)
@@ -331,15 +350,23 @@ get_IO_categorization <- function(
     select(- all_of(cues)) %>%
     nest(x = x) %>%
     mutate(
-      PSE = map_dbl(
-        io, ~ get_PSE_from_io(io = .x)),
+      PSE = map2_dbl(
+        io, io.type, ~ get_PSE_from_io(io = .x, io.type = .y)),
       categorization =
         map2(
           x, io,
           ~ get_categorization_from_MVG_ideal_observer(x = .x$x, model = .y, decision_rule = "proportional") %>%
             filter(category == "/t/") %>%
             mutate(VOT = map(x, ~ .x[1]) %>% unlist())),
-      line = map2(categorization, gender, ~ geom_line(data = .x, aes(x = VOT, y = response, color = .y), alpha = alpha, linewidth = linewidth)),
+      line = pmap(
+        list(categorization, gender, io.type), 
+        ~ geom_line(data = ..1, 
+                    aes(x = if (str_detect(..3, "centered.input")) VOT - (chodroff.mean_VOT - VOT.mean_exp1)
+                        else if (str_detect(..3, "centered.input_block_1")) VOT - (chodroff.mean_VOT - VOT.mean_exp2)
+                        else VOT, 
+                        y =  response,
+                        color = ..2), 
+                    alpha = alpha, linewidth = linewidth)), 
       io.type = io.type
     )
 }
@@ -465,6 +492,7 @@ add_annotations <- function(data.percept.PSE){
     size = 1.8,
     colour = "darkgray")
 }
+
 
 plot_IO_fit <- function(
     data.production,
@@ -642,5 +670,50 @@ plot_talker_MVGs <- function(
       size = .8,
       alpha = .2,
       inherit.aes = F) +
+    geom_abline(intercept = if (centered == T) normMel(245.46968) + (prod_means[2] - percept_means[2]) else normMel(245.46968), 
+               slope = 0.03827, 
+               alpha = .6,
+               linetype = 2) +
     guides(colour = "none", category = "none")
+}
+
+
+
+############################################################################
+# function to prepare variables for modelling
+############################################################################
+prepVars <- function(d, levels.Condition = NULL) {
+  d %<>%
+    drop_na(Condition.Exposure, Phase, Block, Item.MinimalPair, ParticipantID, Item.VOT, Response)
+  
+  print(paste("VOT mean:", signif(mean(d$Item.VOT, na.rm = T))))
+  print(paste("VOT sd:", signif(sd(d$Item.VOT, na.rm = T))))
+  
+  d %<>% 
+    ungroup() %>% 
+    mutate(
+      Block_n = as.numeric(as.character(Block)),  
+      across(c(Condition.Exposure, Block, Item.MinimalPair), factor),
+      
+      Condition.Exposure = factor(Condition.Exposure, levels = levels.Condition)) %>% 
+    
+    drop_na(Block, Response, Item.VOT) %>% 
+    mutate(VOT_gs = (Item.VOT - mean(Item.VOT, na.rm = TRUE)) / (2 * sd(Item.VOT, na.rm = TRUE))) %>% 
+    droplevels()
+  
+  print(paste("mean VOT is", mean(d$Item.VOT), "and SD is", sd(d$Item.VOT)))
+  
+  contrasts(d$Condition.Exposure) = cbind("_Shift0 vs. Shift10" = c(-2/3, 1/3, 1/3),
+                                          "_Shift10 vs. Shift40" = c(-1/3,-1/3, 2/3))
+  require(MASS)
+  if (all(d$Phase == "test") & n_distinct(d$Block) > 1) {
+    contrasts(d$Block) <- fractions(contr.sdif(6))  
+    dimnames(contrasts(d$Block))[[2]] <- c("_Block1 vs. Block3", "_Block3 vs. Block5", "_Block5 vs. Block7", "_Block7 vs. Block8", "_Block8 vs. Block9")
+    
+    print(contrasts(d$Condition.Exposure))
+    print(contrasts(d$Block)) } else {
+      print(contrasts(d$Condition.Exposure))
+    }
+  
+  return(d)
 }

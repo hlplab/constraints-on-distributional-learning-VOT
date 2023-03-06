@@ -590,57 +590,25 @@ if (file.exists("../models/centered_exposure_exp1.rds")) {
     ndraws = 1000)
   write_rds(centered_exposure, file = "../models/centered_exposure_exp1.rds")
 }
-
-# plot the expected categorization function 
-centered_exposure %>% 
-  group_by(sVOT) %>% 
-  summarise(
-    lower__ = quantile(.epred, probs = .025),
-    median = quantile(.epred, probs = .5),
-    upper__ = quantile(.epred, probs = .975),
-    estimate__ = median(.epred)) %>% 
-  ggplot(aes(x = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1) - (chodroff.mean_VOT - VOT.mean_exp1), #ensures x-value for the y-value is same as bef
-             y = estimate__, linetype = "solid")) +
-  geom_ribbon(aes(ymin = lower__, ymax = upper__), alpha = .05, fill = "#333333") +
-  geom_line(colour = "#333333",
-            linewidth = 1.2,
-            alpha = .5) +
-  geom_ribbon(
-    data = psychometric_fit_exp1 %>% 
-  group_by(sVOT) %>% 
-  summarise(estimate__ = mean(estimate__),
-         lower__ = mean(lower__),
-         upper__ = mean(upper__)) %>% 
-    mutate(Item.VOT = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1)),
-    mapping = aes(x = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1),
-                  ymin = lower__,
-                  ymax = upper__),
-    fill = "red",
-    alpha = .05,
-    inherit.aes = F) +
-  geom_line(
-    data = psychometric_fit_exp1 %>% 
-  group_by(sVOT) %>% 
-  summarise(estimate__ = mean(estimate__),
-         lower__ = mean(lower__),
-         upper__ = mean(upper__)) %>% 
-    mutate(Item.VOT = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1)), 
-      mapping = aes(x = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1), 
-             y = estimate__), 
-      colour = "red",
-      alpha = .5,
-    linetype = "dashed",
-      linewidth = 1.2,
-      inherit.aes = F) +
-  scale_x_continuous("VOT (ms)", limits = c(-100, 130)) +
-  scale_y_continuous("Fitted proportion of 't'-responses") +
-  scale_linetype_manual("Predictions", values = c("solid", "dashed"), labels = c("dashed"= "uncentered", "solid" = "centered"))
 ```
 
 
 ```{r plot-IO-VOT-F0-exposure-centered, fig.height=2.5, fig.width=3.7, warning=FALSE}
+VOT_F0.centered.input <- 
+  get_IO_categorization(
+    cues = c("VOT_centered", "f0_Mel_centered"), 
+    groups = c("Talker", "gender"),
+    VOTs = seq(0, 85, .5) + (chodroff.mean_VOT - VOT.mean_exp1),
+    F0s = normMel(predict_f0(VOTs)) + (chodroff.mean_f0_Mel - f0.mean_exp1),
+    lapse_rate = lapse_exp1,
+    alpha = .1, 
+    linewidth = .3,
+    io.type = "VOT_F0.centered.input") 
+
+PSE_VOT_F0.centered.input <- get_PSE_quantiles(data = VOT_F0.centered.input, group = "gender")
+
 p.IOs.VOT_F0.centered.input <- plot_IO_fit(
-  data.production = VOT_F0.centered, 
+  data.production = VOT_F0.centered.input, 
   data.perception = centered_exposure %>% 
   group_by(sVOT) %>% 
   summarise(
@@ -655,9 +623,9 @@ p.IOs.VOT_F0.centered.input <- plot_IO_fit(
     mutate(PSE = PSE - (chodroff.mean_VOT - VOT.mean_exp1),
            .lower = .lower - (chodroff.mean_VOT - VOT.mean_exp1),
            .upper = .upper - (chodroff.mean_VOT - VOT.mean_exp1)),
-  PSE_VOT_F0.centered) 
+  PSE_VOT_F0.centered.input) 
 
-p.likelihoods.exposure.centered <- plot_talker_MVGs(VOT_F0.centered, cues = c("VOT_centered", "f0_Mel_centered"), centered = T)
+p.likelihoods.exposure.centered <- plot_talker_MVGs(VOT_F0.centered.input, cues = c("VOT_centered", "f0_Mel_centered"), centered = T)
 ```
 
 
@@ -716,9 +684,6 @@ p.col2 <- p6 + p7 + p8 + p9 + p10 +
   plot_layout(ncol = 1, byrow = F, guides = "collect") &
   theme(legend.position = "top") 
 
-glob_lab1 <- "Density"
-glob_lab2 <- "Proportion 't'-responses"
-
 p_lab1 <- 
   ggplot() + 
   annotate(geom = "text", x = 1, y = 1, label = glob_lab1, angle = 90) +
@@ -735,6 +700,9 @@ p_lab2 <-
   plot_layout(ncol = 2, guides = "collect") &
   theme(legend.position = "top")
 ```
+
+
+
 ```{r univariate-IO-models, message=FALSE}
 VOT.centered <- 
   get_IO_categorization(
@@ -762,6 +730,20 @@ p.IOs.VOT.centered <- plot_IO_fit(
   PSE_VOT.centered
 ) 
 
+
+VOT.centered.input <- 
+  get_IO_categorization(
+    cues = c("VOT_centered"), 
+    groups = c("Talker", "gender"),
+    VOTs = seq(0, 85, .5) + (chodroff.mean_VOT - VOT.mean_exp1),
+    F0s = normMel(predict_f0(VOTs)) + (chodroff.mean_f0_Mel - f0.mean_exp1),
+    lapse_rate = lapse_exp1,
+    alpha = .1, 
+    linewidth = 0.3,
+    io.type = "VOT.centered.input") 
+
+PSE_VOT.centered.input <- get_PSE_quantiles(data = VOT.centered.input, group = "gender")
+
 # plot of centered input against univariate IOs
 p.IOs.VOT.centered.input <- plot_IO_fit(
   data.production = VOT.centered, 
@@ -779,7 +761,7 @@ p.IOs.VOT.centered.input <- plot_IO_fit(
     mutate(PSE = PSE - (chodroff.mean_VOT - VOT.mean_exp1),
            .lower = .lower - (chodroff.mean_VOT - VOT.mean_exp1),
            .upper = .upper - (chodroff.mean_VOT - VOT.mean_exp1)),
-  PSE_VOT.centered) 
+  PSE_VOT.centered.input) 
 
 VOT_F0.no.noise <- 
   get_IO_categorization(
@@ -816,12 +798,6 @@ p.IOs.VOT_F0.no.noise <-
 # Specify sequence of positive VOTs
 test.VOTs.positive <- c(5, seq(15, 90, 5), seq(100, 130, 10))
 
-# make VOT_F0_centered data set
-VOT_F0.centered.input <- VOT_F0.centered %>% 
-  mutate(io.type = "VOT_F0.centered.input")
-
-VOT.centered.input <- VOT.centered %>% 
-  mutate(io.type = "VOT.centered.input")
 
 # join all 8 IOs into one dataframe
 d.IOs <- 
@@ -837,7 +813,7 @@ d.test.IO <-
   mutate(
     VOT_F0 = map2(Item.VOT, Item.Mel_f0_5ms, ~ c(.x, .y)),
     Item.VOT_centered = Item.VOT + (chodroff.mean_VOT - VOT.mean_exp1),
-    Item.Mel_f0_centered = Item.Mel_f0_5ms - (chodroff.mean_f0_Mel - f0.mean_exp1), 
+    Item.Mel_f0_centered = Item.Mel_f0_5ms + (chodroff.mean_f0_Mel - f0.mean_exp1), 
     VOT_F0_centered = map2(Item.VOT_centered, Item.Mel_f0_centered, ~ c(.x, .y)),
     Response.category = ifelse(Response.Voicing == "voiced", "/d/", "/t/"),
     Response.t = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
@@ -859,14 +835,19 @@ d.test.IO %<>%
           observed_responses = ..1$Response.category, 
           model = ..2)) %>% 
       unlist(),
-    likelihood_per_response = exp(log_likelihood_per_response))
+    likelihood_per_response = exp(log_likelihood_per_response))  %>%  
+  mutate(
+    io.type = fct_relevel(
+      io.type, c("VOT.no.noise", "VOT", "VOT.centered", "VOT.centered.input", "VOT_F0.no.noise", "VOT_F0", "VOT_F0.centered", "VOT_F0.centered.input")),
+    gender = fct_relevel(
+      gender, c("female", "male")))
 
 IO.likelihood <- d.test.IO %>% 
   group_by(io.type, gender) %>% 
   summarise(
     median_likelihood_per_response = median(likelihood_per_response),
-    mode_likelihood_per_response = max(likelihood_per_response, na.rm = T)
-  )
+    mode_likelihood_per_response = max(likelihood_per_response, na.rm = T))
+
 
 # use bootstrap samples by io type to find the CI of the median
 set.seed(356)
@@ -895,8 +876,6 @@ p.likelihood <- d.test.IO %>%
   summarise(
     median_likelihood_per_response = median(likelihood_per_response),
     mode_likelihood_per_response = max(likelihood_per_response)) %>%
-  mutate(io.type = fct_relevel(io.type, c("VOT.no.noise", "VOT", "VOT.centered", "VOT.centered.input", "VOT_F0.no.noise")),
-         gender = fct_relevel(gender, "female")) %>% 
   ggplot(aes(x = io.type, 
              y = median_likelihood_per_response, colour = gender)) +
   geom_point(size = 3, position = position_dodge2(.2)) +
@@ -908,8 +887,6 @@ p.likelihood <- d.test.IO %>%
   geom_errorbar(
     data = d.bootstrap %>% 
       group_by(io.type, gender) %>%
-      mutate(io.type = fct_relevel(io.type, c("VOT.no.noise", "VOT", "VOT.centered", "VOT.centered.input", "VOT_F0.no.noise")),
-         gender = fct_relevel(gender, "female")) %>% 
       summarise(
         median.lower = quantile(median_sample, probs = .025),
         median.upper = quantile(median_sample, probs = .975)),
@@ -924,8 +901,6 @@ p.likelihood <- d.test.IO %>%
   geom_errorbar(
     data = d.bootstrap %>% 
       group_by(io.type, gender) %>%
-      mutate(io.type = fct_relevel(io.type, c("VOT.no.noise", "VOT", "VOT.centered", "VOT.centered.input", "VOT_F0.no.noise")),
-         gender = fct_relevel(gender, "female")) %>% 
       summarise(
         mode.lower = quantile(mode_sample, probs = .025),
         mode.upper = quantile(mode_sample, probs = .975)),
@@ -956,8 +931,6 @@ p.likelihood.multivar <- d.test.IO %>%
   summarise(
     median_likelihood_per_response = median(likelihood_per_response),
     mode_likelihood_per_response = max(likelihood_per_response)) %>%
-  mutate(io.type = fct_relevel(io.type, c("VOT.no.noise", "VOT", "VOT.centered", "VOT.centered.input", "VOT_F0.no.noise")),
-         gender = fct_relevel(gender, "female")) %>%
   ggplot(aes(x = io.type, 
              y = median_likelihood_per_response, colour = gender)) +
   geom_point(size = 3,
@@ -970,8 +943,6 @@ p.likelihood.multivar <- d.test.IO %>%
   geom_errorbar(
     data = d.bootstrap %>% 
       group_by(io.type, gender) %>%
-      mutate(io.type = fct_relevel(io.type, c("VOT.no.noise", "VOT", "VOT.centered", "VOT.centered.input", "VOT_F0.no.noise")),
-         gender = fct_relevel(gender, "female")) %>% 
       summarise(
         median.lower = quantile(median_sample, probs = .025),
         median.upper = quantile(median_sample, probs = .975)),
@@ -986,8 +957,6 @@ p.likelihood.multivar <- d.test.IO %>%
   geom_errorbar(
     data = d.bootstrap %>% 
       group_by(io.type, gender) %>%
-      mutate(io.type = fct_relevel(io.type, c("VOT.no.noise", "VOT", "VOT.centered", "VOT.centered.input", "VOT_F0.no.noise")),
-         gender = fct_relevel(gender, "female")) %>% 
       summarise(
         mode.lower = quantile(mode_sample, probs = .025),
         mode.upper = quantile(mode_sample, probs = .975)),
@@ -1013,10 +982,56 @@ p.likelihood.multivar
 
 
 
-(ref:IO-likelihood-plot) Median likelihood estimates of the human behavioural data under the assumptions of each IO model. Inset: Triangles indicate the mode, error bars represent the 95% quantile intervals from 1000 bootstrap samples of by-talker estimates of each IO type.
 
-```{r combined-IO-likelihood-plots, fig.width=8, fig.height=6.5, fig.cap="(ref:IO-likelihood-plot)", warning=FALSE}
-#p.likelihood + inset_element(p.likelihood.multivar, .406, .05, .935, .82, align_to = "panel")
+
+```{r, warning=FALSE}
+VOT.no.noise_above_median <- VOT.no.noise %>% filter(PSE > 31)
+
+VOT.no.noise_above_median %>% 
+  ggplot() +
+  VOT.no.noise_above_median$line +
+  geom_text(aes(x = PSE, y = .5, label = round(PSE, 1)), 
+            alpha = .3,
+            position = position_dodge2v(0.1)) +
+  scale_x_continuous(limits = c(30, 90)) +
+  scale_y_continuous(limits = c(.25, .75))
+
+
+
+IO <- rbind(VOT.no.noise, VOT, VOT.centered, VOT.centered.input, VOT_F0.no.noise, VOT_F0, VOT_F0.centered, VOT_F0.centered.input) %>% 
+  select(Talker, gender, PSE, io.type) %>% 
+  mutate(
+    io.type = fct_relevel(
+      io.type, c("VOT.no.noise", "VOT", "VOT.centered", "VOT.centered.input", "VOT_F0.no.noise", "VOT_F0", "VOT_F0.centered", "VOT_F0.centered.input")))
+
+IO %>%
+  group_by(gender, io.type) %>% 
+  ggplot(aes(x = io.type, y = PSE, shape = gender, colour = io.type)) +
+  geom_point(alpha = .3, position = position_dodge(.3)) +
+  geom_linerange(
+    data = IO %>%
+  group_by(gender, io.type) %>% 
+    summarise(lower = quantile(PSE, probs = .025),
+              upper = quantile(PSE, probs = .975),
+              median = quantile(PSE, probs = .5)),
+  mapping = aes(x = io.type, ymin = lower, ymax = upper, linetype = gender),
+  alpha = .5,
+  position = position_dodge(.3),
+  inherit.aes = F) +
+  geom_label(
+    data = IO %>%
+  group_by(gender, io.type) %>% 
+    summarise(lower = quantile(PSE, probs = .025),
+              upper = quantile(PSE, probs = .975),
+              median = quantile(PSE, probs = .5)),
+  mapping = aes(x = io.type, y = median, label = round(median)),
+  size = 2,
+  label.padding = unit(0.18, "lines"),
+  position = position_dodge2(.3),
+  inherit.aes = F) +
+  scale_y_continuous(limits = c(12, 65), breaks = seq(15, 65, 5)) +
+  guides(x = guide_axis(angle = 45))
+
 ```
 
 
