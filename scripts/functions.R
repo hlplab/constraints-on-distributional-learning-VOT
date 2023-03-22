@@ -225,9 +225,10 @@ VOT.sd_exp1 <- 51.7727
 f0.mean_exp1 <- 340.923
 f0.sd_exp1 <- 2.58267
 VOT.mean_exp2 <- 35.6597
-VOT.sd_exp2 <- 28.6042
-f0.mean_exp2 <- 340.242
-f0.sd_exp2 <- 1.65449
+VOT.sd_exp2 <- 22.4422
+f0.mean_exp2 <- 339.987
+f0.sd_exp2 <- 1.4256
+
 ############################################################################
 # Get approximate f0 of synthesised stimuli from VOT values
 ############################################################################
@@ -236,7 +237,6 @@ predict_f0 <- function(VOT, intercept = 245.46968, slope = 0.03827) {
   predict_f0 = intercept + slope * (VOT)
   return(predict_f0)
 }
-
 
 ############################################################################
 #  function to optimise minimal difference in likelihoods of 2 categories  #
@@ -305,8 +305,8 @@ get_IO_categorization <- function(
     with_noise = TRUE,
     VOTs = seq(0, 85, .5),
     F0s = normMel(predict_f0(VOTs)),
-    alpha = .2,
-    linewidth = .5,
+    alpha = .1,
+    linewidth = .3,
     io.type
 ) {
   data %<>%

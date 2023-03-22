@@ -14,14 +14,14 @@ author:
     #   - Writing - Original Draft Preparation
     #   - Writing - Review & Editing
     #   - Coding of analyses and visualization
-  - name          : "T Florian Jaeger"
+  - name          : "Maryann Tan"
     affiliation   : "2,3"
     # role:
     #   - Conceptualization
     #   - Writing - Original Draft Preparation
     #   - Writing - Review & Editing
     #   - Coding of analyses and visualization
-  - name          : "YOUR OTHER CO-AUTHOR"
+  - name          : "T F Jaeger"
     affiliation   : "2"
     # role:
     #   - Conceptualization & Framing
@@ -118,6 +118,7 @@ library(assertthat)         # asserts (in functions)
 library(cowplot)
 library(patchwork)
 library(magick)
+library(webshot)
 library(ggstance)
 library(kableExtra)
 
@@ -128,12 +129,14 @@ library(lme4)
 library(brms)
 library(phonR)
 library(tidybayes)
+library(broom.mixed)
 library(posterior)
 library(rsample)
 
 if (has_internet()) remotes::install_github("hlplab/MVBeliefUpdatr")
 library(MVBeliefUpdatr)  # for generating Ideal Observers
 ```
+
 
 ```{r constants-general, include=FALSE}
 # IF you're using brms or rstan, uncomment the following:
@@ -149,7 +152,11 @@ remove_all_axes <- theme(axis.title.y = element_blank(),
         axis.title.x = element_blank(),
         axis.text.y = element_blank(),
         axis.ticks.y = element_blank())
+
+# overwrite conflict between MASS and dplyr
+select <- dplyr::select
 ```
+
 
 ```{r functions-general, include=FALSE}
 source("functions.R")
@@ -189,6 +196,7 @@ animate = T         # switch on/off to replace animations with facets (not yet i
 TODO = T            # switch on/off to get to do list.
 RESET_FIGURES = F   # switch on/off whether figures that exist as files are regenerated
 ```
+
 
 ```{r analysis-preferences}
 # Seed for random number generation

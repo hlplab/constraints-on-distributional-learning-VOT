@@ -32,7 +32,7 @@ We further set the F0 at vowel onset to follow the speaker's natural correlation
 In addition to the critical minimal pair continua we also recorded three words that did not did not contain any stop consonant sounds ("flare", "share", and "rare"). These word recordings were used as catch trials. Stimulus intensity was set to 70 dB sound pressure level for all recordings. 
 
 ### Procedure
-The code for the experiment is available as part of the OSF repository for this article. A live version is available at (https://www.hlp.rochester.edu/FILLIN-FULL-URL). The first page of the experiment informed participants of their rights and the requirements for the experiment: that they had to be native listeners of English, wear headphones for the entire duration of the experiment, and be in a quiet room without distractions. Participants had to pass a headphone test, and were asked to keep the volume unchanged throughout the experiment. Participants could only advance to the start of the experiment by acknowledging each requirement and consenting to the guidelines of the Research Subjects Review Board of the University of Rochester. 
+The code for the experiment is available as part of the OSF repository for this article. A live version is available at (https://www.hlp.rochester.edu//experiments/DLVOT/series-A/experiment-A.html?list_test=NORM-A-forward-test). The first page of the experiment informed participants of their rights and the requirements for the experiment: that they had to be native listeners of English, wear headphones for the entire duration of the experiment, and be in a quiet room without distractions. Participants had to pass a headphone test, and were asked to keep the volume unchanged throughout the experiment. Participants could only advance to the start of the experiment by acknowledging each requirement and consenting to the guidelines of the Research Subjects Review Board of the University of Rochester. 
 
 On the next page, participants were informed about the task for the remainder of the experiment. They were informed that they would heard a female talker speak a single word on each trial, and had to select which word they heard. Participants were instructed to listen carefully and answer as quickly and as accurately as possible. They were also alerted to the fact that the recordings were subtly different and therefore may sound repetitive. This was done to encourage their full attention.
 
@@ -228,6 +228,8 @@ if (file.exists("../models/categorisation_by_min_pair.rds")) {
 }
 ```
 
+
+
 ```{r fitted-categorisation-minimal-pair"}
 remove_axes_titles <- theme(axis.title.x = element_blank(),
                             axis.title.y = element_blank())
@@ -367,7 +369,7 @@ The lapse rate was estimated to be on the slightly larger side, but within the e
 The response bias were estimated to slightly favor "t"-responses (`r make_CI(fit_mix, "mu1_Intercept", "mu1_Intercept > 0")`), as also visible in Figure \@ref(fig:fitted-categorisation-plots) (left).
 Unsurprisingly, the psychometric model suggests high uncertainty about the participant-specific response biases, as it is difficult to reliably estimate participant-specific biases while also accounting for trial and VOT effects (range of by-participant MAP estimates: XX). For all but four participants, the 95% CI includes the hypothesis that responses were unbiased. Of the remaining four participants, three were biased towards "t"-responses and one was biased toward "d"-responses.
 
-There was no convincing evidence of a main effect of trial ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sTrial", "mu2_sTrial < 0")`). Given the slight overall bias towards "t"-responses, the direction of this effect indicates that participants converged towards a 50/50 bias as the test phase proceeded. This is also evident in Figure \@ref(fig:fitted-categorisation-plots) (right). In contrast, there was clear evidence for a positive main effect of VOT on the proportion of "t"-responses ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sVOT", "mu2_sVOT > 0")`). The effect of VOT was consistent across all minimal pair words as evident from the slopes of the fitted lines by minimal pair \@ref(fig:fitted-categorisation-plots) (left). MAP estimates of by minimal pair slopes ranged from . The by minimal-pair intercepts were more varied (MAP estimates: ) with one of the pairs, dim/tim having a slightly lower intercept resulting in fewer 't'-responses on average. In all, this justifies our assumptions that word pair would not have a substantial effect on categorisation behaviour. From the parameter estimates of the overall fit we obtained the category boundary from the point of subjective equality (PSE) <!--( descale(-(summary(fit_mix)$fixed["mu2_Intercept", 1] / summary(fit_mix)$fixed["mu2_sVOT", 1]), VOT.mean_exp1, VOT.sd_exp1) ms)--> which we use for the design of Experiment 2.
+There was no convincing evidence of a main effect of trial ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sTrial", "mu2_sTrial < 0")`). Given the slight overall bias towards "t"-responses, the direction of this effect indicates that participants converged towards a 50/50 bias as the test phase proceeded. This is also evident in Figure \@ref(fig:fitted-categorisation-plots) (right). In contrast, there was clear evidence for a positive main effect of VOT on the proportion of "t"-responses ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sVOT", "mu2_sVOT > 0")`). The effect of VOT was consistent across all minimal pair words as evident from the slopes of the fitted lines by minimal pair \@ref(fig:fitted-categorisation-plots) (left). MAP estimates of by minimal pair slopes ranged from . The by minimal-pair intercepts were more varied (MAP estimates: ) with one of the pairs, dim/tim having a slightly lower intercept resulting in fewer 't'-responses on average. In all, this justifies our assumptions that word pair would not have a substantial effect on categorisation behaviour. From the parameter estimates of the overall fit we obtained the category boundary from the point of subjective equality (PSE) <!--`r( descale(-(summary(fit_mix)$fixed["mu2_Intercept", 1] / summary(fit_mix)$fixed["mu2_sVOT", 1]), VOT.mean_exp1, VOT.sd_exp1) ms)`--> which we use for the design of Experiment 2.
 
 Finally to accomplish the first goal of experiment 1, we look at the interaction between VOT and trial. There was weak evidence that the effect of VOT decreased across trials ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sVOT:sTrial", "mu2_sVOT:sTrial < 0")`). The direction of this change---towards more shallow VOT slopes as the experiment progressed---makes sense since the test stimuli were not informative about the talker's pronunciation. Similar changes throughout prolonged testing have been reported in previous work. [@liu-jaeger2018; @liu-jaeger2019; @REFS].
 
@@ -476,8 +478,6 @@ VOT <-
     cues = c("VOT"), 
     groups = c("Talker", "gender"), 
     lapse_rate = lapse_exp1,
-    alpha = .1, 
-    linewidth = 0.3,
     io.type = "VOT")
 
 PSE_VOT <- get_PSE_quantiles(data = VOT, group = "gender")
@@ -507,8 +507,6 @@ VOT_F0 <-
     cues = c("VOT", "f0_Mel"), 
     groups = c("Talker", "gender"), 
     lapse_rate = lapse_exp1,
-    alpha = .1, 
-    linewidth = .3,
     io.type = "VOT_F0") 
 
 PSE_VOT_F0 <- get_PSE_quantiles(data = VOT_F0, group = "gender")
@@ -538,8 +536,6 @@ VOT_F0.centered <-
     cues = c("VOT_centered", "f0_Mel_centered"), 
     groups = c("Talker", "gender"),
     lapse_rate = lapse_exp1,
-    alpha = .1, 
-    linewidth = .3,
     io.type = "VOT_F0.centered") 
 
 PSE_VOT_F0.centered <- get_PSE_quantiles(data = VOT_F0.centered, group = "gender")
@@ -594,6 +590,8 @@ if (file.exists("../models/centered_exposure_exp1.rds")) {
 
 
 ```{r plot-IO-VOT-F0-exposure-centered, fig.height=2.5, fig.width=3.7, warning=FALSE}
+# there's a bug that appears here which I can't find. Whenever you empty the Global Environment and execute the code from the very beginning (The parent RMD) the following function breaks. It can't find the object, "VOTs". Explicitly defining VOTs outside of the function as a temporary measure
+VOTs <- seq(0, 85, .5) + (chodroff.mean_VOT - VOT.mean_exp1)
 VOT_F0.centered.input <- 
   get_IO_categorization(
     cues = c("VOT_centered", "f0_Mel_centered"), 
@@ -601,8 +599,6 @@ VOT_F0.centered.input <-
     VOTs = seq(0, 85, .5) + (chodroff.mean_VOT - VOT.mean_exp1),
     F0s = normMel(predict_f0(VOTs)) + (chodroff.mean_f0_Mel - f0.mean_exp1),
     lapse_rate = lapse_exp1,
-    alpha = .1, 
-    linewidth = .3,
     io.type = "VOT_F0.centered.input") 
 
 PSE_VOT_F0.centered.input <- get_PSE_quantiles(data = VOT_F0.centered.input, group = "gender")
@@ -684,18 +680,6 @@ p.col2 <- p6 + p7 + p8 + p9 + p10 +
   plot_layout(ncol = 1, byrow = F, guides = "collect") &
   theme(legend.position = "top") 
 
-p_lab1 <- 
-  ggplot() + 
-  annotate(geom = "text", x = 1, y = 1, label = glob_lab1, angle = 90) +
-  coord_cartesian(clip = "off") +
-  theme_void()
-
-p_lab2 <- 
-  ggplot() + 
-  annotate(geom = "text", x = 1, y = 1, label = glob_lab2, angle = 90) +
-  coord_cartesian(clip = "off")+
-  theme_void()
-
 (p.col1 | p.col2) +
   plot_layout(ncol = 2, guides = "collect") &
   theme(legend.position = "top")
@@ -729,7 +713,6 @@ p.IOs.VOT.centered <- plot_IO_fit(
   data.percept.PSE = post_sample_norm,
   PSE_VOT.centered
 ) 
-
 
 VOT.centered.input <- 
   get_IO_categorization(
@@ -905,7 +888,7 @@ p.likelihood <- d.test.IO %>%
         mode.lower = quantile(mode_sample, probs = .025),
         mode.upper = quantile(mode_sample, probs = .975)),
     mapping = aes(x = io.type, ymin = mode.lower, ymax = mode.upper, colour = gender),
-    size = 1.5,
+    linewidth = 1.5,
     alpha = .6,
     width = 0,
     position = position_dodge(.2),
@@ -986,17 +969,16 @@ p.likelihood.multivar
 
 ```{r, warning=FALSE}
 VOT.no.noise_above_median <- VOT.no.noise %>% filter(PSE > 31)
-
-VOT.no.noise_above_median %>% 
-  ggplot() +
-  VOT.no.noise_above_median$line +
-  geom_text(aes(x = PSE, y = .5, label = round(PSE, 1)), 
-            alpha = .3,
-            position = position_dodge2v(0.1)) +
-  scale_x_continuous(limits = c(30, 90)) +
-  scale_y_continuous(limits = c(.25, .75))
-
-
+# 
+# VOT.no.noise_above_median %>% 
+#   ggplot() +
+#   VOT.no.noise_above_median$line +
+#   geom_text(aes(x = PSE, y = .5, label = round(PSE, 1)), 
+#             alpha = .3,
+#             position = position_dodge2v(0.1)) +
+#   scale_x_continuous(limits = c(30, 90)) +
+#   scale_y_continuous(limits = c(.25, .75))
+# 
 
 IO <- rbind(VOT.no.noise, VOT, VOT.centered, VOT.centered.input, VOT_F0.no.noise, VOT_F0, VOT_F0.centered, VOT_F0.centered.input) %>% 
   select(Talker, gender, PSE, io.type) %>% 
@@ -1004,7 +986,7 @@ IO <- rbind(VOT.no.noise, VOT, VOT.centered, VOT.centered.input, VOT_F0.no.noise
     io.type = fct_relevel(
       io.type, c("VOT.no.noise", "VOT", "VOT.centered", "VOT.centered.input", "VOT_F0.no.noise", "VOT_F0", "VOT_F0.centered", "VOT_F0.centered.input")))
 
-IO %>%
+temp_plot_PSE <- IO %>%
   group_by(gender, io.type) %>% 
   ggplot(aes(x = io.type, y = PSE, shape = gender, colour = io.type)) +
   geom_point(alpha = .3, position = position_dodge(.3)) +
