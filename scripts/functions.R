@@ -361,8 +361,8 @@ get_IO_categorization <- function(
       line = pmap(
         list(categorization, gender, io.type), 
         ~ geom_line(data = ..1, 
-                    aes(x = if (str_detect(..3, "centered.input")) VOT - (chodroff.mean_VOT - VOT.mean_exp1)
-                        else if (str_detect(..3, "centered.input_block_1")) VOT - (chodroff.mean_VOT - VOT.mean_exp2)
+                    aes(x = if (str_detect(..3, ".*\\.centered.input$")) VOT - (chodroff.mean_VOT - VOT.mean_exp1)
+                        else if (str_detect(..3, ".*\\.centered.input_block1$")) VOT - (chodroff.mean_VOT - VOT.mean_exp2)
                         else VOT, 
                         y =  response,
                         color = ..2), 

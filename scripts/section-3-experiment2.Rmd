@@ -562,7 +562,7 @@ if (file.exists("../models/centered_exposure_block1_exp2.rds")) {
 ```
 
 
-```{r IO-categorisation-VOT-F0-exposure-centered, warning=FALSE}
+```{r IO-categorisation-VOT-F0-exposure-centered}
 VOTs = seq(0, 85, .5) + (chodroff.mean_VOT - VOT.mean_exp2) # defining VOTs here as temporary debugging measure
 VOT_F0.centered.input_block1 <- 
   get_IO_categorization(
@@ -600,7 +600,7 @@ p.IOs.VOT_F0.centered.input_block1 <- plot_IO_fit(
 ```
 
 
-```{r IO-categorization-VOT-f0-centered-input-block1, warning=FALSE}
+```{r IO-categorization-VOT-f0-centered-input-block1}
 VOT.centered.input_block1 <- 
   get_IO_categorization(
     cues = c("VOT_centered"), 
