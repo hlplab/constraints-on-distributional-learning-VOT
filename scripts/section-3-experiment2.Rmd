@@ -531,7 +531,7 @@ p.IOs.VOT_F0.centered_block1 <- plot_IO_fit(
 
 
 ```{r, message=FALSE}
-# prepare data for IO that centers perceptual input relative to population mean before categorization
+# prepare data for IO that centers perceptual input relative to database mean before categorization
 chodroff.means <- d.chodroff_wilson.selected %>% 
   group_by(Talker) %>% 
   summarise(across(c(VOT, f0_Mel), mean)) %>% 
@@ -563,7 +563,7 @@ if (file.exists("../models/centered_exposure_block1_exp2.rds")) {
 
 
 ```{r IO-categorisation-VOT-F0-exposure-centered, warning=FALSE}
-VOTs = seq(0, 85, .5) + (chodroff.mean_VOT - VOT.mean_exp2) # defining VOTs as temporary debugging measure
+VOTs = seq(0, 85, .5) + (chodroff.mean_VOT - VOT.mean_exp2) # defining VOTs here as temporary debugging measure
 VOT_F0.centered.input_block1 <- 
   get_IO_categorization(
     cues = c("VOT_centered", "f0_Mel_centered"), 
@@ -593,7 +593,10 @@ p.IOs.VOT_F0.centered.input_block1 <- plot_IO_fit(
     mutate(PSE = PSE - (chodroff.mean_VOT - VOT.mean_exp2),
            .lower = .lower - (chodroff.mean_VOT - VOT.mean_exp2),
            .upper = .upper - (chodroff.mean_VOT - VOT.mean_exp2)),
-  PSE_VOT_F0.centered.input_block1) 
+  PSE_VOT_F0.centered.input_block1 %>% 
+    mutate(PSE.lower = round(PSE.lower - (chodroff.mean_VOT - VOT.mean_exp2), 2),
+           PSE.median = PSE.median - (chodroff.mean_VOT - VOT.mean_exp2),
+           PSE.upper = round(PSE.upper - (chodroff.mean_VOT - VOT.mean_exp2), 2))) 
 ```
 
 
@@ -627,7 +630,10 @@ p.IOs.VOT.centered.input_block1 <- plot_IO_fit(
     mutate(PSE = PSE - (chodroff.mean_VOT - VOT.mean_exp2),
            .lower = .lower - (chodroff.mean_VOT - VOT.mean_exp2),
            .upper = .upper - (chodroff.mean_VOT - VOT.mean_exp2)),
-  PSE_VOT.centered.input_block1
+  PSE_VOT.centered.input_block1 %>% 
+    mutate(PSE.lower = round(PSE.lower - (chodroff.mean_VOT - VOT.mean_exp2), 2),
+           PSE.median = PSE.median - (chodroff.mean_VOT - VOT.mean_exp2),
+           PSE.upper = round(PSE.upper - (chodroff.mean_VOT - VOT.mean_exp2), 2))
 )
 ```
 
@@ -743,40 +749,44 @@ p.likelihood.univar_block1 <- d.test.IO_block1 %>%
   summarise(
     median_likelihood_per_response = median(likelihood_per_response),
     mode_likelihood_per_response = max(likelihood_per_response)) %>% 
-  ggplot(aes(x = io.type,
-             colour = gender)) +
-  geom_point(aes(y = median_likelihood_per_response),
-             size = 3, 
+  pivot_longer(cols = c(median_likelihood_per_response, mode_likelihood_per_response), 
+               names_to = "parameter", names_pattern = "(.*)_likelihood_per_response") %>% 
+  ggplot(aes(x = io.type, colour = gender, y = value, shape = parameter)) +
+  geom_point(size = 3, 
              position = position_dodge(.2)) +
-  geom_point(aes(y = mode_likelihood_per_response), 
-             size = 3,
-             position = position_dodge(.2),
-             shape = 17) +
+  # geom_point(aes(y = mode_likelihood_per_response), 
+  #            size = 3,
+  #            position = position_dodge(.2),
+  #            shape = 17) +
   geom_errorbar(
     data = d.bootstrap_block1 %>% 
       group_by(io.type, gender) %>% 
                summarise(
                  median.lower = quantile(median_sample, probs = .025),
-                 median.upper = quantile(median_sample, probs = .975)),
+                 median.upper = quantile(median_sample, probs = .975),
+                 mode.lower = quantile(mode_sample, probs = .025),
+            mode.upper = quantile(mode_sample, probs = .975)) %>% 
+  pivot_longer(cols = c(3:6), names_to = c("parameter", "quantile"), names_pattern = "(.*)\\.(.*)") %>% 
+ pivot_wider(names_from = quantile, values_from = "value"),
              mapping = 
-               aes(x = io.type, ymin = median.lower, ymax = median.upper, colour = gender),
+               aes(x = io.type, ymin = lower, ymax = upper, colour = gender),
              position = position_dodge(.2),
              linewidth = 1.5,
              alpha = .6,
              width = 0,
              inherit.aes = F) +
-      geom_errorbar(
-        data = d.bootstrap_block1 %>% 
-          group_by(io.type, gender) %>% 
-          summarise(
-            mode.lower = quantile(mode_sample, probs = .025),
-            mode.upper = quantile(mode_sample, probs = .975)),
-        mapping = aes(x = io.type, ymin = mode.lower, ymax = mode.upper, colour = gender),
-        position = position_dodge(.2),
-        linewidth = 1.5,
-        alpha = .6,
-        width = 0,
-        inherit.aes = F) +
+      # geom_errorbar(
+      #   data = d.bootstrap_block1 %>% 
+      #     group_by(io.type, gender) %>% 
+      #     summarise(
+      #       mode.lower = quantile(mode_sample, probs = .025),
+      #       mode.upper = quantile(mode_sample, probs = .975)),
+      #   mapping = aes(x = io.type, ymin = mode.lower, ymax = mode.upper, colour = gender),
+      #   position = position_dodge(.2),
+      #   linewidth = 1.5,
+      #   alpha = .6,
+      #   width = 0,
+      #   inherit.aes = F) +
      scale_y_continuous("Median likelihood per response", limits = c(.10736, .11005), labels = scales::label_number(accuracy = 0.0001)) + 
      scale_x_discrete( 
        limits = c("VOT.no.noise_block1", "VOT_block1", "VOT.centered_block1", "VOT.centered.input_block1"),
@@ -903,9 +913,7 @@ fixed_eff_exp2 <- tidy(fit_mix_uniform_bias, effects = "fixed") %>%
   select(-c(effect, component))
 
 kable(fixed_eff_exp2, booktabs = TRUE, caption = "Population estimates") %>% 
-  kable_styling(c("striped", "repeat_header"), position = "center") %>% 
-  column_spec(2, width = "10em") 
-
+  kable_styling(c("striped", "repeat_header"), position = "center") 
 ```
 
 
@@ -913,24 +921,24 @@ Fig. XX summarizes participants’ categorization functions across the different
 
 There was a main effect of VOT $\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_VOT_gs", "mu2_VOT_gs > 0")`; participants were more likely to respond "t" as VOT increased. Condition had a main effect on responses such that with larger shifts, participants on average responded with fewer "t"s.  Additionally, the difference in average "t" responses between the +40ms and +10ms conditions ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift10vs.Shift40", "mu2_Condition.Exposure_Shift10vs.Shift40 < 0")` reduction in log-odds) was *larger* than the difference between the +10 and +0 conditions ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift0vs.Shift10", "mu2_Condition.Exposure_Shift0vs.Shift10 < 0")` reduction in log-odds). 
 Qualitatively, the results indicate listeners adjust their expectations to align with the statistics of the exposure talker, consonant with previous findings of studies employing this paradigm (e.g., @clayards2008; @kleinschmidt2016you; @theodore2019distributional). 
-While there was weak evidence for a main effect of block its interaction with condition revealed how participants in the respective groups responded as they progressively received more informative exposure. Most of the change took place after the first exposure block. There is some evidence that the difference in proportion of "t"-responses between condition +10ms and +0ms in block 3 compared to that in block 1 ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift0vs.Shift10:Block_Block1vs.Block3", "mu2_Condition.Exposure_Shift0vs.Shift10:Block_Block1vs.Block3 < 0")`) was meaningful. In block 3, participants in the +10ms condition on average, responded with fewer "ts" *relative* to participants in the +0ms condition. The evidence for the difference in proportion of "t" responses between the  +40ms and +10ms condition in block 3 compared to that in block 1 was much stronger ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift10vs.Shift40:Block_Block1vs.Block3", "mu2_Condition.Exposure_Shift10vs.Shift40:Block_Block1vs.Block3 < 0")`). 
 
-[THE WORDING BELOW THAT DESCRIBE THE ESTIMATES OF THE INTERACTIONS COULD BE WRONG -- I'M UNDER THE IMPRESSION THAT THE INTERACTION MEASURES THE DIFFERENCE BETWEEN THE DIFFERENCES IN CONDITIONS FROM 1 BLOCK TO THE NEXT BLOCK -- WHAT DOES A POSITIVE ESTIMATE INDICATE? IS IT THAT THE DIFF IN LOG-ODDS BETWEEN +0 AND +10 IN BLOCK 5 IS LARGER THAN THE DIFF IN LOG-ODDS BETWEEN +0 AND +10 IN BLOCK 3? IT DOESN'T LOOK THAT WAY IN THE PLOTS: see figure PANEL 3 DIFFERENCE BETWEEN +10 AND +0 LOOKS NARROWER THAN PANEL 2]
-Moving to test block 5, the difference in average log-odds between +0ms and +10ms in block 5 relative to block 3 was *positive* such that the margin of difference between the two conditions in block 5 was smaller than the corresponding margin in block 3 ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift0vs.Shift10:Block_Block3vs.Block5", "mu2_Condition.Exposure_Shift0vs.Shift10:Block_Block3vs.Block5 >0")`). In blocks 7 and 8, the  average log-odds difference between +0ms and +10ms increased marginally (as indicated by the negative signs of the estimates), although evidence The effects in both comparisons was marginally weaker than that seen in test block 3 while subsequent blocks showed attenuating effects of the interaction between condition and test block. 
+While there was weak evidence for a main effect of block its interaction with condition revealed how participants in the respective groups responded as they progressively received more informative exposure. Most of the change took place after the first exposure block. participants in the +10ms condition on average, responded with fewer "ts" *relative* to participants in the +0ms condition in block 3 compared to that in block 1 ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift0vs.Shift10:Block_Block1vs.Block3", "mu2_Condition.Exposure_Shift0vs.Shift10:Block_Block1vs.Block3 < 0")`). This difference between the  +40ms and +10ms condition in block 3 compared to that in block 1 was more pronounce, reflecting the larger distance between the two exposure distributions ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift10vs.Shift40:Block_Block1vs.Block3", "mu2_Condition.Exposure_Shift10vs.Shift40:Block_Block1vs.Block3 < 0")`). 
 
+In test block 5, the difference in average log-odds between +0ms and +10ms in block 5 relative to block 3 was *positive* such that the margin of difference between the two conditions in block 5 was smaller than the corresponding margin in block 3 ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift0vs.Shift10:Block_Block3vs.Block5", "mu2_Condition.Exposure_Shift0vs.Shift10:Block_Block3vs.Block5 >0")`). In blocks 7 and 8, the  average log-odds difference between +0ms and +10ms increased marginally when compared to the preceding block (as indicated by the negative signs of the estimates; see table xx) while in block 9 the difference between the two exposure conditions began to narrow. The average difference between the +40ms and +10ms condition continued to widen in blocks 5 and block 7 relative to preceding blocks albeit by progressively smaller increments. This trend would reverse in blocks 8 and 9. In all, the respective conditions hit their maximal shifts between blocks 3 and 5 and began to display a reversal of the exposure effects by the end of block 7. This observation in the final test 3 test blocks was expected given previous findings that distributional learning effects can begin to dissipate after extended testing. While 
+
+In summary, the analysis shows that listeners' categorization behaviour changed very early on in the experiment -- only after 24 exposure trials to each category -- but they reached the limits of their shifts just as quickly. Subsequent exposure blocks had a marginal effect on their categorization behaviour. Like this study's predecessor, the various exposure groups did 
 ```{r, results='hide'}
-# get fits by condition for plotting
 cond_fit <- conditional_effects(
-  fit_mix_uniform_bias,
-  effects = "VOT_gs:Condition.Exposure",
-  conditions = make_conditions(
-    d.test_exposure_for_analysis %>% 
-      filter(Phase == "test") %>% 
-      prepVars(levels.Condition = levels_Condition.Exposure), 
-    vars = c("Block")),
-  method = "posterior_epred",
-  ndraws = 800,
-  re_formula = NA)
+    fit_mix_uniform_bias,
+    effects = "VOT_gs:Condition.Exposure",
+    conditions = make_conditions(
+      d.test_exposure_for_analysis %>% 
+        filter(Phase == "test") %>% 
+        prepVars(levels.Condition = levels_Condition.Exposure), 
+      vars = c("Block")),
+    method = "posterior_epred",
+    ndraws = 500,
+    re_formula = NA)
 
 p.conditions <- cond_fit[[1]] %>%
   mutate(Condition.Exposure = case_when(Condition.Exposure == "Shift0" ~ "+0ms",
@@ -993,8 +1001,30 @@ p.conditions <- cond_fit[[1]] %>%
 
 ```{r fitted-categorisation-function-condition-block, fig.width=6, fig.height=4.5}
 p.conditions 
-
 ```
+
+
+```{r}
+# d.contrast.compare <- d.test_exposure_for_analysis %>% 
+#   filter(Phase == "test") %>% 
+#   select(Condition.Exposure, Block) %>% 
+#   distinct()
+# 
+# newdata <- crossing(d.contrast.compare, VOT_gs = 0)
+# 
+# predictions <- epred_draws(
+#   fit_mix_uniform_bias,
+#     newdata = newdata,
+#   re_formula = NA,
+#   ndraws = 100) %>% 
+#   group_by(Condition.Exposure, Block) %>% 
+#   summarise(mean_log_odds = mean(.epred)) %>% 
+#   mutate(VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2), 
+#          prob = plogis(.epred))
+```
+
+
+
 
 ```{r}
 # nested models for extracting the 'intercepts' and 'slopes' for each Block and Condition

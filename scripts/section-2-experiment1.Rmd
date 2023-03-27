@@ -369,7 +369,7 @@ The lapse rate was estimated to be on the slightly larger side, but within the e
 The response bias were estimated to slightly favor "t"-responses (`r make_CI(fit_mix, "mu1_Intercept", "mu1_Intercept > 0")`), as also visible in Figure \@ref(fig:fitted-categorisation-plots) (left).
 Unsurprisingly, the psychometric model suggests high uncertainty about the participant-specific response biases, as it is difficult to reliably estimate participant-specific biases while also accounting for trial and VOT effects (range of by-participant MAP estimates: XX). For all but four participants, the 95% CI includes the hypothesis that responses were unbiased. Of the remaining four participants, three were biased towards "t"-responses and one was biased toward "d"-responses.
 
-There was no convincing evidence of a main effect of trial ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sTrial", "mu2_sTrial < 0")`). Given the slight overall bias towards "t"-responses, the direction of this effect indicates that participants converged towards a 50/50 bias as the test phase proceeded. This is also evident in Figure \@ref(fig:fitted-categorisation-plots) (right). In contrast, there was clear evidence for a positive main effect of VOT on the proportion of "t"-responses ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sVOT", "mu2_sVOT > 0")`). The effect of VOT was consistent across all minimal pair words as evident from the slopes of the fitted lines by minimal pair \@ref(fig:fitted-categorisation-plots) (left). MAP estimates of by minimal pair slopes ranged from . The by minimal-pair intercepts were more varied (MAP estimates: ) with one of the pairs, dim/tim having a slightly lower intercept resulting in fewer 't'-responses on average. In all, this justifies our assumptions that word pair would not have a substantial effect on categorisation behaviour. From the parameter estimates of the overall fit we obtained the category boundary from the point of subjective equality (PSE) <!--`r( descale(-(summary(fit_mix)$fixed["mu2_Intercept", 1] / summary(fit_mix)$fixed["mu2_sVOT", 1]), VOT.mean_exp1, VOT.sd_exp1) ms)`--> which we use for the design of Experiment 2.
+There was no convincing evidence of a main effect of trial ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sTrial", "mu2_sTrial < 0")`). Given the slight overall bias towards "t"-responses, the direction of this effect indicates that participants converged towards a 50/50 bias as the test phase proceeded. This is also evident in Figure \@ref(fig:fitted-categorisation-plots) (right). In contrast, there was clear evidence for a positive main effect of VOT on the proportion of "t"-responses ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sVOT", "mu2_sVOT > 0")`). The effect of VOT was consistent across all minimal pair words as evident from the slopes of the fitted lines by minimal pair \@ref(fig:fitted-categorisation-plots) (left). MAP estimates of by minimal pair slopes ranged from . The by minimal-pair intercepts were more varied (MAP estimates: ) with one of the pairs, dim/tim having a slightly lower intercept resulting in fewer 't'-responses on average. In all, this justifies our assumptions that word pair would not have a substantial effect on categorisation behaviour. From the parameter estimates of the overall fit we obtained the category boundary from the point of subjective equality (PSE) `r( descale(-(summary(fit_mix)$fixed["mu2_Intercept", 1] / summary(fit_mix)$fixed["mu2_sVOT", 1]), VOT.mean_exp1, VOT.sd_exp1) ms)` which we use for the design of Experiment 2.
 
 Finally to accomplish the first goal of experiment 1, we look at the interaction between VOT and trial. There was weak evidence that the effect of VOT decreased across trials ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sVOT:sTrial", "mu2_sVOT:sTrial < 0")`). The direction of this change---towards more shallow VOT slopes as the experiment progressed---makes sense since the test stimuli were not informative about the talker's pronunciation. Similar changes throughout prolonged testing have been reported in previous work. [@liu-jaeger2018; @liu-jaeger2019; @REFS].
 
@@ -535,6 +535,7 @@ VOT_F0.centered <-
   get_IO_categorization(
     cues = c("VOT_centered", "f0_Mel_centered"), 
     groups = c("Talker", "gender"),
+    VOTs = seq(0, 85, .5),
     lapse_rate = lapse_exp1,
     io.type = "VOT_F0.centered") 
 
@@ -571,11 +572,12 @@ chodroff.means <- d.chodroff_wilson.selected %>%
 chodroff.mean_VOT <- chodroff.means %>% pull(VOT)
 chodroff.mean_f0_Mel <- chodroff.means %>% pull(f0_Mel)
 
+# center the VOTs (the x-axis values) from the fitted model by adding the difference in database mean VOT and experiment's VOT mean
 psychometric_fit_exp1_centered <- psychometric_fit_exp1 %>% 
   mutate(Item.VOT = (descale(sVOT, VOT.mean_exp1, VOT.sd_exp1)) + (chodroff.mean_VOT - VOT.mean_exp1),
          sVOT = (Item.VOT - VOT.mean_exp1) / (2 * VOT.sd_exp1))
 
-# get expected values of the centered VOT under the model
+# get expected values of the centered VOTs under the fitted model
 if (file.exists("../models/centered_exposure_exp1.rds")) {
   centered_exposure <- read_rds("../models/centered_exposure_exp1.rds")
 } else {
@@ -612,17 +614,24 @@ p.IOs.VOT_F0.centered.input <- plot_IO_fit(
     median = quantile(.epred, probs = .5),
     upper__ = quantile(.epred, probs = .975),
     estimate__ = quantile(.epred, probs = .5)) %>% 
-    mutate(Item.VOT = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1) - (chodroff.mean_VOT - VOT.mean_exp1)),
+    mutate(Item.VOT = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1) - (chodroff.mean_VOT - VOT.mean_exp1)), # put back predicted centred VOTs on original continuum (x-axis)
   data.test = d.test.excluded %>% 
-    ungroup() %>% distinct(Item.VOT),
+    ungroup() %>% 
+    distinct(Item.VOT),
   data.percept.PSE = post_sample_norm %>% 
     mutate(PSE = PSE - (chodroff.mean_VOT - VOT.mean_exp1),
            .lower = .lower - (chodroff.mean_VOT - VOT.mean_exp1),
            .upper = .upper - (chodroff.mean_VOT - VOT.mean_exp1)),
-  PSE_VOT_F0.centered.input) 
+  PSE_VOT_F0.centered.input %>% 
+    mutate(PSE.lower = round(PSE.lower - (chodroff.mean_VOT - VOT.mean_exp1), 2),
+           PSE.median = PSE.median - (chodroff.mean_VOT - VOT.mean_exp1),
+           PSE.upper = round(PSE.upper - (chodroff.mean_VOT - VOT.mean_exp1), 2))) 
 
 p.likelihoods.exposure.centered <- plot_talker_MVGs(VOT_F0.centered.input, cues = c("VOT_centered", "f0_Mel_centered"), centered = T)
 ```
+
+
+
 
 
 
@@ -949,7 +958,7 @@ p.likelihood.multivar <- d.test.IO %>%
     width = 0,
     position = position_dodge(.2),
     inherit.aes = F) +
-  scale_y_continuous("Median log-likelihood \n per response", limits = c(.48, .67)) +
+  scale_y_continuous("Median likelihood \n per response", limits = c(.48, .67)) +
   scale_x_discrete(expand = expansion(mult = c(0.09, 0.09)), 
                    limits = c("VOT_F0.no.noise", "VOT_F0", "VOT_F0.centered", "VOT_F0.centered.input"),
                    breaks = c("VOT_F0.no.noise", "VOT_F0", "VOT_F0.centered", "VOT_F0.centered.input"),
