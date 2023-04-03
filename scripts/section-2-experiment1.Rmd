@@ -621,7 +621,7 @@ psychometric_fit_exp1 %>%
 ```{r plot-IO-VOT-F0-exposure-centered, fig.height=2.5, fig.width=3.7, warning=FALSE}
 # Whenever you empty the Global Environment and execute the code from the very beginning (The parent RMD) the following function can't find the object, "VOTs".
 VOTs_centered <- seq(0, 85, .5) + (chodroff.mean_VOT - VOT.mean_exp1)
-F0s_centered <- normMel(predict_f0(VOTs)) + (chodroff.mean_f0_Mel - f0.mean_exp1)
+F0s_centered <- normMel(predict_f0(VOTs_centered)) + (chodroff.mean_f0_Mel - f0.mean_exp1)
 VOT_F0.centered.input <- 
   get_IO_categorization(
     cues = c("VOT_centered", "f0_Mel_centered"), 
@@ -700,7 +700,7 @@ p10 <- p.IOs.VOT_F0.centered.input +
 
 
 
-(ref:comparative-IO-plot) **Right column:** Comparing predicted vs. observed categorization functions for Experiment 1. The black line and interval show the psychometric fit and 95% CI for Experiment 1 marginalizing over all random effects. Each thin line shows the prediction of a single talker-specific ideal observer derived from a database of word-initial stop productions [data: @chodroff2017structure; data preparation & model code: @Kurumada_Xie_Jaeger_2022]. The lapse rate and response bias for the ideal observers was set to match the MAP estimates of the psychometric model. For ease of comparisons, horizontal point ranges show the PSE and its 95% CI after discounting lapses. **Left column:** Gaussian distributions indicate talker likelihoods by category. Rug shows show exposure stimuli location along VOT and along VOT and F0 (points). Talker cues (second-to-last-row) and exposure stimuli (last row) are centered relative to overall cue means across categories.
+(ref:comparative-IO-plot) **Right column:** Comparing predicted vs. observed categorization functions for Experiment 1. The black line and interval show the psychometric fit and 95% CI for Experiment 1 marginalizing over all random effects. Each thin line shows the prediction of a single talker-specific ideal observer derived from a database of word-initial stop productions [data: @chodroff2017structure; data preparation & model code: @Kurumada_Xie_Jaeger_2022]. The lapse rate and response bias for the ideal observers was set to match the MAP estimates of the psychometric model. For ease of comparisons, horizontal point ranges show the PSE and its 95% CI after discounting lapses. **Left column:** Gaussian distributions indicate talker likelihoods by category. Rug show exposure stimuli location along VOT and along VOT and F0 (points). Talker cues (second-to-last-row) and exposure stimuli (last row) are centered relative to overall cue means across categories.
 
 ```{r, comparative-IO-plot, warning=FALSE, fig.width=6, fig.height=9, fig.cap="(ref:comparative-IO-plot)"}
 
@@ -888,14 +888,22 @@ p.likelihood <- d.test.IO %>%
   group_by(io.type, gender) %>% 
   summarise(
     median_likelihood_per_response = median(likelihood_per_response),
-    mode_likelihood_per_response = max(likelihood_per_response)) %>%
+    mode_likelihood_per_response = max(likelihood_per_response),
+    min_likelihood_per_response = min(likelihood_per_response)) %>%
   ggplot(aes(x = io.type, 
              y = median_likelihood_per_response, colour = gender)) +
   geom_point(size = 3, position = position_dodge2(.2)) +
-   geom_point(aes(x = io.type, 
-                 y = mode_likelihood_per_response), 
-             size = 3, 
-             shape = 17,
+   geom_label(aes(x = io.type, 
+                 y = mode_likelihood_per_response,
+                 label = "max"),
+              alpha = .5,
+              size = 1.8,
+             position = position_dodge(.2)) +
+     geom_label(aes(x = io.type, 
+                 y = min_likelihood_per_response,
+                 label = "min"),
+              alpha = .5,
+              size = 1.8,
              position = position_dodge(.2)) +
   geom_errorbar(
     data = d.bootstrap %>% 
@@ -911,27 +919,27 @@ p.likelihood <- d.test.IO %>%
     width = 0,
     position = position_dodge(.2),
     inherit.aes = F) + 
-  geom_errorbar(
-    data = d.bootstrap %>% 
-      group_by(io.type, gender) %>%
-      summarise(
-        mode.lower = quantile(mode_sample, probs = .025),
-        mode.upper = quantile(mode_sample, probs = .975)),
-    mapping = aes(x = io.type, ymin = mode.lower, ymax = mode.upper, colour = gender),
-    linewidth = 1.5,
-    alpha = .6,
-    width = 0,
-    position = position_dodge(.2),
-    inherit.aes = F) +
-  scale_y_continuous("Median likelihood per response", limits = c(0.07385, 0.07392)) +
+  # geom_errorbar(
+  #   data = d.bootstrap %>% 
+  #     group_by(io.type, gender) %>%
+  #     summarise(
+  #       mode.lower = quantile(mode_sample, probs = .025),
+  #       mode.upper = quantile(mode_sample, probs = .975)),
+  #   mapping = aes(x = io.type, ymin = mode.lower, ymax = mode.upper, colour = gender),
+  #   linewidth = 1.5,
+  #   alpha = .6,
+  #   width = 0,
+  #   position = position_dodge(.2),
+  #   inherit.aes = F) +
+  scale_y_continuous("Median likelihood per response", limits = c(0.07383, 0.07392)) +
    scale_x_discrete( 
      limits = c("VOT.no.noise", "VOT", "VOT.centered", "VOT.centered.input"),
      breaks = c("VOT.no.noise", "VOT", "VOT.centered", "VOT.centered.input"),
-     labels = c(VOT.no.noise = "VOT", VOT = "VOT\n(+perceptual noise)", VOT.centered = "VOT\n(talker-centered)", VOT.centered.input = "VOT\n(exposure-centered)")) +
+     labels = c(VOT.no.noise = "VOT", VOT = "VOT\n(+perceptual noise)", VOT.centered = "VOT\n(+talker-centered)", VOT.centered.input = "VOT\n(+exposure-centered)")) +
   scale_colour_manual("Gender", values = colours.sex, labels = c("Female", "Male")) +
   theme(axis.title.x = element_blank(),
         legend.position = "top") +
-  guides(x = guide_axis(angle = 45)) +
+  guides(x = guide_axis(angle = 25)) +
   coord_trans(y = "log10")
 
 p.likelihood
@@ -939,20 +947,32 @@ p.likelihood
 
 
 (ref:comparing-likelihoods-of-perception-data-under-each-bivariate-IO)
-```{r IO-multivar-likelihood-plot, fig.width=5.5, fig.height=3.5, warning=FALSE, fig.cap="(ref:comparing-likelihoods-of-perception-data-under-each-bivariate-IO)"}
+```{r IO-multivar-likelihood-plot, fig.width=6, fig.height=3.5, warning=FALSE, fig.cap="(ref:comparing-likelihoods-of-perception-data-under-each-bivariate-IO)"}
 p.likelihood.multivar <- d.test.IO %>% 
   group_by(io.type, gender) %>% 
   summarise(
     median_likelihood_per_response = median(likelihood_per_response),
-    mode_likelihood_per_response = max(likelihood_per_response)) %>%
+    mode_likelihood_per_response = max(likelihood_per_response),
+    min_likelihood_per_response = min(likelihood_per_response)) %>%
   ggplot(aes(x = io.type, 
              y = median_likelihood_per_response, colour = gender)) +
   geom_point(size = 3,
              position = position_dodge(.2)) +
-  geom_point(aes(x = io.type, 
-                 y = mode_likelihood_per_response), 
-             size = 3, 
-             shape = 17,
+  geom_label(aes(x = io.type, 
+                 y = mode_likelihood_per_response,
+                 label = "max",
+                 colour = gender), 
+             size = 1.5,
+             alpha = .5,
+             show.legend = F,
+             position = position_dodge(.2)) +
+    geom_label(aes(x = io.type, 
+                 y = min_likelihood_per_response,
+                 label = "min",
+                 colour = gender), 
+             size = 1.8,
+             alpha = .5,
+             show.legend = F,
              position = position_dodge(.2)) +
   geom_errorbar(
     data = d.bootstrap %>% 
@@ -963,32 +983,33 @@ p.likelihood.multivar <- d.test.IO %>%
     mapping = 
       aes(x = io.type, ymin = median.lower, ymax = median.upper, colour = gender),
     colours = colours.sex,
-    linewidth = 1.5,
+    linewidth = 1.8,
     alpha = .6,
     width = 0,
     position = position_dodge(.2),
     inherit.aes = F) + 
-  geom_errorbar(
-    data = d.bootstrap %>% 
-      group_by(io.type, gender) %>%
-      summarise(
-        mode.lower = quantile(mode_sample, probs = .025),
-        mode.upper = quantile(mode_sample, probs = .975)),
-    mapping = aes(x = io.type, ymin = mode.lower, ymax = mode.upper, colour = gender),
-    size = 1.5,
-    alpha = .6,
-    width = 0,
-    position = position_dodge(.2),
-    inherit.aes = F) +
-  scale_y_continuous("Median likelihood \n per response", limits = c(.48, .67)) +
+  # geom_errorbar(
+  #   data = d.bootstrap %>% 
+  #     group_by(io.type, gender) %>%
+  #     summarise(
+  #       mode.lower = quantile(mode_sample, probs = .025),
+  #       mode.upper = quantile(mode_sample, probs = .975)),
+  #   mapping = aes(x = io.type, ymin = mode.lower, ymax = mode.upper, colour = gender),
+  #   size = 1.5,
+  #   alpha = .6,
+  #   width = 0,
+  #   position = position_dodge(.2),
+  #   inherit.aes = F) +
+  scale_y_continuous("Median likelihood \n per response", limits = c(.05, .67)) +
   scale_x_discrete(expand = expansion(mult = c(0.09, 0.09)), 
                    limits = c("VOT_F0.no.noise", "VOT_F0", "VOT_F0.centered", "VOT_F0.centered.input"),
                    breaks = c("VOT_F0.no.noise", "VOT_F0", "VOT_F0.centered", "VOT_F0.centered.input"),
-                   labels = c(VOT_F0.no.noise = "VOT_F0", VOT_F0 = "VOT-F0\n(+perceptual noise)", VOT_F0.centered = "VOT-F0\n (talker-centered)", VOT_F0.centered.input = "VOT-F0 \n (exposure-centered)")) +
+                   labels = c(VOT_F0.no.noise = "VOT_F0", VOT_F0 = "VOT-F0\n(+perceptual noise)", VOT_F0.centered = "VOT-F0\n (+talker-centered)", VOT_F0.centered.input = "VOT-F0 \n (+exposure-centered)")) +
   scale_colour_manual("Gender", values = colours.sex, labels = c("Female", "Male")) +
   theme(axis.title.x = element_blank(),
         legend.position = "top") +
-  guides(x = guide_axis(angle = 45)) +
+  guides(x = guide_axis(angle = 25),
+           axis.text.x = element_text(size = 8)) +
   coord_trans(y = "log10") 
 
 p.likelihood.multivar

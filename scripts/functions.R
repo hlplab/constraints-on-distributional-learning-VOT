@@ -673,7 +673,8 @@ plot_talker_MVGs <- function(
     geom_abline(intercept = if (centered == T) normMel(245.46968) + (prod_means[2] - percept_means[2]) else normMel(245.46968), 
                slope = 0.03827, 
                alpha = .6,
-               linetype = 2) +
+               linetype = 2, 
+               alpha = .6) +
     guides(colour = "none", category = "none")
 }
 
