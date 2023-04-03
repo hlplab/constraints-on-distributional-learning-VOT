@@ -80,11 +80,15 @@ psychometric_fit_exp1 %>%
   group_by(sVOT) %>% 
   summarise(estimate__ = mean(estimate__),
             lower__ = mean(lower__),
-            upper__ = mean(upper__)) %>% 
+            upper__ = mean(upper__)) %>% mutate(model = "1 + sVOT  * sTrial") %>% 
      ggplot(aes(x = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1), 
-             y = estimate__, linetype = "solid")) + 
+             y = estimate__, fill = model)) + 
     geom_ribbon(
-    data = fit_mix_f0_data, 
+    data = fit_mix_f0_data %>% 
+      group_by(sVOT) %>% 
+      summarise(estimate__ = mean(estimate__),
+            lower__ = mean(lower__),
+            upper__ = mean(upper__)), 
     mapping = aes(
       x = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1),
       ymin = lower__, 
@@ -94,25 +98,31 @@ psychometric_fit_exp1 %>%
     inherit.aes = F) +
   geom_ribbon(aes(ymin = lower__, ymax = upper__),
               fill = "#333333",
-              alpha = .1) +
+              alpha = .1,
+              show.legend = F) +
   geom_line(linewidth = 1.5, 
+            linetype = "solid",
             colour = "#333333",
-            alpha = .2) +
+            alpha = .2,
+            show.legend = F) +
     geom_line(
-      data = fit_mix_f0_data, 
+      data = fit_mix_f0_data %>% 
+      group_by(sVOT) %>% 
+      summarise(estimate__ = mean(estimate__),
+            lower__ = mean(lower__),
+            upper__ = mean(upper__)) %>% mutate(model = "with F0"), 
       mapping = aes(x = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1), 
-             y = estimate__, linetype = 2), 
+             y = estimate__, fill = model),
+      linetype = "dashed",
       colour = "red",
-    linetype = 2,
       alpha = .5,
       linewidth = 1.5,
+      show.legend = T,
       inherit.aes = F) + 
   scale_x_continuous("VOT (ms)", limits = c(-100, 130)) +
   scale_y_continuous("Fitted proportion of 't' responses") +
-  scale_linetype_manual("Model", values = c("solid" = 1, "dashed" = 2), labels = c("1 + sVOT  * sTrial", "fit with F0"))
-
+  scale_fill_manual("Model", values = c("1 + sVOT  * sTrial" = "#333333", "with F0" = "red"), labels = c("sVOT  * sTrial", "sVOT  * sTrial * F0")) 
 ```
-
 
 
 

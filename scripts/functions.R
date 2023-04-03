@@ -361,8 +361,8 @@ get_IO_categorization <- function(
       line = pmap(
         list(categorization, gender, io.type), 
         ~ geom_line(data = ..1, 
-                    aes(x = if (str_detect(..3, ".*\\.centered.input$")) VOT - (chodroff.mean_VOT - VOT.mean_exp1)
-                        else if (str_detect(..3, ".*\\.centered.input_block1$")) VOT - (chodroff.mean_VOT - VOT.mean_exp2)
+                    aes(x = if (str_detect(..3, ".*\\.centered\\.input$")) VOT - (chodroff.mean_VOT - VOT.mean_exp1)
+                        else if (str_detect(..3, ".*\\.centered\\.input_block1$")) VOT - (chodroff.mean_VOT - VOT.mean_exp2)
                         else VOT, 
                         y =  response,
                         color = ..2), 
@@ -514,7 +514,7 @@ plot_IO_fit <- function(
     #   mapping = aes(x = VOT, ymin = response_lower, ymax = response_upper, fill = gender),
     #   alpha = .1) +
   data.production$line +
-    scale_x_continuous("VOT (ms)", breaks = c(0, 25, 50, 100), limits = c(-15, 85), expand = c(0, 0)) +
+    scale_x_continuous("VOT (ms)", breaks = c(0, 25, 50, 75), limits = c(-15, 85), expand = c(0, 0)) +
     scale_y_continuous('Proportion "t"-responses') +
     scale_colour_manual("Model",
                         values = c(colours.sex),
@@ -562,7 +562,7 @@ get_PSE_quantiles <- function(data, group) {
 }
 
 ############################################################################
-# function to plot talker likelihoods in experiment 1 (section 2.3)
+# function to plot talker productions in experiment 1 (section 2.3)
 ############################################################################
 
 plot_talker_UVGs <- function (data_production, data_perception, noise = FALSE) {
@@ -682,7 +682,7 @@ plot_talker_MVGs <- function(
 ############################################################################
 # function to prepare variables for modelling
 ############################################################################
-prepVars <- function(d, levels.Condition = NULL) {
+prepVars <- function(d, levels.Condition = NULL, contrast_type) {
   d %<>%
     drop_na(Condition.Exposure, Phase, Block, Item.MinimalPair, ParticipantID, Item.VOT, Response)
   
@@ -703,15 +703,22 @@ prepVars <- function(d, levels.Condition = NULL) {
   
   print(paste("mean VOT is", mean(d$Item.VOT), "and SD is", sd(d$Item.VOT)))
   
-  contrasts(d$Condition.Exposure) = cbind("_Shift0 vs. Shift10" = c(-2/3, 1/3, 1/3),
-                                          "_Shift10 vs. Shift40" = c(-1/3,-1/3, 2/3))
+  contrasts(d$Condition.Exposure) = cbind("_Shift10 vs. Shift0" = c(-2/3, 1/3, 1/3),
+                                          "_Shift40 vs. Shift10" = c(-1/3,-1/3, 2/3))
   require(MASS)
-  if (all(d$Phase == "test") & n_distinct(d$Block) > 1) {
+  if (all(d$Phase == "test") & n_distinct(d$Block) > 1 & contrast_type == "repeated") {
     contrasts(d$Block) <- fractions(contr.sdif(6))  
-    dimnames(contrasts(d$Block))[[2]] <- c("_Block1 vs. Block3", "_Block3 vs. Block5", "_Block5 vs. Block7", "_Block7 vs. Block8", "_Block8 vs. Block9")
+    dimnames(contrasts(d$Block))[[2]] <- c("_Test2 vs. Test1", "_Test3 vs. Test2", "_Test4 vs. Test3", "_Test5 vs. Test4", "_Test6 vs. Test5")
     
     print(contrasts(d$Condition.Exposure))
-    print(contrasts(d$Block)) } else {
+    print(contrasts(d$Block)) } else if (all(d$Phase == "test") & n_distinct(d$Block) > 1 & contrast_type == "helmert"){
+      contrasts(d$Block) <- cbind("_Test2 vs. Test1" = c(-1/2, 1/2, 0, 0, 0, 0),
+                                  "_Test3 vs. Test2_1" = c(-1/3, -1/3, 2/3, 0, 0, 0), 
+                                  "Test4 vs. Test3_2_1" = c(-1/4, -1/4, -1/4, 3/4, 0, 0), 
+                                  "_Test5 vs. Test4_3_2_1" = c(-1/5, -1/5, -1/5, -1/5, 4/5, 0), 
+                                  "_Test6 vs. Test5_4_3_2_1" = c(-1/6, -1/6, -1/6, -1/6, -1/6, 5/6))
+      print(contrasts(d$Condition.Exposure))
+      print(contrasts(d$Block))} else {
       print(contrasts(d$Condition.Exposure))
     }
   

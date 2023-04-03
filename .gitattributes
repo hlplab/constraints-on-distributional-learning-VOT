@@ -2,3 +2,4 @@ models/IBBU-Tan-Jaeger2022-Experiment2-scaled.RDS filter=lfs diff=lfs merge=lfs 
 models/Exp-AE-DLVOT-labelled-lapsing-GLMM.rds filter=lfs diff=lfs merge=lfs -text
 models/Block1-AEDLVOT-labelled-lapsing-GLMM.rds filter=lfs diff=lfs merge=lfs -text
 models/Block1-AEDLVOT-lapse-exp2.rds filter=lfs diff=lfs merge=lfs -text
+models/Exp-AE-DLVOT-labelled-lapsing-GLMM-helmert.rds filter=lfs diff=lfs merge=lfs -text

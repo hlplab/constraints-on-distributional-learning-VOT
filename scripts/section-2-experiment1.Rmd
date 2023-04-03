@@ -535,7 +535,6 @@ VOT_F0.centered <-
   get_IO_categorization(
     cues = c("VOT_centered", "f0_Mel_centered"), 
     groups = c("Talker", "gender"),
-    VOTs = seq(0, 85, .5),
     lapse_rate = lapse_exp1,
     io.type = "VOT_F0.centered") 
 
@@ -575,7 +574,8 @@ chodroff.mean_f0_Mel <- chodroff.means %>% pull(f0_Mel)
 # center the VOTs (the x-axis values) from the fitted model by adding the difference in database mean VOT and experiment's VOT mean
 psychometric_fit_exp1_centered <- psychometric_fit_exp1 %>% 
   mutate(Item.VOT = (descale(sVOT, VOT.mean_exp1, VOT.sd_exp1)) + (chodroff.mean_VOT - VOT.mean_exp1),
-         sVOT = (Item.VOT - VOT.mean_exp1) / (2 * VOT.sd_exp1))
+         sVOT = (Item.VOT - VOT.mean_exp1) / (2 * VOT.sd_exp1)) %>% 
+  select(-c(effect1__, effect2__, estimate__, se__, lower__, upper__))
 
 # get expected values of the centered VOTs under the fitted model
 if (file.exists("../models/centered_exposure_exp1.rds")) {
@@ -590,16 +590,44 @@ if (file.exists("../models/centered_exposure_exp1.rds")) {
 }
 ```
 
+```{r, fig.cap="visualising difference between uncentered and centered exposure fit (dashed line).", fig.width=6, fig.height=4.5}
+psychometric_fit_exp1 %>% 
+  group_by(sVOT) %>% 
+  summarise(
+    lower__ = quantile(lower__, probs = .025),
+    median = quantile(estimate__, probs = .5),
+    upper__ = quantile(upper__, probs = .975),
+    estimate__ = quantile(estimate__, probs = .5)) %>% 
+    mutate(Item.VOT = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1)) %>% 
+  ggplot(aes(x = Item.VOT, y = estimate__)) +
+  geom_line(colour = "grey", linewidth = 1.5) +
+  geom_line(data = centered_exposure %>% 
+  group_by(sVOT) %>% 
+  summarise(estimate__ = mean(.epred),
+         lower__ = mean(lower__),
+         upper__ = mean(upper__)) %>% 
+    mutate(Item.VOT = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1) - (chodroff.mean_VOT - VOT.mean_exp1)),
+  mapping = aes(x = Item.VOT, y = estimate__), 
+  linetype = 2,
+  linewidth = 1.5,
+  inherit.aes = F)
+```
+
+
+
+
+
 
 ```{r plot-IO-VOT-F0-exposure-centered, fig.height=2.5, fig.width=3.7, warning=FALSE}
-# there's a bug that appears here which I can't find. Whenever you empty the Global Environment and execute the code from the very beginning (The parent RMD) the following function breaks. It can't find the object, "VOTs". Explicitly defining VOTs outside of the function as a temporary measure
-VOTs <- seq(0, 85, .5) + (chodroff.mean_VOT - VOT.mean_exp1)
+# Whenever you empty the Global Environment and execute the code from the very beginning (The parent RMD) the following function can't find the object, "VOTs".
+VOTs_centered <- seq(0, 85, .5) + (chodroff.mean_VOT - VOT.mean_exp1)
+F0s_centered <- normMel(predict_f0(VOTs)) + (chodroff.mean_f0_Mel - f0.mean_exp1)
 VOT_F0.centered.input <- 
   get_IO_categorization(
     cues = c("VOT_centered", "f0_Mel_centered"), 
     groups = c("Talker", "gender"),
-    VOTs = seq(0, 85, .5) + (chodroff.mean_VOT - VOT.mean_exp1),
-    F0s = normMel(predict_f0(VOTs)) + (chodroff.mean_f0_Mel - f0.mean_exp1),
+    VOTs = VOTs_centered,
+    F0s = F0s_centered,
     lapse_rate = lapse_exp1,
     io.type = "VOT_F0.centered.input") 
 
@@ -611,9 +639,8 @@ p.IOs.VOT_F0.centered.input <- plot_IO_fit(
   group_by(sVOT) %>% 
   summarise(
     lower__ = quantile(.epred, probs = .025),
-    median = quantile(.epred, probs = .5),
     upper__ = quantile(.epred, probs = .975),
-    estimate__ = quantile(.epred, probs = .5)) %>% 
+    estimate__ = mean(.epred)) %>% 
     mutate(Item.VOT = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1) - (chodroff.mean_VOT - VOT.mean_exp1)), # put back predicted centred VOTs on original continuum (x-axis)
   data.test = d.test.excluded %>% 
     ungroup() %>% 
@@ -629,10 +656,6 @@ p.IOs.VOT_F0.centered.input <- plot_IO_fit(
 
 p.likelihoods.exposure.centered <- plot_talker_MVGs(VOT_F0.centered.input, cues = c("VOT_centered", "f0_Mel_centered"), centered = T)
 ```
-
-
-
-
 
 
 
@@ -790,7 +813,6 @@ p.IOs.VOT_F0.no.noise <-
 # Specify sequence of positive VOTs
 test.VOTs.positive <- c(5, seq(15, 90, 5), seq(100, 130, 10))
 
-
 # join all 8 IOs into one dataframe
 d.IOs <- 
   rbind(VOT.no.noise, VOT, VOT.centered, VOT.centered.input, VOT_F0.no.noise, VOT_F0, VOT_F0.centered, VOT_F0.centered.input) %>% 
@@ -839,7 +861,6 @@ IO.likelihood <- d.test.IO %>%
   summarise(
     median_likelihood_per_response = median(likelihood_per_response),
     mode_likelihood_per_response = max(likelihood_per_response, na.rm = T))
-
 
 # use bootstrap samples by io type to find the CI of the median
 set.seed(356)
@@ -915,6 +936,7 @@ p.likelihood <- d.test.IO %>%
 
 p.likelihood
 ```
+
 
 (ref:comparing-likelihoods-of-perception-data-under-each-bivariate-IO)
 ```{r IO-multivar-likelihood-plot, fig.width=5.5, fig.height=3.5, warning=FALSE, fig.cap="(ref:comparing-likelihoods-of-perception-data-under-each-bivariate-IO)"}
