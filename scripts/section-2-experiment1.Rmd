@@ -606,7 +606,7 @@ psychometric_fit_exp1 %>%
   summarise(estimate__ = mean(.epred),
          lower__ = mean(lower__),
          upper__ = mean(upper__)) %>% 
-    mutate(Item.VOT = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1) - (chodroff.mean_VOT - VOT.mean_exp1)),
+    mutate(Item.VOT = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1)),
   mapping = aes(x = Item.VOT, y = estimate__), 
   linetype = 2,
   linewidth = 1.5,
@@ -635,13 +635,12 @@ PSE_VOT_F0.centered.input <- get_PSE_quantiles(data = VOT_F0.centered.input, gro
 
 p.IOs.VOT_F0.centered.input <- plot_IO_fit(
   data.production = VOT_F0.centered.input, 
-  data.perception = centered_exposure %>% 
+  data.perception = psychometric_fit_exp1 %>% 
   group_by(sVOT) %>% 
-  summarise(
-    lower__ = quantile(.epred, probs = .025),
-    upper__ = quantile(.epred, probs = .975),
-    estimate__ = mean(.epred)) %>% 
-    mutate(Item.VOT = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1) - (chodroff.mean_VOT - VOT.mean_exp1)), # put back predicted centred VOTs on original continuum (x-axis)
+  summarise(estimate__ = mean(estimate__),
+         lower__ = mean(lower__),
+         upper__ = mean(upper__)) %>% 
+    mutate(Item.VOT = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1)), 
   data.test = d.test.excluded %>% 
     ungroup() %>% 
     distinct(Item.VOT),
@@ -882,7 +881,7 @@ d.bootstrap <- d.test.IO %>%
 
 (ref:comparing-likelihoods-of-perception-data-under-each-IO) Comparing the likelihood of the perception data under univariate IOs with different assumptions
 
-```{r IO-univar-likelihood-plot, fig.width=5.5, fig.height=4.5, fig.cap="(ref:comparing-likelihoods-of-perception-data-under-each-IO)"}
+```{r IO-univar-likelihood-plot, fig.width=6.5, fig.height=4.5, fig.cap="(ref:comparing-likelihoods-of-perception-data-under-each-IO)"}
 # plot median likelihood per response with bootstrapped 95% CI
 p.likelihood <- d.test.IO %>% 
   group_by(io.type, gender) %>% 
@@ -892,19 +891,24 @@ p.likelihood <- d.test.IO %>%
     min_likelihood_per_response = min(likelihood_per_response)) %>%
   ggplot(aes(x = io.type, 
              y = median_likelihood_per_response, colour = gender)) +
-  geom_point(size = 3, position = position_dodge2(.2)) +
+  geom_point(size = 3, position = position_dodge2(.2),
+             show.legend = F) +
    geom_label(aes(x = io.type, 
                  y = mode_likelihood_per_response,
-                 label = "max"),
+                 label = "+"),
               alpha = .5,
-              size = 1.8,
-             position = position_dodge(.2)) +
+              size = 3.5,
+              fontface = "bold",
+             position = position_dodge(.2),
+             show.legend = F) +
      geom_label(aes(x = io.type, 
                  y = min_likelihood_per_response,
-                 label = "min"),
+                 label = "-"),
               alpha = .5,
-              size = 1.8,
-             position = position_dodge(.2)) +
+              size = 3.5,
+              fontface = "bold",
+             position = position_dodge(.2),
+             show.legend = F) +
   geom_errorbar(
     data = d.bootstrap %>% 
       group_by(io.type, gender) %>%
@@ -918,7 +922,8 @@ p.likelihood <- d.test.IO %>%
     alpha = .6,
     width = 0,
     position = position_dodge(.2),
-    inherit.aes = F) + 
+    inherit.aes = F,
+    show.legend = F) + 
   # geom_errorbar(
   #   data = d.bootstrap %>% 
   #     group_by(io.type, gender) %>%
@@ -939,15 +944,13 @@ p.likelihood <- d.test.IO %>%
   scale_colour_manual("Gender", values = colours.sex, labels = c("Female", "Male")) +
   theme(axis.title.x = element_blank(),
         legend.position = "top") +
-  guides(x = guide_axis(angle = 25)) +
-  coord_trans(y = "log10")
-
-p.likelihood
+  coord_trans(y = "log10") +
+  remove_axes_titles
 ```
 
 
 (ref:comparing-likelihoods-of-perception-data-under-each-bivariate-IO)
-```{r IO-multivar-likelihood-plot, fig.width=6, fig.height=3.5, warning=FALSE, fig.cap="(ref:comparing-likelihoods-of-perception-data-under-each-bivariate-IO)"}
+```{r IO-multivar-likelihood-plot, fig.width=6.5, fig.height=4.5, warning=FALSE, fig.cap="(ref:comparing-likelihoods-of-perception-data-under-each-bivariate-IO)"}
 p.likelihood.multivar <- d.test.IO %>% 
   group_by(io.type, gender) %>% 
   summarise(
@@ -960,17 +963,19 @@ p.likelihood.multivar <- d.test.IO %>%
              position = position_dodge(.2)) +
   geom_label(aes(x = io.type, 
                  y = mode_likelihood_per_response,
-                 label = "max",
+                 label = "+",
                  colour = gender), 
-             size = 1.5,
+             size = 3.5,
+            fontface = "bold",
              alpha = .5,
              show.legend = F,
              position = position_dodge(.2)) +
     geom_label(aes(x = io.type, 
                  y = min_likelihood_per_response,
-                 label = "min",
+                 label = "-",
                  colour = gender), 
-             size = 1.8,
+             size = 3.5,
+             fontface = "bold",
              alpha = .5,
              show.legend = F,
              position = position_dodge(.2)) +
@@ -1000,19 +1005,29 @@ p.likelihood.multivar <- d.test.IO %>%
   #   width = 0,
   #   position = position_dodge(.2),
   #   inherit.aes = F) +
-  scale_y_continuous("Median likelihood \n per response", limits = c(.05, .67)) +
+  scale_y_continuous(" ", limits = c(.05, .67)) +
   scale_x_discrete(expand = expansion(mult = c(0.09, 0.09)), 
                    limits = c("VOT_F0.no.noise", "VOT_F0", "VOT_F0.centered", "VOT_F0.centered.input"),
                    breaks = c("VOT_F0.no.noise", "VOT_F0", "VOT_F0.centered", "VOT_F0.centered.input"),
-                   labels = c(VOT_F0.no.noise = "VOT_F0", VOT_F0 = "VOT-F0\n(+perceptual noise)", VOT_F0.centered = "VOT-F0\n (+talker-centered)", VOT_F0.centered.input = "VOT-F0 \n (+exposure-centered)")) +
+                   labels = c(VOT_F0.no.noise = "VOT-F0", VOT_F0 = "VOT-F0\n(+perceptual noise)", VOT_F0.centered = "VOT-F0\n (+talker-centered)", VOT_F0.centered.input = "VOT-F0 \n (+exposure-centered)")) +
   scale_colour_manual("Gender", values = colours.sex, labels = c("Female", "Male")) +
   theme(axis.title.x = element_blank(),
-        legend.position = "top") +
-  guides(x = guide_axis(angle = 25),
-           axis.text.x = element_text(size = 8)) +
+        legend.position = "none") +
+  guides(axis.text.x = element_text(size = 8)) +
   coord_trans(y = "log10") 
 
-p.likelihood.multivar
+
+p.title <- ggplot(data.frame(l = p.likelihood.multivar$labels$y, x = 1, y = 100) %>% mutate(l = "Median likelihood per response")) +
+  geom_text(aes(x, y, label = l), angle = 90, fontface = "bold") +
+  theme_void() +
+  coord_cartesian(clip = "off")
+
+
+p.title + (p.likelihood / p.likelihood.multivar) +
+  plot_layout(ncol = 2, 
+              guides = "collect",
+              widths = c(1, 25)) &
+  theme(legend.position = "top")
 ```
 
 

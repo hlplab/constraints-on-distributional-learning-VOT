@@ -707,7 +707,7 @@ prepVars <- function(d, levels.Condition = NULL, contrast_type) {
   contrasts(d$Condition.Exposure) = cbind("_Shift10 vs. Shift0" = c(-2/3, 1/3, 1/3),
                                           "_Shift40 vs. Shift10" = c(-1/3,-1/3, 2/3))
   require(MASS)
-  if (all(d$Phase == "test") & n_distinct(d$Block) > 1 & contrast_type == "repeated") {
+  if (all(d$Phase == "test") & n_distinct(d$Block) > 1 & contrast_type == "difference") {
     contrasts(d$Block) <- fractions(contr.sdif(6))  
     dimnames(contrasts(d$Block))[[2]] <- c("_Test2 vs. Test1", "_Test3 vs. Test2", "_Test4 vs. Test3", "_Test5 vs. Test4", "_Test6 vs. Test5")
     

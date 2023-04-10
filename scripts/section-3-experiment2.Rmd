@@ -580,63 +580,16 @@ PSE_VOT_F0.centered.input_block1 <- get_PSE_quantiles(data = VOT_F0.centered.inp
 # plot predicted categorisation after centering exposure, against IOs
 p.IOs.VOT_F0.centered.input_block1 <- plot_IO_fit(
   data.production = VOT_F0.centered.input_block1, 
-  data.perception = epred_centered_block1 %>% 
-  group_by(VOT_gs) %>% 
-  summarise(lower__ = quantile(.epred, probs = .025),
-    median = quantile(.epred, probs = .5),
-    upper__ = quantile(.epred, probs = .975),
-    estimate__ = median(.epred)) %>% 
-    mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2) - (chodroff.mean_VOT - VOT.mean_exp2)),
+  data.perception = psychometric_fit_block1 %>% 
+    mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2)),
   data.test = d.block1 %>%  
     ungroup() %>% distinct(Item.VOT),
-  data.percept.PSE = post_sample_block1 %>% 
-    mutate(PSE = PSE - (chodroff.mean_VOT - VOT.mean_exp2),
-           .lower = .lower - (chodroff.mean_VOT - VOT.mean_exp2),
-           .upper = .upper - (chodroff.mean_VOT - VOT.mean_exp2)),
+  data.percept.PSE = post_sample_block1,
   PSE_VOT_F0.centered.input_block1 %>% 
     mutate(PSE.lower = round(PSE.lower - (chodroff.mean_VOT - VOT.mean_exp2), 2),
            PSE.median = PSE.median - (chodroff.mean_VOT - VOT.mean_exp2),
            PSE.upper = round(PSE.upper - (chodroff.mean_VOT - VOT.mean_exp2), 2))) 
 ```
-
-
-```{r IO-categorization-VOT-f0-centered-input-block1}
-VOT.centered.input_block1 <- 
-  get_IO_categorization(
-    cues = c("VOT_centered"), 
-    groups = c("Talker", "gender"), 
-    VOTs = seq(0, 85, .5) + (chodroff.mean_VOT - VOT.mean_exp2),
-    F0s = normMel(predict_f0(VOTs)) + (chodroff.mean_f0_Mel - f0.mean_exp2),
-    lapse_rate = lapse_exp2,
-    alpha = .1, 
-    linewidth = 0.3,
-    io.type = "VOT.centered.input_block1")
-
-PSE_VOT.centered.input_block1 <- get_PSE_quantiles(data = VOT.centered.input_block1, group = "gender")
-
-p.IOs.VOT.centered.input_block1 <- plot_IO_fit(
-  data.production = VOT.centered.input_block1, 
-  data.perception = epred_centered_block1 %>% 
-  group_by(VOT_gs) %>% 
-  summarise(lower__ = quantile(.epred, probs = .025),
-    median = quantile(.epred, probs = .5),
-    upper__ = quantile(.epred, probs = .975),
-    estimate__ = median(.epred)) %>% 
-    mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2) - (chodroff.mean_VOT - VOT.mean_exp2)),
-  data.test = d.block1 %>% 
-    ungroup() %>% 
-    distinct(Item.VOT),
-  data.percept.PSE = post_sample_block1 %>% 
-    mutate(PSE = PSE - (chodroff.mean_VOT - VOT.mean_exp2),
-           .lower = .lower - (chodroff.mean_VOT - VOT.mean_exp2),
-           .upper = .upper - (chodroff.mean_VOT - VOT.mean_exp2)),
-  PSE_VOT.centered.input_block1 %>% 
-    mutate(PSE.lower = round(PSE.lower - (chodroff.mean_VOT - VOT.mean_exp2), 2),
-           PSE.median = PSE.median - (chodroff.mean_VOT - VOT.mean_exp2),
-           PSE.upper = round(PSE.upper - (chodroff.mean_VOT - VOT.mean_exp2), 2))
-)
-```
-
 
 
 
@@ -742,22 +695,22 @@ d.bootstrap_block1 <- d.test.IO_block1 %>%
 
 
 
-```{r, fig.width=4.5, fig.height=4.5, warning=FALSE}
+```{r, fig.width=6.5, fig.height=4.5, warning=FALSE}
 # plot median likelihood per response with bootstrapped 95% CI
 p.likelihood.univar_block1 <- d.test.IO_block1 %>% 
   group_by(io.type, gender) %>% 
   summarise(
     median_likelihood_per_response = median(likelihood_per_response),
     mode_likelihood_per_response = max(likelihood_per_response)) %>% 
-  pivot_longer(cols = c(median_likelihood_per_response, mode_likelihood_per_response), 
-               names_to = "parameter", names_pattern = "(.*)_likelihood_per_response") %>% 
-  ggplot(aes(x = io.type, colour = gender, y = value, shape = parameter)) +
-  geom_point(size = 3, 
-             position = position_dodge(.3)) +
-  # geom_point(aes(y = mode_likelihood_per_response), 
-  #            size = 3,
-  #            position = position_dodge(.2),
-  #            shape = 17) +
+  ggplot(aes(x = io.type, colour = gender)) +
+  geom_point(aes(y = median_likelihood_per_response), 
+             size = 3, 
+             position = position_dodge(.2), show.legend = F) +
+  geom_label(aes(y = mode_likelihood_per_response,
+             label = "+"),
+             size = 3.5,
+             position = position_dodge(.2),
+             show.legend = F) +
   geom_linerange(
     data = d.bootstrap_block1 %>% 
       group_by(io.type, gender) %>% 
@@ -765,18 +718,16 @@ p.likelihood.univar_block1 <- d.test.IO_block1 %>%
                  median.lower = quantile(median_sample, probs = .025),
                  median.upper = quantile(median_sample, probs = .975),
                  mode.lower = quantile(mode_sample, probs = .025),
-            mode.upper = quantile(mode_sample, probs = .975)) %>% 
-  pivot_longer(cols = c(3:6), names_to = c("parameter", "quantile"), names_pattern = "(.*)\\.(.*)") %>% 
- pivot_wider(names_from = quantile, values_from = "value"),
-             mapping = 
-               aes(x = io.type, ymin = lower, ymax = upper, colour = gender),
+            mode.upper = quantile(mode_sample, probs = .975)),
+             mapping = aes(x = io.type, ymin = median.lower, ymax = median.upper, colour = gender),
              position = position_dodge(.2),
              linewidth = 1.5,
              alpha = .6,
-             inherit.aes = F) +
+             inherit.aes = F,
+    show.legend = F) +
       # geom_errorbar(
-      #   data = d.bootstrap_block1 %>% 
-      #     group_by(io.type, gender) %>% 
+      #   data = d.bootstrap_block1 %>%
+      #     group_by(io.type, gender) %>%
       #     summarise(
       #       mode.lower = quantile(mode_sample, probs = .025),
       #       mode.upper = quantile(mode_sample, probs = .975)),
@@ -795,17 +746,15 @@ p.likelihood.univar_block1 <- d.test.IO_block1 %>%
                   VOT.centered_block1 = "VOT\n(+talker-centered)", 
                   VOT.centered.input_block1 = "VOT\n(+exposure-centered)")) +
      scale_colour_manual("Gender", values = colours.sex, labels = c("Female", "Male")) +
-     theme(legend.position = "top",
-           axis.text.x = element_text(size = 8)) +
      guides(x = guide_axis(angle = 0)) +
      coord_trans(y = "log10")
 
-p.likelihood.univar_block1
+p.likelihood.univar_block1 <- p.likelihood.univar_block1 + remove_axes_titles
 ```
 
 
 
-```{r likelihood-comparison-plots-block1, fig.height=4.5, fig.width=5.5, warning=FALSE, cache=FALSE}
+```{r likelihood-comparison-plots-block1, fig.height=4.5, fig.width=6.5, warning=FALSE, cache=FALSE}
 # zoom in on multi-variate models
 p.likelihood.multivar_block1 <- d.test.IO_block1 %>% 
   group_by(gender, io.type) %>% 
@@ -815,11 +764,10 @@ p.likelihood.multivar_block1 <- d.test.IO_block1 %>%
   ggplot(aes(x = io.type, colour = gender)) +
   geom_point(aes(y = median_likelihood_per_response),
              size = 3, position = position_dodge(.2)) +
-  geom_point(aes(x = io.type, 
-                 y = mode_likelihood_per_response), 
+  geom_label(aes(y = mode_likelihood_per_response, label = "+"), 
              size = 3,
              position = position_dodge(.2),
-             shape = 17) +
+             show.legend = F) +
   geom_errorbar(
     data = d.bootstrap_block1 %>% 
       group_by(gender, io.type) %>% 
@@ -833,20 +781,20 @@ p.likelihood.multivar_block1 <- d.test.IO_block1 %>%
     alpha = .6,
     width = 0,
     inherit.aes = F) + 
-  geom_errorbar(
-    data = d.bootstrap_block1 %>% 
-      group_by(gender, io.type) %>%
-      summarise(
-        mode.lower = quantile(mode_sample, probs = .025),
-        mode.upper = quantile(mode_sample, probs = .975)),
-    mapping = aes(x = io.type, ymin = mode.lower, ymax = mode.upper, colour = gender),
-    size = 1.5,
-    position = position_dodge(.2),
-    alpha = .6,
-    width = 0,
-    inherit.aes = F) +
-  scale_y_continuous("Median likelihood per response", limits = c(.156, .746), labels = scales::label_number(accuracy = 0.001)) +
-  scale_x_discrete( 
+  # geom_errorbar(
+  #   data = d.bootstrap_block1 %>% 
+  #     group_by(gender, io.type) %>%
+  #     summarise(
+  #       mode.lower = quantile(mode_sample, probs = .025),
+  #       mode.upper = quantile(mode_sample, probs = .975)),
+  #   mapping = aes(x = io.type, ymin = mode.lower, ymax = mode.upper, colour = gender),
+  #   size = 1.5,
+  #   position = position_dodge(.2),
+  #   alpha = .6,
+  #   width = 0,
+  #   inherit.aes = F) +
+  scale_y_continuous(" ", limits = c(.156, .746), labels = scales::label_number(accuracy = 0.001)) +
+  scale_x_discrete("IO Type", 
     limits = c("VOT_F0.no.noise_block1", "VOT_F0_block1", "VOT_F0.centered_block1", "VOT_F0.centered.input_block1"),
     breaks = c("VOT_F0.no.noise_block1", "VOT_F0_block1", "VOT_F0.centered_block1", "VOT_F0.centered.input_block1"),
     labels = c(VOT_F0.no.noise_block1 = "VOT_F0", VOT_F0_block1 = "VOT-F0\n(+perceptual noise)", VOT_F0.centered_block1 = "VOT-F0\n (+talker-centered)", VOT_F0.centered.input_block1 = "VOT-F0 \n (+exposure-centered)")) +
@@ -855,12 +803,22 @@ p.likelihood.multivar_block1 <- d.test.IO_block1 %>%
   theme(legend.position = "top") +
   coord_trans(y = "log10")
 
-p.likelihood.multivar_block1
+
+p.title2 <- ggplot(data.frame(l = p.likelihood.multivar_block1$labels$y, x = 1, y = 100) %>% mutate(l = "Median likelihood per response")) +
+  geom_text(aes(x, y, label = l), angle = 90, fontface = "bold") +
+  theme_void() +
+  coord_cartesian(clip = "off")
+
+p.title2 + (p.likelihood.univar_block1 / p.likelihood.multivar_block1) +
+  plot_layout(ncol = 2, 
+              guides = "collect",
+              widths = c(1, 25)) &
+  theme(legend.position = "top")
 ```
 ## Regression analysis
 The regression analysis addresses two main questions: 
 Do participants shift their categorisation behaviour in an incremental fashion, i.e. do they exhibit categorisation behaviour that draws closer to the ideal categorisation function with each successive exposure block?
-Are the differences in shifts between the conditions proportional to the magnitude of the shifts between exposure distributions i.e. is the +40ms condition 3 times that of the +10ms condition?
+Are the differences in shifts between the conditions proportional to the magnitude of the shifts between exposure distributions i.e. is the PSE of the +40ms condition 3 times that of the +10ms condition?
 
 As with experiment 1 we fit a Bayesian mixed-effects psychometric model with lapse and perceptual components. Continuous predictors were standardised to twice the standard deviation and priors and sampling parameters were identical to those specified in experiment 1. 
 
@@ -868,14 +826,14 @@ To analyse the incremental effects of exposure condition on the proportion of /t
 
 ### Expectations
 Given previous findings of @kleinschmidt2016you we expected participants in the various exposure conditions to shift their average categorization functions towards the direction of the ideal categorization function implied by their respective exposure distributions. We expected the differences between the groups to be most pronounced after the final exposure block as they would have had the complete exposure to all the tokens that make up the exposure distributions. This follows from predictions of incremental Bayesian belief-updating -- that listeners would integrate their prior expectations with the current input to infer the present talker's cue-to-category-mapping (the posterior distribution). 
-Also based on previous findings, we expected the +40ms group to not fully  converge on the ideal categorization function implied by the exposure distribution as the further an exposure talker's cue distributions deviates from a *typical* talker, the further the distance the average categorization function from the implied boundary. We therefore expected to see differences in categorizations between the +10ms and +40ms conditions such that listeners in the +40ms condition would shift more than those in the +10ms condition but to have an average categorization function located to the left of the ideal function. [@kleinschmidt2016you].
+Also based on previous findings, we expected the +40ms group to not fully  converge on the ideal categorization function as it was previously found that the further an exposure talker's cue distributions deviated from a *typical* talker's, the further the distance of categorization function from the ideal boundary. We therefore expected to see differences in categorizations between the +10ms and +40ms conditions such that listeners in the +40ms condition would shift more than those in the +10ms condition but to have an average categorization function located to the left of the ideal function. [@kleinschmidt2016you].
 ```{r, results='hide'}
 # set condition levels
 levels_Condition.Exposure = c("Shift0", "Shift10", "Shift40")
 
 contrasts <- d.test_exposure_for_analysis %>% 
     filter(Phase == "test") %>% 
-    prepVars(levels.Condition = levels_Condition.Exposure) 
+    prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = "difference") 
 ```
 
 
@@ -883,7 +841,7 @@ contrasts <- d.test_exposure_for_analysis %>%
 ```{r warning=FALSE}
 d.test_exposure_for_analysis %<>% 
   mutate(Response.Voiceless = ifelse(Response.Voicing == "voiceless", 1, 0))
-contrast_type <- "repeated"
+contrast_type <- "difference"
 
 my_priors <- c(
   prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),
@@ -917,19 +875,12 @@ fixed_eff_exp2_helmert <- tidy(fit_mix_helmert, effects = "fixed") %>%
   select(-c(effect, component))
 
 
-
 fixed_eff_exp2 <- tidy(fit_mix_uniform_bias, effects = "fixed") %>% 
   select(-c(effect, component))
 
 
-fixed_eff_exp2_helmert <- tidy(fit_mix_helmert, effects = "fixed") %>% 
-  select(-c(effect, component))
-
 kable(fixed_eff_exp2, booktabs = TRUE, caption = "Population estimates") %>% 
   kable_styling(c("striped", "repeat_header"), position = "center") 
-
-fixed_eff_exp2_helmert 
-fixed_eff_exp2
 ```
 
 
@@ -954,7 +905,7 @@ cond_fit <- conditional_effects(
     conditions = make_conditions(
       d.test_exposure_for_analysis %>% 
         filter(Phase == "test") %>% 
-        prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = "repeated"), 
+        prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = "difference"), 
       vars = c("Block")),
     method = "posterior_epred",
     ndraws = 500,
@@ -1045,7 +996,7 @@ fit_mix_nested <- brm(
   control = list(adapt_delta = .99),
   file = "../models/Exp-AE-DLVOT-labelled-lapsing-GLMM-nested.rds")
 
-# summary = F below gives all the posterior draws
+# summary = F below gives all 8000 posterior samples
 temp <- 
 fixef(fit_mix_nested, summary = F, pars = gsub("^b_(mu2_.*)$", "\\1", variables(fit_mix_nested)))
 
@@ -1083,6 +1034,7 @@ Intercepts_slopes <- tidy(fit_mix_nested, effects = "fixed") %>%
 ```
 
 ```{r, warning=FALSE}
+# alternative way to get posterior draws using gather_draws
 d.PSE <- fit_mix_nested %>% 
   gather_draws(`b_mu2_IpasteCondition.ExposureBlocksepEQ.*`, regex = TRUE, ndraws = 8000) %>% 
   mutate(.variable = gsub("b_mu2_IpasteCondition.ExposureBlocksepEQxShift(\\d{1,2})x(\\d{1}.*$)", "Shift\\1.\\2", .variable),
@@ -1093,12 +1045,12 @@ d.PSE <- fit_mix_nested %>%
   relocate(c(Condition.Exposure, Block, Intercept, slope, .chain, .iteration, .draw)) %>% 
   mutate(PSE = descale(-Intercept/slope, VOT.mean_exp2, VOT.sd_exp2)) %>% 
   group_by(Condition.Exposure, Block) %>% 
-  mutate(Block = factor(case_when(Block == 1 ~ "Test 1",
-                                Block == 3 ~ "Test 2",
-                                Block == 5 ~ "Test 3",
-                                Block == 7 ~ "Test 4",
-                                Block == 8 ~ "Test 5",
-                                Block == 9 ~ "Test 6"))) %>% 
+  mutate(Block = factor(case_when(Block == 1 ~ "1",
+                                Block == 3 ~ "2",
+                                Block == 5 ~ "3",
+                                Block == 7 ~ "4",
+                                Block == 8 ~ "5",
+                                Block == 9 ~ "6"))) %>% 
   summarise(lower = quantile(PSE, probs = .025),
             median = quantile(PSE, probs = .5),
             upper = quantile(PSE, probs = .975))
@@ -1116,7 +1068,7 @@ p.PSE <- d.PSE %>%
     values = c("#cc0000", "#12D432","#0481F3"),
     aesthetics = "color") +
   scale_y_continuous("Median PSE (ms)", limits = c(24.5, 65.5), breaks = seq(25, 65.5, 5)) +
-  scale_x_discrete("Block") +
+  scale_x_discrete("Test block") +
   theme(legend.position = "top")
 ```
 
@@ -1141,12 +1093,12 @@ d.params <- temp %>%
     names_from = Parameter) %>%
   # Get HDCI or SE
   group_by(Condition, Block) %>% 
-  mutate(Block = factor(case_when(Block == 1 ~ "Test 1",
-                                Block == 3 ~ "Test 2",
-                                Block == 5 ~ "Test 3",
-                                Block == 7 ~ "Test 4",
-                                Block == 8 ~ "Test 5",
-                                Block == 9 ~ "Test 6"))) %>% 
+  mutate(Block = factor(case_when(Block == 1 ~ "1",
+                                Block == 3 ~ "2",
+                                Block == 5 ~ "3",
+                                Block == 7 ~ "4",
+                                Block == 8 ~ "5",
+                                Block == 9 ~ "6"))) %>% 
   summarise(Intercept.lower = quantile(Intercept, probs = .025),
             Intercept.median = quantile(Intercept, probs = .5),
             Intercept.upper = quantile(Intercept, probs = .975),
@@ -1181,6 +1133,7 @@ p.slopes <- d.params %>%
     values = c("#cc0000", "#12D432","#0481F3"),
     aesthetics = "color") +
   scale_y_continuous("Slope") +
+  xlab("Test block") +
   theme(legend.position = "top") 
 ```
 
@@ -1217,17 +1170,12 @@ predictions <- epred_draws(
 ```
 
 ```{r}
-conditional_effects(
-    fit_mix_helmert,
-    effects = "VOT_gs:Condition.Exposure",
-    conditions = make_conditions(
-      d.test_exposure_for_analysis %>% 
-        filter(Phase == "test") %>% 
-        prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = "helmert"), 
-      vars = c("Block")),
-    method = "posterior_epred",
-    ndraws = 500,
-    re_formula = NA)
+d.temp <- d.test_exposure_for_analysis %>% filter(Condition.Exposure == "Shift0")
+
+d.temp %>% 
+  group_by(ParticipantID) %>% 
+  summarise(n()) 
+  
 ```
 
 
