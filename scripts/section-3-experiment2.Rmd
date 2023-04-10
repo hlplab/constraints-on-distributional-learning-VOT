@@ -452,6 +452,34 @@ p.IOs.VOT.centered_block1 <- plot_IO_fit(
 ```
 
 
+```{r IO-categorization-VOT-f0-centered-input-block1, warning=FALSE}
+VOT.centered.input_block1 <- 
+  get_IO_categorization(
+    cues = c("VOT_centered"), 
+    groups = c("Talker", "gender"), 
+    VOTs = seq(0, 85, .5) + (chodroff.mean_VOT - VOT.mean_exp2),
+    F0s = normMel(predict_f0(VOTs)) + (chodroff.mean_f0_Mel - f0.mean_exp2),
+    lapse_rate = lapse_exp2,
+    alpha = .1, 
+    linewidth = 0.3,
+    io.type = "VOT.centered.input_block1")
+
+PSE_VOT.centered.input_block1 <- get_PSE_quantiles(data = VOT.centered.input_block1, group = "gender")
+
+p.IOs.VOT.centered.input_block1 <- plot_IO_fit(
+  data.production = VOT.centered.input_block1, 
+  data.perception = psychometric_fit_block1 %>% 
+    mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2)),
+  data.test = d.block1 %>% 
+    ungroup() %>% 
+    distinct(Item.VOT),
+  data.percept.PSE = post_sample_block1 %>% 
+    mutate(PSE = PSE - (chodroff.mean_VOT - VOT.mean_exp2),
+           .lower = .lower - (chodroff.mean_VOT - VOT.mean_exp2),
+           .upper = .upper - (chodroff.mean_VOT - VOT.mean_exp2)),
+  PSE_VOT.centered.input_block1
+)
+```
 
 
 ```{r IO-categorization-VOT-F0-no-noise-block1, message=FALSE}
