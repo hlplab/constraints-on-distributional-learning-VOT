@@ -221,6 +221,32 @@ d.exposure_test %>%
 ```
 
 
+```{r, fig.width=8, fig.height=3}
+d.exposure_test %>%
+  filter(
+    Is.CatchTrial == FALSE &
+    Exclude_participant.due_to_catch_trials == FALSE &
+    Exclude_participant.due_to_labeled_trials == FALSE &
+    Exclude_participant.due_to_VOT_slope == FALSE) %>% 
+  group_by(ParticipantID, Block) %>%
+  mutate(
+    Response.log_RT = log10(ifelse(Response.RT <= 0, NA_real_, Response.RT)),
+    Response.log_RT.scaled = scale(Response.log_RT), # deducts each value with subject's own mean, divide by own SD
+    Response.log_RT.mean = mean(Response.log_RT, na.rm = T)) %>% 
+  ungroup() %>% 
+  mutate(across(c(ParticipantID, Condition.Exposure, Block), factor)) %>%
+  group_by(ParticipantID, Condition.Exposure,Block, Trial) %>% 
+  summarise(Response.log_RT) %>% 
+  ggplot(aes(x = Trial, y = Response.log_RT, colour = ParticipantID, group = Condition.Exposure)) +
+  geom_path(aes(group = ParticipantID), alpha = .3) +
+  scale_x_continuous("Trial", breaks = c(12, 24, 36, 48)) +
+  scale_y_continuous("mean log-RT (log10 of msec)") +
+  facet_grid(Condition.Exposure ~ Block, scales = "free_x", space = "free_x") +
+  theme(legend.position = "none")
+```
+
+
+
 
 
 ```{r, fig.width=8, fig.height=3}

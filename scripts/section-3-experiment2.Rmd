@@ -117,7 +117,7 @@ Participants underwent 234 trials which included 6 catch trials in each exposure
 
 ```{r}
 # load formatted exposure and test data from experiment 2
-d.exposure_test <- read_csv("../data/exposure_test_experiment2.csv", show_col_types = F)
+d.exposure_test <- read_csv("../data/experiment2_raw_formatted.csv", show_col_types = F)
 
 # load f0-5ms-into-vowel measurements of stimuli
 d.f0.5ms <- 
@@ -203,34 +203,33 @@ d.exposure_test %<>% left_join(d.VOT_exclusion)
 
 ```{r set-RT-exclusion-criteria, message=FALSE}
 # calculate RT exclusion AFTER removing excluded participants due to other criteria
-d.test_exposure_for_analysis <- d.exposure_test %>%
-  filter(
-    Is.CatchTrial == FALSE &
-    Exclude_participant.due_to_catch_trials == FALSE &
-    Exclude_participant.due_to_labeled_trials == FALSE &
-    Exclude_participant.due_to_VOT_slope == FALSE) %>% 
-  group_by(ParticipantID) %>%
-  mutate(
-    Response.log_RT = log10(ifelse(Response.RT <= 0, NA_real_, Response.RT)),
-    Response.log_RT.scaled = scale(Response.log_RT), # deducts each value with subject's own mean, divide by own SD
-    Response.log_RT.mean = mean(Response.log_RT, na.rm = T)) %>% 
-  ungroup() %>% 
-  mutate(Exclude_participant.due_to_RT = ifelse(abs(scale(Response.log_RT.mean)) > 3, TRUE, FALSE)) %>% 
-  filter(Exclude_participant.due_to_RT == FALSE) %>% 
-  mutate(Exclude_trial.due_to_RT = ifelse(abs(Response.log_RT.scaled) > 3, TRUE, FALSE))
+# d.test_exposure_for_analysis <- d.exposure_test %>%
+#   filter(
+#     Is.CatchTrial == FALSE &
+#     Exclude_participant.due_to_catch_trials == FALSE &
+#     Exclude_participant.due_to_labeled_trials == FALSE &
+#     Exclude_participant.due_to_VOT_slope == FALSE) %>% 
+#   group_by(ParticipantID) %>%
+#   mutate(
+#     Response.log_RT = log10(ifelse(Response.RT <= 0, NA_real_, Response.RT)),
+#     Response.log_RT.scaled = scale(Response.log_RT), # deducts each value with subject's own mean, divide by own SD
+#     Response.log_RT.mean = mean(Response.log_RT, na.rm = T)) %>% 
+#   ungroup() %>% 
+#   mutate(Exclude_participant.due_to_RT = ifelse(abs(scale(Response.log_RT.mean)) > 3, TRUE, FALSE)) %>% 
+#   filter(Exclude_participant.due_to_RT == FALSE) %>% 
+#   mutate(Exclude_trial.due_to_RT = ifelse(abs(Response.log_RT.scaled) > 3, TRUE, FALSE))
 
 # get number of participants excluded due to RT
-excl.RT.participant <- d.test_exposure_for_analysis %>% 
-  filter(Exclude_participant.due_to_RT == TRUE) %>% 
-  tally()
+# excl.RT.participant <- d.test_exposure_for_analysis %>% 
+#   filter(Exclude_participant.due_to_RT == TRUE) %>% 
+#   tally()
 
 # get number of trials excluded due to RT
-excl.RT.trial <- d.test_exposure_for_analysis %>%  
-  filter(Exclude_trial.due_to_RT == TRUE) %>% 
-  tally()
+# excl.RT.trial <- d.test_exposure_for_analysis %>%  
+#   filter(Exclude_trial.due_to_RT == TRUE) 
 
 # proportion of trials excluded due to RT
-proportion.trials.excluded <- excl.RT.trial/nrow(d.test_exposure_for_analysis)
+# proportion.trials.excluded <- nrow(excl.RT.trial)/nrow(d.test_exposure_for_analysis)
 
 # get number of participants excluded due to catch trial
 excl.catch <- d.exposure_test %>% 
@@ -253,8 +252,15 @@ excl.VOT <- d.exposure_test %>%
   summarise() %>% 
   tally()
 
-# remove excluded trials due to slow RT
-d.test_exposure_for_analysis %<>% filter(Exclude_trial.due_to_RT == FALSE) 
+# make dataframe for analysis after exclusions
+d.test_exposure_for_analysis <- d.exposure_test %>%
+  filter(
+    Is.CatchTrial == FALSE &
+    Exclude_participant.due_to_catch_trials == FALSE &
+    Exclude_participant.due_to_labeled_trials == FALSE &
+    Exclude_participant.due_to_VOT_slope == FALSE)
+
+write_csv(d.test_exposure_for_analysis, "../data/d.test_exposure_for_analysis")
 ```
 
 ### Exclusions
@@ -277,11 +283,17 @@ We first present participants' categorisation responses. Given that this experim
 # make Block 1 subset
 d.block1 <- d.test_exposure_for_analysis %>% 
   filter(Block == 1) 
-# set the mean and SD values for scaling/unscaling purposes. Use means and SD of VOTs within test blocks only
-VOT.mean_exp2 <- mean(d.block1$Item.VOT)
-VOT.sd_exp2 <- sd(d.block1$Item.VOT)
-f0.mean_exp2 <- mean(d.block1$Item.Mel_F0_5ms)
-f0.sd_exp2 <- sd(d.block1$Item.Mel_F0_5ms)
+
+# set the mean and SD values for scaling/unscaling purposes. 
+d.mean_sd <- d.test_exposure_for_analysis %>% 
+  filter(Phase == "test") %>% 
+  ungroup() %>% 
+  summarise(across(c(Item.VOT, Item.Mel_F0_5ms), list(mean = mean, sd = sd), .names = "{.col}.{.fn}"))
+
+VOT.mean_exp2 <- d.mean_sd %>% pull(Item.VOT.mean)
+VOT.sd_exp2 <- d.mean_sd %>% pull(Item.VOT.sd)
+f0.mean_exp2 <- d.mean_sd %>% pull(Item.Mel_F0_5ms.mean)
+f0.sd_exp2 <- d.mean_sd %>% pull(Item.Mel_F0_5ms.sd)
 
 d.block1 %<>% 
   mutate(
@@ -290,8 +302,8 @@ d.block1 %<>%
     F0_gs = (Item.Mel_F0_5ms - f0.mean_exp2) /(2 * f0.sd_exp2))
 
 # load the full experiment fit to obtain lapse rate
-fit_mix_uniform_bias <- readRDS("../models/Exp-AE-DLVOT-labelled-lapsing-GLMM.rds")
-lapse_exp2 <- summary(fit_mix_uniform_bias)$fixed["theta1_Intercept", 1]
+fit_mix_uniform_bias <- readRDS("../models/Exp-AE-DLVOT-labelled-lapsing-GLMM-difference-no-RTexcl.rds")
+lapse_exp2 <- as.numeric(summary(fit_mix_uniform_bias)$fixed["theta1_Intercept", 1])
 
 # run brms model of data for block 1 using lapse rate from full model (section X.X) 
 fit_mix_block1 <- brm(
@@ -308,7 +320,7 @@ fit_mix_block1 <- brm(
   chains = chains,
   family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
   control = list(adapt_delta = .999),
-  file = "../models/Block1-AEDLVOT-lapse-exp2_2ndfit.rds")
+  file = "../models/Exp-AE-DLVOT-Block1-lapse-no-RTexcl.rds")
 ```
 
 
@@ -317,8 +329,8 @@ fit_mix_block1 <- brm(
 
 
 ```{r}
-# get PSE of Block 1
-PSE.fit_mix_block1 <- descale(-(summary(fit_mix_block1)$fixed["mu2_Intercept", 1] / summary(fit_mix_block1)$fixed["mu2_VOT_gs", 1]), VOT.mean_exp2, VOT.sd_exp2)
+# get PSE of Block 1 from model summary
+PSE.fit_mix_block1 <- descale(-(as.numeric(summary(fit_mix_block1)$fixed["mu2_Intercept", 1])) / as.numeric(summary(fit_mix_block1)$fixed["mu2_VOT_gs", 1]), VOT.mean_exp2, VOT.sd_exp2)
 
 # get posterior samples of intercept and slope, and median qi of the PSE 
 post_sample_block1 <- fit_mix_block1 %>% 
@@ -352,11 +364,11 @@ p.fit_block1 <- psychometric_fit_block1 %>%
     alpha = .5,
     size = 1, 
     inherit.aes = F) +
-  geom_point(
+  geom_label(
     data = post_sample_block1 %>% 
       median_qi(PSE) %>% 
       mutate(y = 0.01),
-    mapping = aes(x = PSE, y = y),
+    mapping = aes(x = PSE, y = y, label = round(PSE)),
     color = "#333333", 
     size = 1.3,
     alpha = .5) +
@@ -372,6 +384,10 @@ p.fit_block1 <- psychometric_fit_block1 %>%
     mapping = aes(x = Item.VOT),
     alpha = .6,
     inherit.aes = F)
+
+psychometric_fit_block1 %>% mutate(
+  Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2)
+)
 ```
 
 
@@ -734,7 +750,7 @@ p.likelihood.univar_block1 <- d.test.IO_block1 %>%
   geom_point(aes(y = median_likelihood_per_response), 
              size = 3, 
              position = position_dodge(.2), show.legend = F) +
-  geom_label(aes(y = mode_likelihood_per_response,
+  geom_text(aes(y = mode_likelihood_per_response,
              label = "+"),
              size = 3.5,
              position = position_dodge(.2),
@@ -774,7 +790,8 @@ p.likelihood.univar_block1 <- d.test.IO_block1 %>%
                   VOT.centered_block1 = "VOT\n(+talker-centered)", 
                   VOT.centered.input_block1 = "VOT\n(+exposure-centered)")) +
      scale_colour_manual("Gender", values = colours.sex, labels = c("Female", "Male")) +
-     guides(x = guide_axis(angle = 0)) +
+     guides(x = guide_axis(angle = 22.5)) +
+  theme(panel.grid.major.x = element_blank()) +
      coord_trans(y = "log10")
 
 p.likelihood.univar_block1 <- p.likelihood.univar_block1 + remove_axes_titles
@@ -792,7 +809,7 @@ p.likelihood.multivar_block1 <- d.test.IO_block1 %>%
   ggplot(aes(x = io.type, colour = gender)) +
   geom_point(aes(y = median_likelihood_per_response),
              size = 3, position = position_dodge(.2)) +
-  geom_label(aes(y = mode_likelihood_per_response, label = "+"), 
+  geom_text(aes(y = mode_likelihood_per_response, label = "+"), 
              size = 3,
              position = position_dodge(.2),
              show.legend = F) +
@@ -827,8 +844,9 @@ p.likelihood.multivar_block1 <- d.test.IO_block1 %>%
     breaks = c("VOT_F0.no.noise_block1", "VOT_F0_block1", "VOT_F0.centered_block1", "VOT_F0.centered.input_block1"),
     labels = c(VOT_F0.no.noise_block1 = "VOT_F0", VOT_F0_block1 = "VOT-F0\n(+perceptual noise)", VOT_F0.centered_block1 = "VOT-F0\n (+talker-centered)", VOT_F0.centered.input_block1 = "VOT-F0 \n (+exposure-centered)")) +
   scale_colour_manual("Gender", values = colours.sex, labels = c("Female", "Male")) +
-  guides(x = guide_axis(angle = 0)) + 
-  theme(legend.position = "top") +
+  guides(x = guide_axis(angle = 22.5)) + 
+  theme(legend.position = "top",
+        panel.grid.major.x = element_blank()) +
   coord_trans(y = "log10")
 
 
@@ -868,7 +886,9 @@ contrasts <- d.test_exposure_for_analysis %>%
 
 ```{r warning=FALSE}
 d.test_exposure_for_analysis %<>% 
-  mutate(Response.Voiceless = ifelse(Response.Voicing == "voiceless", 1, 0))
+  mutate(Response.Voiceless = ifelse(Response.Voicing == "voiceless", 1, 0),
+         VOT_gs = (Item.VOT - VOT.mean_exp2)/ (2 * VOT.sd_exp2),
+         F0_gs = (Item.Mel_F0_5ms - f0.mean_exp2) /(2 * f0.sd_exp2))
 contrast_type <- "difference"
 
 my_priors <- c(
@@ -894,18 +914,20 @@ fit_mix_uniform_bias <- brm(
   warmup = 2000, # samples used to fit
   family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
   control = list(adapt_delta = .99),
-  file = "../models/Exp-AE-DLVOT-labelled-lapsing-GLMM.rds")
-
-# load helmert contrast-coded model
-fit_mix_helmert <- read_rds("../models/Exp-AE-DLVOT-labelled-lapsing-GLMM-helmert.rds")
-
-fixed_eff_exp2_helmert <- tidy(fit_mix_helmert, effects = "fixed") %>% 
-  select(-c(effect, component))
+  file = "../models/Exp-AE-DLVOT-labelled-lapsing-GLMM-difference-no-RTexcl.rds")
 
 
 fixed_eff_exp2 <- tidy(fit_mix_uniform_bias, effects = "fixed") %>% 
   select(-c(effect, component))
 
+# load helmert contrast-coded model
+fit_mix_helmert <- read_rds("../models/Exp-AE-DLVOT-labelled-lapsing-GLMM-helmert-no-RTexcl.rds")
+
+fixed_eff_exp2_helmert <- tidy(fit_mix_helmert, effects = "fixed") %>% 
+  select(-c(effect, component))
+
+fixed_eff_exp2
+fixed_eff_exp2_helmert
 
 kable(fixed_eff_exp2, booktabs = TRUE, caption = "Population estimates") %>% 
   kable_styling(c("striped", "repeat_header"), position = "center") 
@@ -956,10 +978,11 @@ p.conditions <- cond_fit[[1]] %>%
            geom_line(aes(color = Condition.Exposure), 
                      size = 1) +
            geom_rug(data = d.test_exposure_for_analysis %>%
+                      ungroup() %>% 
                       distinct(Item.VOT),
                     aes(x = Item.VOT),
                     alpha = 0.5,
-                    colour = "lightgrey",
+                    colour = "grey",
                     inherit.aes = F) +
            stat_summary(
              data = d.test_exposure_for_analysis %>%
@@ -978,7 +1001,7 @@ p.conditions <- cond_fit[[1]] %>%
              fun.data = mean_cl_boot,
              mapping = aes(x = Item.VOT,
                            y = Response.Voiceless,
-                           colour = Condition.Exposure),
+               colour = Condition.Exposure),
              geom = "pointrange",
              size = 0.2,
              position = position_dodge2(width = 2),
@@ -1022,7 +1045,7 @@ fit_mix_nested <- brm(
   warmup = 2000, # samples used to fit
   family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
   control = list(adapt_delta = .99),
-  file = "../models/Exp-AE-DLVOT-labelled-lapsing-GLMM-nested.rds")
+  file = "../models/Exp-AE-DLVOT-labelled-lapsing-GLMM-nested-no-RTexcl.rds")
 
 # summary = F below gives all 8000 posterior samples
 temp <- 
@@ -1088,16 +1111,38 @@ p.PSE <- d.PSE %>%
   geom_point(position = position_dodge(.3), size = 2.5) +
   geom_linerange(aes(ymin = lower, ymax = upper), linewidth = 1.2, position = position_dodge(.3), alpha = .5) +
   stat_summary(geom = "line", position = position_dodge(.3)) +
-  geom_hline(yintercept = 25, linetype = 2, linewidth = 0.8, colour = "#cc0000", alpha = 0.8) +
-  geom_hline(yintercept = 25 + 10, linetype = 2, linewidth = .8, colour = "#12D432", alpha = 0.5) +
-  geom_hline(yintercept = 25 + 40, linetype = 2, linewidth = .8, colour = "#0481F3", alpha = 0.5) +
+  geom_hline(yintercept = 27.1, linetype = 2, linewidth = 0.8, colour = "#cc0000", alpha = 0.8) +
+  geom_hline(yintercept = 27.1 + 10, linetype = 2, linewidth = .8, colour = "#12D432", alpha = 0.5) +
+  geom_hline(yintercept = 27.1 + 40, linetype = 2, linewidth = .8, colour = "#0481F3", alpha = 0.5) +
   scale_colour_manual("Condition",
     labels = c("+0ms", "+10ms", "+40ms"),
     values = c("#cc0000", "#12D432","#0481F3"),
     aesthetics = "color") +
-  scale_y_continuous("Median PSE (ms)", limits = c(24.5, 65.5), breaks = seq(25, 65.5, 5)) +
+  scale_y_continuous("Median PSE (ms)", limits = c(24.5, 67.5), breaks = seq(25, 65.5, 5)) +
   scale_x_discrete("Test block") +
   theme(legend.position = "top")
+
+
+
+fit_mix_nested %>% 
+  gather_draws(`b_mu2_IpasteCondition.ExposureBlocksepEQ.*`, regex = TRUE, ndraws = 8000) %>% 
+  mutate(.variable = gsub("b_mu2_IpasteCondition.ExposureBlocksepEQxShift(\\d{1,2})x(\\d{1}.*$)", "Shift\\1.\\2", .variable),
+         term = ifelse(str_detect(.variable, "VOT_gs"), "slope", "Intercept")) %>% 
+  separate(col = .variable, into = c("Condition.Exposure", "Block"), sep = "\\.") %>% 
+  mutate(Block = ifelse(str_detect(Block, "VOT"), str_replace(Block, "(\\d{1}):VOT_gs", "\\1"), Block)) %>% 
+  pivot_wider(names_from = term, values_from = ".value") %>% 
+  relocate(c(Condition.Exposure, Block, Intercept, slope, .chain, .iteration, .draw)) %>% 
+  mutate(PSE = descale(-Intercept/slope, VOT.mean_exp2, VOT.sd_exp2))%>% 
+  group_by(Block) %>% 
+  mutate(Block = factor(case_when(Block == 1 ~ "1",
+                                Block == 3 ~ "2",
+                                Block == 5 ~ "3",
+                                Block == 7 ~ "4",
+                                Block == 8 ~ "5",
+                                Block == 9 ~ "6"))) %>% 
+  summarise(lower = quantile(PSE, probs = .025),
+            median = quantile(PSE, probs = .5),
+            upper = quantile(PSE, probs = .975))
 ```
 
 
@@ -1183,7 +1228,7 @@ d.contrast.compare <- d.test_exposure_for_analysis %>%
   filter(Phase == "test") %>%
   select(Condition.Exposure, Block) %>%
   distinct()
-# 
+ 
 newdata <- crossing(d.contrast.compare, VOT_gs = 0)
 
 predictions <- epred_draws(
@@ -1197,21 +1242,111 @@ predictions <- epred_draws(
          prob = plogis(mean_log_odds))
 ```
 
-```{r}
-d.temp <- d.test_exposure_for_analysis %>% filter(Condition.Exposure == "Shift0")
 
-d.temp %>% 
-  group_by(ParticipantID) %>% 
-  summarise(n()) 
+
+
+
+
+
+
+```{r make-dataframe-for-logistic-regression-on-predicted-props-by-IOs}
+x <- d.test_exposure_for_analysis %>% 
+  filter(Phase == "test") %>% 
+  distinct(Item.VOT) %>%
+  pull()
+
+conditions <- tibble(
+  condition = c("shift0", "shift10", "shift40")) 
   
+ios <- tibble(
+  category = factor(c("/d/", "/t/")),
+  Sigma = list(matrix(sqrt(80)), matrix(sqrt(278))),
+  prior = c(.5, .5),
+  lapse_rate = c(0, 0),
+  lapse_bias = c(.5, .5),
+  Sigma_noise = list(matrix(80), matrix(80))
+  )
+
+io.conditions <- crossing(conditions, ios) %>% 
+  cbind(tibble(mu = list(c(VOT = 5), c(VOT = 50), c(VOT = 15), c(VOT = 60), c(VOT = 45), c(VOT = 90)))) %>% 
+  relocate(c(condition, category, mu)) %>% 
+  nest(io = -c(condition)) %>% 
+  crossing(x) %>% 
+  mutate(x = map(x, ~ c(.x))) %>% 
+  nest(x = x)
+
+d.io.categorisation <- io.conditions %>% 
+  mutate(categorisation = 
+           map2(x, io,
+          ~ get_categorization_from_MVG_ideal_observer(x = .x$x, model = .y, decision_rule = "proportional") %>% 
+            mutate(VOT = map(x, ~ .x[1]) %>% unlist()))) %>%
+  unnest(cols = categorisation, names_repair = "unique") %>% 
+  select(c(condition, io, category, response, VOT)) %>% 
+  pivot_wider(names_from = category, values_from = response, names_prefix = "response_") %>% 
+  mutate(n_d = round(`response_/d/` * 10^9),
+         n_t = 10^9 - n_d)
+
+d.io.categorisation %>%
+  group_by(condition) %>% 
+  nest() %>% 
+  mutate(model = map(data, ~ glm(cbind(n_t, n_d) ~ 1 + VOT, family = binomial, data = .x)),
+         intercept = map_dbl(model, ~ tidy(.x)[1,2] %>% pull()),
+         slope = map_dbl(model, ~ tidy(.x)[2,2] %>% pull()),  
+           PSE = -intercept/slope)
 ```
 
 
 
+```{r}
+x1 <- c(seq(0, 85, .1))
+
+conditions <- tibble(
+  condition = c("shift0", "shift10", "shift40")) 
+  
+ios <- tibble(
+  category = factor(c("/d/", "/t/")),
+  Sigma = list(matrix(sqrt(80)), matrix(sqrt(278))),
+  prior = c(.5, .5),
+  lapse_rate = c(0, 0),
+  lapse_bias = c(.5, .5),
+  Sigma_noise = list(matrix(80), matrix(80))
+  )
+
+io.conditions <- crossing(conditions, ios) %>% 
+  cbind(tibble(mu = list(c(VOT = 5), c(VOT = 50), c(VOT = 15), c(VOT = 60), c(VOT = 45), c(VOT = 90)))) %>% 
+  relocate(c(condition, category, mu)) %>% 
+  nest(io = -c(condition)) %>% 
+  crossing(x1) %>% 
+  mutate(x1 = map(x1, ~ c(.x))) %>% 
+  nest(x = x1)
+
+d.exposure.io.predictions <- io.conditions %>% 
+  mutate(categorisation = 
+           map2(x, io,
+          ~ get_categorization_from_MVG_ideal_observer(x = .x$x1, model = .y, decision_rule = "proportional") %>% 
+            mutate(VOT = map(x, ~ .x[1]) %>% unlist()))) %>%
+  unnest(cols = categorisation, names_repair = "unique") 
 
 
+d.exposure.io.predictions %>% 
+  group_by(condition) %>% 
+  filter(category == "/t/") %>% 
+  mutate(response_PSE = abs(response - .5)) %>% 
+  group_by(condition) %>% 
+  filter(response_PSE == min(response_PSE))
 
 
+d.io.categorisation <- io.conditions %>% 
+  mutate(categorisation = 
+           map2(x, io,
+          ~ get_categorization_from_MVG_ideal_observer(x = .x$x, model = .y, decision_rule = "proportional") %>% 
+            mutate(VOT = map(x, ~ .x[1]) %>% unlist()))) %>%
+  unnest(cols = categorisation, names_repair = "unique") %>% 
+  select(c(condition, io, category, response, VOT)) %>% 
+  pivot_wider(names_from = category, values_from = response, names_prefix = "response_") %>% 
+  mutate(n_d = round(`response_/d/` * 10^9),
+         n_t = 10^9 - n_d)
+```
 
 
 

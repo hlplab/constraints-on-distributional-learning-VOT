@@ -224,10 +224,10 @@ VOT.mean_exp1 <- 47.6304
 VOT.sd_exp1 <- 51.7727
 f0.mean_exp1 <- 340.923
 f0.sd_exp1 <- 2.58267
-VOT.mean_exp2 <- 35.6597
-VOT.sd_exp2 <- 22.4422
-f0.mean_exp2 <- 339.987
-f0.sd_exp2 <- 1.4256
+VOT.mean_exp2 <- 35.833
+VOT.sd_exp2 <- 22.151
+f0.mean_exp2 <- 340
+f0.sd_exp2 <- 1.392
 
 ############################################################################
 # Get approximate f0 of synthesised stimuli from VOT values
