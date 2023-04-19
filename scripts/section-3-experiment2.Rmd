@@ -259,15 +259,12 @@ d.test_exposure_for_analysis <- d.exposure_test %>%
     Exclude_participant.due_to_catch_trials == FALSE &
     Exclude_participant.due_to_labeled_trials == FALSE &
     Exclude_participant.due_to_VOT_slope == FALSE)
-
-write_csv(d.test_exposure_for_analysis, "../data/d.test_exposure_for_analysis")
 ```
 
 ### Exclusions
 We excluded from analysis participants who committed more than 3 errors out of the 18 catch trials (<84% accuracy, N = 1), participants who committed more than 4 errors out of the 72 catch trials (<94% accuracy, N = 0), participants with an average reaction time (RT) more than three standard deviations from the mean of the by-participant means (N = 0), and participants who reported not to have used headphones (N = 0) or not to be native (L1) speakers of US English (N = 0). 
 
 In addition, participants' categorization during the early phase of the experiment were scrutinised for their slope orientation and their proportion of "t"-responses at the least ambiguous locations of the VOT continuum. The early phase of the experiment was defined as the first 36 trials and the least ambiguous locations were defined as -20ms from the empirical mean of the /d/ category and +20ms from the empirical mean of the /t/ category. These means were taken from the production data estimates by @Kurumada_Xie_Jaeger_2022.
-For the remaining participants, trials that were more than three SDs from the participant's mean RT were excluded from analysis (`r proportion.trials.excluded * 100 `%). Finally, we excluded participants (N = 0) who had less than 50% data remaining after these exclusions. 
 
 
 
@@ -386,10 +383,6 @@ p.fit_block1 <- psychometric_fit_block1 %>%
     mapping = aes(x = Item.VOT),
     alpha = .6,
     inherit.aes = F)
-
-psychometric_fit_block1 %>% mutate(
-  Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2)
-)
 ```
 
 
@@ -441,8 +434,7 @@ p.IOs.VOT_block1 <- plot_IO_fit(
   data.test = d.block1 %>% 
     ungroup() %>% distinct(Item.VOT),
   data.percept.PSE = post_sample_block1,
-  PSE_VOT_block1
-)
+  PSE_VOT_block1)
 ```
 
 
@@ -639,9 +631,9 @@ p.IOs.VOT_F0.centered.input_block1 <- plot_IO_fit(
 
 
 
+(ref:comparative-production-IO-plot-block1) From top to bottom: description
 
-
-```{r prepare-plots-to-make-IO-plot-grid-block1, fig.width=4, fig.height=8.5, warning=FALSE}
+```{r comparative-production-IO-plot-block1, fig.width=4, fig.height=8.5, warning=FALSE}
 # make plot grid
 remove_all_titles <- 
   theme(axis.title.y = element_blank(),
@@ -718,13 +710,6 @@ d.test.IO_block1 %<>%
     io.type = fct_relevel(io.type, c("VOT.no.noise_block1", "VOT_block1", "VOT.centered_block1", "VOT.centered.input_block1", "VOT_F0.no.noise_block1", "VOT_F0_block1", "VOT_F0.centered_block1", "VOT_F0.centered.input_block1")),
     gender = fct_relevel(gender, c("female", "male")))
 
-IO.likelihood_block1 <- d.test.IO_block1 %>% 
-  group_by(io.type) %>% 
-  summarise(
-    median_likelihood_per_response = median(likelihood_per_response),
-    mode_likelihood_per_response = max(likelihood_per_response, na.rm = T)
-  )
-
 # use bootstrap samples by io type to find the CI of the median and mode
 set.seed(7896)
 d.bootstrap_block1 <- d.test.IO_block1 %>% 
@@ -754,14 +739,15 @@ IO.likelihood_block1 <- d.test.IO_block1 %>%
 
 
 p.likelihood.block1 <- IO.likelihood_block1 %>% 
-  mutate(io.label = if(str_detect(io.type, "^(VOT|VOT_F0)\\.no\\.noise.*_block1$")) {"raw"} 
+  mutate(io.label = if(str_detect(io.type, "^(VOT|VOT_F0)\\.no\\.noise_block1$")) {"raw"} 
     else if(str_detect(io.type, "^(VOT|VOT_F0)_block1$")) {"+perceptual noise"}
     else if(str_detect(io.type, "^(VOT|VOT_F0)\\.centered_block1$")) {"+talker-centered"}
-    else if(str_detect(io.type, "^(VOT|VOT_F0)\\.centered.input_block1$")) {"+exposure-centered"}) %>% 
+    else if(str_detect(io.type, "^(VOT|VOT_F0)\\.centered\\.input_block1$")) {"+exposure-centered"}) %>% 
   ggplot(aes(x = io.label, colour = gender)) +
   geom_point(aes(y = median_likelihood_per_response), 
              size = 3, 
-             position = position_dodge(.2), show.legend = F) +
+             position = position_dodge(.2), 
+             show.legend = T) +
   geom_text(aes(y = mode_likelihood_per_response,
              label = "+"),
              size = 3.5,
@@ -790,9 +776,12 @@ p.likelihood.block1 <- IO.likelihood_block1 %>%
   scale_y_continuous("Median likelihood per response") + 
   scale_x_discrete("IO Type", limits = c("raw", "+perceptual noise", "+talker-centered", "+exposure-centered"), breaks = c("raw", "+perceptual noise", "+talker-centered", "+exposure-centered")) + 
   scale_colour_manual("Gender", values = colours.sex, labels = c("Female", "Male")) + 
-  theme(panel.grid.major.x = element_blank()) + 
+  theme(panel.grid.major.x = element_blank(),
+        legend.position = "top") + 
   coord_trans(y = "log10") +
   facet_grid(cues ~., scales = "free_y")
+
+p.likelihood.block1
 ```
 
 
@@ -810,22 +799,12 @@ To analyse the incremental effects of exposure condition on the proportion of /t
 ### Expectations
 Given previous findings of @kleinschmidt2016you we expected participants in the various exposure conditions to shift their average categorization functions towards the direction of the ideal categorization function implied by their respective exposure distributions. We expected the differences between the groups to be most pronounced after the final exposure block as they would have had the complete exposure to all the tokens that make up the exposure distributions. This follows from predictions of incremental Bayesian belief-updating -- that listeners would integrate their prior expectations with the current input to infer the present talker's cue-to-category-mapping (the posterior distribution). 
 Also based on previous findings, we expected the +40ms group to not fully  converge on the ideal categorization function as it was previously found that the further an exposure talker's cue distributions deviated from a *typical* talker's, the further the distance of categorization function from the ideal boundary. We therefore expected to see differences in categorizations between the +10ms and +40ms conditions such that listeners in the +40ms condition would shift more than those in the +10ms condition but to have an average categorization function located to the left of the ideal function. [@kleinschmidt2016you].
-```{r, results='hide'}
-# set condition levels
-levels_Condition.Exposure = c("Shift0", "Shift10", "Shift40")
-
-contrasts <- d.test_exposure_for_analysis %>% 
-    filter(Phase == "test") %>% 
-    prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = "difference") 
-```
-
 
 
 ```{r warning=FALSE}
 d.test_exposure_for_analysis %<>% 
-  mutate(Response.Voiceless = ifelse(Response.Voicing == "voiceless", 1, 0),
-         VOT_gs = (Item.VOT - VOT.mean_exp2)/ (2 * VOT.sd_exp2),
-         F0_gs = (Item.Mel_F0_5ms - f0.mean_exp2) /(2 * f0.sd_exp2))
+  mutate(Response.Voiceless = ifelse(Response.Voicing == "voiceless", 1, 0))
+levels_Condition.Exposure = c("Shift0", "Shift10", "Shift40")
 contrast_type <- "difference"
 
 my_priors <- c(
@@ -843,7 +822,7 @@ fit_mix_uniform_bias <- brm(
     theta1 ~ 1),
   data = d.test_exposure_for_analysis %>% 
     filter(Phase == "test") %>% 
-    prepVars(levels.Condition = levels_Condition.Exposure),
+    prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
   cores = 4,
   chains = chains,
   init = 0,
@@ -873,18 +852,24 @@ kable(fixed_eff_exp2, booktabs = TRUE, caption = "Population estimates") %>%
 
 Fig. XX summarizes participants’ categorization functions across the different test blocks. A first point to note are the average categorization functions of the respective conditions before exposure to the talker. As depicted in the first panel, the average functions converge on the same boundary or PSE (4xms, CI = ) which suggests that participants largely had similar expectations about the cue distribution corresponding to /d/ and /t/ for this type of talker. What it also shows is that in setting our baseline condition we may have underestimated the perceived boundary for our test stimuli by approximately 20ms which implies that the +10ms shift and the +40ms shift were in fact -10ms and +20ms respectively.[ELABORATION]
 
-There was a main effect of VOT $\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_VOT_gs", "mu2_VOT_gs > 0")`; participants were more likely to respond "t" as VOT increased. Condition had a main effect on responses such that with larger shifts, participants on average responded with fewer "t"s.  Additionally, the difference in average "t" responses between the +40ms and +10ms conditions ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift10vs.Shift40", "mu2_Condition.Exposure_Shift10vs.Shift40 < 0")` reduction in log-odds) was *larger* than the difference between the +10 and +0 conditions ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift0vs.Shift10", "mu2_Condition.Exposure_Shift0vs.Shift10 < 0")` reduction in log-odds). 
+There was a main effect of VOT $\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_VOT_gs", "mu2_VOT_gs > 0")`; participants were more likely to respond "t" as VOT increased. Condition had a main effect on responses such that with larger shifts, participants on average responded with fewer "t"s.  Additionally, the difference in average "t" responses between the +40ms and +10ms conditions ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift40vs.Shift10", "mu2_Condition.Exposure_Shift40vs.Shift10 < 0")` reduction in log-odds) was *larger* than the difference between the +10 and +0 conditions ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift10vs.Shift0", "mu2_Condition.Exposure_Shift10vs.Shift0 < 0")` reduction in log-odds). 
 Qualitatively, the results indicate listeners adjust their expectations to align with the statistics of the exposure talker, consonant with previous findings of studies employing this paradigm (e.g., @clayards2008; @kleinschmidt2016you; @theodore2019distributional). 
 
-While there was weak evidence for a main effect of block its interaction with condition revealed how participants in the respective exposure groups responded as they progressively received more informative input. Most of the change took place after the first exposure block. Participants in the +10ms condition responded with fewer "ts" compared to participants in the +0ms condition in test block 2 relative to that in test block 1 ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift0vs.Shift10:Block_Block1vs.Block3", "mu2_Condition.Exposure_Shift0vs.Shift10:Block_Block1vs.Block3 < 0")`). The difference between the  +40ms and +10ms condition in test block 2 relative to that in block 1 was more pronounced, reflecting the wider separation between the two exposure conditions in block 2 ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift10vs.Shift40:Block_Block1vs.Block3", "mu2_Condition.Exposure_Shift10vs.Shift40:Block_Block1vs.Block3 < 0")`). 
+While there was weak evidence for a main effect of block its interaction with condition revealed how participants in the respective exposure groups responded as they progressively received more informative input. Most of the change took place after the first exposure block. Participants in the +10ms condition responded with fewer "ts" compared to participants in the +0ms condition in test block 2 relative to that in test block 1 ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1", "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 < 0")`). The difference between the  +40ms and +10ms condition in test block 2 relative to that in block 1 was more pronounced, reflecting the wider separation between the two exposure conditions in block 2 ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1", "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 < 0")`). 
 
-In test block 3, the difference in average log-odds between conditions +0ms and +10ms, relative to block 2 was *positive* such that the difference between the two conditions in test block 3 was smaller than the corresponding difference in block 2 ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift0vs.Shift10:Block_Block3vs.Block5", "mu2_Condition.Exposure_Shift0vs.Shift10:Block_Block3vs.Block5 >0")`). In test blocks 4 and 5, the  average log-odds difference between +0ms and +10ms increased marginally when compared to the preceding block, respectively (as indicated by the negative signs of the estimates; see table xx) while in test block 6 the difference between the two exposure conditions narrowed substantially. Looking at the  the difference between the +40ms and +10ms conditions, this continued to widen in test blocks 3 and block 4 relative to their respective preceding blocks, albeit by progressively smaller increments. This widening trend would then reverse in test blocks 5 and 6. In all, the respective conditions hit their maximal shifts between blocks 2 and 3 and began to display a reversal of the exposure effects by the end of block 4. This "unlearning" of the exposure distribution, observed in the final 3 test blocks was expected given previous findings that distributional learning effects can begin to dissipate with prolonged testing with tokens from a uniform distribution. 
+In test block 3, the difference in average log-odds between conditions +0ms and +10ms, relative to block 2 was *positive* such that the difference between the two conditions in test block 3 was smaller than the corresponding difference in block 2 ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2", "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 >0")`). In test blocks 4 and 5, the  average log-odds difference between +0ms and +10ms increased marginally when compared to the preceding block, respectively (as indicated by the negative signs of the estimates; see table xx) while in test block 6 the difference between the two exposure conditions narrowed substantially. Looking at the  the difference between the +40ms and +10ms conditions, this continued to widen in test blocks 3 and block 4 relative to their respective preceding blocks, albeit by progressively smaller increments. This widening trend would then reverse in test blocks 5 and 6. In all, the respective conditions hit their maximal shifts between blocks 2 and 3 and began to display a reversal of the exposure effects by the end of block 4. This "unlearning" of the exposure distribution, observed in the final 3 test blocks was expected given previous findings that distributional learning effects can begin to dissipate with prolonged testing with tokens from a uniform distribution. 
 
 An examination of the block-by-block changes in the intercepts and slopes of the respective conditions, confirmed that the changes in categorization behaviour were driven predominantly by changes in the intercept (fig xx). the slopes of all 3 conditions in test block 4, which immediately follows the final exposure block, and where participants would have had full exposure to their respective distributions, did not differ substantially from each other nor from their estimated starting point in test block 1. Conversely, the intercepts at these points in the experiment were more distinct from each other and from where they were estimated to be at test block 1. 
 
-In summary, the analysis shows that the groups diverged in their categorisation behaviour very early on in the experiment -- only after 24 exposures to each category. This suggests a readiness to adapt to a new talker by integrating current input with prior expectations. This prompt shift was however tempered by participants reaching the limits of their adaptation almost as quickly; the +40ms condition for example achieved more than 95% of its maximal shift during the experiment in test block 2. Only a marginal change in categorization behaviour was observed after the second exposure block while the third exposure block barely resulted in further shifts. Glaringly, all three conditions undershot the ideal categorization boundaries implied by their respective exposure distributions: 14.5ms in the +0ms, 7.2ms in the +10ms, and 14.5ms in the +40ms conditions. Like this study's antecedent, the various exposure groups did 
+In summary, the analysis shows that the groups diverged in their categorisation behaviour very early on in the experiment -- only after 24 exposures to each category. This suggests a readiness to adapt to a new talker by integrating current input with prior expectations. This prompt shift was however tempered by participants reaching the limits of their adaptation almost as quickly; the +40ms condition for example achieved more than 95% of its maximal shift in the experiment in test block 2. Only a marginal change in categorization behaviour was observed after the second exposure block while the third exposure block barely resulted in further shifts. 
 
-Under the Bayesian ideal adapter framework quick adaptation is characterised as listeners having weak beliefs in their prior cue means and variances. Listeners' strength in prior beliefs influences the speed of adaptation, and this is what we observed from the analysis so far. On the other hand, weak prior beliefs also predict that it would take few trials for listeners to converge on the implied categorisation boundary. But this is not what we observed in our data. Instead, listeners were held back and stayed close to their ... mean As listeners adapt to new talkers either by shifting their expectations of the mean, by expanding the variance or by both, the strength of pri. We dig deeper into the behaviour of the participants by running IA analyses in the next section 
+ **Glaringly, all three conditions undershot the ideal categorization boundaries implied by their respective exposure distributions: 14.5ms in the +0ms, 7.2ms in the +10ms, and 14.5ms in the +40ms conditions. 
+
+  **Like this study's predecessor, we also find that participants had a greater propensity to shift their categorisations upwards than downwards as the +40ms group showed the widest deviation from the baseline.
+
+Under the Bayesian ideal adapter framework quick adaptation is characterised as listeners having weak beliefs in their prior cue means and variances. Listeners' strength in prior beliefs influences the speed of adaptation, and this is what we observed. On the other hand, weak prior beliefs also predict that it would take few trials for listeners to converge on the implied categorisation boundary. But this is not what we observed in our data. 
+
+
 ```{r, results='hide'}
 cond_fit <- conditional_effects(
     fit_mix_uniform_bias,
@@ -962,6 +947,8 @@ p.conditions <- cond_fit[[1]] %>%
 p.conditions 
 ```
 
+
+
 ```{r}
 # nested models for extracting the 'intercepts' and 'slopes' for each Block and Condition
 fit_mix_nested <- brm(
@@ -1021,6 +1008,9 @@ Intercepts_slopes <- tidy(fit_mix_nested, effects = "fixed") %>%
   mutate(Block = ifelse(str_detect(Block, "VOT"), str_replace(Block, "(\\d{1}):VOT_gs", "\\1"), Block)) 
 ```
 
+
+
+
 ```{r, warning=FALSE}
 # alternative way to get posterior draws using gather_draws
 d.PSE <- fit_mix_nested %>% 
@@ -1058,8 +1048,6 @@ p.PSE <- d.PSE %>%
   scale_y_continuous("Median PSE (ms)", limits = c(24.5, 67.5), breaks = seq(25, 65.5, 5)) +
   scale_x_discrete("Test block") +
   theme(legend.position = "top")
-
-
 
 fit_mix_nested %>% 
   gather_draws(`b_mu2_IpasteCondition.ExposureBlocksepEQ.*`, regex = TRUE, ndraws = 8000) %>% 
@@ -1160,33 +1148,12 @@ p.slopes <- d.params %>%
 
 
 
-```{r}
-d.contrast.compare <- d.test_exposure_for_analysis %>%
-  filter(Phase == "test") %>%
-  select(Condition.Exposure, Block) %>%
-  distinct()
- 
-newdata <- crossing(d.contrast.compare, VOT_gs = 0)
-
-predictions <- epred_draws(
-  fit_mix_uniform_bias,
-    newdata = newdata,
-  re_formula = NA,
-  ndraws = 100) %>%
-  group_by(Condition.Exposure, Block, VOT_gs) %>%
-  summarise(mean_log_odds = mean(.epred)) %>%
-  mutate(VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2),
-         prob = plogis(mean_log_odds))
-```
 
 
 
 
 
-
-
-
-```{r make-dataframe-for-logistic-regression-on-predicted-props-by-IOs}
+```{r make-dataframe-for-logistic-regression-on-predicted-probs-by-IOs}
 x <- d.test_exposure_for_analysis %>% 
   filter(Phase == "test") %>% 
   distinct(Item.VOT) %>%
@@ -1232,58 +1199,6 @@ d.io.categorisation %>%
            PSE = -intercept/slope)
 ```
 
-
-
-```{r}
-x1 <- c(seq(0, 85, .1))
-
-conditions <- tibble(
-  condition = c("shift0", "shift10", "shift40")) 
-  
-ios <- tibble(
-  category = factor(c("/d/", "/t/")),
-  Sigma = list(matrix(sqrt(80)), matrix(sqrt(278))),
-  prior = c(.5, .5),
-  lapse_rate = c(0, 0),
-  lapse_bias = c(.5, .5),
-  Sigma_noise = list(matrix(80), matrix(80))
-  )
-
-io.conditions <- crossing(conditions, ios) %>% 
-  cbind(tibble(mu = list(c(VOT = 5), c(VOT = 50), c(VOT = 15), c(VOT = 60), c(VOT = 45), c(VOT = 90)))) %>% 
-  relocate(c(condition, category, mu)) %>% 
-  nest(io = -c(condition)) %>% 
-  crossing(x1) %>% 
-  mutate(x1 = map(x1, ~ c(.x))) %>% 
-  nest(x = x1)
-
-d.exposure.io.predictions <- io.conditions %>% 
-  mutate(categorisation = 
-           map2(x, io,
-          ~ get_categorization_from_MVG_ideal_observer(x = .x$x1, model = .y, decision_rule = "proportional") %>% 
-            mutate(VOT = map(x, ~ .x[1]) %>% unlist()))) %>%
-  unnest(cols = categorisation, names_repair = "unique") 
-
-
-d.exposure.io.predictions %>% 
-  group_by(condition) %>% 
-  filter(category == "/t/") %>% 
-  mutate(response_PSE = abs(response - .5)) %>% 
-  group_by(condition) %>% 
-  filter(response_PSE == min(response_PSE))
-
-
-d.io.categorisation <- io.conditions %>% 
-  mutate(categorisation = 
-           map2(x, io,
-          ~ get_categorization_from_MVG_ideal_observer(x = .x$x, model = .y, decision_rule = "proportional") %>% 
-            mutate(VOT = map(x, ~ .x[1]) %>% unlist()))) %>%
-  unnest(cols = categorisation, names_repair = "unique") %>% 
-  select(c(condition, io, category, response, VOT)) %>% 
-  pivot_wider(names_from = category, values_from = response, names_prefix = "response_") %>% 
-  mutate(n_d = round(`response_/d/` * 10^9),
-         n_t = 10^9 - n_d)
-```
 
 
 

@@ -653,7 +653,7 @@ plot_talker_MVGs <- function(
     ggplot() +
     plot$ellipse +
     scale_x_continuous("VOT (ms)") +
-    scale_y_continuous("F0") +
+    scale_y_continuous("F0 (Mel)") +
     scale_colour_manual("Talker sex", values = colours.sex, labels = c("Female", "Male")) +
     scale_linetype_discrete("Category") +
     geom_point(
@@ -672,9 +672,8 @@ plot_talker_MVGs <- function(
       inherit.aes = F) +
     geom_abline(intercept = if (centered == T) normMel(245.46968) + (prod_means[2] - percept_means[2]) else normMel(245.46968), 
                slope = 0.03827, 
-               alpha = .6,
                linetype = 2, 
-               alpha = .6) +
+               alpha = .3) +
     guides(colour = "none", category = "none")
 }
 
