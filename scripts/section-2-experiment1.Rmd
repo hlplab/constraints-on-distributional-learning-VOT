@@ -801,7 +801,9 @@ d.test.IO <-
   nest(d.perception = everything()) %>%
   crossing(d.IOs) 
 
-d.test.IO %<>%
+d.test.IO %<>% if (file.exists("../data/d.test.IO.rds")) {
+  d.test.IO <- read_rds("../data/d.test.IO.rds")
+} else {
   mutate(
     log_likelihood_per_response =
       pmap(
@@ -822,6 +824,7 @@ d.test.IO %<>%
       io.type, c("VOT.no.noise", "VOT", "VOT.centered", "VOT.centered.input", "VOT_F0.no.noise", "VOT_F0", "VOT_F0.centered", "VOT_F0.centered.input")),
     gender = fct_relevel(
       gender, c("female", "male")))
+}
 
 # use bootstrap samples by io type to find the CI of the median
 set.seed(356)

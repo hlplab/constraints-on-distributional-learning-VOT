@@ -720,7 +720,7 @@ d.test.IO_block1 <-
 
 # calculate the likelihood of each IO under the data
 if (file.exists("../data/d.test.IO_block1.csv")) {
-  d.test.IO_block1 <- read_rds("../data/d.test.IO_block1.rds")
+  d.test.IO_block1 <- read_rds("../data/d.test.IO_block1.csv")
 } else {
 d.test.IO_block1 %<>%
   mutate(
