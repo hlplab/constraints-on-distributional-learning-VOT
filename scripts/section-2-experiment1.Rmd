@@ -801,10 +801,10 @@ d.test.IO <-
   nest(d.perception = everything()) %>%
   crossing(d.IOs) 
 
-d.test.IO %<>% if (file.exists("../data/d.test.IO.rds")) {
+if (file.exists("../data/d.test.IO.rds")) {
   d.test.IO <- read_rds("../data/d.test.IO.rds")
 } else {
-  mutate(
+  d.test.IO %<>% mutate(
     log_likelihood_per_response =
       pmap(
         list(d.perception, io, io.type), 
@@ -846,7 +846,7 @@ d.bootstrap <- d.test.IO %>%
 
 (ref:comparing-likelihoods-of-perception-data-under-each-IO) Comparing the likelihood of production IOs with different assumptions
 
-```{r IO-univar-likelihood-plot, fig.width=6.5, fig.height=4.5, fig.cap="(ref:comparing-likelihoods-of-perception-data-under-each-IO)"}
+```{r IO-univar-likelihood-plot, fig.width=4.5, fig.height=4.5, fig.cap="(ref:comparing-likelihoods-of-perception-data-under-each-IO)"}
 # plot median likelihood per response with bootstrapped 95% CI
 IO.likelihood <- d.test.IO %>% 
   group_by(io.type, gender) %>% 
@@ -863,7 +863,7 @@ p.likelihood <- IO.likelihood %>%
     io.type == "VOT.centered.input" | io.type == "VOT_F0.centered.input" ~ "+exposure-centered")) %>% 
   ggplot(aes(x = io.label, colour = gender)) +
   geom_point(aes(y = median_likelihood_per_response), 
-             size = 3, 
+             size = 2, 
              position = position_dodge(.2), 
              show.legend = T) +
   geom_text(aes(y = mode_likelihood_per_response,
@@ -888,7 +888,7 @@ p.likelihood <- IO.likelihood %>%
           io.type == "VOT.centered.input" | io.type == "VOT_F0.centered.input" ~ "+exposure-centered")),
     mapping = aes(x = io.label, ymin = median.lower, ymax = median.upper, colour = gender),
     position = position_dodge(.2),
-    linewidth = 1.5,
+    linewidth = 1.2,
     alpha = .6,
     inherit.aes = F,
     show.legend = F) +
@@ -896,8 +896,8 @@ p.likelihood <- IO.likelihood %>%
   scale_x_discrete("IO Type", limits = c("raw", "+perceptual noise", "+talker-centered", "+exposure-centered"), breaks = c("raw", "+perceptual noise", "+talker-centered", "+exposure-centered")) + 
   scale_colour_manual("Gender", values = colours.sex, labels = c("Female", "Male")) + 
   theme(panel.grid.major.x = element_blank(),
-        legend.position = "top") + 
-  coord_trans(y = "log10") +
+        legend.position = "top",
+        axis.text.x = element_text(angle = 22.5, vjust = 1, hjust = 1)) + 
   facet_grid(cues ~., scales = "free_y")
 
 p.likelihood

@@ -773,10 +773,11 @@ IO.likelihood_block1 <- d.test.IO_block1 %>%
 
 
 p.likelihood.block1 <- IO.likelihood_block1 %>% 
-  mutate(io.label = if(str_detect(io.type, "^(VOT|VOT_F0)\\.no\\.noise_block1$")) {"raw"} 
-    else if(str_detect(io.type, "^(VOT|VOT_F0)_block1$")) {"+perceptual noise"}
-    else if(str_detect(io.type, "^(VOT|VOT_F0)\\.centered_block1$")) {"+talker-centered"}
-    else if(str_detect(io.type, "^(VOT|VOT_F0)\\.centered\\.input_block1$")) {"+exposure-centered"}) %>% 
+  mutate(io.label = case_when(
+    io.type == "VOT.no.noise_block1" | io.type == "VOT_F0.no.noise_block1" ~ "raw",
+    io.type == "VOT_block1" | io.type == "VOT_F0_block1" ~ "+perceptual noise", 
+    io.type == "VOT.centered_block1" | io.type == "VOT_F0.centered_block1" ~ "+talker-centered",
+    io.type == "VOT.centered.input_block1" | io.type == "VOT_F0.centered.input_block1" ~ "+exposure-centered")) %>% 
   ggplot(aes(x = io.label, colour = gender)) +
   geom_point(aes(y = median_likelihood_per_response), 
              size = 2, 
@@ -796,11 +797,12 @@ p.likelihood.block1 <- IO.likelihood_block1 %>%
         mode.lower = quantile(mode_sample, probs = .025),
         mode.upper = quantile(mode_sample, probs = .975)) %>%
   mutate(
-    cues = ifelse(str_detect(io.type, "VOT_F0.*block1$"), "VOT-F0", "VOT"),
-    io.label = if(str_detect(io.type, "^(VOT|VOT_F0)\\.no\\.noise.*_block1$")) {"raw"} 
-    else if(str_detect(io.type, "^(VOT|VOT_F0)_block1$")) {"+perceptual noise"}
-    else if(str_detect(io.type, "^(VOT|VOT_F0)\\.centered_block1$")) {"+talker-centered"}
-    else if(str_detect(io.type, "^(VOT|VOT_F0)\\.centered.input_block1$")) {"+exposure-centered"}),
+    cues = ifelse(str_detect(io.type, "VOT_F0.*"), "VOT-F0", "VOT"),
+        io.label = case_when(
+          io.type == "VOT.no.noise_block1" | io.type == "VOT_F0.no.noise_block1" ~ "raw",
+          io.type == "VOT_block1" | io.type == "VOT_F0_block1" ~ "+perceptual noise", 
+          io.type == "VOT.centered_block1" | io.type == "VOT_F0.centered_block1" ~ "+talker-centered",
+          io.type == "VOT.centered.input_block1" | io.type == "VOT_F0.centered.input_block1" ~ "+exposure-centered")),
     mapping = aes(x = io.label, ymin = median.lower, ymax = median.upper, colour = gender),
     position = position_dodge(.2),
     linewidth = 1.2,
