@@ -1,0 +1,392 @@
+---
+title: "Rmd_for_making_plots_for talks"
+author: "Maryann Tan"
+date: "2023-04-24"
+output: html_document
+---
+
+
+
+
+
+Run all the functions and code for section 2 and 3 first. Then run the code below to make custom plots for posters or presentations. 
+
+
+```{r prepare-plots-to-make-IO-plot-grid}
+# make plot grid
+remove_x_title <- theme(axis.title.x = element_blank())
+remove_y_title <- theme(axis.title.y = element_blank()) 
+
+guide_spec <-  guides(linetype = "none")
+
+p1 <- p.likelihoods.VOT +
+  remove_x_title + guide_spec + ggtitle("Production") + theme(plot.title = element_text(size = 8, face = "bold"))
+
+p2 <- p.likelihoods.VOT_noise +
+   remove_x_title + guide_spec
+
+p3 <- p.likelihoods.VOT_F0 +
+   remove_x_title + guide_spec
+
+p4 <- p.likelihoods.VOT_F0.centered +
+   remove_x_title + guide_spec
+
+p5 <- p.likelihoods.exposure.centered 
+
+p6 <- p.IOs.VOT.no.noise + 
+  remove_axes_titles + ggtitle("Perception") + theme(plot.title = element_text(size = 8, face = "bold"))
+
+p7 <- p.IOs.VOT + 
+  remove_axes_titles 
+
+p8 <- p.IOs.VOT_F0 + 
+  remove_x_title 
+
+p9 <- p.IOs.VOT_F0.centered + 
+  remove_axes_titles
+
+p10 <- p.IOs.VOT_F0.centered.input + 
+  remove_y_title 
+```
+
+
+```{r, fig.width=3.2, fig.height=4.2}
+p.likelihood.block1 <- IO.likelihood_block1 %>% 
+  mutate(io.label = if(str_detect(io.type, "^(VOT|VOT_F0)\\.no\\.noise_block1$")) {"raw"} 
+    else if(str_detect(io.type, "^(VOT|VOT_F0)_block1$")) {"+perceptual noise"}
+    else if(str_detect(io.type, "^(VOT|VOT_F0)\\.centered_block1$")) {"+talker-centered"}
+    else if(str_detect(io.type, "^(VOT|VOT_F0)\\.centered\\.input_block1$")) {"+exposure-centered"}) %>% 
+  ggplot(aes(x = io.label, colour = gender)) +
+  geom_point(aes(y = median_likelihood_per_response), 
+             size = 2, 
+             position = position_dodge(.2), 
+             show.legend = T) +
+  geom_text(aes(y = mode_likelihood_per_response,
+             label = "+"),
+             size = 3.5,
+             position = position_dodge(.2),
+             show.legend = F) +
+  geom_linerange(
+    data = d.bootstrap_block1 %>%
+      group_by(io.type, gender) %>%
+      summarise(
+        median.lower = quantile(median_sample, probs = .025),
+        median.upper = quantile(median_sample, probs = .975),
+        mode.lower = quantile(mode_sample, probs = .025),
+        mode.upper = quantile(mode_sample, probs = .975)) %>%
+  mutate(
+    cues = ifelse(str_detect(io.type, "VOT_F0.*block1$"), "VOT-F0", "VOT"),
+    io.label = if(str_detect(io.type, "^(VOT|VOT_F0)\\.no\\.noise.*_block1$")) {"raw"} 
+    else if(str_detect(io.type, "^(VOT|VOT_F0)_block1$")) {"+perceptual noise"}
+    else if(str_detect(io.type, "^(VOT|VOT_F0)\\.centered_block1$")) {"+talker-centered"}
+    else if(str_detect(io.type, "^(VOT|VOT_F0)\\.centered.input_block1$")) {"+exposure-centered"}),
+    mapping = aes(x = io.label, ymin = median.lower, ymax = median.upper, colour = gender),
+    position = position_dodge(.2),
+    linewidth = 1.2,
+    alpha = .6,
+    inherit.aes = F,
+    show.legend = F) +
+  scale_y_continuous("Median likelihood per response") + 
+  scale_x_discrete("IO Type", limits = c("raw", "+perceptual noise", "+talker-centered", "+exposure-centered"), breaks = c("raw", "+perceptual noise", "+talker-centered", "+exposure-centered")) + 
+  scale_colour_manual("Gender", values = colours.sex, labels = c("Female", "Male")) + 
+  theme(panel.grid.major.x = element_blank(),
+        legend.position = "top",
+        legend.key = element_rect(linewidth = .5),
+        legend.key.height = unit(.1, "cm"),
+        legend.key.width = unit(.2, "cm"),
+        legend.text = element_text(size = 8),
+        legend.title = element_text(size = 8),
+        legend.justification = "right",
+        legend.margin = margin(b = 0),
+        legend.box.margin = margin(r = 0, b = 0),
+        axis.text.x = element_text(angle = 20, vjust = 1.1, hjust = 1, size = 8),
+        axis.text.y = element_text(size = 8),
+        axis.title.x = element_text(vjust = 0),
+        plot.margin = margin(1, 1, 1, 1, "cm")) + 
+  facet_grid(cues ~., scales = "free_y")
+
+ggsave("likelihood_plot_exp2.png", p.likelihood.block1, width = 9.1, height = 12, units = "cm", path = "~/Desktop/")
+```
+
+
+
+
+```{r}
+p.IOs <- (p.col1 | p.col2) +
+  plot_layout(ncol = 2, guides = "collect") &
+  theme(legend.position = "top") +
+  guides(legend.key.height = unit(.1, "cm"),
+        legend.key.width = unit(.2, "cm"),
+        legend.text = element_text(size = 8),
+        legend.title = element_text(size = 8),
+        legend.margin = margin(b = 0),
+        legend.box.margin = margin(r = 0, b = 0),
+        legend.justification = "right",
+        axis.text.y = element_text(size = 8),
+        axis.text.x = element_text(size = 8))
+
+ggsave("IOs_plot_exp1.png", p.IOs, width = 15.5, height = 21, units = "cm", path = "~/Desktop/")
+```
+
+
+
+
+
+
+
+Experiment 2 block 1 plots for ASA poster
+
+```{r, fig.width=7.5, fig.height=1.8, warning=FALSE}
+p11 <- p.IOs.VOT.no.noise_block1 + 
+  remove_x_title + ggtitle("VOT") + theme(plot.title = element_text(face = "bold", size = 8, margin = margin(b = 2)), plot.title.position = "panel")
+p12 <- p.IOs.VOT_block1 + ggtitle("VOT (+perceptual noise)") + 
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.title = element_text(face = "bold", size = 8, margin = margin(b = 2))) + 
+  remove_all_titles 
+p13 <- p.IOs.VOT_F0_block1 + remove_y_title + ggtitle("VOT-F0 (+perceptual noise)") + theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.title = element_text(face = "bold", size = 8, margin = margin(b = 2)))
+p14 <- p.IOs.VOT_F0.centered_block1 + ggtitle("VOT-F0 (+talker-centered)") + theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.title = element_text(face = "bold", size = 8, margin = margin(b = 2))) +
+  remove_all_titles
+p15 <- p.IOs.VOT_F0.centered.input_block1 + ggtitle("VOT-F0 (+exposure-centered)") + theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.title = element_text(face = "bold", size = 8, margin = margin(b = 2))) + 
+  remove_all_titles  
+
+p.IOs.exp2 <- p11 + p12 + p13 + p14 + p15 + 
+  plot_layout(ncol = 5, byrow = T, guides = "collect") &
+  theme(legend.position = "none")  
+  # guides(
+  #   legend.key.height = unit(.1, "cm"),
+  #        legend.key.width = unit(.2, "cm"),
+  #        legend.text = element_text(size = 8),
+  #        legend.title = element_text(size = 8),
+  #        legend.margin = margin(b = 0),
+  #        legend.box.margin = margin(r = 0, b = 0),
+  #        legend.justification = "right",
+  #   axis.text.x = element_text(size = 8))
+
+ggsave("IOs_plot_exp2.png", p.IOs.exp2, width = 23, height = 6, units = "cm", path = "~/Desktop/")
+
+```
+
+
+
+
+
+
+
+```{r, results='hide', fig.height=2.5, fig.width=6, warning=FALSE}
+p.fit <- cond_fit[[1]] %>%
+  mutate(Condition.Exposure = case_when(Condition.Exposure == "Shift0" ~ "+0ms",
+                                        Condition.Exposure == "Shift10" ~ "+10ms",
+                                        Condition.Exposure == "Shift40" ~ "+40ms"),
+         Test_block = factor(case_when(Block == 1 ~ "Test 1",
+                                Block == 3 ~ "Test 2",
+                                Block == 5 ~ "Test 3",
+                                Block == 7 ~ "Test 4",
+                                Block == 8 ~ "Test 5",
+                                Block == 9 ~ "Test 6"))) %>% 
+           ggplot(aes(x = descale(VOT_gs, VOT.mean_test, VOT.sd_test), 
+                      y = estimate__, 
+                      group = Condition.Exposure)) +
+           geom_ribbon(aes(ymin = lower__, ymax = upper__, fill = Condition.Exposure), alpha = .1) +
+           geom_line(aes(color = Condition.Exposure), 
+                     size = 1) +
+           geom_rug(data = d.test_exposure_for_analysis %>%
+                      ungroup() %>% 
+                      distinct(Item.VOT),
+                    aes(x = Item.VOT),
+                    alpha = 0.5,
+                    colour = "grey",
+                    inherit.aes = F) +
+           stat_summary(
+             data = d.test_exposure_for_analysis %>%
+               filter(Phase == "test") %>%
+               mutate(Condition.Exposure =
+                        case_when(Condition.Exposure == "Shift0" ~ "+0ms",
+                                  Condition.Exposure == "Shift10" ~ "+10ms",
+                                  Condition.Exposure == "Shift40" ~ "+40ms"),
+                      Test_block = factor(case_when(Block == 1 ~ "Test 1",
+                                Block == 3 ~ "Test 2",
+                                Block == 5 ~ "Test 3",
+                                Block == 7 ~ "Test 4",
+                                Block == 8 ~ "Test 5",
+                                Block == 9 ~ "Test 6"))) %>%
+               group_by(Condition.Exposure, Test_block),
+             fun.data = mean_cl_boot,
+             mapping = aes(x = Item.VOT,
+                           y = Response.Voiceless,
+               colour = Condition.Exposure),
+             geom = "pointrange",
+             size = 0.2,
+             position = position_dodge2(width = 2),
+             inherit.aes = F) +
+           scale_x_continuous("VOT (ms)", limits = c(-5, 75), breaks = c(-5, 5, 15, 25, 35,45, 55, 70)) +
+           scale_y_continuous("Proportion \"t\"-responses") +
+           scale_color_manual(
+             "Condition",
+             labels = c("+0ms", "+10ms", "+40ms"),
+             values = c("#cc0000", "#12D432","#0481F3"),
+             aesthetics = c("color", "fill")) +
+           facet_wrap(
+             . ~ Test_block,
+             nrow = 1) + 
+           theme(legend.position = "none", axis.text = element_text(size = 8))
+
+p.fit 
+
+ggsave("fitted_cat_plot_exp2.png", p.fit, width = 25, height = 5.3, units = "cm", path = "~/Desktop/")
+```
+
+
+
+```{r, fig.width=4.8, fig.height=4.5}
+p.PSE <- d.PSE %>% 
+  filter(Block %in% c(1:4)) %>% 
+  ggplot(aes(x = as.numeric(Block), y = mean, colour = Condition.Exposure, group = Condition.Exposure)) +
+  geom_rect(aes(ymin = 19.5, ymax = 68, xmin = 1.25, xmax = 1.75), 
+            fill = "grey", 
+            alpha = .01, 
+            inherit.aes = F) +
+  geom_rect(aes(ymin = 19.5, ymax = 68, xmin = 2.25, xmax = 2.75), 
+            fill = "grey", 
+            alpha = .01, 
+            inherit.aes = F) +
+  geom_rect(aes(ymin = 19.5, ymax = 68, xmin = 3.25, xmax = 3.75), 
+            fill = "grey", 
+            alpha = .01, 
+            inherit.aes = F) +
+  geom_point(position = position_dodge(.3), size = 1.6) +
+  geom_linerange(aes(ymin = lower, ymax = upper), linewidth = 0.8, position = position_dodge(.3), alpha = .5) +
+  stat_summary(geom = "line", position = position_dodge(.3)) +
+  annotate("segment", x = 0.8, xend = 4, y = 67, yend = 67, colour = "#0481F3", linetype = 2, linewidth = 0.8, alpha = .6) +
+  annotate("segment", x = 0.8, xend = 4, y = 37, yend = 37, colour = "#12D432", linetype = 2, linewidth = 0.8, alpha = .6) +
+  annotate("segment", x = 0.8, xend = 4, y = 27, yend = 27, colour = "#cc0000", linetype = 2, linewidth = 0.8, alpha = .6) +
+  # geom_hline(yintercept = 27.1, linetype = 2, linewidth = 0.8, colour = "#cc0000", alpha = 0.8) +
+  # geom_hline(yintercept = 27.1 + 10, linetype = 2, linewidth = .8, colour = "#12D432", alpha = 0.5) +
+  # geom_hline(yintercept = 27.1 + 40, linetype = 2, linewidth = .8, colour = "#0481F3", alpha = 0.5) +
+  annotate("text", x = 4.2, y = 67.2, label = "true shift =\n +22 ms", size = 1.9, colour = "#0481F3") +
+  annotate("text", x = 4.25, y = 35.4, label = " true shift =\n -8 ms", size = 1.9, colour = "#12D432") +
+  annotate("text", x = 4.2, y = 27.2, label = "true shift =\n -18 ms", size = 1.9, colour = "#cc0000") +
+    annotate("text", x = 4.4, y = 53, label = "8.1 ms\n (37%)", size = 1.9, colour = "#0481F3") +
+  annotate("text", x = 4.5, y = 42, label = "3.7 ms (42%)", size = 1.9, colour = "#12D432") +
+  annotate("text", x = 4.4, y = 38.5, label = "4.4 ms (25%)", size = 1.9, colour = "#cc0000") +
+  geom_linerange(data = VOT_F0.centered_block1 %>% summarise(
+    PSE.lower = round(quantile(PSE, probs = c(.025)) - (chodroff.mean_VOT - VOT.mean_exp2)),
+    PSE.upper = round(quantile(PSE, probs = c(.975)) -(chodroff.mean_VOT - VOT.mean_exp2))),
+    mapping = aes(x = 4.8, ymin = PSE.lower, ymax = PSE.upper),
+    alpha = 0.3,
+    colour = "black",
+    linewidth = .8,
+    inherit.aes = F) +
+  geom_label(data = VOT_F0.centered_block1 %>% summarise(
+    PSE.lower = round(quantile(PSE, probs = c(.025)) - (chodroff.mean_VOT - VOT.mean_exp2)),
+    PSE.median = round(quantile(PSE, probs = c(.5)) - (chodroff.mean_VOT - VOT.mean_exp2)),
+    PSE.upper = round(quantile(PSE, probs = c(.975)) - (chodroff.mean_VOT - VOT.mean_exp2))),
+    mapping = aes(x = 4.8, y = PSE.median, label = PSE.median),
+    size = 1.5,
+    label.padding = unit(0.18, "lines"),
+    colour = "black",
+    inherit.aes = F) +
+  scale_colour_manual("Condition",
+    labels = c("+0ms", "+10ms", "+40ms"),
+    values = c("#cc0000", "#12D432","#0481F3"),
+    aesthetics = "color") +
+  scale_y_continuous("PSE (ms)", limits = c(19.5, 68), breaks = seq(25, 65.5, 5)) +
+  scale_x_continuous("Test block", limits = c(0.8, 5), breaks = c(1:4), expand = c(0, 0.02)) +  
+  theme(legend.position = "none")
+
+p.PSE
+
+#8.14 ms (37%) 
+#3.7 ms (41.5%)
+#4.37 ms (25.4%) 
+
+ggsave("p.pse.png", p.PSE, width = 7, height = 8, units = "cm", path = "~/Desktop/")
+```
+
+```{r}
+p.intercepts <- d.params %>% 
+  ggplot(aes(x = as.numeric(Block), y = Intercept.mean, colour = Condition, group = Condition)) +
+  geom_rect(aes(ymin = -15.5, ymax = 5.5, xmin = 1.25, xmax = 1.75), 
+            fill = "grey", 
+            alpha = .01, 
+            inherit.aes = F) +
+  geom_rect(aes(ymin = -15.5, ymax = 5.5, xmin = 2.25, xmax = 2.75), 
+            fill = "grey", 
+            alpha = .01, 
+            inherit.aes = F) +
+  geom_rect(aes(ymin = -15.5, ymax = 5.5, xmin = 3.25, xmax = 3.75), 
+            fill = "grey", 
+            alpha = .01, 
+            inherit.aes = F) +
+  geom_point(aes(colour = Condition), 
+             position = position_dodge(.3), size = 1.6) +
+  geom_linerange(aes(ymin = Intercept.lower, ymax = Intercept.upper), linewidth = 0.8, position = position_dodge(.3), alpha = .5) +
+  stat_summary(geom = "line", position = position_dodge(.3)) +
+  geom_hline(yintercept = 4.2, linetype = 2, linewidth = 0.8, colour = "#cc0000", alpha = 0.8) +
+  geom_hline(yintercept = -0.62, linetype = 2, linewidth = .8, colour = "#12D432", alpha = 0.5) +
+  geom_hline(yintercept = -15.2, linetype = 2, linewidth = .8, colour = "#0481F3", alpha = 0.5) +
+  scale_colour_manual("Condition",
+    labels = c("+0ms", "+10ms", "+40ms"),
+    values = c("#cc0000", "#12D432","#0481F3"),
+    aesthetics = "color") + 
+  scale_y_continuous("Intercept", limits = c(-15.5, 5.5)) +
+  scale_x_continuous("Test block", breaks = c(1:6), labels = c("1":"6")) +
+  theme(legend.position = "none")
+
+ggsave("p.intercepts.png", p.intercepts, width = 7, height = 8, units = "cm", path = "~/Desktop/")
+```
+
+
+
+
+
+```{r}
+p.slopes <- d.params %>% 
+  ggplot(aes(x = as.numeric(Block), y = VOT_gs.mean, colour = Condition, group = Condition)) +
+    geom_rect(aes(ymin = 5, ymax = 33, xmin = 1.25, xmax = 1.75), 
+            fill = "grey", 
+            alpha = .01, 
+            inherit.aes = F) +
+  geom_rect(aes(ymin = 5, ymax = 33, xmin = 2.25, xmax = 2.75), 
+            fill = "grey", 
+            alpha = .01, 
+            inherit.aes = F) +
+  geom_rect(aes(ymin = 5, ymax = 33, xmin = 3.25, xmax = 3.75), 
+            fill = "grey", 
+            alpha = .01, 
+            inherit.aes = F) +
+  geom_point(position = position_dodge(.3), size = 1.6) +
+  geom_linerange(aes(ymin = VOT_gs.lower, ymax = VOT_gs.upper), 
+                 linewidth = 0.8, position = position_dodge(.3), alpha = .5) +
+  stat_summary(geom = "line", position = position_dodge(.3)) +
+    geom_hline(yintercept = 21.56, linetype = 2, linewidth = 0.8, colour = "#cc0000", alpha = 0.8) +
+  geom_hline(yintercept = 21.51, linetype = 2, linewidth = .8, colour = "#12D432", alpha = 0.5) +
+  geom_hline(yintercept = 21.46, linetype = 2, linewidth = .8, colour = "#0481F3", alpha = 0.5) +
+  scale_colour_manual("Condition",
+    labels = c("+0ms", "+10ms", "+40ms"),
+    values = c("#cc0000", "#12D432","#0481F3"),
+    aesthetics = "color") +
+  scale_y_continuous("Slope", limits = c(5, 33)) +
+  scale_x_continuous("Test block", breaks = c(1:6), labels = c("1":"6")) +
+  theme(legend.position = "none") 
+ggsave("p.slopes.png", p.slopes, width = 7, height = 8, units = "cm", path = "~/Desktop/")
+```
+
+
+
+
+```{r}
+fixef(fit_mix_uniform_bias)
+
+fit_mix_uniform_bias %>% 
+  spread_draws(b[])
+
+
+data(RankCorr, package = "ggdist")
+
+RankCorr %>%
+  spread_draws(b[i,j]) %>%
+  filter(j == 1) %>%
+  compare_levels(b, by = i, comparison = control) %>%
+  ggplot(aes(x = b, y = i)) +
+  stat_halfeye()
+```
+

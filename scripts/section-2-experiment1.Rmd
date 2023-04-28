@@ -617,10 +617,7 @@ p.IOs.VOT_F0.centered.input <- plot_IO_fit(
   data.test = d.test.excluded %>% 
     ungroup() %>% 
     distinct(Item.VOT),
-  data.percept.PSE = post_sample_norm %>% 
-    mutate(PSE = PSE - (chodroff.mean_VOT - VOT.mean_exp1),
-           .lower = .lower - (chodroff.mean_VOT - VOT.mean_exp1),
-           .upper = .upper - (chodroff.mean_VOT - VOT.mean_exp1)),
+  data.percept.PSE = post_sample_norm,
   PSE_VOT_F0.centered.input %>% 
     mutate(PSE.lower = round(PSE.lower - (chodroff.mean_VOT - VOT.mean_exp1), 2),
            PSE.median = PSE.median - (chodroff.mean_VOT - VOT.mean_exp1),
