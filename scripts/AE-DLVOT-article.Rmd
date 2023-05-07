@@ -120,6 +120,7 @@ library(patchwork)
 library(magick)
 library(webshot)
 library(ggstance)
+library(ggnewscale)
 library(kableExtra)
 
 library(linguisticsdown)    # IPA symbols

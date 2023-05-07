@@ -652,7 +652,7 @@ plot_talker_MVGs <- function(
   plot %>%
     ggplot() +
     plot$ellipse +
-    scale_x_continuous("VOT (ms)") +
+    scale_x_continuous("VOT (ms)", breaks = seq(-100, 150, 50)) +
     scale_y_continuous("F0 (Mel)") +
     scale_colour_manual("Talker sex", values = colours.sex, labels = c("Female", "Male")) +
     scale_linetype_discrete("Category") +

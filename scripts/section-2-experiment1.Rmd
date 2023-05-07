@@ -567,7 +567,7 @@ chodroff.means <- d.chodroff_wilson.selected %>%
 chodroff.mean_VOT <- chodroff.means %>% pull(VOT)
 chodroff.mean_f0_Mel <- chodroff.means %>% pull(f0_Mel)
 
-# center the VOTs (the x-axis values) from the fitted model by adding the difference in database mean VOT and experiment's VOT mean
+# center the VOTs (the x-axis values) from the fitted model by adding the difference in database mean VOT and experiment's exposure VOT mean
 psychometric_fit_exp1_centered <- psychometric_fit_exp1 %>% 
   mutate(Item.VOT = (descale(sVOT, VOT.mean_exp1, VOT.sd_exp1)) + (chodroff.mean_VOT - VOT.mean_exp1),
          sVOT = (Item.VOT - VOT.mean_exp1) / (2 * VOT.sd_exp1)) %>% 
@@ -619,9 +619,9 @@ p.IOs.VOT_F0.centered.input <- plot_IO_fit(
     distinct(Item.VOT),
   data.percept.PSE = post_sample_norm,
   PSE_VOT_F0.centered.input %>% 
-    mutate(PSE.lower = round(PSE.lower - (chodroff.mean_VOT - VOT.mean_exp1), 2),
+    mutate(PSE.lower = round(PSE.lower - (chodroff.mean_VOT - VOT.mean_exp1)),
            PSE.median = PSE.median - (chodroff.mean_VOT - VOT.mean_exp1),
-           PSE.upper = round(PSE.upper - (chodroff.mean_VOT - VOT.mean_exp1), 2))) 
+           PSE.upper = round(PSE.upper - (chodroff.mean_VOT - VOT.mean_exp1)))) 
 
 p.likelihoods.exposure.centered <- plot_talker_MVGs(VOT_F0.centered.input, cues = c("VOT_centered", "f0_Mel_centered"), centered = T)
 ```
@@ -682,6 +682,8 @@ p.col2 <- p6 + p7 + p8 + p9 + p10 +
 (p.col1 | p.col2) +
   plot_layout(ncol = 2, guides = "collect") &
   theme(legend.position = "top")
+
+ggsave("IOs_plot_exp1.png", last_plot(), width = 16, height = 35, units = "cm", path = "~/Desktop/")
 ```
 
 

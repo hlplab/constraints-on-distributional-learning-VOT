@@ -6,6 +6,263 @@ output: html_document
 ---
 
 
+```{r plot-functions-for-experiment2}
+plot_talker_UVGs <- function (data_production, data_perception, noise = FALSE) {
+  plot <- data_production %>%
+    mutate(x = list(VOT = seq(-25, 100, .5)),
+           x = map(x, ~ as_tibble(.x) %>% rename("VOT (ms)" = value))) %>%
+    unnest(io) %>%
+    mutate(
+      gaussian = pmap(
+        list(x, gender, category, mu, Sigma, Sigma_noise),
+        ~ geom_function(
+          data = ..1,
+          aes(x = `VOT (ms)`,
+              linetype = ..3, colour = ..2),
+          fun = function(x) dnorm(x, mean = ..4[[1]][[1]], sd = if (noise == T) sqrt(..5[[1]][[1]]) + sqrt(..6[[1]][[1]]) else sqrt(..5[[1]][[1]])), alpha = .2)))
+
+  plot %>%
+    ggplot() +
+    plot$gaussian +
+    scale_colour_manual("Talker sex", values = colours.sex, labels = c("Female", "Male")) +
+    scale_linetype_discrete("Category") +
+    scale_y_continuous("Density") +
+    geom_rug(
+      data = data_perception %>%
+        ungroup() %>%
+        distinct(Item.VOT),
+      mapping = aes(x = Item.VOT),
+      colour = "black",
+      alpha = .6,
+      inherit.aes = F) +
+    guides(colour = "none")
+}
+
+get_bivariate_normal_ellipse <- function(
+    mu = c(0, 0),
+    Sigma = diag(2),
+    level = .95,
+    segments = 51,
+    varnames = c("VOT", "F0")
+) {
+  # Ths function is based on calculate_ellipse from ggplot2, with modification to
+  # remove uncertainty about Sigma (since we're plotting the theoretical distribution,
+  # for which Sigma is known)
+  require(tidyverse)
+
+  chol_decomp <- chol(Sigma)
+  # Adapted from https://stats.stackexchange.com/questions/64680/how-to-determine-quantiles-isolines-of-a-multivariate-normal-distribution
+  # (tested)
+  radius <- sqrt(-2 * log(1 - level))
+
+  # Make n + 1 point over unit circle
+  angles <- (0:segments) * 2 * pi/segments
+  unit.circle <- cbind(cos(angles), sin(angles))
+
+  # Shape unit circle by covariance, scale by radius, and move it to mu
+  # (the t() calls are necessary since we allow mu to be a vector, so we
+  # need to transform the 2-col x segements-rows matrix into a segments-col
+  # x 2-row matrix, and then---after adding mu---transforming the whole
+  # thing back into a 2-col x segements-rows matrix)
+  ellipse <- as.data.frame(t(mu + radius * t(unit.circle %*% chol_decomp)))
+  names(ellipse) <- varnames
+
+  return(ellipse)
+}
+
+
+plot_talker_MVGs <- function(
+  data_production,
+  prod_means = c(chodroff.mean_VOT, chodroff.mean_f0_Mel),
+  cues,
+  data_perception = d.block1,
+  percept_means = c(VOT.mean_test, f0.mean_test),
+  centered = F
+) {
+  plot <- data_production %>%
+    unnest(io) %>%
+    select(-c(x, PSE, categorization, line)) %>%
+    mutate(ellipse_points = pmap(
+      list(mu, Sigma, Sigma_noise),
+      ~ get_bivariate_normal_ellipse(..1, Sigma = ..2 + ..3))) %>%
+    group_by(Talker) %>%
+    mutate(ellipse = pmap(
+      list(gender, category, ellipse_points),
+      ~ geom_path(data = ..3, mapping = aes(x = ..3[[1]], y = ..3[[2]], colour = ..1, linetype = ..2), alpha = .1)))
+
+  plot %>%
+    ggplot() +
+    plot$ellipse +
+    scale_x_continuous("VOT (ms)", breaks = seq(-25, 150, 50)) +
+    scale_y_continuous("F0 (Mel)") +
+    scale_colour_manual("Talker sex", values = colours.sex, labels = c("Female", "Male")) +
+    scale_linetype_discrete("Category") +
+    geom_point(
+      data = if (centered == T) data_perception %>%
+        ungroup() %>%
+        distinct(Item.VOT, Item.Mel_F0_5ms) %>%
+        mutate(Item.VOT = Item.VOT + (prod_means[1] - percept_means[1]),
+               Item.Mel_F0_5ms = Item.Mel_F0_5ms + (prod_means[2] - percept_means[2])) else
+                 data_perception %>%
+        ungroup() %>%
+        distinct(Item.VOT, Item.Mel_F0_5ms),
+      aes(x = Item.VOT, y = Item.Mel_F0_5ms),
+      shape = 4,
+      size = .8,
+      alpha = .2,
+      inherit.aes = F) +
+    geom_abline(intercept = if (centered == T) normMel(245.46968) + (prod_means[2] - percept_means[2]) else normMel(245.46968), 
+               slope = 0.03827, 
+               linetype = 2, 
+               alpha = .3) +
+    guides(colour = "none", category = "none")
+}
+
+```
+
+
+
+```{r}
+VOT.no.noise_block1 <- 
+  get_IO_categorization(
+    cues = c("VOT"), 
+    groups = c("Talker", "gender"), 
+    lapse_rate = lapse_exp2,
+    with_noise = FALSE, 
+    alpha = .1, 
+    linewidth = 0.3,
+    io.type = "VOT.no.noise_block1")
+
+PSE_VOT.no.noise_block1 <- get_PSE_quantiles(data = VOT.no.noise, group = "gender")
+
+p.IOs.VOT.no.noise_block1 <- plot_IO_fit(
+  data.production = VOT.no.noise_block1, 
+  data.perception = psychometric_fit_block1 %>% 
+    mutate(Item.VOT = descale(VOT_gs, VOT.mean_test, VOT.sd_test)),
+  data.test = d.block1 %>% 
+    ungroup() %>% distinct(Item.VOT),
+  data.percept.PSE = post_sample_block1,
+  PSE_VOT.no.noise_block1)
+
+p.likelihoods.VOT.no.noise_block1 <- plot_talker_UVGs(VOT.no.noise_block1, d.block1 %>% 
+    ungroup() %>% distinct(Item.VOT))
+```
+
+
+```{r IO-categorization-VOT-block1}
+VOT_block1 <- 
+  get_IO_categorization(
+    cues = c("VOT"), 
+    groups = c("Talker", "gender"), 
+    lapse_rate = lapse_exp2,
+    with_noise = T, 
+    alpha = .1, 
+    linewidth = 0.3,
+    io.type = "VOT_block1")
+
+PSE_VOT_block1 <- get_PSE_quantiles(data = VOT_block1, group = "gender")
+
+p.IOs.VOT_block1 <- plot_IO_fit(
+  data.production = VOT_block1, 
+  data.perception = psychometric_fit_block1 %>% 
+    mutate(Item.VOT = descale(VOT_gs, VOT.mean_test, VOT.sd_test)),
+  data.test = d.block1 %>% 
+    ungroup() %>% distinct(Item.VOT),
+  data.percept.PSE = post_sample_block1,
+  PSE_VOT_block1)
+
+p.likelihoods.VOT_block1 <- plot_talker_UVGs(VOT_block1, d.block1 %>% 
+    ungroup() %>% distinct(Item.VOT), noise = T)
+```
+
+```{r IO-categorization-VOT-centered-block1, message=FALSE, warning=FALSE}
+VOT_F0_block1 <- 
+  get_IO_categorization(
+    cues = c("VOT", "f0_Mel"), 
+    groups = c("Talker", "gender"), 
+    lapse_rate = lapse_exp2,
+    alpha = .1, 
+    linewidth = 0.3,
+    io.type = "VOT_F0_block1")
+
+PSE_VOT_F0_block1 <- get_PSE_quantiles(data = VOT_F0_block1, group = "gender")
+
+p.IOs.VOT_F0_block1 <- plot_IO_fit(
+  data.production = VOT_F0_block1, 
+  data.perception = psychometric_fit_block1 %>% 
+    mutate(Item.VOT = descale(VOT_gs, VOT.mean_test, VOT.sd_test)),
+  data.test = d.block1 %>% 
+    ungroup() %>% distinct(Item.VOT),
+  data.percept.PSE = post_sample_block1,
+  PSE_VOT_F0_block1
+)
+
+p.likelihoods.VOT_F0_block1 <- plot_talker_MVGs(VOT_F0_block1, cues = c("VOT", "f0_Mel"))
+```
+
+
+```{r IO-categorisation-VOT-F0-centered-block1, warning=FALSE}
+VOT_F0.centered_block1 <- 
+  get_IO_categorization(
+    cues = c("VOT_centered", "f0_Mel_centered"), 
+    groups = c("Talker", "gender"), 
+    lapse_rate = lapse_exp2,
+    alpha = .1, 
+    linewidth = 0.3,
+    io.type = "VOT_F0.centered_block1")
+
+PSE_VOT_F0.centered_block1 <- get_PSE_quantiles(data = VOT_F0.centered_block1, group = "gender")
+
+p.IOs.VOT_F0.centered_block1 <- plot_IO_fit(
+  data.production = VOT_F0.centered_block1, 
+  data.perception = psychometric_fit_block1 %>% 
+    mutate(Item.VOT = descale(VOT_gs, VOT.mean_test, VOT.sd_test)),
+  data.test = d.block1 %>% 
+    ungroup() %>% distinct(Item.VOT),
+  data.percept.PSE = post_sample_block1,
+  PSE_VOT_F0.centered_block1)
+
+p.likelihoods.VOT_F0.centered_block1 <- plot_talker_MVGs(VOT_F0.centered_block1, cues = c("VOT_centered", "f0_Mel_centered"))
+```
+
+
+
+```{r IO-categorisation-VOT-F0-exposure-centered, warning=FALSE}
+VOTs_centered = seq(0, 85, .5) + (chodroff.mean_VOT - VOT.mean_test) 
+F0s_centered <- normMel(predict_f0(VOTs_centered)) + (chodroff.mean_f0_Mel - f0.mean_test)
+
+VOT_F0.centered.input_block1 <- 
+  get_IO_categorization(
+    cues = c("VOT_centered", "f0_Mel_centered"), 
+    groups = c("Talker", "gender"), 
+    VOTs = VOTs,
+    F0s = F0s_centered,
+    lapse_rate = lapse_exp2,
+    alpha = .1, 
+    linewidth = 0.3,
+    io.type = "VOT_F0.centered.input_block1")
+
+PSE_VOT_F0.centered.input_block1 <- get_PSE_quantiles(data = VOT_F0.centered.input_block1, group = "gender")
+
+# plot predicted categorisation after centering exposure, against IOs
+p.IOs.VOT_F0.centered.input_block1 <- plot_IO_fit(
+  data.production = VOT_F0.centered.input_block1, 
+  data.perception = psychometric_fit_block1 %>% 
+    mutate(Item.VOT = descale(VOT_gs, VOT.mean_test, VOT.sd_test)),
+  data.test = d.block1 %>%  
+    ungroup() %>% distinct(Item.VOT),
+  data.percept.PSE = post_sample_block1,
+  PSE_VOT_F0.centered.input_block1 %>% 
+    mutate(PSE.lower = round(PSE.lower - (chodroff.mean_VOT - VOT.mean_test)),
+           PSE.median = PSE.median - (chodroff.mean_VOT - VOT.mean_test),
+           PSE.upper = round(PSE.upper - (chodroff.mean_VOT - VOT.mean_test)))) 
+
+p.likelihoods.VOT_F0.centered.input_block1 <- plot_talker_MVGs(VOT_F0.centered.input_block1, cues = c("VOT_centered", "f0_Mel_centered"), centered = T)
+```
+
+
+
+
 
 
 
@@ -19,43 +276,86 @@ remove_y_title <- theme(axis.title.y = element_blank())
 
 guide_spec <-  guides(linetype = "none")
 
-p1 <- p.likelihoods.VOT +
-  remove_x_title + guide_spec + ggtitle("Production") + theme(plot.title = element_text(size = 8, face = "bold"))
+p1 <- p.likelihoods.VOT.no.noise_block1 +
+  remove_x_title + guide_spec + theme(plot.title = element_text(size = 8, face = "bold"))
 
-p2 <- p.likelihoods.VOT_noise +
+p2 <- p.likelihoods.VOT_block1 +
    remove_x_title + guide_spec
 
-p3 <- p.likelihoods.VOT_F0 +
+p3 <- p.likelihoods.VOT_F0_block1 +
    remove_x_title + guide_spec
 
-p4 <- p.likelihoods.VOT_F0.centered +
+p4 <- p.likelihoods.VOT_F0.centered_block1 +
    remove_x_title + guide_spec
 
-p5 <- p.likelihoods.exposure.centered 
+p5 <- p.likelihoods.VOT_F0.centered.input_block1 
+```
 
-p6 <- p.IOs.VOT.no.noise + 
-  remove_axes_titles + ggtitle("Perception") + theme(plot.title = element_text(size = 8, face = "bold"))
 
-p7 <- p.IOs.VOT + 
-  remove_axes_titles 
 
-p8 <- p.IOs.VOT_F0 + 
-  remove_x_title 
+```{r comparative-production-IO-plot-block1, fig.width=6.5, fig.height=10, warning=FALSE}
+# make plot grid
+remove_all_titles <- 
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank())
+guide_spec <-  guides(linetype = "none")
 
-p9 <- p.IOs.VOT_F0.centered + 
+p11 <- p.IOs.VOT.no.noise_block1 + 
   remove_axes_titles
 
-p10 <- p.IOs.VOT_F0.centered.input + 
-  remove_y_title 
+p12 <- p.IOs.VOT_block1 + 
+  remove_all_titles 
+
+p13 <- p.IOs.VOT_F0_block1 + 
+  remove_x_title
+
+p14 <- p.IOs.VOT_F0.centered_block1 + 
+  remove_all_titles
+
+p15 <- p.IOs.VOT_F0.centered.input_block1 + 
+  remove_y_title  
+
+
+p11 + p12 + p13 + p14 + p15 + 
+  plot_layout(ncol = 1, byrow = F, guides = "collect") &
+  theme(legend.position = "top")
+
+
+
+p.col1 <- p1 +p2 + p3 + p4 + p5 +
+  plot_layout(ncol = 1, byrow = F, guides = "collect") &
+  theme(legend.position = "top")  
+
+p.col2 <- p11 + p12 + p13 + p14 + p15 + 
+  plot_layout(ncol = 1, byrow = F, guides = "collect") &
+  theme(legend.position = "top")
+
+p.fig1 <- (p.col1 | p.col2) +
+  plot_layout(ncol = 2, guides = "collect") &
+  theme(legend.position = "top")
+
+ggsave("IOs_plot_exp1.png", p.fig1, width = 15.5, height = 22, units = "cm", path = "~/Desktop/")
 ```
+
+
+
+
+
+
+
+
+
+
+
 
 
 ```{r, fig.width=3.2, fig.height=4.2}
 p.likelihood.block1 <- IO.likelihood_block1 %>% 
-  mutate(io.label = if(str_detect(io.type, "^(VOT|VOT_F0)\\.no\\.noise_block1$")) {"raw"} 
-    else if(str_detect(io.type, "^(VOT|VOT_F0)_block1$")) {"+perceptual noise"}
-    else if(str_detect(io.type, "^(VOT|VOT_F0)\\.centered_block1$")) {"+talker-centered"}
-    else if(str_detect(io.type, "^(VOT|VOT_F0)\\.centered\\.input_block1$")) {"+exposure-centered"}) %>% 
+  mutate(io.label = case_when(
+    io.type == "VOT.no.noise_block1" | io.type == "VOT_F0.no.noise_block1" ~ "raw",
+    io.type == "VOT_block1" | io.type == "VOT_F0_block1" ~ "+perceptual noise", 
+    io.type == "VOT.centered_block1" | io.type == "VOT_F0.centered_block1" ~ "+talker-centered",
+    io.type == "VOT.centered.input_block1" | io.type == "VOT_F0.centered.input_block1" ~ "+exposure-centered")) %>% 
   ggplot(aes(x = io.label, colour = gender)) +
   geom_point(aes(y = median_likelihood_per_response), 
              size = 2, 
@@ -74,12 +374,13 @@ p.likelihood.block1 <- IO.likelihood_block1 %>%
         median.upper = quantile(median_sample, probs = .975),
         mode.lower = quantile(mode_sample, probs = .025),
         mode.upper = quantile(mode_sample, probs = .975)) %>%
-  mutate(
-    cues = ifelse(str_detect(io.type, "VOT_F0.*block1$"), "VOT-F0", "VOT"),
-    io.label = if(str_detect(io.type, "^(VOT|VOT_F0)\\.no\\.noise.*_block1$")) {"raw"} 
-    else if(str_detect(io.type, "^(VOT|VOT_F0)_block1$")) {"+perceptual noise"}
-    else if(str_detect(io.type, "^(VOT|VOT_F0)\\.centered_block1$")) {"+talker-centered"}
-    else if(str_detect(io.type, "^(VOT|VOT_F0)\\.centered.input_block1$")) {"+exposure-centered"}),
+      mutate(
+        cues = ifelse(str_detect(io.type, "VOT_F0.*"), "VOT-F0", "VOT"),
+        io.label = case_when(
+          io.type == "VOT.no.noise_block1" | io.type == "VOT_F0.no.noise_block1" ~ "raw",
+          io.type == "VOT_block1" | io.type == "VOT_F0_block1" ~ "+perceptual noise", 
+          io.type == "VOT.centered_block1" | io.type == "VOT_F0.centered_block1" ~ "+talker-centered",
+          io.type == "VOT.centered.input_block1" | io.type == "VOT_F0.centered.input_block1" ~ "+exposure-centered")),
     mapping = aes(x = io.label, ymin = median.lower, ymax = median.upper, colour = gender),
     position = position_dodge(.2),
     linewidth = 1.2,
@@ -109,67 +410,7 @@ ggsave("likelihood_plot_exp2.png", p.likelihood.block1, width = 9.1, height = 12
 ```
 
 
-
-
-```{r}
-p.IOs <- (p.col1 | p.col2) +
-  plot_layout(ncol = 2, guides = "collect") &
-  theme(legend.position = "top") +
-  guides(legend.key.height = unit(.1, "cm"),
-        legend.key.width = unit(.2, "cm"),
-        legend.text = element_text(size = 8),
-        legend.title = element_text(size = 8),
-        legend.margin = margin(b = 0),
-        legend.box.margin = margin(r = 0, b = 0),
-        legend.justification = "right",
-        axis.text.y = element_text(size = 8),
-        axis.text.x = element_text(size = 8))
-
-ggsave("IOs_plot_exp1.png", p.IOs, width = 15.5, height = 21, units = "cm", path = "~/Desktop/")
-```
-
-
-
-
-
-
-
-Experiment 2 block 1 plots for ASA poster
-
-```{r, fig.width=7.5, fig.height=1.8, warning=FALSE}
-p11 <- p.IOs.VOT.no.noise_block1 + 
-  remove_x_title + ggtitle("VOT") + theme(plot.title = element_text(face = "bold", size = 8, margin = margin(b = 2)), plot.title.position = "panel")
-p12 <- p.IOs.VOT_block1 + ggtitle("VOT (+perceptual noise)") + 
-  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.title = element_text(face = "bold", size = 8, margin = margin(b = 2))) + 
-  remove_all_titles 
-p13 <- p.IOs.VOT_F0_block1 + remove_y_title + ggtitle("VOT-F0 (+perceptual noise)") + theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.title = element_text(face = "bold", size = 8, margin = margin(b = 2)))
-p14 <- p.IOs.VOT_F0.centered_block1 + ggtitle("VOT-F0 (+talker-centered)") + theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.title = element_text(face = "bold", size = 8, margin = margin(b = 2))) +
-  remove_all_titles
-p15 <- p.IOs.VOT_F0.centered.input_block1 + ggtitle("VOT-F0 (+exposure-centered)") + theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.title = element_text(face = "bold", size = 8, margin = margin(b = 2))) + 
-  remove_all_titles  
-
-p.IOs.exp2 <- p11 + p12 + p13 + p14 + p15 + 
-  plot_layout(ncol = 5, byrow = T, guides = "collect") &
-  theme(legend.position = "none")  
-  # guides(
-  #   legend.key.height = unit(.1, "cm"),
-  #        legend.key.width = unit(.2, "cm"),
-  #        legend.text = element_text(size = 8),
-  #        legend.title = element_text(size = 8),
-  #        legend.margin = margin(b = 0),
-  #        legend.box.margin = margin(r = 0, b = 0),
-  #        legend.justification = "right",
-  #   axis.text.x = element_text(size = 8))
-
-ggsave("IOs_plot_exp2.png", p.IOs.exp2, width = 23, height = 6, units = "cm", path = "~/Desktop/")
-
-```
-
-
-
-
-
-
+Poster 2 plots
 
 ```{r, results='hide', fig.height=2.5, fig.width=6, warning=FALSE}
 p.fit <- cond_fit[[1]] %>%
@@ -255,18 +496,18 @@ p.PSE <- d.PSE %>%
   geom_point(position = position_dodge(.3), size = 1.6) +
   geom_linerange(aes(ymin = lower, ymax = upper), linewidth = 0.8, position = position_dodge(.3), alpha = .5) +
   stat_summary(geom = "line", position = position_dodge(.3)) +
-  annotate("segment", x = 0.8, xend = 4, y = 67, yend = 67, colour = "#0481F3", linetype = 2, linewidth = 0.8, alpha = .6) +
-  annotate("segment", x = 0.8, xend = 4, y = 37, yend = 37, colour = "#12D432", linetype = 2, linewidth = 0.8, alpha = .6) +
-  annotate("segment", x = 0.8, xend = 4, y = 27, yend = 27, colour = "#cc0000", linetype = 2, linewidth = 0.8, alpha = .6) +
+  annotate("segment", x = 0.8, xend = 4, y = 64.142, yend = 64.326, colour = "#0481F3", linetype = 2, linewidth = 0.8, alpha = .6) +
+  annotate("segment", x = 0.8, xend = 4, y = 34.142, yend = 34.324, colour = "#12D432", linetype = 2, linewidth = 0.8, alpha = .6) +
+  annotate("segment", x = 0.8, xend = 4, y = 24.145, yend = 24.326, colour = "#cc0000", linetype = 2, linewidth = 0.8, alpha = .6) +
   # geom_hline(yintercept = 27.1, linetype = 2, linewidth = 0.8, colour = "#cc0000", alpha = 0.8) +
   # geom_hline(yintercept = 27.1 + 10, linetype = 2, linewidth = .8, colour = "#12D432", alpha = 0.5) +
   # geom_hline(yintercept = 27.1 + 40, linetype = 2, linewidth = .8, colour = "#0481F3", alpha = 0.5) +
-  annotate("text", x = 4.2, y = 67.2, label = "true shift =\n +22 ms", size = 1.9, colour = "#0481F3") +
-  annotate("text", x = 4.25, y = 35.4, label = " true shift =\n -8 ms", size = 1.9, colour = "#12D432") +
-  annotate("text", x = 4.2, y = 27.2, label = "true shift =\n -18 ms", size = 1.9, colour = "#cc0000") +
-    annotate("text", x = 4.4, y = 53, label = "8.1 ms\n (37%)", size = 1.9, colour = "#0481F3") +
-  annotate("text", x = 4.5, y = 42, label = "3.7 ms (42%)", size = 1.9, colour = "#12D432") +
-  annotate("text", x = 4.4, y = 38.5, label = "4.4 ms (25%)", size = 1.9, colour = "#cc0000") +
+  annotate("text", x = 4.25, y = 63, label = "true shift =\n +19 ms", size = 1.9, colour = "#0481F3") +
+  annotate("text", x = 4.25, y = 33, label = " true shift =\n -12 ms", size = 1.9, colour = "#12D432") +
+  annotate("text", x = 4.25, y = 23, label = "true shift =\n -20 ms", size = 1.9, colour = "#cc0000") +
+  annotate("text", x = 4.42, y = 52.5, label = "8.1 ms\n (43%)", size = 1.9, colour = "#0481F3") +
+  annotate("text", x = 4.55, y = 42, label = "-3.7 ms (31%)", size = 1.9, colour = "#12D432") +
+  annotate("text", x = 4.45, y = 39.5, label = "-4.4 ms (22%)", size = 1.9, colour = "#cc0000") +
   geom_linerange(data = VOT_F0.centered_block1 %>% summarise(
     PSE.lower = round(quantile(PSE, probs = c(.025)) - (chodroff.mean_VOT - VOT.mean_exp2)),
     PSE.upper = round(quantile(PSE, probs = c(.975)) -(chodroff.mean_VOT - VOT.mean_exp2))),
@@ -292,7 +533,7 @@ p.PSE <- d.PSE %>%
   scale_x_continuous("Test block", limits = c(0.8, 5), breaks = c(1:4), expand = c(0, 0.02)) +  
   theme(legend.position = "none")
 
-p.PSE
+ p.PSE
 
 #8.14 ms (37%) 
 #3.7 ms (41.5%)
@@ -301,18 +542,21 @@ p.PSE
 ggsave("p.pse.png", p.PSE, width = 7, height = 8, units = "cm", path = "~/Desktop/")
 ```
 
+
+
+
 ```{r}
 p.intercepts <- d.params %>% 
   ggplot(aes(x = as.numeric(Block), y = Intercept.mean, colour = Condition, group = Condition)) +
-  geom_rect(aes(ymin = -15.5, ymax = 5.5, xmin = 1.25, xmax = 1.75), 
+  geom_rect(aes(ymin = -15, ymax = 6, xmin = 1.25, xmax = 1.75), 
             fill = "grey", 
             alpha = .01, 
             inherit.aes = F) +
-  geom_rect(aes(ymin = -15.5, ymax = 5.5, xmin = 2.25, xmax = 2.75), 
+  geom_rect(aes(ymin = -15, ymax = 6, xmin = 2.25, xmax = 2.75), 
             fill = "grey", 
             alpha = .01, 
             inherit.aes = F) +
-  geom_rect(aes(ymin = -15.5, ymax = 5.5, xmin = 3.25, xmax = 3.75), 
+  geom_rect(aes(ymin = -15, ymax = 6, xmin = 3.25, xmax = 3.75), 
             fill = "grey", 
             alpha = .01, 
             inherit.aes = F) +
@@ -320,14 +564,14 @@ p.intercepts <- d.params %>%
              position = position_dodge(.3), size = 1.6) +
   geom_linerange(aes(ymin = Intercept.lower, ymax = Intercept.upper), linewidth = 0.8, position = position_dodge(.3), alpha = .5) +
   stat_summary(geom = "line", position = position_dodge(.3)) +
-  geom_hline(yintercept = 4.2, linetype = 2, linewidth = 0.8, colour = "#cc0000", alpha = 0.8) +
-  geom_hline(yintercept = -0.62, linetype = 2, linewidth = .8, colour = "#12D432", alpha = 0.5) +
-  geom_hline(yintercept = -15.2, linetype = 2, linewidth = .8, colour = "#0481F3", alpha = 0.5) +
+  geom_hline(yintercept = 5.9, linetype = 2, linewidth = 0.8, colour = "#cc0000", alpha = 0.8) +
+  geom_hline(yintercept = 0.8, linetype = 2, linewidth = .8, colour = "#12D432", alpha = 0.5) +
+  geom_hline(yintercept = -14.6, linetype = 2, linewidth = .8, colour = "#0481F3", alpha = 0.5) +
   scale_colour_manual("Condition",
     labels = c("+0ms", "+10ms", "+40ms"),
     values = c("#cc0000", "#12D432","#0481F3"),
     aesthetics = "color") + 
-  scale_y_continuous("Intercept", limits = c(-15.5, 5.5)) +
+  scale_y_continuous("Intercept", limits = c(-15, 6)) +
   scale_x_continuous("Test block", breaks = c(1:6), labels = c("1":"6")) +
   theme(legend.position = "none")
 
@@ -357,9 +601,9 @@ p.slopes <- d.params %>%
   geom_linerange(aes(ymin = VOT_gs.lower, ymax = VOT_gs.upper), 
                  linewidth = 0.8, position = position_dodge(.3), alpha = .5) +
   stat_summary(geom = "line", position = position_dodge(.3)) +
-    geom_hline(yintercept = 21.56, linetype = 2, linewidth = 0.8, colour = "#cc0000", alpha = 0.8) +
-  geom_hline(yintercept = 21.51, linetype = 2, linewidth = .8, colour = "#12D432", alpha = 0.5) +
-  geom_hline(yintercept = 21.46, linetype = 2, linewidth = .8, colour = "#0481F3", alpha = 0.5) +
+    geom_hline(yintercept = 22.8, linetype = 2, linewidth = 0.8, colour = "#cc0000", alpha = 0.8) +
+  geom_hline(yintercept = 22.8, linetype = 2, linewidth = .8, colour = "#12D432", alpha = 0.5) +
+  geom_hline(yintercept = 22.8, linetype = 2, linewidth = .8, colour = "#0481F3", alpha = 0.5) +
   scale_colour_manual("Condition",
     labels = c("+0ms", "+10ms", "+40ms"),
     values = c("#cc0000", "#12D432","#0481F3"),
@@ -373,20 +617,218 @@ ggsave("p.slopes.png", p.slopes, width = 7, height = 8, units = "cm", path = "~/
 
 
 
+
+
+
+
+
 ```{r}
-fixef(fit_mix_uniform_bias)
+# ensuring that a particular proportion of points are included within each contour line
+#adjusted from https://stackoverflow.com/questions/75598144/interpretation-of-2d-density-estimate-charts
+# we can get the 2d density with MASS::kde2d, then convert to a raster using terra. We can then order the points according to the density in the associated 2d density grid and find the density at which a quantile is passed with approx
+quantile_levels <- c(0, .05, .25, .5, .75, .95, .99)
 
-fit_mix_uniform_bias %>% 
-  spread_draws(b[])
+density_quantiles <- function(x, y, quantiles) {
+  require(terra)
+  dens <- MASS::kde2d(x, y, n = 500)
+  df   <- cbind(expand.grid(x = dens$x, y = dens$y), z = c(dens$z))
+  r    <- terra::rast(df)
+  ind  <- sapply(seq_along(x), function(i) cellFromXY(r, cbind(x[i], y[i])))
+  ind  <- ind[order(-r[ind][[1]])]
+  vals <- r[ind][[1]]
+  ret  <- approx(seq_along(ind)/length(ind), vals, xout = quantiles)$y
+  replace(ret, is.na(ret), max(r[]))
+}
+
+p.density <- 
+  d.chodroff_wilson.selected %>% 
+  ggplot(aes(x = VOT_centered, y = f0_Mel_centered, linetype = category, group = category)) +
+  geom_density2d(
+    data = . %>% filter(category == "/d/"),
+    contour_var = "density", aes(alpha = after_stat(level)), 
+    colour = "black",
+    breaks = density_quantiles(x = d.chodroff_wilson.selected %>% filter(category == "/d/") %>% pull(VOT_centered), 
+                               y = d.chodroff_wilson.selected %>% filter(category == "/d/") %>% pull(f0_Mel_centered),
+                               quantiles = quantile_levels[-1])) +
+  geom_density2d(
+    data = . %>% filter(category == "/t/"),
+    contour_var = "density", aes(alpha = after_stat(level)), 
+    colour = "black",
+    breaks = density_quantiles(x = d.chodroff_wilson.selected %>% filter(category == "/t/") %>% pull(VOT_centered), 
+                               y = d.chodroff_wilson.selected %>% filter(category == "/t/") %>% pull(f0_Mel_centered),
+                               quantiles = quantile_levels[-1])) +
+  scale_y_continuous("F0 (Mel)", limits = c(118, 360)) + 
+  scale_x_continuous("VOT (ms)", limits = c(-12, 125), breaks = scales::breaks_width(25)) +
+  scale_alpha_continuous(breaks = quantile_levels, range = c(.1, 1), labels = scales::percent(quantile_levels)) +
+  theme(legend.position = "top") +
+  #plot the uncentred means
+  geom_point(
+    data = d.test_exposure_for_analysis %>% 
+      filter(Phase == "exposure") %>% 
+      group_by(Condition.Exposure) %>%
+      mutate(
+        category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))) %>% 
+      group_by(Condition.Exposure, category) %>% 
+      summarise(across(c(Item.VOT, Item.Mel_F0_5ms), mean)),
+    mapping = aes(x = Item.VOT, y = Item.Mel_F0_5ms, colour = Condition.Exposure, shape = category),
+    size = 2,
+    shape = c(1, 2, 1, 2, 1, 2),
+    alpha = 0.8,
+  inherit.aes = F) +
+  #plot centred means
+  geom_point(
+    data = d.test_exposure_for_analysis %>% 
+      filter(Phase == "exposure") %>% 
+      group_by(Condition.Exposure) %>%
+      mutate(
+        category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")),
+        Item.VOT_centered = Item.VOT + (chodroff.mean_VOT - VOT.mean_exp2),
+        Item.Mel_F0_5ms_centered = Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - f0.mean_exp2)) %>% 
+      group_by(Condition.Exposure, category) %>% 
+      summarise(across(c(Item.VOT_centered, Item.Mel_F0_5ms_centered), mean)),
+    mapping = aes(x = Item.VOT_centered, y = Item.Mel_F0_5ms_centered, colour = Condition.Exposure, shape = category),
+    size = 2,
+    alpha = 0.8,
+  inherit.aes = F) +
+  scale_colour_manual("Condition",
+             labels = c("+0ms", "+10ms", "+40ms"),
+             values = c("#cc0000", "#12D432","#0481F3")) +
+  guides(colour = "none",
+         linetype = guide_legend(title = "Category"),
+         shape = guide_legend(title = "Category")) + 
+ theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) + 
+  remove_axes_titles 
+p.density
+ggsave("ellipse_plot_legend1.png", last_plot(), width = 11, height = 8.3, units = "cm", path = "~/Desktop/")
+```
 
 
-data(RankCorr, package = "ggdist")
 
-RankCorr %>%
-  spread_draws(b[i,j]) %>%
-  filter(j == 1) %>%
-  compare_levels(b, by = i, comparison = control) %>%
-  ggplot(aes(x = b, y = i)) +
-  stat_halfeye()
+
+```{r}
+get_bivariate_normal_ellipse <- function(
+    mu = c(0, 0),
+    Sigma = diag(2),
+    level = .95,
+    segments = 51,
+    varnames = c("VOT", "F0")
+) {
+  # Ths function is based on calculate_ellipse from ggplot2, with modification to
+  # remove uncertainty about Sigma (since we're plotting the theoretical distribution,
+  # for which Sigma is known)
+  require(tidyverse)
+
+  chol_decomp <- chol(Sigma)
+  # Adapted from https://stats.stackexchange.com/questions/64680/how-to-determine-quantiles-isolines-of-a-multivariate-normal-distribution
+  # (tested)
+  radius <- sqrt(-2 * log(1 - level))
+
+  # Make n + 1 point over unit circle
+  angles <- (0:segments) * 2 * pi/segments
+  unit.circle <- cbind(cos(angles), sin(angles))
+
+  # Shape unit circle by covariance, scale by radius, and move it to mu
+  # (the t() calls are necessary since we allow mu to be a vector, so we
+  # need to transform the 2-col x segments-rows matrix into a segments-col
+  # x 2-row matrix, and then---after adding mu---transforming the whole
+  # thing back into a 2-col x segments-rows matrix)
+  ellipse <- as.data.frame(t(mu + radius * t(unit.circle %*% chol_decomp)))
+  names(ellipse) <- varnames
+
+  return(ellipse)
+}
+
+```
+
+
+```{r, warning=FALSE}
+cov_d <- (d.chodroff_wilson.selected %>% 
+  group_by(category) %>% 
+  nest(data = -c(category)) %>% 
+  mutate(covariance = map_dbl(data, ~ cov(.x$VOT_centered, .x$f0_Mel_centered))) %>% 
+  pull(covariance))[1]
+
+cov_t <- (d.chodroff_wilson.selected %>% 
+  group_by(category) %>% 
+  nest(data = -c(category)) %>% 
+  mutate(covariance = map_dbl(data, ~ cov(.x$VOT_centered, .x$f0_Mel_centered))) %>% 
+  pull(covariance))[2]
+
+cat_d <- d.chodroff_wilson.selected %>% 
+  filter(category == "/d/")
+
+cov(cat_d$VOT_centered, cat_d$f0_Mel_centered)
+cues = c("VOT", "f0_Mel")
+
+d.category_ellipse <- d.chodroff_wilson.selected %>% 
+  group_by(category) %>% 
+  summarise(across(c(VOT_centered, f0_Mel_centered), list(mean = mean, var = var), .names = "{.col}.{.fn}")) %>% 
+  mutate(cov = ifelse(category == "/d/", cov_d, cov_t),
+         mu = map2(VOT_centered.mean, f0_Mel_centered.mean, ~ c("VOT" = .x, "f0_Mel" = .y)),
+         Sigma = pmap(list(VOT_centered.var, f0_Mel_centered.var, cov), ~ matrix(c(..1, ..3, ..3, ..2), 2, 2, dimnames = list(cues, cues)))) %>% 
+  select(c(category, mu, Sigma)) %>% 
+  crossing(level = quantile_levels) %>% 
+  group_by(category) %>%
+  mutate(ellipse = c(1:length(quantile_levels)),
+         ellipse_points = pmap(list(mu, Sigma, level), ~ get_bivariate_normal_ellipse(mu = ..1, Sigma = ..2, level = ..3))) %>% 
+  group_by(ellipse) %>% 
+  mutate(path = pmap(list(category, level, ellipse_points),
+                     ~ geom_path(data = ..3, mapping = aes(x = ..3[[1]], y = ..3[[2]], linetype = ..1, colour = ..2))))
+
+p.ellipse <- d.category_ellipse %>% 
+  ggplot() +
+  d.category_ellipse$path +
+  scale_y_continuous("F0 (Mel)", limits = c(118, 360)) +
+  scale_x_continuous("VOT (ms)", limits = c(-12, 125), breaks = scales::breaks_width(25)) +
+  scale_color_gradient("Interval", low = "#000000",
+  high = "#D0D0D0") +
+  scale_linetype_manual("Category", values = c(1, 2)) + 
+  theme(legend.position = "right") +
+  new_scale_color() +
+  #plot the uncentred means
+  geom_point(
+    data = d.test_exposure_for_analysis %>% 
+      filter(Phase == "exposure") %>% 
+      group_by(Condition.Exposure) %>%
+      mutate(
+        category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))) %>% 
+      group_by(Condition.Exposure, category) %>% 
+      summarise(across(c(Item.VOT, Item.Mel_F0_5ms), mean)),
+    mapping = aes(x = Item.VOT, y = Item.Mel_F0_5ms, colour = Condition.Exposure, shape = category),
+    size = 2,
+    shape = c(1, 2, 1, 2, 1, 2),
+    alpha = 0.8,
+  inherit.aes = F,
+  show.legend = F) +
+  scale_colour_manual("Condition",
+             labels = c("+0ms", "+10ms", "+40ms"),
+             values = c("#cc0000", "#12D432","#0481F3")) +
+  new_scale_color() +
+  geom_point(
+    data = d.test_exposure_for_analysis %>% 
+      filter(Phase == "exposure") %>% 
+      group_by(Condition.Exposure) %>%
+      mutate(
+        category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")),
+        Item.VOT_centered = Item.VOT + (chodroff.mean_VOT - VOT.mean_exp2),
+        Item.Mel_F0_5ms_centered = Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - f0.mean_exp2)) %>% 
+      group_by(Condition.Exposure, category) %>% 
+      summarise(across(c(Item.VOT_centered, Item.Mel_F0_5ms_centered), mean)),
+    mapping = aes(x = Item.VOT_centered, y = Item.Mel_F0_5ms_centered, colour = Condition.Exposure, shape = category),
+    size = 2,
+    alpha = 0.8,
+  inherit.aes = F,
+  show.legend = F) +
+  scale_colour_manual("Condition",
+             labels = c("+0ms", "+10ms", "+40ms"),
+             values = c("#cc0000", "#12D432","#0481F3")) 
+  # guides(colour = "none")
+
+
+(p.density / p.ellipse) +
+  plot_layout(ncol = 1, guides = "collect") &
+  theme(legend.position = "none")
+
+ggsave("ellipse_plot.png", last_plot(), width = 11, height = 12, units = "cm", path = "~/Desktop/")
 ```
 

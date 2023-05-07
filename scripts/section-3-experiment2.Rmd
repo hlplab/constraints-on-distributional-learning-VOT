@@ -489,8 +489,8 @@ VOT.centered.input_block1 <-
   get_IO_categorization(
     cues = c("VOT_centered"), 
     groups = c("Talker", "gender"), 
-    VOTs = seq(0, 85, .5) + (chodroff.mean_VOT - VOT.mean_exp2),
-    F0s = normMel(predict_f0(VOTs)) + (chodroff.mean_f0_Mel - f0.mean_exp2),
+    VOTs = seq(0, 85, .5) + (chodroff.mean_VOT - VOT.mean_test),
+    F0s = normMel(predict_f0(VOTs)) + (chodroff.mean_f0_Mel - f0.mean_test),
     lapse_rate = lapse_exp2,
     alpha = .1, 
     linewidth = 0.3,
@@ -506,9 +506,9 @@ p.IOs.VOT.centered.input_block1 <- plot_IO_fit(
     ungroup() %>% 
     distinct(Item.VOT),
   data.percept.PSE = post_sample_block1 %>% 
-    mutate(PSE = PSE - (chodroff.mean_VOT - VOT.mean_exp2),
-           .lower = .lower - (chodroff.mean_VOT - VOT.mean_exp2),
-           .upper = .upper - (chodroff.mean_VOT - VOT.mean_exp2)),
+    mutate(PSE = PSE - (chodroff.mean_VOT - VOT.mean_test),
+           .lower = .lower - (chodroff.mean_VOT - VOT.mean_test),
+           .upper = .upper - (chodroff.mean_VOT - VOT.mean_test)),
   PSE_VOT.centered.input_block1
 )
 ```
@@ -584,10 +584,7 @@ p.IOs.VOT_F0.centered_block1 <- plot_IO_fit(
   data.test = d.block1 %>% 
     ungroup() %>% distinct(Item.VOT),
   data.percept.PSE = post_sample_block1,
-  PSE_VOT_F0.centered_block1 %>% 
-    mutate(PSE.lower = round(PSE.lower - (chodroff.mean_VOT - VOT.mean_exp2), 2),
-           PSE.median = PSE.median - (chodroff.mean_VOT - VOT.mean_exp2),
-           PSE.upper = round(PSE.upper - (chodroff.mean_VOT - VOT.mean_exp2), 2)))
+  PSE_VOT_F0.centered_block1)
 ```
 
 
@@ -605,9 +602,9 @@ chodroff.mean_f0 <- chodroff.means %>% pull(f0_Mel)
 
 # center exposure data relative to database mean
 psychometric_fit_block1_centered <- psychometric_fit_block1 %>% 
-  mutate(Item.VOT = descale(VOT_gs, VOT.mean_exp2, VOT.sd_exp2),
-         Item.VOT = Item.VOT + (chodroff.mean_VOT - VOT.mean_exp2),
-         VOT_gs = (Item.VOT - VOT.mean_exp2)/(2 * VOT.sd_exp2))
+  mutate(Item.VOT = descale(VOT_gs, VOT.mean_test, VOT.sd_test),
+         Item.VOT = Item.VOT + (chodroff.mean_VOT - VOT.mean_test),
+         VOT_gs = (Item.VOT - VOT.mean_test)/(2 * VOT.sd_test))
 
 
 # get expected values of the centered EXPOSURE VOT under the linear model
@@ -625,8 +622,8 @@ if (file.exists("../models/centered_exposure_block1_exp2.rds")) {
 
 
 ```{r IO-categorisation-VOT-F0-exposure-centered}
-VOTs_centered = seq(0, 85, .5) + (chodroff.mean_VOT - VOT.mean_exp2) 
-F0s_centered <- normMel(predict_f0(VOTs_centered)) + (chodroff.mean_f0_Mel - f0.mean_exp2)
+VOTs_centered = seq(0, 85, .5) + (chodroff.mean_VOT - VOT.mean_test) 
+F0s_centered <- normMel(predict_f0(VOTs_centered)) + (chodroff.mean_f0_Mel - f0.mean_test)
 
 VOT_F0.centered.input_block1 <- 
   get_IO_categorization(
@@ -650,9 +647,9 @@ p.IOs.VOT_F0.centered.input_block1 <- plot_IO_fit(
     ungroup() %>% distinct(Item.VOT),
   data.percept.PSE = post_sample_block1,
   PSE_VOT_F0.centered.input_block1 %>% 
-    mutate(PSE.lower = round(PSE.lower - (chodroff.mean_VOT - VOT.mean_exp2), 2),
-           PSE.median = PSE.median - (chodroff.mean_VOT - VOT.mean_exp2),
-           PSE.upper = round(PSE.upper - (chodroff.mean_VOT - VOT.mean_exp2), 2))) 
+    mutate(PSE.lower = round(PSE.lower - (chodroff.mean_VOT - VOT.mean_test)),
+           PSE.median = PSE.median - (chodroff.mean_VOT - VOT.mean_test),
+           PSE.upper = round(PSE.upper - (chodroff.mean_VOT - VOT.mean_test)))) 
 ```
 
 
@@ -710,7 +707,7 @@ d.test.IO_block1 <-
   filter(Item.VOT > -5) %>%  # filter to only the +ve for the time being; may need to include the -ve values
   mutate(
     VOT_F0 = map2(Item.VOT, Item.Mel_F0_5ms, ~ c(.x, .y)),
-    Item.VOT_centered = Item.VOT + (chodroff.mean_VOT - VOT.mean_exp2),
+    Item.VOT_centered = Item.VOT + (chodroff.mean_VOT - VOT.mean_test),
     Item.Mel_F0_centered = Item.Mel_F0_5ms + (chodroff.mean_f0 - f0.mean_exp2), 
     VOT_F0_centered = map2(Item.VOT_centered, Item.Mel_F0_centered, ~ c(.x, .y)),
     Response.category = ifelse(Response.Voicing == "voiced", "/d/", "/t/"),
@@ -741,6 +738,8 @@ d.test.IO_block1 %<>%
   mutate(
     io.type = fct_relevel(io.type, c("VOT.no.noise_block1", "VOT_block1", "VOT.centered_block1", "VOT.centered.input_block1", "VOT_F0.no.noise_block1", "VOT_F0_block1", "VOT_F0.centered_block1", "VOT_F0.centered.input_block1")),
     gender = fct_relevel(gender, c("female", "male")))
+  
+  write_csv(d.test.IO_block1, "../data/d.test.IO_block1.csv")
 }  
 
 # use bootstrap samples by io type to find the CI of the median and mode
@@ -757,7 +756,6 @@ d.bootstrap_block1 <- d.test.IO_block1 %>%
   mutate(splits = map(splits, ~ as_tibble(.x)),
          median_sample = map_dbl(splits, ~ median(.x$likelihood_per_response)),
          mode_sample = map_dbl(splits, ~ max(.x$likelihood_per_response))) 
-
 ```
 
 
@@ -1032,7 +1030,7 @@ fit_mix_nested <- brm(
 #   pivot_wider(
 #     values_from = value,
 #     names_from = Parameter) %>%
-#   mutate(PSE = descale(-Intercept / VOT_gs, VOT.mean_exp2, VOT.sd_exp2)) %>%
+#   mutate(PSE = descale(-Intercept / VOT_gs, VOT.mean_test, VOT.sd_test)) %>%
 #   # Get HDCI or SE
 #   group_by(Condition, Block) %>% 
 #   summarise(lower = quantile(PSE, probs = .025),
@@ -1188,12 +1186,18 @@ ggsave("p.params_exp2.png", p.params, width = 14, height = 8, units = "cm", path
 ```
 
 
-```{r compare-density-database-with-exposure-means}
-
+```{r compare-density-database-with-exposure-means, fig.width=6.5, fig.height=4.5}
 
 d.chodroff_wilson.selected %>% 
   ggplot(aes(x = VOT_centered, y = f0_Mel_centered, colour = category, group = category)) +
   geom_density2d() +
+  scale_colour_manual(values = c("/d/" = "#000000", "/t/" = "#a6a6a6")) +
+  scale_y_continuous("F0_Mel", limits = c(160, 320), breaks = seq(0, 320, 25)) +
+  scale_x_continuous("VOT (ms)", limits = c(-2, 95), breaks = seq(0, 95, 10)) +
+  theme(legend.position = "top",
+        axis.text = element_text(size = 10)) +
+  guides(colour = guide_legend("Category")) +
+  new_scale_color() +
   geom_point(
     data = d.test_exposure_for_analysis %>% 
       filter(Phase == "exposure") %>% 
@@ -1204,16 +1208,18 @@ d.chodroff_wilson.selected %>%
         Item.Mel_F0_5ms_centered = Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - f0.mean_exp2)) %>% 
       group_by(Condition.Exposure, category) %>% 
       summarise(across(c(Item.VOT_centered, Item.Mel_F0_5ms_centered), mean)),
-    mapping = aes(x = Item.VOT_centered, y = Item.Mel_F0_5ms_centered, group = Condition.Exposure, shape = category),
-    size = 3,
+    mapping = aes(x = Item.VOT_centered, y = Item.Mel_F0_5ms_centered, colour = Condition.Exposure, shape = category),
+    size = 2,
+    alpha = 0.8,
   inherit.aes = F) +
-scale_colour_manual(values = c("/d/" = "#00000", "/t/" = "#808080")) +
-scale_y_continuous(limits = c(160, 320)) +
-scale_x_continuous("VOT (msec)", limits = c(-2, 95), breaks = seq(0, 95, 5))
+  scale_colour_manual("Condition",
+             labels = c("+0ms", "+10ms", "+40ms"),
+             values = c("#cc0000", "#12D432","#0481F3")) +
+  guides(colour = "none",
+         shape = guide_legend("Category")) +
+  theme(legend.justification = "right")
 
-
-
-
+ggsave("density_plot.png", last_plot(), width = 11, height = 8.3, units = "cm", path = "~/Desktop/")
 ```
 
 
@@ -1235,7 +1241,7 @@ conditions <- tibble(
   
 ios <- tibble(
   category = factor(c("/d/", "/t/")),
-  Sigma = list(matrix(sqrt(80)), matrix(sqrt(278))),
+  Sigma = list(matrix(sqrt(76.719)), matrix(sqrt(168.789))),
   prior = c(.5, .5),
   lapse_rate = c(0, 0),
   lapse_bias = c(.5, .5),
@@ -1243,7 +1249,7 @@ ios <- tibble(
   )
 
 io.conditions <- crossing(conditions, ios) %>% 
-  cbind(tibble(mu = list(c(VOT = 5), c(VOT = 50), c(VOT = 15), c(VOT = 60), c(VOT = 45), c(VOT = 90)))) %>% 
+  cbind(tibble(mu = list(c(VOT = 1.1887), c(VOT = 47.9249), c(VOT = 11.1887), c(VOT = 57.9249), c(VOT = 41.1887), c(VOT = 87.9249)))) %>% 
   relocate(c(condition, category, mu)) %>% 
   nest(io = -c(condition)) %>% 
   crossing(x) %>% 
@@ -1271,9 +1277,6 @@ d.io.categorisation %>%
          intercept_scaled = map_dbl(model_scaled, ~ tidy(.x)[1,2] %>% pull()),
          slope_scaled = map_dbl(model_scaled, ~ tidy(.x)[2,2] %>% pull()),
            PSE = -intercept_unscaled/slope_unscaled)
-
-
-# use scaled VOT, get intercept and slope from scaled
 ```
 
 
