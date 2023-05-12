@@ -224,6 +224,8 @@ VOT.mean_exp1 <- 47.6304
 VOT.sd_exp1 <- 51.7727
 f0.mean_exp1 <- 340.923
 f0.sd_exp1 <- 2.58267
+VOT.mean_testblock1 <- 36
+f0.mean_testblock1 <- 340
 VOT.mean_exp2 <- 40.587
 VOT.sd_exp2 <- 28.495
 f0.mean_exp2 <- 340.24
@@ -246,7 +248,7 @@ get_diff_in_likelihood_from_io <- function(x, io, add_f0 = F, io.type) {
   # (the way we created our stimuli), we set the F0 based on the VOT.
   if (add_f0) x <- c(x, normMel(predict_f0(x))) 
   else if (add_f0 & io.type == "VOT_F0.centered.input") x <- c(x, normMel(predict_f0(x)) + (chodroff.mean_f0_Mel - f0.mean_exp1)) 
-  else if (add_f0 & io.type == "VOT_F0.centered.input_block1") x <- c(x, normMel(predict_f0(x)) + (chodroff.mean_f0_Mel - f0.mean_exp2))
+  else if (add_f0 & io.type == "VOT_F0.centered.input_block1") x <- c(x, normMel(predict_f0(x)) + (chodroff.mean_f0_Mel - f0.mean_testblock1))
   
   # abs(dmvnorm(x, io$mu[[1]], io$Sigma[[1]], log = T) - dmvnorm(x, io$mu[[2]], io$Sigma[[2]], log = T))
   y <- abs(dmvnorm(x, io$mu[[2]], io$Sigma[[2]] + io$Sigma_noise[[2]], log = F) / (dmvnorm(x, io$mu[[1]], io$Sigma[[1]] + io$Sigma_noise[[1]], log = F) + dmvnorm(x, io$mu[[2]], io$Sigma[[2]] + io$Sigma_noise[[2]], log = F)) - .5)
@@ -362,7 +364,7 @@ get_IO_categorization <- function(
         list(categorization, gender, io.type), 
         ~ geom_line(data = ..1, 
                     aes(x = if (str_detect(..3, ".*\\.centered\\.input$")) VOT - (chodroff.mean_VOT - VOT.mean_exp1)
-                        else if (str_detect(..3, ".*\\.centered\\.input_block1$")) VOT - (chodroff.mean_VOT - VOT.mean_exp2)
+                        else if (str_detect(..3, ".*\\.centered\\.input_block1$")) VOT - (chodroff.mean_VOT - VOT.mean_testblock1)
                         else VOT, 
                         y =  response,
                         color = ..2), 

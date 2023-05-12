@@ -794,10 +794,10 @@ d.test.IO <-
   select(Item.Filename, Item.VOT, Item.Mel_f0_5ms, Response, Response.Voicing) %>%
   filter(Item.VOT %in% test.VOTs.positive) %>%  # filter to only the +ve for the time being; may need to include the -ve values
   mutate(
-    VOT_F0 = map2(Item.VOT, Item.Mel_f0_5ms, ~ c(.x, .y)),
+    Item.VOT_F0 = map2(Item.VOT, Item.Mel_f0_5ms, ~ c(.x, .y)),
     Item.VOT_centered = Item.VOT + (chodroff.mean_VOT - VOT.mean_exp1),
     Item.Mel_f0_centered = Item.Mel_f0_5ms + (chodroff.mean_f0_Mel - f0.mean_exp1), 
-    VOT_F0_centered = map2(Item.VOT_centered, Item.Mel_f0_centered, ~ c(.x, .y)),
+    Item.VOT_F0_centered = map2(Item.VOT_centered, Item.Mel_f0_centered, ~ c(.x, .y)),
     Response.category = ifelse(Response.Voicing == "voiced", "/d/", "/t/"),
     Response.t = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
   nest(d.perception = everything()) %>%
@@ -811,22 +811,25 @@ if (file.exists("../data/d.test.IO.rds")) {
       pmap(
         list(d.perception, io, io.type), 
         ~ get_average_log_likelihood_of_perception_data_under_IO(
-          observed_inputs = if(str_detect(..3, "VOT.centered.input")) {..1$Item.VOT_centered}
-          else if (str_detect(..3, "VOT_F0.centered.input")) {..1$VOT_F0_centered}
-          else if (str_detect(..3, "VOT_F0$")) {..1$VOT_F0}
-          else if (str_detect(..3, "VOT_F0.no.noise")) {..1$VOT_F0} 
-          else if (str_detect(..3, "VOT_F0.centered")) {..1$VOT_F0}
-          else {..1$Item.VOT}, 
+          observed_inputs = if(str_detect(..3, "VOT\\.centered\\.input$")) {..1$Item.VOT_centered} 
+          else if (str_detect(..3, "VOT_F0\\.centered\\.input$")) {..1$Item.VOT_F0_centered} 
+          else if (str_detect(..3, "VOT_F0\\.no\\.noise$")) {..1$Item.VOT_F0} 
+          else if (str_detect(..3, "VOT_F0\\.centered$")) {..1$Item.VOT_F0}
+          else if (str_detect(..3, "VOT_F0$")) {..1$Item.VOT_F0}
+          else if (str_detect(..3, "VOT\\.no\\.noise$")) {..1$Item.VOT}
+          else if (str_detect(..3, "VOT\\.centered$")) {..1$Item.VOT}
+          else if (str_detect(..3, "VOT$")) {..1$Item.VOT}, 
           observed_responses = ..1$Response.category, 
           model = ..2)) %>% 
       unlist(),
-    likelihood_per_response = exp(log_likelihood_per_response))  %>%  
+    likelihood_per_response = exp(log_likelihood_per_response)) %>% 
   mutate(
-    io.type = fct_relevel(
-      io.type, c("VOT.no.noise", "VOT", "VOT.centered", "VOT.centered.input", "VOT_F0.no.noise", "VOT_F0", "VOT_F0.centered", "VOT_F0.centered.input")),
-    gender = fct_relevel(
-      gender, c("female", "male")))
+    io.type = fct_relevel(io.type, c("VOT.no.noise", "VOT", "VOT.centered", "VOT.centered.input", "VOT_F0.no.noise", "VOT_F0", "VOT_F0.centered", "VOT_F0.centered.input")),
+    gender = fct_relevel(gender, c("female", "male")))
+  
+  write_rds(d.test.IO, "../data/d.test.IO.rds")
 }
+
 
 # use bootstrap samples by io type to find the CI of the median
 set.seed(356)
@@ -953,7 +956,6 @@ temp_plot_PSE <- IO %>%
   inherit.aes = F) +
   scale_y_continuous(limits = c(12, 65), breaks = seq(15, 65, 5)) +
   guides(x = guide_axis(angle = 45))
-
 ```
 
 
