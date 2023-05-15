@@ -725,14 +725,14 @@ d.test.IO_block1 %<>%
       pmap(
         list(d.perception, io, io.type), 
         ~ get_average_log_likelihood_of_perception_data_under_IO(
-          observed_inputs = if(str_detect(..3, "VOT\\.centered\\.input_block1$")) {as.list(..1$Item.VOT_centered)} 
+          observed_inputs = if(str_detect(..3, "VOT\\.centered\\.input_block1$")) {..1$Item.VOT_centered} 
           else if (str_detect(..3, "VOT_F0\\.centered.input_block1$")) {..1$VOT_F0_centered} 
           else if (str_detect(..3, "VOT_F0\\.no\\.noise_block1$")) {..1$VOT_F0} 
           else if (str_detect(..3, "VOT_F0\\.centered_block1$")) {..1$VOT_F0}
           else if (str_detect(..3, "VOT_F0_block1$")) {..1$VOT_F0}
-          else if (str_detect(..3, "VOT\\.no\\.noise_block1$")) {as.list(..1$Item.VOT)}
-          else if (str_detect(..3, "VOT\\.centered_block1$")) {as.list(..1$Item.VOT)}
-          else if (str_detect(..3, "VOT_block1$")) {as.list(..1$Item.VOT)}, 
+          else if (str_detect(..3, "VOT\\.no\\.noise_block1$")) {..1$Item.VOT}
+          else if (str_detect(..3, "VOT\\.centered_block1$")) {..1$Item.VOT}
+          else if (str_detect(..3, "VOT_block1$")) {..1$Item.VOT}, 
           observed_responses = ..1$Response.category, 
           model = ..2)) %>% 
       unlist(),
@@ -1212,7 +1212,7 @@ d.chodroff_wilson.selected %>%
          shape = guide_legend("Category")) +
   theme(legend.justification = "right")
 
-ggsave("density_plot.png", last_plot(), width = 11, height = 8.3, units = "cm", path = "~/Desktop/")
+#ggsave("density_plot.png", last_plot(), width = 11, height = 8.3, units = "cm", path = "~/Desktop/")
 ```
 
 
@@ -1224,6 +1224,26 @@ ggsave("density_plot.png", last_plot(), width = 11, height = 8.3, units = "cm", 
 
 
 ```{r make-dataframe-for-logistic-regression-on-predicted-probs-by-IOs}
+# get the actual means and variances of the exposure stimuli during the experiment
+d.summarystats_exposure <- d.test_exposure_for_analysis %>% 
+  filter(Phase == "exposure") %>% 
+  mutate(Category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")) %>% 
+  group_by(Condition.Exposure, Category) %>% 
+  # get all exposure rows from one participant per condition
+  slice_head(n = 144) %>% 
+  summarise(mean = mean(Item.VOT, na.rm = T),
+            var = var(Item.VOT, na.rm = T))
+
+exposure_shift0_mean_d <- (d.summarystats_exposure %>% pull(mean))[1]
+exposure_shift0_mean_t <- (d.summarystats_exposure %>% pull(mean))[2]
+exposure_shift10_mean_d <- (d.summarystats_exposure %>% pull(mean))[3]
+exposure_shift10_mean_t <- (d.summarystats_exposure %>% pull(mean))[4]
+exposure_shift40_mean_d <- (d.summarystats_exposure %>% pull(mean))[5]
+exposure_shift40_mean_t <- (d.summarystats_exposure %>% pull(mean))[6]
+
+exposure_var_d <- (d.summarystats_exposure %>% pull(var))[1]
+exposure_var_t <- (d.summarystats_exposure %>% pull(var))[2] 
+
 x <- d.test_exposure_for_analysis %>% 
   filter(Phase == "test") %>% 
   distinct(Item.VOT) %>%
@@ -1234,7 +1254,7 @@ conditions <- tibble(
   
 ios <- tibble(
   category = factor(c("/d/", "/t/")),
-  Sigma = list(matrix(sqrt(76.719)), matrix(sqrt(168.789))),
+  Sigma = list(matrix(sqrt(exposure_var_d)), matrix(sqrt(exposure_var_t))),
   prior = c(.5, .5),
   lapse_rate = c(0, 0),
   lapse_bias = c(.5, .5),
@@ -1242,7 +1262,7 @@ ios <- tibble(
   )
 
 io.conditions <- crossing(conditions, ios) %>% 
-  cbind(tibble(mu = list(c(VOT = 1.1887), c(VOT = 47.9249), c(VOT = 11.1887), c(VOT = 57.9249), c(VOT = 41.1887), c(VOT = 87.9249)))) %>% 
+  cbind(tibble(mu = list(c(VOT = exposure_shift0_mean_d), c(VOT = exposure_shift0_mean_t), c(VOT = exposure_shift10_mean_d), c(VOT = 57.9249), c(VOT = 41.1887), c(VOT = 87.9249)))) %>% 
   relocate(c(condition, category, mu)) %>% 
   nest(io = -c(condition)) %>% 
   crossing(x) %>% 

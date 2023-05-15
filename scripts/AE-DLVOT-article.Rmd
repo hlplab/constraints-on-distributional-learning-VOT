@@ -134,7 +134,7 @@ library(broom.mixed)
 library(posterior)
 library(rsample)
 
-if (has_internet()) remotes::install_github("hlplab/MVBeliefUpdatr")
+#if (has_internet()) remotes::install_github("hlplab/MVBeliefUpdatr")
 library(MVBeliefUpdatr)  # for generating Ideal Observers
 ```
 
