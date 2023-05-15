@@ -401,7 +401,7 @@ VOT.no.noise_block1 <-
     linewidth = 0.3,
     io.type = "VOT.no.noise_block1")
 
-PSE_VOT.no.noise_block1 <- get_PSE_quantiles(data = VOT.no.noise, group = "gender")
+PSE_VOT.no.noise_block1 <- get_PSE_quantiles(data = VOT.no.noise_block1, group = "gender")
 
 p.IOs.VOT.no.noise_block1 <- plot_IO_fit(
   data.production = VOT.no.noise_block1, 
