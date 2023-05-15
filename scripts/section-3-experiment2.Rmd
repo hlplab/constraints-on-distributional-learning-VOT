@@ -463,7 +463,7 @@ p.IOs.VOT.centered_block1 <- plot_IO_fit(
 ```
 
 
-```{r IO-categorization-VOT-f0-centered-input-block1, warning=FALSE}
+```{r IO-categorization-VOT-f0-centered-input-block1, message=FALSE}
 # prepare data for IO that centers perceptual input relative to database mean before categorization
 chodroff.means <- d.chodroff_wilson.selected %>% 
   group_by(Talker) %>% 
@@ -1262,7 +1262,7 @@ ios <- tibble(
   )
 
 io.conditions <- crossing(conditions, ios) %>% 
-  cbind(tibble(mu = list(c(VOT = exposure_shift0_mean_d), c(VOT = exposure_shift0_mean_t), c(VOT = exposure_shift10_mean_d), c(VOT = 57.9249), c(VOT = 41.1887), c(VOT = 87.9249)))) %>% 
+  cbind(tibble(mu = list(c(VOT = exposure_shift0_mean_d), c(VOT = exposure_shift0_mean_t), c(VOT = exposure_shift10_mean_d), c(VOT = exposure_shift10_mean_t), c(VOT = exposure_shift40_mean_d), c(VOT = exposure_shift40_mean_t)))) %>% 
   relocate(c(condition, category, mu)) %>% 
   nest(io = -c(condition)) %>% 
   crossing(x) %>% 
