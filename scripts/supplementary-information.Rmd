@@ -199,7 +199,18 @@ d.exposure_test %>%
   theme(legend.position = "top") +
   facet_grid(Condition.Exposure ~ Block) 
 ```
-
+```{r, message=FALSE, fig.width=6, fig.height=5}
+d.test_exposure_for_analysis %>% 
+  filter(Is.CatchTrial == FALSE & Phase == "exposure") %>% 
+  mutate(Item.Labeled = factor(ifelse(Item.Labeled == TRUE, "labeled", "unlabeled"))) %>% 
+  summarise(Condition.Exposure, Block, Item.Labeled, Response.Correct) %>% 
+  ggplot(aes(x = Response.Correct, fill = Item.Labeled)) +
+  geom_bar(position = position_dodge2(width = .5, preserve = "single"), width = .5) +
+  scale_x_discrete("Response", labels = c("incorrect", "correct")) +
+  scale_colour_manual("Labelling", aesthetics = c("colour", "fill"), breaks = c("labeled", "unlabeled"), values = c("#f6546a", "#00ced1")) +
+  theme(legend.position = "top") +
+  facet_grid(Condition.Exposure ~ Block) 
+```
 
 ```{r fig,width=8, fig.height=5, fig.width=6}
 d.exposure_test %>%

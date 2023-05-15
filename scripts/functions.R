@@ -720,9 +720,12 @@ prepVars <- function(d, levels.Condition = NULL, contrast_type) {
                                   "_Test5 vs. Test4_3_2_1" = c(-1/5, -1/5, -1/5, -1/5, 4/5, 0), 
                                   "_Test6 vs. Test5_4_3_2_1" = c(-1/6, -1/6, -1/6, -1/6, -1/6, 5/6))
       print(contrasts(d$Condition.Exposure))
-      print(contrasts(d$Block))} else {
-      print(contrasts(d$Condition.Exposure))
-    }
+      print(contrasts(d$Block))} else if (all(d$Phase == "exposure") & n_distinct(d$Block) > 1 & contrast_type == "difference"){
+        contrasts(d$Block) <- cbind("_Exposure2 vs. Exposure1" = c(-2/3, 1/3, 1/3),
+                                    "_Exposure3 vs. Exposure2" = c(-1/3,-1/3, 2/3))
+        print(contrasts(d$Block))} else {
+          print(contrasts(d$Condition.Exposure))
+        }
   
   return(d)
 }
