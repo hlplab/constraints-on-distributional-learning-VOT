@@ -1,6 +1,6 @@
 ---
-title             : "Listeners adjust their prior expectations as they adapt to speech of an unfamiliar talker"
-shorttitle        : "AE-DLVOT"
+title             : "Unravelling the time-course of listener adaptation to an unfamiliar talker."
+shorttitle        : "Cognition draft"
 date              : "`r format(Sys.time(), '%B %d, %Y')`"
 
 author: 
@@ -221,10 +221,10 @@ knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 ```{r, child="section-1-introduction.Rmd"}
 ```
 
-```{r, child="section-2-experiment1.Rmd"}
+```{r, child="section-2-materials and method.Rmd"}
 ```
 
-```{r, child="section-3-experiment2.Rmd"}
+```{r, child="section-3-analysis of results.Rmd"}
 ```
 
 ```{r, child="section-6-general-discussion.Rmd"}
