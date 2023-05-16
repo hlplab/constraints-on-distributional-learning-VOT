@@ -11,39 +11,117 @@ require(cowplot)
 source("functions.R")
 ```
 
-# Norming experiment: Listener's expectations prior to informative exposure
-The norming experiment investigates native (L1) US English listeners' categorization of word-initial stop voicing by an unfamiliar female L1 US English talker, prior to more informative exposure. Specifically, listeners heard isolated recordings from a /d/-/t/ continuum, and had to respond which word they  heard (e.g., "din" or "tin"). The recordings varied in voice onset time (VOT), the primary phonetic cue to word-initial stop voicing in L1 US English, as well as correlated secondary cues (f0 and rhyme duration). Critically, exposure was relatively uninformative about the talker's use of the phonetic cues in that all phonetic realizations occurred equally often. 
 
-The primary goal of norming is methodological. We use the norming experiment to test basic assumptions about the paradigm and stimuli we employ in this study. We obtain estimates of the category boundary between /d/ and /t/ *for the specific stimuli used in Experiment 2*, as perceived by *the type of listeners we seek to recruit for the main experiment*. We also test whether prolonged testing across the phonetic continuum changes listeners' categorization behavior. Previous work has found that prolonged testing on uniform distributions can reduce the effects of previous exposure [e.g., @mitterer2011; @liu-jaeger2018], at least in listeners of the age group we recruit from [@scharenborg2013comparing]. However, these studies employed only a small number of 5-7 perceptually highly ambiguous stimuli, each repeated many times. In the norming experiment, we employ a much larger set of stimuli that span the entire continuum from very clear /d/s to very clear /t/s, each presented only twice. If prolonged testing changes listeners' responses, this has to be taken into account in the design of the main.
 
 
 ## Methods 
 ### Participants
-Participants were recruited over Amazon's Mechanical Turk platform, and paid $2.50 each (for a targeted remuneration of \$6/hour). The experiment was only visible to Mechanical Turk participants who (1) had an IP address in the United States, (2) had an approval rating of 95% based on at least 50 previous assignments, and (3) had not previously participated in any experiment on stop voicing from our lab. 
+Participants were recruited over the Prolific platform and experiment data (but not participant profile data) were collected, stored, and via proliferate (@schuster). They were paid $8.00 each (for a targeted remuneration of \$9.60/hour). The experiment was visible to participants following a selection of Prolific's available pre-screening criteria. Participants had to (1) have US nationality, (2) report to only know English, and (3) had not previously participated in any experiment from our lab on Prolific.
 
-24 L1 US English listeners (female = 9; mean age = 36.2 years; SD age = 9.2 years) completed the experiment. To be eligible, participants had to confirm that they (1) spent at least the first 10 years of their life in the US speaking only English, (2) were in a quiet place, and (3) wore in-ear or over-the-ears headphones that cost at least \$15. 
+126 L1 US English listeners (male = 60, female = 59, NA = 3; mean age = 38 years; SD age = 12 years) completed the experiment. Due to data transfer errors 4 participants' data were not stored and therefore not included in this analysis. To be eligible, participants had to confirm that they (1) spent at least the first 10 years of their life in the US speaking only English, (2) were in a quiet place and free from distractions, and (3) wore in-ear or over-the-ears headphones that cost at least \$15. 
 
 ### Materials 
-We recorded multiple tokens of four minimal word pairs ("dill"/"till", "dim"/"tim", "din"/"tin", and "dip"/"tip") from a 23-year-old, female L1 US English talker from New Hampshire, judged by the research assistant to have a "general American" accent. These recordings were used to create four natural-sounding minimal pair VOT continua (dill-till, dip-tip, din-tin, and dip-tip) using a Praat script [@winn2020manipulation]. The full procedure is described in the supplementary information (SI, \@ref(sec:SI-XXX)). The VOT continua ranged from -100ms VOT to +130ms VOT in 5ms steps. Experiment 1 employs 24 of these steps (-100, -50, -10, 5  `r paste0(seq(15, 90, 5), collapse = ", ")`, `r paste0(seq(100, 130, 10), collapse = ", ")`). VOT tokens in the lower and upper ends were distributed over larger increments because stimuli in those ranges were expected to elicit floor and ceiling effects, respectively. 
 
-We further set the F0 at vowel onset to follow the speaker's natural correlation which was estimated through a linear regression analysis of all the recorded speech tokens. We did this so that we could determine the approximate corresponding f0 values at each VOT value along the continua as predicted by this talker's VOT. The duration of the vowel was set to follow the natural trade-off relation with VOT reported in @allen1999effects. This approach closely resembles that taken in @theodore2019distributional, and resulted in continuum steps that sound highly natural [unlike the robotic-sounding stimuli employed in @clayards2008perception; @kleinschmidt2016you]. All stimuli are available as part of the OSF repository for this article.
+We recorded multiple tokens of four minimal word pairs ("dill"/"till", "dim"/"tim", "din"/"tin", and "dip"/"tip") from a 23-year-old, female L1 US English talker from New Hampshire, judged to have a "general American" accent. These recordings were used to create four natural-sounding minimal pair VOT continua (dill-till, dip-tip, din-tin, and dip-tip) using a Praat script [@winn2020manipulation]. In addition to the critical minimal pair continua we also recorded three words that did not did not contain any stop consonant sounds ("flare", "share", and "rare"). These word recordings were used as catch trials. Stimulus intensity was set to 70 dB sound pressure level for all recordings. The full procedure is described in the supplementary information (SI, \@ref(sec:SI-XXX)). 
 
-In addition to the critical minimal pair continua we also recorded three words that did not did not contain any stop consonant sounds ("flare", "share", and "rare"). These word recordings were used as catch trials. Stimulus intensity was set to 70 dB sound pressure level for all recordings. 
+We also set the F0 at vowel onset to follow the speaker's natural correlation which was estimated through a linear regression analysis of all the recorded speech tokens. We did this so that we could determine the approximate corresponding f0 values at each VOT value along the continua as predicted by this talker's VOT. The duration of the vowel was set to follow the natural trade-off relation with VOT reported in @allen1999effects. This approach resulted in continuum steps that sound highly natural [unlike the robotic-sounding stimuli employed in @clayards2008perception; @kleinschmidt2016you]. All stimuli are available as part of the OSF repository for this article.
+
+Prior to creating the three exposure conditions of the experiment, we ran a norming experiment to test US-L1 listeners' perception of our stimuli and to determine a baseline categorisation boundary for this talker. The norming experiment also served as a measure to detect possible anomalous features present in our stimuli (for e.g. if it would elicit unusual categorisation behaviour or whether certain minimal-pairs had an exaggerated effect on categorisation). For the norming experiment the VOT continua employed 24 VOT steps ranging from -100ms VOT to +130ms (-100, -50, -10, 5  `r paste0(seq(15, 90, 5), collapse = ", ")`, `r paste0(seq(100, 130, 10), collapse = ", ")`). VOT tokens in the lower and upper ends were distributed over larger increments because stimuli in those ranges were expected to elicit floor and ceiling effects, respectively. We found VOTto have the expected effect on the proportion of "t"-responses, i.e. higher VOTs elicited greater "t"-responses and that the word-pairs did not differ substantially from each other. The results and analysis of the norming experiment are reported in full in section \@ref(sec:XX).  
+
+
+A subset of the materials were used to generate the three exposure conditions; in particular three continua of the minimal pairs, dill-till, din-tin, and dip-tip. The dim-tim continuum was omitted in order to keep the pairs as distinct as possible. 
+
+We employed a multi-block exposure-test design \@ref(fig:exp2-design-figure) which enabled the assessment of listener perception before informative exposure as well as incrementally at intervals  during informative exposure (after every 48 exposure trials). To have a comparable test between blocks and across conditions, test blocks were made up of a uniform distribution of 12 VOT stimuli (-5, 5, 15, 25, 30, 35, 40, 45, 50, 55, 65, 70), identical across test blocks and between conditions. Each of the test tokens were presented once at random. The test blocks were kept short to minimise distortion of the intended distribution to be presented by the end of the exposure phase. After the final exposure block we tripled the number of test blocks to increase the statistical power to detect exposure induced behavioural changes. 
+
+The conditions were created by first generating the baseline distribution (+0ms shift) and then shifting that distribution by +10ms and by +40ms to the right of the VOT continuum to create the remaining two conditions. 
+
+To construct the +0ms shift exposure distribution we first computed the point of subjective equality (PSE) from the fitted psychometric function of listener responses from the norming experiment. The PSE corresponds to the VOT duration that was perceived as most ambiguous across all participants during norming (i.e. the stimulus that on average, elicited equal chance of being categorised as /d/ or /t/) thus marking the categorical boundary. From a distributional perspective the PSE is where the likelihoods of both categories intersect and have equal probability density (we assumed Gaussian distributions and equal prior probability for each category) [SOMETHING HERE ABOUT GAUSSIANS BEING A CONVENIENT ASSUMPTION?]. To limit the infinite combinations of category likelihoods that could intersect at this value, we set the variances of the /d/ (80ms) and /t/ (270ms (lowered from 398 because of dip-tip pair limitations)) categories based on parameter estimates (@Kurumada_Xie_Jaeger_2022) obtained from the production database of word-initial stops in @chodroff2017structure. To each variance value we added 80ms following (@kronrod2016unified) to account for variability due to perceptual noise since these likelihoods were estimated from perceptual data. We took an additional degree of freedom of setting the *distance between the means* of the categories at 46ms; this too was based on the population parameter estimates derived from analyses of the production database. The means of both categories were then obtained through a grid-search process to find the likelihood distributions that crossed at 25ms VOT (see XX of SI for further detail on this procedure).
+
+The distributional make up was determined through a process of sampling tokens from a discretised normal distribution (available through the `extraDistr` package in R). 
+For each exposure block 8 VOT tokens per minimal word pair were sampled from discrete normal distributions of each category of the +0ms condition, giving 24 /d/ and 24 /t/ items (48 critical trials) per block. Additionally, each exposure block contained 2 instances of 3 catch items, giving 6 catch trials per block. The sampled distributions of VOT tokens were increased by a margin of +10ms and +40 ms to create the remaining two conditions. Three variants of each condition list were created so that exposure blocks followed a latin-square order. 
+
+Lastly, half of the exposure trials were randomly assigned as labelled trials. In labelled trials, participants receive clear information of the word's category as both orthographic options will always begin with the intended sound. For example if a trial was intended to be "dill" then the two image options will either be "dill" and "dip" or "dill" and "din". Test trials were always unlabelled. 
+
+```{r exp2-design-distribution, fig.height=3, fig.width=6, warning=FALSE, message=FALSE}
+# read in exposure block sampled tokens
+d.exposure <- read_csv("../data/exposure_block_tokens.csv", show_col_types = F)
+
+# set variances of categories
+var_d <- 80
+var_t <- 270
+
+d.means <- 
+  crossing(condition = c("+0ms", "+10ms", "+40ms"),
+         category = c("/d/", "/t/")) %>% 
+  mutate(mean = c(5, 50, 15, 60, 45, 90))
+
+d.exposure %>% 
+  na.omit() %>% 
+  filter(image_selection == "forward" & list_LSQ_variant == "A") %>% 
+  mutate(condition = case_when(condition == "Shift0" ~ "+0ms",
+                               condition == "Shift10" ~ "+10ms",
+                               condition == "Shift40" ~ "+40ms"),
+         labelling = as_factor(labelling)) %>% 
+  ggplot() +
+  geom_histogram(aes(x = VOT, fill = paste(condition, category, labelling), 
+                     color = paste(condition, category, labelling),
+                     linetype = labelling), 
+                 alpha = .8) +
+  scale_colour_manual(
+    "Labelling",
+    values = c(
+    "+0ms /d/ labeled" = "#800000", 
+    "+0ms /d/ unlabeled" = "#ff9999",
+    "+0ms /t/ labeled" = "#cc0000", 
+    "+0ms /t/ unlabeled" = "#ffe6e6",
+    "+10ms /d/ labeled" = "#0a751c",
+    "+10ms /d/ unlabeled" = "#b9f9c3",
+    "+10ms /t/ labeled" = "#12D432",
+    "+10ms /t/ unlabeled" = "#e8fdeb",
+    "+40ms /d/ labeled" = "#02427e", 
+    "+40ms /d/ unlabeled" = "#b4dafe",
+    "+40ms /t/ labeled" = "#0481F3", 
+    "+40ms /t/ unlabeled" = "#e6f3ff"),
+    aesthetics = c("color", "category", "fill"),
+    labels = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", "", "", "", "", "", "", "", "")) +
+    guides(colour = guide_legend(override.aes = list(
+    colour = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
+    fill = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
+    linetype = c(2, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0),
+    values = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", 0, 0, 0, 0, 0, 0, 0, 0)), nrow = 1)) +
+  stat_function(fun = function(x) 72 * 5 * dnorm(x, 5, sqrt(var_d)),
+                color = "black", size = .6, alpha = .7, linetype = 2) +
+  stat_function(
+    fun = function(x) 72 * 5 * dnorm(x, 50, sqrt(var_t)),
+    color = "black", size = .6, alpha = .5, linetype = 2) +
+  geom_rug(data = tibble(VOT = c(5, 50)), aes(x = VOT), sides = "t") +
+  scale_x_continuous("VOT (ms)", breaks = seq(-50, 150, 30)) +
+  scale_y_continuous("Count") +
+  geom_text(data = d.means,
+            aes(x = 103, 
+                y = 17,
+                label = paste("mean", category, "=", mean)),
+            size = 2,
+            position = position_dodge2v(height = -8),
+            inherit.aes = F) +
+  facet_wrap(~ condition, scales = "free_y") +
+  guides(linetype = "none") +
+  theme(legend.position = "top")
+```
 
 ### Procedure
-The code for the experiment is available as part of the OSF repository for this article. A live version is available at (https://www.hlp.rochester.edu//experiments/DLVOT/series-A/experiment-A.html?list_test=NORM-A-forward-test). The first page of the experiment informed participants of their rights and the requirements for the experiment: that they had to be native listeners of English, wear headphones for the entire duration of the experiment, and be in a quiet room without distractions. Participants had to pass a headphone test, and were asked to keep the volume unchanged throughout the experiment. Participants could only advance to the start of the experiment by acknowledging each requirement and consenting to the guidelines of the Research Subjects Review Board of the University of Rochester. 
+The code for the experiment is available as part of the OSF repository for this article. A live version is available at (https://www.hlp.rochester.edu/FILLIN-FULL-URL). The first page of the experiment informed participants of their rights and the requirements for the experiment: that they had to be native listeners of English, wear headphones for the entire duration of the experiment, and be in a quiet room without distractions. Participants had to pass a headphone test, and were asked to keep the volume unchanged throughout the experiment. Participants could only advance to the start of the experiment by acknowledging each requirement and consenting to the guidelines of the Research Subjects Review Board of the University of Rochester. 
 
-On the next page, participants were informed about the task for the remainder of the experiment. They were informed that they would hear a female talker speak a single word on each trial, and had to select which word they heard. Participants were instructed to listen carefully and answer as quickly and as accurately as possible. They were also alerted to the fact that the recordings were subtly different and therefore may sound repetitive. This was done to encourage their full attention.
+On the next page, participants were informed about the task for the remainder of the experiment. They were informed that they would hear a female talker speak a single word on each trial, and had to select which word they heard. They were also informed that they needed to click a green button that would be displayed during each trial when it "lights up" in order to hear the recording of the speaker saying the word. Participants were instructed to listen carefully and answer as quickly and as accurately as possible. They were also alerted to the fact that the recordings were subtly different and therefore may sound repetitive. This was done to encourage their full attention.
 
-Each trial started with a dark-shaded green fixation dot being displayed. At 500ms from trial onset, two minimal pair words appeared on the screen, as shown in Figure \@ref(fig:exp1-example-trial). At 1000ms from trial onset, the fixation dot would turn bright green and an audio recording from the matching minimal pair continuum started playing. Participants were required to click on the word they heard. For each participant, /d/-initial words were either always displayed on the left side or always displayed on the right side. Across participants, this ordering was counter-balanced. After participants clicked on the word, the next trial began.
+Each trial started with a dark-shaded green fixation dot being displayed. At 500ms from trial onset, two minimal pair words appeared on the screen, as shown in Figure \@ref(fig:exp1-example-trial). At 1000ms from trial onset, the fixation dot wouuld turn bright green and participants had to click on the dot to play the recording. Participants responded by clicking on the word they heard and the next trial would begin. The placement of the word presentations were counter-balanced across participants.
+
+Participants underwent 234 trials which included 6 catch trials in each exposure block (18 in total). Since these recordings were easily distinguishable, they served as a check on participant attention throughout the experiment.  Catch trials were distributed randomly throughout the experiment with the constraint that no more than two catch trials would occur in a row. Participants were given the opportunity to take breaks after every 60 trials during exposure blocks. Participants took an average of 17 minutes (SD = 9) to complete the 234 trials, after which they answered a short survey about the experiment.
 
 ```{r exp1-example-trial, fig.cap="Example trial display. The words were displayed 500ms after trial onset and the audio recording of the word was played 1000ms after trial onset"}
 knitr::include_graphics("../figures/exp1_trial_example.png")
 ```
 
-Participants heard 192 target trials (four minimal pair continua, each with 24 VOT steps, each heard twice). In addition, participants heard 12 catch trials. On catch trials, participant saw two written catch stimuli on the screen (e.g., "flare" and "rare"), and heard one of them (e.g. "rare"). Since these recordings were easily distinguishable, they served as a check on participant attention throughout the experiment. 
-
-The order of trials was randomized for each participant with the only constraint that no stimulus was repeated before each stimulus had been heard at least once. Catch trials were distributed randomly throughout the experiment with the constraint that no more than two catch trials would occur in a row. Participants were given the opportunity to take breaks after every 60 trials. Participants took an average of 12 minutes (SD = 4.8) to complete the 204 trials, after which they answered a short survey about the experiment. 
 
 ```{r, echo=FALSE, warning=FALSE}
 # load formatted dataframe from experiment 1
@@ -123,252 +201,7 @@ d.test.excluded <-
 ### Exclusions
 We excluded from analysis participants who committed more than 2 errors out of the 12 catch trials (<83% accuracy, N = 3), participants with an average reaction time (RT) more than three standard deviations from the mean of the by-participant means (N = 0), and participants who reported not to have used headphones (N = 0) or not to be native (L1) speakers of US English (N = 0). For the remaining participants, trials that were more than three SDs from the participant's mean RT were excluded from analysis (`r proportion.excluded * 100 `%). Finally, we excluded participants (N = 0) who had less than 50% data remaining after these exclusions. 
 
-### Analysis approach
-The goal of our behavioral analyses was to address three methodological questions that are of relevance to Experiment 2: (1) whether our stimuli resulted in 'reasonable' categorisation functions, (2) whether these functions differed between the four minimal pair items, and (3) whether participants' categorisation functions changed throughout the 192 test trials.
 
-To address these questions, we fit a single Bayesian mixed-effects psychometric model to participants' categorization responses on critical trials [e.g., @prins2011]. This model is essentially an extension of mixed-effects logistic regression that also takes into account attentional lapses. A failure to do so---while commonplace in research on speech perception [incl. our own work, but see @clayards2008; @kleinschmidt2016you]---can lead to biased estimates of categorization boundaries [e.g., @wichmann2001psychometric]. The mixed-effects psychometric model describes the probability of "t"-responses as a weighted mixture of a lapsing-model and a perceptual model. The lapsing model is a mixed-effects logistic regression [@jaeger2008categorical] that predicts participant responses that are made independent of the stimulus---for example, responses that result from attentional lapses. These responses are independent of the stimulus, and depend only on participants' response bias. The perceptual model is a mixed-effects logistic regression that predicts all other responses, and captures stimulus-dependent aspects of participants' responses. The relative weight of the two models is determined by the lapse rate, which is described by a third mixed-effects logistic regression.
-
-The *lapsing model* only contained an intercept (the response bias in log-odds) and by-participant random intercepts. Similarly, the *model for the lapse rate* only had an intercept (the lapse rate) and by-participants random intercepts. No by-item random effects were included for the lapse rate nor lapsing model since these parts of the analysis---by definition---describe stimulus-*in*dependent behavior. The *perceptual model* included an intercept and VOT, as well as the full random effect structure by participants and items (the four minimal pair continua), including random intercepts and random slopes by participant and minimal pair. We did not model the random effects of trial to reduce model complexity. This potentially makes our analysis of trials in the model anti-conservative. Finally, the models included the covariance between by-participant random effects across the three linear predictors for the lapsing model, lapse rate model, and perceptual model. This allows us to capture whether participants who lapse more often have, for example, different response biases or different sensitivity to VOT (after accounting for lapsing).
-
-We fit the model using the package \texttt{brms} [@R-brms_a] in R [@R; @RStudio]. Following previous work from our lab [@horberg2021rational; @xie2021cross], we used weakly regularizing priors to facilitate model convergence. For fixed effect parameters, we standardized continuous predictors (VOT) by dividing through twice their standard deviation [@gelman2008scaling], and used Student priors centered around zero with a scale of 2.5 units [following @gelman2008weakly] and 3 degrees of freedom. For random effect standard deviations, we used a Cauchy prior with location 0 and scale 2, and for random effect correlations, we used an uninformative LKJ-Correlation prior with its only parameter set to 1, describing a uniform prior over correlation matrices [@Lewandowski2009]. Four chains with 2000 warm-up samples and 2000 posterior samples each were fit. No divergent transitions after warm-up were observed, and all $\hat{R}$ were close to 1.
-
-### Expectations 
-Based on previous experiments, we expected a strong positive effect of VOT, with increasing proportions of "t"-responses for increasing VOTs. We did not have clear expectations for the effect of trial other than that responses should become more uniformed (i.e move towards 50-50 "d"/"t"-bias or 0-log-odds) as the experiment progressed [@liu2018inferring] due to the un-informativeness of the stimuli. 
-Previous studies with similar paradigms have typically found lapse rates of 0-10% [< -2.2 log-odds, e.g., @clayards2008perception; @kleinschmidt2016you]. 
-
-```{r}
-# set the mean and SD values for scaling/unscaling purposes
-VOT.mean_exp1 <- mean(d.test.excluded$Item.VOT)
-VOT.sd_exp1 <- sd(d.test.excluded$Item.VOT)
-Trial.mean <- mean(d.test.excluded$Trial) 
-Trial.sd <- sd(d.test.excluded$Trial)
-f0.mean_exp1 <- mean(d.test.excluded$Item.Mel_f0_5ms)
-f0.sd_exp1 <- sd(d.test.excluded$Item.Mel_f0_5ms)
-
-d.test.excluded %<>%
-  mutate(
-    sVOT = (Item.VOT - VOT.mean_exp1) / (2 * VOT.sd_exp1),
-    sTrial = (Trial - Trial.mean) / (2 * Trial.sd))
-
-# set priors for psychometric model
-my_priors <- c(
-  prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"), # prior 
-  prior(student_t(3, 0, 2.5), class = "b", dpar = "theta1"), 
-  prior(cauchy(0, 2.5), class = "sd"),
-  prior(lkj(1), class = "cor")
-)
-
-# load (or run) the psychometric model with interaction
-fit_mix <- brm(
-  bf(
-    Response.Voicing == "voiceless" ~ 1,
-    mu1 ~ 1 + (1 | g | ParticipantID),
-    mu2 ~ 1 + sVOT * sTrial + (1 + sVOT | g | ParticipantID) + (1 + sVOT | h | Item.MinimalPair),
-    theta1 ~ 1 + (1 | g | ParticipantID)),
-  data = d.test.excluded,
-  cores = 4,
-  iter = 4000,
-  warmup = 2000,
-  family = mixture(bernoulli("logit"), bernoulli("logit")),
-  control = list(adapt_delta = .99),
-  file = "../models/Exp-NORM-lapsing-bias-GLMM")
-
-# get effects of psychometric fit conditioned on VOT interacting with trial
-if (file.exists("../models/conditional_effects_VOT_Trial.rds")) {
-  psychometric_fit_exp1 <- read_rds("../models/conditional_effects_VOT_Trial.rds")
-} else {
-  int_conditions <- list(sTrial = sort(unique((d.test.excluded$Trial - Trial.mean)) / (2 * Trial.sd)))
-  
-  psychometric_fit_exp1 <-
-    conditional_effects(
-      fit_mix,
-      effects = "sVOT:sTrial",
-      int_conditions = int_conditions,
-      ndraws = 1000,
-      plot = F)[[1]]
-  
-  write_rds(psychometric_fit_exp1, file = "../models/conditional_effects_VOT_Trial.rds")
-}
-
-# get the PSE from the fitted categorisation function
-PSE.fit_mix <- descale(-(summary(fit_mix)$fixed["mu2_Intercept", 1] / summary(fit_mix)$fixed["mu2_sVOT", 1]), VOT.mean_exp1, VOT.sd_exp1) 
-
-# get posterior samples of intercept and slope, and median qi of the PSEs
-post_sample_norm <- fit_mix %>% 
-  spread_draws(b_mu2_Intercept, b_mu2_sVOT) %>% 
-  mutate(PSE = descale(-(b_mu2_Intercept/b_mu2_sVOT), VOT.mean_exp1, VOT.sd_exp1)) %>% 
-  median_qi(PSE)
-```
-
-
-
-```{r}
-# prepare data for predicted categorisation by min pair
-newdata <- expand_grid(
-  sVOT = (seq(-100, 130, 1) - VOT.mean_exp1) / (2 * VOT.sd_exp1),
-  Item.MinimalPair = levels(factor(d.test.excluded$Item.MinimalPair)),
-  ParticipantID = levels(factor(d.test.excluded$ParticipantID)),
-  sTrial = 0)
-
-# get expectation values for categorisation by min pair through posterior predictions
-if (file.exists("../models/categorisation_by_min_pair.rds")) {
-  cat_minimalpair <- read_rds("../models/categorisation_by_min_pair.rds")
-} else {
-  cat_minimalpair <- fit_mix %>%
-    epred_draws(
-      newdata = newdata,
-      ndraws = 1000,
-      re_formula = ~ (1 + sVOT | Item.MinimalPair))
-  write_rds(cat_minimalpair, file = "../models/categorisation_by_min_pair.rds")
-}
-```
-
-
-
-```{r fitted-categorisation-minimal-pair"}
-remove_axes_titles <- theme(axis.title.x = element_blank(),
-                            axis.title.y = element_blank())
-MinPair_plot <- 
-  cat_minimalpair %>% 
-  group_by(sVOT, Item.MinimalPair) %>% 
-  ggplot(aes(x = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1), 
-             y = .epred, colour = Item.MinimalPair)) +
-  stat_lineribbon(alpha = .9, .width = 0.95) +
-  scale_y_continuous("Fitted proportion of 't'-responses") +
-  scale_color_manual("Minimal Pair", breaks = c("dilltill", "dimtim", "dintin", "diptip"),  
-                     values = c("#002699", "#0040ff", "#668cff", "#b3c6ff"), 
-                     labels = c("dill/till", "dim/tim", "din/tin", "dip/tip")) +
-  scale_fill_brewer("CI", palette = "Greys", type = "qual") +
-  remove_axes_titles +
-  theme(axis.text.y = element_blank(),
-        axis.ticks.y = element_blank())
-  
-```
-
-
-
-```{r psychometric-plot, fig.width=3.8, fig.height =2.6, message=FALSE}
-p.vot <- 
-  psychometric_fit_exp1 %>% 
-  group_by(sVOT) %>% 
-  summarise(estimate__ = mean(estimate__),
-         lower__ = mean(lower__),
-         upper__ = mean(upper__)) %>% 
-  ggplot(aes(x = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1), 
-             y = estimate__)) +
-  scale_x_continuous("VOT (ms)", breaks = scales::pretty_breaks(n = 4), limits = c(-100, 130)) +
-  scale_y_continuous("Fitted proportion of 't' responses") +
-  geom_ribbon(
-    aes(ymin = lower__, 
-        ymax = upper__), alpha = .08) +
-  geom_line(linewidth = 1.5, 
-            colour = "#333333",
-            alpha = .8) +
-  geom_errorbarh(
-    data = post_sample_norm %>% 
-      mutate(y = .01),
-    mapping = aes(xmin = .lower, xmax = .upper, y = y), 
-    color = "#333333",
-    height = 0,
-    alpha = .8,
-    size = 1, 
-    inherit.aes = F) +
-  geom_label(data = post_sample_norm %>% 
-      mutate(y = 0.01, PSE = round(PSE)),
-    mapping = aes(x = PSE, y = y, label = PSE),
-    color = "#333333", 
-    size = 1.8,
-    label.padding = unit(0.18, "lines"),
-    inherit.aes = F) +
-  annotate(
-    geom = "text",
-    x = 75,
-    y = 0.01, 
-    label = paste(round(post_sample_norm[[2]]), "ms", "-", round(post_sample_norm[[3]]), "ms"),
-    size = 2.5,
-    colour = "darkgray") +
-## transformation of by-participant means into empirical logits
-   # stat_summary(
-   #  data = d.test.excluded %>% 
-   #    group_by(ParticipantID, Item.VOT) %>% 
-   #    mutate(Response.ProportionVoiceless = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
-   #    summarise(Response.EmpiricalLogitVoiceless = qlogis((sum(Response.ProportionVoiceless) + .5)/(length(Response.ProportionVoiceless) + 1))), 
-   #  mapping = aes(x = Item.VOT, 
-   #                y = Response.EmpiricalLogitVoiceless),
-   #  geom = "pointrange",
-   #  fun.data = function(x){mean_cl_boot(x) %>% mutate(across(c(y, ymin, ymax), ~ plogis(.x)))},
-   #  size = .4,
-   #  colour = "#c4b7a6",
-   #  alpha = .6,
-   #  inherit.aes = F) 
-  stat_summary(
-    data = d.test.excluded %>% 
-      group_by(ParticipantID, Item.VOT) %>% 
-      mutate(Response.ProportionVoiceless = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
-      summarise(Response.ProportionVoiceless = mean(Response.ProportionVoiceless)), 
-    mapping = aes(x = Item.VOT, 
-                  y = Response.ProportionVoiceless),
-    geom = "pointrange",
-    fun.data = "mean_cl_boot",
-    size = .4,
-    colour = "#c4b7a6",
-    alpha = .6,
-    inherit.aes = F) +
-  labs(x = "VOT (ms)")
-```
-
-(ref:fitted-categorisation-plots) Categorisation functions and points of subjective equality (PSE) derived from the Bayesian mixed-effects psychometric model fit to listeners' responses in Experiment 1. The categorization functions include lapse rates and biases. The PSEs correct for lapse rates and lapse biases (i.e., they are the PSEs of the perceptual component of the psychometric model).\protect\footnote{Here and in Experiment 2, lapse biases were close to uniform (.5/.5). For such scenarios, bias-corrected PSEs will be very similar to uncorrected PSEs. This is also evident in Figure \ref{fig:fitted-categorisation-plots}.} **Left:** Effects of VOT, lapse rate, and lapse bias, while marginalizing over trial effects as well as all random effects. Vertical point ranges represent the mean proportion and 95% bootstrapped CIs of participants' "t"-responses at each VOT step. Horizontal point ranges denote the mean and 95% quantile interval of the points of subjective equality (PSE), derived from the 8000 posterior samples of the population parameters. **Right:** The same but showing the fitted categorization functions for each of the four minimal pair continua. Participants' responses are omitted to avoid clutter.   
-
-```{r fitted-categorisation-plots, warning=FALSE, fig.width=6, fig.height = 3.3, fig.cap="(ref:fitted-categorisation-plots)"}
-MinPair_plot <- MinPair_plot + labs(x = "VOT (ms)")
-
-xlab <- p.vot$labels$x
-p.vot$labels$x <- MinPair_plot$labels$x <- " "
-
-(p.vot | MinPair_plot) + 
-  plot_layout(ncol = 2, guides = "collect") &
-  theme(legend.position = "top")
-```
-
-
-```{r by-participant-lapse-bias, warning=FALSE, fig.height=2.6, fig.width=6.5}
-lapse_participant <- fit_mix %>% spread_draws(r_ParticipantID__theta1[ParticipantID, term], b_theta1_Intercept) %>%
-  group_by(ParticipantID) %>%
-  mutate(ParticipantID = factor(ParticipantID),
-         Participant_lapse = b_theta1_Intercept + r_ParticipantID__theta1,
-         estimated_lapse = plogis(Participant_lapse) * 100) %>%
-  select(ParticipantID, term, r_ParticipantID__theta1, Participant_lapse, estimated_lapse) %>%
-  mode_hdci(estimated_lapse)
-
-bias_participant <- fit_mix %>%
-  spread_draws(r_ParticipantID__mu1[ParticipantID, term], b_mu1_Intercept) %>%
-  group_by(ParticipantID) %>%
-  mutate(ParticipantID = factor(ParticipantID),
-         Participant_bias = b_mu1_Intercept + r_ParticipantID__mu1,
-         estimated_bias = plogis(Participant_bias) * 100) %>%
-  select(ParticipantID, term, r_ParticipantID__mu1, Participant_bias, estimated_bias) %>%
-  mode_hdci(estimated_bias)
-
-estimate_minpair <- fit_mix %>% spread_draws(r_Item.MinimalPair__mu2[Item.MinimalPair, term], b_mu2_Intercept, b_mu2_sVOT) %>%
-  group_by(Item.MinimalPair) %>%
-  mutate(predicted_eff = ifelse(term == "Intercept", r_Item.MinimalPair__mu2 + b_mu2_Intercept, r_Item.MinimalPair__mu2 + b_mu2_sVOT)) %>%
-  group_by(Item.MinimalPair, term) %>%
-  mode_hdci(predicted_eff) %>%
-  pivot_wider(names_from = term,
-              values_from = c(predicted_eff, .lower, .upper))
-```
-
-The lapse rate was estimated to be on the slightly larger side, but within the expected range 
-(`r make_CI(fit_mix, "theta1_Intercept", "theta1_Intercept < 0")`). Maximum a posteriori (MAP) estimates of by-participant lapse rates ranged from XX . Very high lapse rates were estimated for four of the participants with one in particular whose CI indicated exceptionally high uncertainty. These lapse rates might reflect data quality issues with Mechanical Turk that started to emerge over recent years [see @REFS; and, specifically for experiments on speech perception, @cummings2023], and we return to this issue in Experiment 2. 
-
-The response bias were estimated to slightly favor "t"-responses (`r make_CI(fit_mix, "mu1_Intercept", "mu1_Intercept > 0")`), as also visible in Figure \@ref(fig:fitted-categorisation-plots) (left).
-Unsurprisingly, the psychometric model suggests high uncertainty about the participant-specific response biases, as it is difficult to reliably estimate participant-specific biases while also accounting for trial and VOT effects (range of by-participant MAP estimates: XX). For all but four participants, the 95% CI includes the hypothesis that responses were unbiased. Of the remaining four participants, three were biased towards "t"-responses and one was biased toward "d"-responses.
-
-There was no convincing evidence of a main effect of trial ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sTrial", "mu2_sTrial < 0")`). Given the slight overall bias towards "t"-responses, the direction of this effect indicates that participants converged towards a 50/50 bias as the test phase proceeded. This is also evident in Figure \@ref(fig:fitted-categorisation-plots) (right). In contrast, there was clear evidence for a positive main effect of VOT on the proportion of "t"-responses ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sVOT", "mu2_sVOT > 0")`). The effect of VOT was consistent across all minimal pair words as evident from the slopes of the fitted lines by minimal pair \@ref(fig:fitted-categorisation-plots) (left). MAP estimates of by minimal pair slopes ranged from . The by minimal-pair intercepts were more varied (MAP estimates: ) with one of the pairs, dim/tim having a slightly lower intercept resulting in fewer 't'-responses on average. In all, this justifies our assumptions that word pair would not have a substantial effect on categorisation behaviour. From the parameter estimates of the overall fit we obtained the category boundary from the point of subjective equality (PSE) `r( descale(-(summary(fit_mix)$fixed["mu2_Intercept", 1] / summary(fit_mix)$fixed["mu2_sVOT", 1]), VOT.mean_exp1, VOT.sd_exp1) ms)` which we use for the design of Experiment 2.
-
-Finally to accomplish the first goal of experiment 1, we look at the interaction between VOT and trial. There was weak evidence that the effect of VOT decreased across trials ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sVOT:sTrial", "mu2_sVOT:sTrial < 0")`). The direction of this change---towards more shallow VOT slopes as the experiment progressed---makes sense since the test stimuli were not informative about the talker's pronunciation. Similar changes throughout prolonged testing have been reported in previous work. [@liu-jaeger2018; @liu-jaeger2019; @REFS].
-
-Overall, there was little evidence that participants substantially changed their categorisation behaviour as the experiment progressed. Still, to err on the cautious side, Experiment 2 employs shorter test phases.
 
 
 
