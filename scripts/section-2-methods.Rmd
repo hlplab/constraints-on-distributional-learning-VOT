@@ -1,0 +1,320 @@
+```{r, stand-alone-preamble}
+require(tidyverse)
+require(magrittr)
+
+require(brms)
+require(tidybayes)
+require(MVBeliefUpdatr)
+require(phonR)
+require(cowplot)
+
+source("functions.R")
+```
+
+
+
+
+## Methods 
+### Participants
+Participants were recruited over the Prolific platform and experiment data (but not participant profile data) were collected, stored, and via proliferate (@schuster). They were paid $8.00 each (for a targeted remuneration of \$9.60/hour). The experiment was visible to participants following a selection of Prolific's available pre-screening criteria. Participants had to (1) have US nationality, (2) report to only know English, and (3) had not previously participated in any experiment from our lab on Prolific.
+
+126 L1 US English listeners (male = 60, female = 59, NA = 3; mean age = 38 years; SD age = 12 years) completed the experiment. Due to data transfer errors 4 participants' data were not stored and therefore not included in this analysis. To be eligible, participants had to confirm that they (1) spent at least the first 10 years of their life in the US speaking only English, (2) were in a quiet place and free from distractions, and (3) wore in-ear or over-the-ears headphones that cost at least \$15. 
+
+### Materials 
+
+We recorded multiple tokens of four minimal word pairs ("dill"/"till", "dim"/"tim", "din"/"tin", and "dip"/"tip") from a 23-year-old, female L1 US English talker from New Hampshire, judged to have a "general American" accent. These recordings were used to create four natural-sounding minimal pair VOT continua (dill-till, dip-tip, din-tin, and dip-tip) using a Praat script [@winn2020manipulation]. In addition to the critical minimal pair continua we also recorded three words that did not did not contain any stop consonant sounds ("flare", "share", and "rare"). These word recordings were used as catch trials. Stimulus intensity was set to 70 dB sound pressure level for all recordings. The full procedure is described in the supplementary information (SI, \@ref(sec:SI-XXX)). 
+
+We also set the F0 at vowel onset to follow the speaker's natural correlation which was estimated through a linear regression analysis of all the recorded speech tokens. We did this so that we could determine the approximate corresponding f0 values at each VOT value along the continua as predicted by this talker's VOT. The duration of the vowel was set to follow the natural trade-off relation with VOT reported in @allen1999effects. This approach resulted in continuum steps that sound highly natural [unlike the robotic-sounding stimuli employed in @clayards2008perception; @kleinschmidt2016you]. All stimuli are available as part of the OSF repository for this article.
+
+Prior to creating the three exposure conditions of the experiment, we ran a norming experiment to test US-L1 listeners' perception of our stimuli and to determine a baseline categorisation boundary for this talker. The norming experiment also served as a measure to detect possible anomalous features present in our stimuli (for e.g. if it would elicit unusual categorisation behaviour or whether certain minimal-pairs had an exaggerated effect on categorisation). For the norming experiment the VOT continua employed 24 VOT steps ranging from -100ms VOT to +130ms (-100, -50, -10, 5  `r paste0(seq(15, 90, 5), collapse = ", ")`, `r paste0(seq(100, 130, 10), collapse = ", ")`). VOT tokens in the lower and upper ends were distributed over larger increments because stimuli in those ranges were expected to elicit floor and ceiling effects, respectively. We found VOT to have the expected effect on the proportion of "t"-responses, i.e. higher VOTs elicited greater "t"-responses and that the word-pairs did not differ substantially from each other. The results and analysis of the norming experiment are reported in full in section \@ref(sec:XX).  
+
+
+A subset of the materials were used to generate the three exposure conditions; in particular three continua of the minimal pairs, dill-till, din-tin, and dip-tip. The dim-tim continuum was omitted in order to keep the pairs as distinct as possible. 
+
+We employed a multi-block exposure-test design \@ref(fig:exp2-design-figure) which enabled the assessment of listener perception before informative exposure as well as incrementally at intervals  during informative exposure (after every 48 exposure trials). To have a comparable test between blocks and across conditions, test blocks were made up of a uniform distribution of 12 VOT stimuli (-5, 5, 15, 25, 30, 35, 40, 45, 50, 55, 65, 70), identical across test blocks and between conditions. Each of the test tokens were presented once at random. The test blocks were kept short to minimise distortion of the intended distribution to be presented by the end of the exposure phase. After the final exposure block we tripled the number of test blocks to increase the statistical power to detect exposure induced behavioural changes. 
+
+The conditions were created by first generating the baseline distribution (+0ms shift) and then shifting that distribution by +10ms and by +40ms to the right of the VOT continuum to create the remaining two conditions. 
+
+To construct the +0ms shift exposure distribution we first computed the point of subjective equality (PSE) from the perceptual component of the fitted psychometric function of listener responses in the norming experiment. The PSE corresponds to the VOT duration that was perceived as most ambiguous across all participants during norming (i.e. the stimulus that on average, elicited equal chance of being categorised as /d/ or /t/) thus marking the categorical boundary. From a distributional perspective the PSE is where the likelihoods of both categories intersect and have equal probability density (we assumed Gaussian distributions and equal prior probability for each category) [SOMETHING HERE ABOUT GAUSSIANS BEING A CONVENIENT ASSUMPTION?]. To limit the infinite combinations of category likelihoods that could intersect at this value, we set the variances of the /d/ (80ms) and /t/ (270ms (lowered from 398 because of dip-tip pair limitations)) categories based on parameter estimates (@Kurumada_Xie_Jaeger_2022) obtained from the production database of word-initial stops in @chodroff2017structure. To each variance value we added 80ms following (@kronrod2016unified) to account for variability due to perceptual noise since these likelihoods were estimated from perceptual data. We took an additional degree of freedom of setting the *distance between the means* of the categories at 46ms; this too was based on the mean  for /d/ and /t/ estimated from the production database. The means of both categories were then obtained through a grid-search process to find the likelihood distributions that crossed at 25ms VOT (see XX of SI for further detail on this procedure).
+
+The distributional make up was determined through a process of sampling tokens from a discretised normal distribution with values rounded to the nearest multiple of 5 integer (available through the `extraDistr` package in R). 
+For each exposure block 8 VOT tokens per minimal word pair were sampled from discrete normal distributions of each category of the +0ms condition, giving 24 /d/ and 24 /t/ items (48 critical trials) per block. Additionally, each exposure block contained 2 instances of 3 catch items, giving 6 catch trials per block. The sampled distributions of VOT tokens were increased by a margin of +10ms and +40 ms to create the remaining two conditions. Three variants of each condition list were created so that exposure blocks followed a latin-square order. 
+
+Lastly, half of the exposure trials were randomly assigned as labelled trials. In labelled trials, participants receive clear information of the word's category as both orthographic options will always begin with the intended sound. For example if a trial was intended to be "dill" then the two image options will either be "dill" and "dip" or "dill" and "din". Test trials were always *unlabelled*. 
+
+```{r exp2-design-distribution, fig.height=3, fig.width=6, warning=FALSE, message=FALSE}
+# read in exposure block sampled tokens
+d.exposure <- read_csv("../data/exposure_block_tokens.csv", show_col_types = F)
+
+# set variances of categories
+var_d <- 80
+var_t <- 270
+
+d.means <- 
+  crossing(condition = c("+0ms", "+10ms", "+40ms"),
+         category = c("/d/", "/t/")) %>% 
+  mutate(mean = c(5, 50, 15, 60, 45, 90))
+
+d.exposure %>% 
+  na.omit() %>% 
+  filter(image_selection == "forward" & list_LSQ_variant == "A") %>% 
+  mutate(condition = case_when(condition == "Shift0" ~ "+0ms",
+                               condition == "Shift10" ~ "+10ms",
+                               condition == "Shift40" ~ "+40ms"),
+         labelling = as_factor(labelling)) %>% 
+  ggplot() +
+  geom_histogram(aes(x = VOT, fill = paste(condition, category, labelling), 
+                     color = paste(condition, category, labelling),
+                     linetype = labelling), 
+                 alpha = .8) +
+  scale_colour_manual(
+    "Labelling",
+    values = c(
+    "+0ms /d/ labeled" = "#800000", 
+    "+0ms /d/ unlabeled" = "#ff9999",
+    "+0ms /t/ labeled" = "#cc0000", 
+    "+0ms /t/ unlabeled" = "#ffe6e6",
+    "+10ms /d/ labeled" = "#0a751c",
+    "+10ms /d/ unlabeled" = "#b9f9c3",
+    "+10ms /t/ labeled" = "#12D432",
+    "+10ms /t/ unlabeled" = "#e8fdeb",
+    "+40ms /d/ labeled" = "#02427e", 
+    "+40ms /d/ unlabeled" = "#b4dafe",
+    "+40ms /t/ labeled" = "#0481F3", 
+    "+40ms /t/ unlabeled" = "#e6f3ff"),
+    aesthetics = c("color", "category", "fill"),
+    labels = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", "", "", "", "", "", "", "", "")) +
+    guides(colour = guide_legend(override.aes = list(
+    colour = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
+    fill = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
+    linetype = c(2, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0),
+    values = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", 0, 0, 0, 0, 0, 0, 0, 0)), nrow = 1)) +
+  stat_function(fun = function(x) 72 * 5 * dnorm(x, 5, sqrt(var_d)),
+                color = "black", size = .6, alpha = .7, linetype = 2) +
+  stat_function(
+    fun = function(x) 72 * 5 * dnorm(x, 50, sqrt(var_t)),
+    color = "black", size = .6, alpha = .5, linetype = 2) +
+  geom_rug(data = tibble(VOT = c(5, 50)), aes(x = VOT), sides = "t") +
+  scale_x_continuous("VOT (ms)", breaks = seq(-50, 150, 30)) +
+  scale_y_continuous("Count") +
+  geom_text(data = d.means,
+            aes(x = 103, 
+                y = 17,
+                label = paste("mean", category, "=", mean)),
+            size = 2,
+            position = position_dodge2v(height = -8),
+            inherit.aes = F) +
+  facet_wrap(~ condition, scales = "free_y") +
+  guides(linetype = "none") +
+  theme(legend.position = "top")
+```
+
+### Procedure
+The code for the experiment is available as part of the OSF repository for this article. A live version is available at (https://www.hlp.rochester.edu/FILLIN-FULL-URL). The first page of the experiment informed participants of their rights and the requirements for the experiment: that they had to be native listeners of English, wear headphones for the entire duration of the experiment, and be in a quiet room without distractions. Participants had to pass a headphone test, and were asked to keep the volume unchanged throughout the experiment. Participants could only advance to the start of the experiment by acknowledging each requirement and consenting to the guidelines of the Research Subjects Review Board of the University of Rochester. 
+
+On the next page, participants were informed about the task for the remainder of the experiment. They were informed that they would hear a female talker speak a single word on each trial, and had to select which word they heard. They were also informed that they needed to click a green button that would be displayed during each trial when it "lights up" in order to hear the recording of the speaker saying the word. Participants were instructed to listen carefully and answer as quickly and as accurately as possible. They were also alerted to the fact that the recordings were subtly different and therefore may sound repetitive. This was done to encourage their full attention.
+
+Each trial started with a dark-shaded green fixation dot being displayed. At 500ms from trial onset, two minimal pair words appeared on the screen, as shown in Figure \@ref(fig:exp1-example-trial). At 1000ms from trial onset, the fixation dot wouuld turn bright green and participants had to click on the dot to play the recording. Participants responded by clicking on the word they heard and the next trial would begin. The placement of the word presentations were counter-balanced across participants.
+
+Participants underwent 234 trials which included 6 catch trials in each exposure block (18 in total). Since these recordings were easily distinguishable, they served as a check on participant attention throughout the experiment.  Catch trials were distributed randomly throughout the experiment with the constraint that no more than two catch trials would occur in a row. Participants were given the opportunity to take breaks after every 60 trials during exposure blocks. Participants took an average of 17 minutes (SD = 9) to complete the 234 trials, after which they answered a short survey about the experiment.
+
+```{r exp1-example-trial, fig.cap="Example trial display. The words were displayed 500ms after trial onset and the audio recording of the word was played 1000ms after trial onset"}
+knitr::include_graphics("../figures/exp1_trial_example.png")
+```
+
+
+```{r}
+# load formatted exposure and test data from experiment 2
+d.exposure_test <- read_csv("../data/experiment2_raw_formatted.csv", show_col_types = F)
+
+# load f0-5ms-into-vowel measurements of stimuli
+d.f0.5ms <- 
+  read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv", show_col_types = F) %>% 
+  select(filename, VOT, f0_5ms_into_vowel) %>% 
+  rename(Item.VOT = VOT,
+         Item.F0_5ms = f0_5ms_into_vowel,
+         Item.Filename = filename) %>% 
+  mutate(Item.Filename = paste0(Item.Filename, ".wav"))
+
+# add f0-5ms data
+d.exposure_test %<>% 
+ungroup() %>%
+  left_join(d.f0.5ms, by = c("Item.Filename", "Item.VOT")) %>% 
+              mutate(Item.Mel_F0_5ms = normMel(Item.F0_5ms)) 
+
+# mark catch trials rows and mark those to be excluded
+d.exposure_test %<>% 
+  mutate(
+    Is.CatchTrial = ifelse(Item.ExpectedResponse %in% c("flare", "rare", "share"), TRUE, FALSE),
+    CatchTrial.Correct = ifelse(Is.CatchTrial == TRUE, 
+                    ifelse(Item.ExpectedResponse == Response, TRUE, FALSE), NA),
+    Answer.sex.Correct = ifelse(sex == "woman", TRUE, FALSE)) %>% 
+  group_by(ParticipantID) %>% 
+  mutate(Exclude_participant.due_to_catch_trials = ifelse(sum(CatchTrial.Correct, na.rm = TRUE) < 17, TRUE, FALSE)) %>%
+  ungroup()
+
+# mark labelled trials
+d.exposure_test %<>% 
+  mutate(Response.Correct = ifelse(Item.ExpectedResponse == Response, TRUE, FALSE),
+         LabeledTrial.Correct = ifelse(Item.Labeled == TRUE, ifelse(Response.Correct == TRUE, TRUE, FALSE), NA)) %>% 
+  group_by(ParticipantID) %>% 
+  mutate(Exclude_participant.due_to_labeled_trials = ifelse(sum(LabeledTrial.Correct, na.rm = T) < 68, TRUE, FALSE))
+```
+
+
+
+```{r set-exclusion-due-to-categorisation-slope, warning=FALSE}
+# get data for exclusion due to categorisation slope of first 36 trials. 
+d.VOT_exclusion <- d.exposure_test %>% 
+  filter(Block == 1 | (Block == 2 & Trial %in% c(13:36))) %>% 
+  drop_na(c(ParticipantID, Response.Voicing, Item.VOT)) %>% 
+  mutate(Response.ProportionVoiceless = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
+  select(c(Experiment, ParticipantID, Condition.Exposure, Response.Voicing, Response.ProportionVoiceless, Item.VOT))
+
+# set the VOT criteria 
+empirical_means <- c(17, 62)
+VOT_for_targeted_proportion_t <- empirical_means + c(-20, 20)
+targeted_proportion_t <- c(.15, .80) 
+
+
+# Fit logistic regression by participant to get model predictions (REPLACE WITH LAPSE ESTIMATED NON-LINEAR FIT)
+d.VOT_exclusion %<>%
+  group_by(ParticipantID, Experiment, Condition.Exposure) %>%
+  nest() %>%
+  mutate(
+    CategorizationModel =
+      map(data, ~ glm(Response.ProportionVoiceless ~ 1 + Item.VOT, data = .x, family = binomial))) %>% 
+  # type = "response" in predict() gives the probability
+  summarise(Model.predicted.Reponse = 
+              map(CategorizationModel, ~ predict(object = .x, 
+                                                 newdata = tibble(Item.VOT = VOT_for_targeted_proportion_t), 
+                                                 type = "response"))) %>% 
+  mutate(Exclude_participant.due_to_VOT_slope = 
+           map(Model.predicted.Reponse, ~ ifelse(.x[1] > targeted_proportion_t[1] || .x[2] < targeted_proportion_t[2], TRUE, FALSE)),
+         Exclude_participant.due_to_lower_VOT = map(Model.predicted.Reponse, ~ ifelse(.x[1] > targeted_proportion_t[1], TRUE, FALSE)),
+         Exclude_participant.due_to_higher_VOT = map(Model.predicted.Reponse, ~ ifelse(.x[2] < targeted_proportion_t[2], TRUE, FALSE))) %>% 
+  select(ParticipantID, Experiment, Condition.Exposure, Exclude_participant.due_to_VOT_slope, Exclude_participant.due_to_lower_VOT, Exclude_participant.due_to_higher_VOT) %>% 
+  mutate(across(c(Exclude_participant.due_to_VOT_slope, 
+                  Exclude_participant.due_to_lower_VOT, 
+                  Exclude_participant.due_to_higher_VOT), .fns = unlist)) %>% 
+  ungroup()
+
+# counting TRUEs
+n_excluded_VOT_slope <- d.VOT_exclusion %>% 
+  group_by(Exclude_participant.due_to_VOT_slope, Condition.Exposure) %>% 
+  summarise(n())
+  
+d.exposure_test %<>% left_join(d.VOT_exclusion)
+```
+
+
+
+```{r set-RT-exclusion-criteria, message=FALSE}
+# calculate RT exclusion AFTER removing excluded participants due to other criteria
+# d.test_exposure_for_analysis <- d.exposure_test %>%
+#   filter(
+#     Is.CatchTrial == FALSE &
+#     Exclude_participant.due_to_catch_trials == FALSE &
+#     Exclude_participant.due_to_labeled_trials == FALSE &
+#     Exclude_participant.due_to_VOT_slope == FALSE) %>% 
+#   group_by(ParticipantID) %>%
+#   mutate(
+#     Response.log_RT = log10(ifelse(Response.RT <= 0, NA_real_, Response.RT)),
+#     Response.log_RT.scaled = scale(Response.log_RT), # deducts each value with subject's own mean, divide by own SD
+#     Response.log_RT.mean = mean(Response.log_RT, na.rm = T)) %>% 
+#   ungroup() %>% 
+#   mutate(Exclude_participant.due_to_RT = ifelse(abs(scale(Response.log_RT.mean)) > 3, TRUE, FALSE)) %>% 
+#   filter(Exclude_participant.due_to_RT == FALSE) %>% 
+#   mutate(Exclude_trial.due_to_RT = ifelse(abs(Response.log_RT.scaled) > 3, TRUE, FALSE))
+
+# get number of participants excluded due to RT
+# excl.RT.participant <- d.test_exposure_for_analysis %>% 
+#   filter(Exclude_participant.due_to_RT == TRUE) %>% 
+#   tally()
+
+# get number of trials excluded due to RT
+# excl.RT.trial <- d.test_exposure_for_analysis %>%  
+#   filter(Exclude_trial.due_to_RT == TRUE) 
+
+# proportion of trials excluded due to RT
+# proportion.trials.excluded <- nrow(excl.RT.trial)/nrow(d.test_exposure_for_analysis)
+
+# get number of participants excluded due to catch trial
+excl.catch <- d.exposure_test %>% 
+  filter(Exclude_participant.due_to_catch_trials == TRUE) %>% 
+  group_by(ParticipantID) %>% 
+  summarise() %>% 
+  tally() 
+
+# get number of participants excluded due to labelled trials
+excl.labeled <- d.exposure_test %>% 
+  filter(Exclude_participant.due_to_labeled_trials == TRUE) %>% 
+  group_by(ParticipantID) %>% 
+  summarise() %>% 
+  tally() 
+
+# count number of exclusions due to VOT slope
+excl.VOT <- d.exposure_test %>% 
+  filter(Exclude_participant.due_to_VOT_slope == TRUE) %>% 
+  group_by(ParticipantID) %>% 
+  summarise() %>% 
+  tally()
+
+# make dataframe for analysis after exclusions
+d.test_exposure_for_analysis <- d.exposure_test %>%
+  filter(
+    Is.CatchTrial == FALSE &
+    Exclude_participant.due_to_catch_trials == FALSE &
+    Exclude_participant.due_to_labeled_trials == FALSE &
+    Exclude_participant.due_to_VOT_slope == FALSE)
+```
+
+### Exclusions
+We excluded from analysis participants who committed more than 3 errors out of the 18 catch trials (<84% accuracy, N = 1), participants who committed more than 4 errors out of the 72 labelled trials (<94% accuracy, N = 0), participants with an average reaction time (RT) more than three standard deviations from the mean of the by-participant means (N = 0), and participants who reported not to have used headphones (N = 0) or not to be native (L1) speakers of US English (N = 0). 
+
+In addition, participants' categorization during the early phase of the experiment were scrutinised for their slope orientation and their proportion of "t"-responses at the least ambiguous locations of the VOT continuum. The early phase of the experiment was defined as the first 36 trials and the least ambiguous locations were defined as -20ms below the empirical mean of the /d/ category and +20ms above the empirical mean of the /t/ category. These means were obtained from the production data estimates by @Kurumada_Xie_Jaeger_2022.
+
+
+### Analysis approach
+
+##Results
+## Regression analysis
+The regression analysis addresses two main questions: 
+Do participants shift their categorisation behaviour in an incremental fashion, i.e. do they exhibit categorisation behaviour that draws closer to the ideal categorisation function with each successive exposure block?
+Are the differences in shifts between the conditions proportional to the magnitude of the shifts between exposure distributions i.e. is the PSE of the +40ms condition 3 times that of the +10ms condition?
+
+We fit a Bayesian mixed-effects psychometric model with lapse and perceptual components. Continuous predictors were standardised to twice the standard deviation and priors and sampling parameters were identical to those specified in experiment 1. 
+
+To analyse the incremental effects of exposure condition on the proportion of /t/ responses at test, the perceptual model contained exposure condition (backward difference coded, comparing the +10ms against the +0ms shift condition, and the +40ms against the +10ms shift condition), test block (backward difference coded from the first to the sixth test block), VOT (scaled to twice the), and their full factorial interaction. For the perceptual model, "t"-responses were regressed on the three-way interaction of VOT, condition, and block. Random effects were modelled with varying intercepts and slopes by participant and varying intercepts and slopes by minimal pair item. The lapsing model which estimates participant bias on trials with attention lapses was fitted without an intercept but with an offset [how does one describe this? what does offset(0) represent]. Finally, a population-level intercept was fitted to estimate the lapse rate. Random effects for the lapsing model and lapse rates were not fitted to limit the number of parameters and to ensure model convergence.
+
+### Expectations
+Given previous findings of @kleinschmidt2016you we expected participants in the various exposure conditions to shift their average categorization functions towards the direction of the ideal categorization function implied by their respective exposure distributions. We expected the differences between the groups to be most pronounced after the final exposure block as they would have had the complete exposure to all the tokens that make up the exposure distributions. This follows from predictions of incremental Bayesian belief-updating -- that listeners would integrate their prior expectations with the current input to infer the present talker's cue-to-category-mapping (the posterior distribution). 
+Also based on previous findings, we expected the +40ms group to not fully  converge on the ideal categorization function as it was previously found that the further an exposure talker's cue distributions deviated from a *typical* talker's, the further the distance of categorization function from the ideal boundary. We therefore expected to see differences in categorizations between the +10ms and +40ms conditions such that listeners in the +40ms condition would shift more than those in the +10ms condition but to have an average categorization function located to the left of the ideal function. [@kleinschmidt2016you].
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\newpage
+
+
+
+
+
+
+
+
