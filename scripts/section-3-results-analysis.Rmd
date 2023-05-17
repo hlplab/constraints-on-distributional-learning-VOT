@@ -133,79 +133,7 @@ p.fit_block1 <- psychometric_fit_block1 %>%
 
 
 
-```{r IO-categorization-VOT-no-noise-block1}
-lapse_exp2 = plogis(as.numeric(summary(fit_mix_uniform_bias)$fixed["theta1_Intercept", 1]))
 
-VOT.no.noise_block1 <- 
-  get_IO_categorization(
-    cues = c("VOT"), 
-    groups = c("Talker", "gender"), 
-    lapse_rate = lapse_exp2,
-    with_noise = FALSE, 
-    alpha = .1, 
-    linewidth = 0.3,
-    io.type = "VOT.no.noise_block1")
-
-PSE_VOT.no.noise_block1 <- get_PSE_quantiles(data = VOT.no.noise_block1, group = "gender")
-
-p.IOs.VOT.no.noise_block1 <- plot_IO_fit(
-  data.production = VOT.no.noise_block1, 
-  data.perception = psychometric_fit_block1 %>% 
-    mutate(Item.VOT = descale(VOT_gs, VOT.mean_testblock1, VOT.sd_test)),
-  data.test = d.block1 %>% 
-    ungroup() %>% distinct(Item.VOT),
-  data.percept.PSE = post_sample_block1,
-  PSE_VOT.no.noise_block1
-)
-```
-
-
-```{r IO-categorization-VOT-block1, message=FALSE}
-VOT_block1 <- 
-  get_IO_categorization(
-    cues = c("VOT"), 
-    groups = c("Talker", "gender"), 
-    lapse_rate = lapse_exp2,
-    with_noise = T, 
-    alpha = .1, 
-    linewidth = 0.3,
-    io.type = "VOT_block1")
-
-PSE_VOT_block1 <- get_PSE_quantiles(data = VOT_block1, group = "gender")
-
-p.IOs.VOT_block1 <- plot_IO_fit(
-  data.production = VOT_block1, 
-  data.perception = psychometric_fit_block1 %>% 
-    mutate(Item.VOT = descale(VOT_gs, VOT.mean_testblock1, VOT.sd_test)),
-  data.test = d.block1 %>% 
-    ungroup() %>% distinct(Item.VOT),
-  data.percept.PSE = post_sample_block1,
-  PSE_VOT_block1)
-```
-
-
-```{r IO-categorization-VOT-centered-block1, message=FALSE}
-VOT.centered_block1 <- 
-  get_IO_categorization(
-    cues = c("VOT_centered"), 
-    groups = c("Talker", "gender"), 
-    lapse_rate = lapse_exp2,
-    alpha = .1, 
-    linewidth = 0.3,
-    io.type = "VOT.centered_block1")
-
-PSE_VOT.centered_block1 <- get_PSE_quantiles(data = VOT.centered_block1, group = "gender")
-
-p.IOs.VOT.centered_block1 <- plot_IO_fit(
-  data.production = VOT.centered_block1, 
-  data.perception = psychometric_fit_block1 %>% 
-    mutate(Item.VOT = descale(VOT_gs, VOT.mean_testblock1, VOT.sd_test)),
-  data.test = d.block1 %>% 
-    ungroup() %>% distinct(Item.VOT),
-  data.percept.PSE = post_sample_block1,
-  PSE_VOT.centered_block1
-)
-```
 
 
 ```{r IO-categorization-VOT-f0-centered-input-block1, message=FALSE}
@@ -230,107 +158,13 @@ f0.mean_exp2 <- d.mean_sd %>% pull(Item.Mel_F0_5ms.mean)
 f0.sd_exp2 <- d.mean_sd %>% pull(Item.Mel_F0_5ms.sd)
 
 
-VOT.centered.input_block1 <- 
-  get_IO_categorization(
-    cues = c("VOT_centered"), 
-    groups = c("Talker", "gender"), 
-    VOTs = seq(0, 85, .5) + (chodroff.mean_VOT - VOT.mean_testblock1),
-    F0s = normMel(predict_f0(VOTs)) + (chodroff.mean_f0_Mel - f0.mean_testblock1),
-    lapse_rate = lapse_exp2,
-    alpha = .1, 
-    linewidth = 0.3,
-    io.type = "VOT.centered.input_block1")
 
-PSE_VOT.centered.input_block1 <- get_PSE_quantiles(data = VOT.centered.input_block1, group = "gender")
-
-p.IOs.VOT.centered.input_block1 <- plot_IO_fit(
-  data.production = VOT.centered.input_block1, 
-  data.perception = psychometric_fit_block1 %>% 
-    mutate(Item.VOT = descale(VOT_gs, VOT.mean_testblock1, VOT.sd_test)),
-  data.test = d.block1 %>% 
-    ungroup() %>% 
-    distinct(Item.VOT),
-  data.percept.PSE = post_sample_block1 %>% 
-    mutate(PSE = PSE - (chodroff.mean_VOT - VOT.mean_testblock1),
-           .lower = .lower - (chodroff.mean_VOT - VOT.mean_testblock1),
-           .upper = .upper - (chodroff.mean_VOT - VOT.mean_testblock1)),
-  PSE_VOT.centered.input_block1
-)
-```
-
-
-```{r IO-categorization-VOT-F0-no-noise-block1, message=FALSE}
-VOT_F0.no.noise_block1 <- 
-  get_IO_categorization(
-    cues = c("VOT", "f0_Mel"), 
-    groups = c("Talker", "gender"), 
-    lapse_rate = lapse_exp2,
-    with_noise = F, 
-    alpha = .1, 
-    linewidth = 0.3,
-    io.type = "VOT_F0.no.noise_block1")
-
-PSE_VOT_F0.no.noise_block1 <- get_PSE_quantiles(data = VOT_F0.no.noise_block1, group = "gender")
-
-p.IOs.VOT_F0.no.noise_block1 <- plot_IO_fit(
-  data.production = VOT_F0.no.noise_block1, 
-  data.perception = psychometric_fit_block1 %>% 
-    mutate(Item.VOT = descale(VOT_gs, VOT.mean_testblock1, VOT.sd_test)),
-  data.test = d.block1 %>% 
-    ungroup() %>% distinct(Item.VOT),
-  data.percept.PSE = post_sample_block1,
-  PSE_VOT_F0.no.noise_block1
-)
 ```
 
 
 
-```{r IO-categorization-VOT-F0-block1, message=FALSE}
-VOT_F0_block1 <- 
-  get_IO_categorization(
-    cues = c("VOT", "f0_Mel"), 
-    groups = c("Talker", "gender"), 
-    lapse_rate = lapse_exp2,
-    alpha = .1, 
-    linewidth = 0.3,
-    io.type = "VOT_F0_block1")
-
-PSE_VOT_F0_block1 <- get_PSE_quantiles(data = VOT_F0_block1, group = "gender")
-
-p.IOs.VOT_F0_block1 <- plot_IO_fit(
-  data.production = VOT_F0_block1, 
-  data.perception = psychometric_fit_block1 %>% 
-    mutate(Item.VOT = descale(VOT_gs, VOT.mean_testblock1, VOT.sd_test)),
-  data.test = d.block1 %>% 
-    ungroup() %>% distinct(Item.VOT),
-  data.percept.PSE = post_sample_block1,
-  PSE_VOT_F0_block1
-)
-```
 
 
-
-```{r IO-categorisation-VOT-F0-centered-block1, message=FALSE}
-VOT_F0.centered_block1 <- 
-  get_IO_categorization(
-    cues = c("VOT_centered", "f0_Mel_centered"), 
-    groups = c("Talker", "gender"), 
-    lapse_rate = lapse_exp2,
-    alpha = .1, 
-    linewidth = 0.3,
-    io.type = "VOT_F0.centered_block1")
-
-PSE_VOT_F0.centered_block1 <- get_PSE_quantiles(data = VOT_F0.centered_block1, group = "gender")
-
-p.IOs.VOT_F0.centered_block1 <- plot_IO_fit(
-  data.production = VOT_F0.centered_block1, 
-  data.perception = psychometric_fit_block1 %>% 
-    mutate(Item.VOT = descale(VOT_gs, VOT.mean_testblock1, VOT.sd_test)),
-  data.test = d.block1 %>% 
-    ungroup() %>% distinct(Item.VOT),
-  data.percept.PSE = post_sample_block1,
-  PSE_VOT_F0.centered_block1)
-```
 
 
 
