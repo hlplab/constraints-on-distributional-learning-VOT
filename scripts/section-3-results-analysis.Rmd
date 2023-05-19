@@ -190,16 +190,16 @@ chodroff.means <- d.chodroff_wilson.selected %>%
 
 chodroff.mean_VOT <- chodroff.means %>% pull(VOT)
 chodroff.mean_f0 <- chodroff.means %>% pull(f0_Mel)
-
-# get means and SDs from entire experiment for centering purposes
-d.mean_sd <- d.test_exposure_for_analysis %>% 
-  ungroup() %>% 
-  summarise(across(c(Item.VOT, Item.Mel_F0_5ms), list(mean = mean, sd = sd), .names = "{.col}.{.fn}"))
-
-VOT.mean_test <- d.mean_sd %>% pull(Item.VOT.mean)
-VOT.sd_exp2 <- d.mean_sd %>% pull(Item.VOT.sd)
-f0.mean_exp2 <- d.mean_sd %>% pull(Item.Mel_F0_5ms.mean)
-f0.sd_exp2 <- d.mean_sd %>% pull(Item.Mel_F0_5ms.sd)
+# 
+# # get means and SDs from entire experiment for centering purposes
+# d.mean_sd <- d.test_exposure_for_analysis %>% 
+#   ungroup() %>% 
+#   summarise(across(c(Item.VOT, Item.Mel_F0_5ms), list(mean = mean, sd = sd), .names = "{.col}.{.fn}"))
+# 
+# VOT.mean_test <- d.mean_sd %>% pull(Item.VOT.mean)
+# VOT.sd_test <- d.mean_sd %>% pull(Item.VOT.sd)
+# f0.mean_exp2 <- d.mean_sd %>% pull(Item.Mel_F0_5ms.mean)
+# f0.sd_exp2 <- d.mean_sd %>% pull(Item.Mel_F0_5ms.sd)
 ```
 
 
@@ -740,12 +740,12 @@ p.params <- ((p.intercept + remove_x_guides) / (p.slope + remove_x_guides) / p.P
 # calculate the various mean VOTs exposed to for each condition, including the labelled trials, with and without accounting for the test trials
 cond_means_test_exposure <- d.test_exposure_for_analysis %>% 
   group_by(Condition.Exposure) %>% 
-  summarise(across(c(Item.VOT, ), mean, .names = "{.col}_mean_test_exposure"))
+  summarise(across(c(Item.VOT, Item.Mel_F0_5ms), mean, .names = "{.col}_mean_test_exposure"))
   
 cond_means_exposure <- d.test_exposure_for_analysis %>% 
   filter(Phase == "exposure") %>% 
   group_by(Condition.Exposure) %>% 
-  summarise(across(c(Item.VOT, Item.F0_5ms), mean, .names = "{.col}_mean_exposure"))
+  summarise(across(c(Item.VOT, Item.Mel_F0_5ms), mean, .names = "{.col}_mean_exposure"))
 
 cond_means <- left_join(cond_means_test_exposure, cond_means_exposure)
 ```
@@ -811,14 +811,21 @@ p.density <-
       group_by(Condition.Exposure) %>%
       mutate(
         category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")),
-        Item.VOT_centered = Item.VOT + (chodroff.mean_VOT - VOT.mean_exp2),
-        Item.Mel_F0_5ms_centered = Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - f0.mean_exp2)) %>% 
+        Item.VOT_centered = case_when(
+          Condition.Exposure == "Shift0" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_test_exposure[1]),
+          Condition.Exposure == "Shift10" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_test_exposure[2]),
+          Condition.Exposure == "Shift40" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_test_exposure[3])),
+        Item.Mel_F0_5ms_centered = case_when(
+          Condition.Exposure == "Shift0" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.Mel_F0_5ms_mean_exposure[1]),
+          Condition.Exposure == "Shift10" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.Mel_F0_5ms_mean_exposure[2]),
+          Condition.Exposure == "Shift40" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.Mel_F0_5ms_mean_exposure[3]))) %>% 
       group_by(Condition.Exposure, category) %>% 
       summarise(across(c(Item.VOT_centered, Item.Mel_F0_5ms_centered), mean)),
     mapping = aes(x = Item.VOT_centered, y = Item.Mel_F0_5ms_centered, colour = Condition.Exposure, shape = category),
     size = 2,
     alpha = 0.8,
-  inherit.aes = F) +
+  inherit.aes = F,
+  show.legend = T) +
   scale_colour_manual("Condition",
              labels = c("+0ms", "+10ms", "+40ms"),
              values = c("#cc0000", "#12D432","#0481F3")) +
@@ -872,8 +879,8 @@ p.ellipse <- d.category_ellipse %>%
   scale_x_continuous("VOT (ms)", limits = c(-12, 125), breaks = scales::breaks_width(25)) +
   scale_color_gradient("Interval", low = "#000000",
   high = "#D0D0D0") +
-  scale_linetype_manual("Category", values = c(1, 2)) + 
-  theme(legend.position = "right") +
+  # scale_linetype_manual("Category", values = c(1, 2)) + 
+  # theme(legend.position = "right") +
   new_scale_color() +
   #plot the uncentred means
   geom_point(
@@ -893,7 +900,6 @@ p.ellipse <- d.category_ellipse %>%
   scale_colour_manual("Condition",
              labels = c("+0ms", "+10ms", "+40ms"),
              values = c("#cc0000", "#12D432","#0481F3")) +
-  new_scale_color() +
   #plot the centered means
   geom_point(
     data = d.test_exposure_for_analysis %>% 
@@ -906,9 +912,9 @@ p.ellipse <- d.category_ellipse %>%
           Condition.Exposure == "Shift10" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_test_exposure[2]),
           Condition.Exposure == "Shift40" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_test_exposure[3])),
         Item.Mel_F0_5ms_centered = case_when(
-          Condition.Exposure == "Shift0" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.F0_5ms_mean_test_exposure[1]),
-          Condition.Exposure == "Shift10" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.F0_5ms_mean_test_exposure[2]),
-          Condition.Exposure == "Shift40" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.F0_5ms_mean_test_exposure[3]))) %>% 
+          Condition.Exposure == "Shift0" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.Mel_F0_5ms_mean_test_exposure[1]),
+          Condition.Exposure == "Shift10" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.Mel_F0_5ms_mean_test_exposure[2]),
+          Condition.Exposure == "Shift40" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.Mel_F0_5ms_mean_test_exposure[3]))) %>% 
       group_by(Condition.Exposure, category) %>% 
       summarise(across(c(Item.VOT_centered, Item.Mel_F0_5ms_centered), mean)),
     mapping = aes(x = Item.VOT_centered, y = Item.Mel_F0_5ms_centered, colour = Condition.Exposure, shape = category),
@@ -916,15 +922,15 @@ p.ellipse <- d.category_ellipse %>%
     alpha = 0.8,
   inherit.aes = F,
   show.legend = F) +
-  scale_colour_manual("Condition",
-             labels = c("+0ms", "+10ms", "+40ms"),
-             values = c("#cc0000", "#12D432","#0481F3")) 
-  # guides(colour = "none")
-
+  guides(linetype = "none")
+  # scale_colour_manual("Condition",
+  #            labels = c("+0ms", "+10ms", "+40ms"),
+  #            values = c("#cc0000", "#12D432","#0481F3")) +
+p.ellipse
 
 (p.density / p.ellipse) +
   plot_layout(ncol = 1, guides = "collect") &
-  theme(legend.position = "none")
+  theme(legend.position = "right")
 ```
 
 
