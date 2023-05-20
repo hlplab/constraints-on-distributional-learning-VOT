@@ -14,8 +14,6 @@ source("functions.R")
 
 
 ## Behavioral results
-We first present participants' categorisation responses. Given that this experiment was designed to give pre-exposure test data, we run an analysis on test block 1 that is similar to the IO analysis of experiment 1. 
-
 
 
 ### Analysis approach
@@ -242,12 +240,8 @@ if (file.exists("../models/centered_exposure_block1_exp2.rds")) {
 
 ## Regression analysis
 The regression analysis addresses two main questions: 
-Do participants shift their categorisation behaviour in an incremental fashion, i.e. do they exhibit categorisation behaviour that draws closer to the ideal categorisation function with each successive exposure block?
+Do participants shift their categorisation behaviour in an incremental fashion, such that the categorisation function draws closer to the ideal categorisation function with each successive exposure block?
 Are the differences in shifts between the conditions proportional to the magnitude of the shifts between exposure distributions i.e. is the PSE of the +40ms condition 3 times that of the +10ms condition?
-
-As with experiment 1 we fit a Bayesian mixed-effects psychometric model with lapse and perceptual components. Continuous predictors were standardised to twice the standard deviation and priors and sampling parameters were identical to those specified in experiment 1. 
-
-To analyse the incremental effects of exposure condition on the proportion of /t/ responses at test, the perceptual model contained exposure condition (backward difference coded, comparing the +10ms against the +0ms shift condition, and the +40ms against the +10ms shift condition), test block (backward difference coded from the first to last test block), VOT (Gelman scaled), and their full factorial interaction. For the perceptual model, "t"-responses were regressed on the three-way interaction of VOT, condition, and block. Random effects were modelled with varying intercepts and slopes by participant and varying intercepts and slopes by minimal pair item. The lapsing model which estimates participant bias on trials with attention lapses was fitted without an intercept but with an offset [how does one describe this? what does offset(0) represent]. Finally, a population-level intercept was fitted to estimate the lapse rate. Random effects for the lapsing model and lapse rates were not fitted to limit the number of parameters and to ensure model convergence.
 
 ### Expectations
 Given previous findings of @kleinschmidt2016you we expected participants in the various exposure conditions to shift their average categorization functions towards the direction of the ideal categorization function implied by their respective exposure distributions. We expected the differences between the groups to be most pronounced after the final exposure block as they would have had the complete exposure to all the tokens that make up the exposure distributions. This follows from predictions of incremental Bayesian belief-updating -- that listeners would integrate their prior expectations with the current input to infer the present talker's cue-to-category-mapping (the posterior distribution). 
@@ -301,8 +295,12 @@ kable(fixed_eff_exp2, booktabs = TRUE) %>%
   kable_styling(latex_options = c("striped", "repeat_header", "scale_down"), position = "center") 
 ```
 
+We fit two identical Bayesian mixed-effects psychometric models to participants' categorization responses on critical trials separately for test and exposure blocks [e.g., @prins2011]. Categorization at test 
+This model is essentially an extension of mixed-effects logistic regression that also takes into account attentional lapses. A failure to do so---while commonplace in research on speech perception [incl. our own work, but see @clayards2008; @kleinschmidt2016you]---can lead to biased estimates of categorization boundaries [e.g., @wichmann2001psychometric]. The mixed-effects psychometric model describes the probability of "t"-responses as a weighted mixture of a lapsing-model and a perceptual model. The lapsing model is a mixed-effects logistic regression [@jaeger2008categorical] that predicts participant responses that are made independent of the stimulus---for example, responses that result from attentional lapses. These responses are independent of the stimulus, and depend only on participants' response bias. The perceptual model is a mixed-effects logistic regression that predicts all other responses, and captures stimulus-dependent aspects of participants' responses. The relative weight of the two models is determined by the lapse rate, which is described by a third mixed-effects logistic regression. Continuous predictors were standardised to twice the standard deviation and priors and sampling parameters were identical to those specified in experiment 1. 
 
-Fig. XX summarizes participants’ categorization functions across the different test blocks. A first point to note are the average categorization functions of the respective conditions before exposure to the talker. As depicted in the first panel, the average functions converge on the same boundary or PSE (4xms, CI = ) which suggests that participants largely had similar expectations about the cue distribution corresponding to /d/ and /t/ for this type of talker. What it also shows is that in setting our baseline condition we may have underestimated the perceived boundary for our test stimuli by approximately 20ms which implies that the +10ms shift and the +40ms shift were in fact -10ms and +20ms respectively.[ELABORATION]
+To analyse the incremental effects of exposure condition on the proportion of "t"-responses at test, the perceptual model contained exposure condition (backward difference coded, comparing the +10ms against the +0ms shift condition, and the +40ms against the +10ms shift condition), test block (backward difference coded from the first to last test block), VOT (Gelman scaled), and their full factorial interaction. For the perceptual model, "t"-responses were regressed on the three-way interaction of VOT, condition, and block. Random effects were modelled with varying intercepts and slopes by participant and varying intercepts and slopes by minimal pair item. The lapsing model which estimates participant bias on trials with attention lapses was fitted without an intercept but with an offset [how does one describe this? what does offset(0) represent]. Finally, a population-level intercept was fitted to estimate the lapse rate. Random effects for the lapsing model and lapse rates were not fitted to limit the number of parameters and to ensure model convergence.
+
+Fig. XX summarizes participants’ fitted categorization functions across the different test blocks. A first point to note are the average categorization functions of the respective conditions before exposure to the talker. As depicted in the first panel, the average functions converge on the same boundary or PSE (4xms, CI = ) which suggests that participants largely had similar expectations about the cue distribution corresponding to /d/ and /t/ for this type of talker. What it also shows is that in setting our baseline condition we may have underestimated the perceived boundary for our test stimuli by approximately 20ms which implies that the +10ms shift and the +40ms shift were in fact -10ms and +20ms respectively.[ELABORATION]
 
 There was a main effect of VOT $\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_VOT_gs", "mu2_VOT_gs > 0")`; participants were more likely to respond "t" as VOT increased. Condition had a main effect on responses such that with larger shifts, participants on average responded with fewer "t"s.  Additionally, the difference in average "t" responses between the +40ms and +10ms conditions ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift40vs.Shift10", "mu2_Condition.Exposure_Shift40vs.Shift10 < 0")` reduction in log-odds) was *larger* than the difference between the +10 and +0 conditions ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift10vs.Shift0", "mu2_Condition.Exposure_Shift10vs.Shift0 < 0")` reduction in log-odds). 
 Qualitatively, the results indicate listeners adjust their expectations to align with the statistics of the exposure talker, consonant with previous findings of studies employing this paradigm (e.g., @clayards2008; @kleinschmidt2016you; @theodore2019distributional). 
@@ -360,6 +358,7 @@ fit_mix_exposure <- brm(
   control = list(adapt_delta = .99),
   file = "../models/Exp-AE-DLVOT-lapsing-GLMM-differencecoded-exposureblocks.rds")
 
+summary(fit_mix_exposure)
 tidy(fit_mix_exposure, effects = "fixed") %>% 
   select(-c(effect, component))
 ```
@@ -725,7 +724,7 @@ p.PSE <- d.estimates %>%
 ```
 
 
-```{r, fig.width=3.5, fig.height=6.5}
+```{r, fig.width=3.5, fig.height=6.5, warning=FALSE}
 remove_x_guides <- theme(axis.text.x = element_blank(),
                          axis.ticks.x = element_blank(),
                          axis.title.x = element_blank())
@@ -834,7 +833,6 @@ p.density <-
          shape = guide_legend(title = "Category")) + 
  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) + 
   remove_axes_titles 
-p.density
 
 #ggsave("density_plot.png", last_plot(), width = 11, height = 8.3, units = "cm", path = "~/Desktop/")
 ```
