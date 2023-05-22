@@ -461,9 +461,9 @@ kable(fixed_eff_exp2, booktabs = TRUE) %>%
   kable_styling(latex_options = c("striped", "repeat_header", "scale_down"), position = "center") 
 ```
 
-We fit two Bayesian mixed-effects psychometric models to participants' categorization responses on critical trials separately for test and exposure blocks [e.g., @prins2011]. We are primarily interested in the changes in categorization behaviour between test blocks which are presumed to be a consequence of the input from preceding exposure blocks however we fit regression models for exposure in order to visualise participant behaviour during exposure as well. Our analysis is therefore focused on the estimates fitted to test blocks.
+We fit two Bayesian mixed-effects psychometric models to participants' categorization responses on critical trials for test and exposure blocks [e.g., @prins2011]. We are primarily interested in the changes in categorization behaviour between test blocks which are presumed to be a consequence of the input from preceding exposure blocks however we fit a regression model for exposure in order to visualise participant behaviour during exposure as well. Our analysis is therefore focused on the estimates fitted to test blocks.
 
-The psychometric model is essentially an extension of mixed-effects logistic regression that also takes into account attentional lapses. A failure to do so---while commonplace in research on speech perception [incl. our own work, but see @clayards2008; @kleinschmidt2016you]---can lead to biased estimates of categorization boundaries [e.g., @wichmann2001psychometric]. The mixed-effects psychometric model describes the probability of "t"-responses as a weighted mixture of a lapsing-model and a perceptual model. The lapsing model is a mixed-effects logistic regression [@jaeger2008categorical] that predicts participant responses that are made independent of the stimulus---for example, responses that result from attentional lapses. These responses are independent of the stimulus, and depend only on participants' response bias. The perceptual model is a mixed-effects logistic regression that predicts all other responses, and captures stimulus-dependent aspects of participants' responses. The relative weight of the two models is determined by the lapse rate, which is described by a third mixed-effects logistic regression. 
+The psychometric model is essentially an extension of mixed-effects logistic regression that also takes into account attentional lapses. Ignoring attentional lapses--while commonplace in research on speech perception [incl. our own work, but see @clayards2008; @kleinschmidt2016you]---can lead to biased estimates of categorization boundaries [e.g., @wichmann2001psychometric]. The mixed-effects psychometric model describes the probability of "t"-responses as a weighted mixture of a lapsing-model and a perceptual model. The lapsing model is a mixed-effects logistic regression [@jaeger2008categorical] that predicts participant responses that are made independent of the stimulus---for example, responses that result from attentional lapses. These responses are independent of the stimulus, and depend only on participants' response bias. The perceptual model is a mixed-effects logistic regression that predicts all other responses, and captures stimulus-dependent aspects of participants' responses. The relative weight of the two models is determined by the lapse rate, which is described by a third mixed-effects logistic regression. 
 
 We fit the model using the package \texttt{brms} [@R-brms_a] in R [@R; @RStudio]. Following previous work from our lab [@horberg2021rational; @xie2021cross], we used weakly regularizing priors to facilitate model convergence. For fixed effect parameters, we standardized continuous predictors (VOT) by dividing through twice their standard deviation [@gelman2008scaling], and used Student priors centered around zero with a scale of 2.5 units [following @gelman2008weakly] and 3 degrees of freedom. For random effect standard deviations, we used a Cauchy prior with location 0 and scale 2, and for random effect correlations, we used an uninformative LKJ-Correlation prior with its only parameter set to 1, describing a uniform prior over correlation matrices [@Lewandowski2009]. Four chains with 2000 warm-up samples and 2000 posterior samples each were fit. No divergent transitions after warm-up were observed, and all $\hat{R}$ were close to 1.
 
@@ -486,15 +486,16 @@ In summary, the analysis shows that the groups diverged in their categorisation 
 
  **Glaringly, all three conditions undershot the ideal categorization boundaries implied by their respective exposure distributions: 14.5ms in the +0ms, 7.2ms in the +10ms, and 14.5ms in the +40ms conditions. 
 
-  **Like this study's predecessor, we also find that participants had a greater propensity to shift their categorisations upwards than downwards as the +40ms group showed the widest deviation from the baseline.
+  **Like this study's predecessor, we also find that participants had a greater propensity to shift their categorisations rightwards towards higher VOT values rather than leftwards towards lower VOT values as the +40ms group showed the widest deviation from the baseline.
 
 Under the Bayesian ideal adapter framework quick adaptation is characterised as listeners having weak beliefs in their prior cue means and variances. Listeners' strength in prior beliefs influences the speed of adaptation, and this is what we observed. On the other hand, weak prior beliefs also predict that it would take few trials for listeners to converge on the implied categorisation boundary. But this is not what we observed in our data. 
 
 
 
 ```{r model-exposure-blocks}
-# get VOT mean and sd of exposure blocks for scaling purposes
+# get VOT mean and sd across exposure blocks and CONDITIONS for scaling purposes
 exposure_block_stats <- d.test_exposure_for_analysis %>% 
+  ungroup() %>% 
     filter(Phase == "exposure" & Item.Labeled == FALSE) %>% 
   summarise(VOT.mean_exposure = mean(Item.VOT),
             VOT.sd_exposure = sd(Item.VOT))
@@ -529,7 +530,6 @@ fit_mix_exposure <- brm(
   control = list(adapt_delta = .99),
   file = "../models/Exp-AE-DLVOT-lapsing-GLMM-differencecoded-exposureblocks.rds")
 
-summary(fit_mix_exposure)
 tidy(fit_mix_exposure, effects = "fixed") %>% 
   select(-c(effect, component))
 ```
@@ -541,16 +541,13 @@ cond_fit_exposure <- conditional_effects(
     effects = "VOT_gs:Condition.Exposure",
     conditions = make_conditions(
       d.test_exposure_for_analysis %>% 
-        filter(Phase == "exposure") %>% 
+        filter(Phase == "exposure" & Item.Labeled == FALSE) %>% 
         prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = "difference"), 
       vars = c("Block")),
     method = "posterior_epred",
     ndraws = 500,
     re_formula = NA)
 ```
-
-
-
 
 
 
@@ -574,7 +571,7 @@ cond_fit_test <- conditional_effects(
 
 ```{r, fig.width=6, fig.height=4.3}
 #combine test and exposure fit
-cond_fit_exposure[[1]] %>% 
+cond_fit_exposure[[1]] %<>% 
   mutate(Item.VOT = descale(VOT_gs, VOT.mean_exposure, VOT.sd_exposure))
 
 cond_fit_test[[1]] %<>% 
@@ -841,7 +838,11 @@ d.estimates <- full_join(d.estimates_test, d.estimates_exposure) %>%
   mutate(PSE = ifelse(Block %in% c(2, 4, 6), descale(-Intercept/slope, VOT.mean_exposure, VOT.sd_exposure), descale(-Intercept/slope, VOT.mean_test, VOT.sd_test))) %>% 
   group_by(Condition.Exposure, Block) %>% 
   summarise(across(c(Intercept, slope, PSE), .fns = list(lower = ~ quantile(.x, probs = .025), mean = mean, upper = ~ quantile(.x, probs = .975))))
+```
 
+
+
+```{r}
 p.intercept <- d.estimates %>% 
   ggplot(aes(x = Block, y = Intercept_mean, colour = Condition.Exposure, group = Condition.Exposure)) +
   geom_point(position = position_dodge(.3), size = 2) +
@@ -885,27 +886,27 @@ p.intercept <- d.estimates %>%
 
 p.slope <- d.estimates %>% 
   ggplot(aes(x = Block, y = slope_mean, colour = Condition.Exposure, group = Condition.Exposure)) +
-geom_rect(aes(ymin = 9.5, ymax = 31, xmin = 0.75, xmax = 1.25), 
+geom_rect(aes(ymin = 8.5, ymax = 32, xmin = 0.75, xmax = 1.25), 
             fill = "grey", 
             alpha = .009, 
             inherit.aes = F) +
-  geom_rect(aes(ymin = 9.5, ymax = 31, xmin = 2.75, xmax = 3.25), 
+  geom_rect(aes(ymin = 8.5, ymax = 32, xmin = 2.75, xmax = 3.25), 
             fill = "grey", 
             alpha = .009, 
             inherit.aes = F) +
-  geom_rect(aes(ymin = 9.5, ymax = 31, xmin = 4.75, xmax = 5.25), 
+  geom_rect(aes(ymin = 8.5, ymax = 32, xmin = 4.75, xmax = 5.25), 
             fill = "grey", 
             alpha = .009, 
             inherit.aes = F) +
-   geom_rect(aes(ymin = 9.5, ymax = 31, xmin = 6.75, xmax = 7.25), 
+   geom_rect(aes(ymin = 8.5, ymax = 32, xmin = 6.75, xmax = 7.25), 
             fill = "grey", 
             alpha = .009, 
             inherit.aes = F) +
-   geom_rect(aes(ymin = 9.5, ymax = 31, xmin = 7.75, xmax = 8.25), 
+   geom_rect(aes(ymin = 8.5, ymax = 32, xmin = 7.75, xmax = 8.25), 
             fill = "grey", 
             alpha = .009, 
             inherit.aes = F) +
-  geom_rect(aes(ymin = 9.5, ymax = 31, xmin = 8.75, xmax = 9.25), 
+  geom_rect(aes(ymin = 8.5, ymax = 32, xmin = 8.75, xmax = 9.25), 
             fill = "grey", 
             alpha = .009, 
             inherit.aes = F) +
@@ -926,7 +927,30 @@ geom_rect(aes(ymin = 9.5, ymax = 31, xmin = 0.75, xmax = 1.25),
 
 p.PSE <- d.estimates %>% 
   ggplot(aes(x = Block, y = PSE_mean, colour = Condition.Exposure, group = Condition.Exposure)) +
-    
+  geom_rect(aes(ymin = 25.2, ymax = 66.8, xmin = 0.75, xmax = 1.25), 
+            fill = "grey", 
+            alpha = .009, 
+            inherit.aes = F) +
+  geom_rect(aes(ymin = 25.2, ymax = 67, xmin = 2.75, xmax = 3.25), 
+            fill = "grey", 
+            alpha = .009, 
+            inherit.aes = F) +
+  geom_rect(aes(ymin = 25.2, ymax = 67, xmin = 4.75, xmax = 5.25), 
+            fill = "grey", 
+            alpha = .009, 
+            inherit.aes = F) +
+   geom_rect(aes(ymin = 25.2, ymax = 67, xmin = 6.75, xmax = 7.25), 
+            fill = "grey", 
+            alpha = .009, 
+            inherit.aes = F) +
+   geom_rect(aes(ymin = 25.2, ymax = 67, xmin = 7.75, xmax = 8.25), 
+            fill = "grey", 
+            alpha = .009, 
+            inherit.aes = F) +
+  geom_rect(aes(ymin = 25.2, ymax = 67, xmin = 8.75, xmax = 9.25), 
+            fill = "grey", 
+            alpha = .009, 
+            inherit.aes = F) +
   geom_point(position = position_dodge(.3), size = 2) +
   geom_linerange(aes(ymin = PSE_lower, ymax = PSE_upper), linewidth = 1, position = position_dodge(.3), alpha = .5) +
   stat_summary(geom = "line", position = position_dodge(.3)) +
@@ -945,16 +969,14 @@ p.PSE <- d.estimates %>%
 
 
 ```{r, fig.width=3.5, fig.height=6.5, warning=FALSE}
-remove_x_guides <- theme(axis.text.x = element_blank(),
-                         axis.ticks.x = element_blank(),
-                         axis.title.x = element_blank())
-
 p.params <- ((p.intercept + remove_x_guides) / (p.slope + remove_x_guides) / p.PSE) + 
   plot_layout( guides = "collect") &
   theme(legend.position = "none", axis.text = element_text(size = 8))
 
 #ggsave("p.params_exp2.png", p.params, width = 14, height = 8, units = "cm", path = "~/Desktop/")
 ```
+
+
 ```{r}
 # calculate the various mean VOTs exposed to for each condition, including the labelled trials, with and without accounting for the test trials
 cond_means_test_exposure <- d.test_exposure_for_analysis %>% 
@@ -1053,8 +1075,6 @@ p.density <-
          shape = guide_legend(title = "Category")) + 
  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) + 
   remove_axes_titles 
-
-#ggsave("density_plot.png", last_plot(), width = 11, height = 8.3, units = "cm", path = "~/Desktop/")
 ```
 
 ```{r, warning=FALSE}

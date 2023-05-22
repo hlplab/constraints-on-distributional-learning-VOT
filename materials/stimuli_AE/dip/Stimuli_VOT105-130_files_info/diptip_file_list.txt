@@ -1,0 +1,6 @@
+diptip_F0_1_VOT_1.wav
+diptip_F0_2_VOT_2.wav
+diptip_F0_3_VOT_3.wav
+diptip_F0_4_VOT_4.wav
+diptip_F0_5_VOT_5.wav
+diptip_F0_6_VOT_6.wav

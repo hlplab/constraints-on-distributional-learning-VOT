@@ -1,0 +1,66 @@
+Using Praat version 6.1
+###############################################
+SOUND SELECTION INFO
+User selected 5_103_din_1 as the voiced endpoint
+User selected 6_103_tin_5 as the voiceless endpoint
+
+###############################################
+used original_aspiration_sound_before_lengthening for the aspiration noise
+
+###############################################
+using regular Lengthen procedure 
+using multiplier of 1.753
+
+###############################################
+Marked 0.15152343506209826 as the vowel onset in the 5_103_din_1 sound
+
+
+###############################################
+VOT steps 
+VOT_1	0.135 
+VOT_2	0.14 
+
+Added 0.05 silence at the onset of each sound
+Added 3 ms aspiration at the end for blending into the vowel
+
+Vowel-cutback information:
+For each 1 ms of VOT, 0.33 ms of vowel cutback
+(0.33 vowel-cutback ratio)
+Maximum vowel cutback actually used: 0.046
+Maximum vowel cutback duration permitted: 0.5 seconds
+
+
+###############################################
+Original sound F0 onset: 'f0_onset:1'
+F0 continuum minimum:  251.0
+F0 continuum maximum:  252.0
+Modification declared as explict declaration of F0 in absolute_Hz
+
+###############################################
+F0 steps: 
+F0_1	251 
+F0_2	252 
+
+Pitch analysis between 65 and 275 Hz
+
+###############################################
+Aspiration intensities (dB)
+aspiration_int_1	59.5 
+aspiration_int_2	60.5 
+
+Aspiration change (dB)
+aspiration_int_change_1	-1 
+aspiration_int_change_2	0 
+
+
+###############################################
+Used 0.006 as the VOT cross-fade duration 
+
+###############################################
+Output sounds maintained natural intensity-VOT relationship
+(not equalized for RMS)
+
+###############################################
+Vowel onset intensitying ramping
+Step 1 half-ramped vowel onset intensity over the first 0.021 s
+Step 2 half-ramped vowel onset intensity over the first 0.022 s

@@ -1,0 +1,87 @@
+Using Praat version 6.1
+Saving to parent folder /Users/mata4004/Desktop/Swedish_BeliefUpdating_VOT/materials/stimuli_AE/dim
+###############################################
+SOUND SELECTION INFO
+User selected 7_104_dim_1 as the voiced endpoint
+User selected 8_104_Tim_9 as the voiceless endpoint
+
+###############################################
+used original_aspiration_sound_before_lengthening for the aspiration noise
+
+###############################################
+using regular Lengthen procedure 
+using multiplier of 1.633
+
+###############################################
+Marked 0.043632527084908036 as the vowel onset in the 7_104_dim_1 sound
+
+
+###############################################
+VOT steps 
+VOT_1	0.105 
+VOT_2	0.11 
+VOT_3	0.115 
+VOT_4	0.12 
+VOT_5	0.125 
+VOT_6	0.13 
+
+Added 0.05 silence at the onset of each sound
+Added 3 ms aspiration at the end for blending into the vowel
+
+Vowel-cutback information:
+For each 1 ms of VOT, 0.33 ms of vowel cutback
+(0.33 vowel-cutback ratio)
+Maximum vowel cutback actually used: 0.043
+Maximum vowel cutback duration permitted: 0.5 seconds
+
+
+###############################################
+Original sound F0 onset: 'f0_onset:1'
+F0 continuum minimum:  250.0
+F0 continuum maximum:  251.0
+Modification declared as explict declaration of F0 in absolute_Hz
+
+###############################################
+F0 steps: 
+F0_1	250 
+F0_2	250 
+F0_3	250 
+F0_4	251 
+F0_5	251 
+F0_6	251 
+
+Pitch analysis between 65 and 275 Hz
+
+###############################################
+Aspiration intensities (dB)
+aspiration_int_1	60.5 
+aspiration_int_2	60.5 
+aspiration_int_3	60.5 
+aspiration_int_4	60.5 
+aspiration_int_5	60.5 
+aspiration_int_6	60.5 
+
+Aspiration change (dB)
+aspiration_int_change_1	0 
+aspiration_int_change_2	0 
+aspiration_int_change_3	0 
+aspiration_int_change_4	0 
+aspiration_int_change_5	0 
+aspiration_int_change_6	0 
+
+
+###############################################
+Used 0.006 as the VOT cross-fade duration 
+
+###############################################
+Output sounds maintained natural intensity-VOT relationship
+(not equalized for RMS)
+
+###############################################
+Vowel onset intensitying ramping
+Step 1 half-ramped vowel onset intensity over the first 0.016 s
+Step 2 half-ramped vowel onset intensity over the first 0.017 s
+Step 3 half-ramped vowel onset intensity over the first 0.018 s
+Step 4 half-ramped vowel onset intensity over the first 0.018 s
+Step 5 half-ramped vowel onset intensity over the first 0.019 s
+Step 6 half-ramped vowel onset intensity over the first 0.020 s

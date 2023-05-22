@@ -1,0 +1,163 @@
+Using Praat version 6.1
+Saving to parent folder /Users/mata4004/Desktop/Swedish_BeliefUpdating_VOT/materials/stimuli_AE/dill
+###############################################
+SOUND SELECTION INFO
+User selected 3_102_dill_1 as the voiced endpoint
+User selected 4_102_till_5 as the voiceless endpoint
+
+###############################################
+used original_aspiration_sound_before_lengthening for the aspiration noise
+
+###############################################
+Replicating the last 0.023 at the end of the aspiration segment
+   to support the maximum length of the VOT continuum
+
+
+###############################################
+Marked 0.10490561990561992 as the vowel onset in the 3_102_dill_1 sound
+
+
+###############################################
+VOT steps 
+VOT_1	0 
+VOT_2	0.005 
+VOT_3	0.01 
+VOT_4	0.015 
+VOT_5	0.02 
+VOT_6	0.025 
+VOT_7	0.03 
+VOT_8	0.035 
+VOT_9	0.04 
+VOT_10	0.045 
+VOT_11	0.05 
+VOT_12	0.055 
+VOT_13	0.06 
+VOT_14	0.065 
+VOT_15	0.07 
+VOT_16	0.075 
+VOT_17	0.08 
+VOT_18	0.085 
+VOT_19	0.09 
+VOT_20	0.095 
+VOT_21	0.1 
+
+Added 0.05 silence at the onset of each sound
+Added 3 ms aspiration at the end for blending into the vowel
+
+Vowel-cutback information:
+For each 1 ms of VOT, 0.33 ms of vowel cutback
+(0.33 vowel-cutback ratio)
+Maximum vowel cutback actually used: 0.033
+Maximum vowel cutback duration permitted: 0.5 seconds
+
+
+###############################################
+Original sound F0 onset: 'f0_onset:1'
+F0 continuum minimum:  246.0
+F0 continuum maximum:  250.0
+Modification declared as explict declaration of F0 in absolute_Hz
+
+###############################################
+F0 steps: 
+F0_1	246 
+F0_2	246 
+F0_3	246 
+F0_4	247 
+F0_5	247 
+F0_6	247 
+F0_7	247 
+F0_8	247 
+F0_9	248 
+F0_10	248 
+F0_11	248 
+F0_12	248 
+F0_13	248 
+F0_14	249 
+F0_15	249 
+F0_16	249 
+F0_17	249 
+F0_18	249 
+F0_19	250 
+F0_20	250 
+F0_21	250 
+
+Pitch analysis between 65 and 275 Hz
+
+###############################################
+Aspiration intensities (dB)
+aspiration_int_1	55.5 
+aspiration_int_2	55.7 
+aspiration_int_3	56 
+aspiration_int_4	56.2 
+aspiration_int_5	56.5 
+aspiration_int_6	56.7 
+aspiration_int_7	57 
+aspiration_int_8	57.2 
+aspiration_int_9	57.5 
+aspiration_int_10	57.7 
+aspiration_int_11	58 
+aspiration_int_12	58.2 
+aspiration_int_13	58.5 
+aspiration_int_14	58.7 
+aspiration_int_15	59 
+aspiration_int_16	59.2 
+aspiration_int_17	59.5 
+aspiration_int_18	59.7 
+aspiration_int_19	60 
+aspiration_int_20	60.2 
+aspiration_int_21	60.5 
+
+Aspiration change (dB)
+aspiration_int_change_1	-5 
+aspiration_int_change_2	-4.75 
+aspiration_int_change_3	-4.5 
+aspiration_int_change_4	-4.25 
+aspiration_int_change_5	-4 
+aspiration_int_change_6	-3.75 
+aspiration_int_change_7	-3.5 
+aspiration_int_change_8	-3.25 
+aspiration_int_change_9	-3 
+aspiration_int_change_10	-2.75 
+aspiration_int_change_11	-2.5 
+aspiration_int_change_12	-2.25 
+aspiration_int_change_13	-2 
+aspiration_int_change_14	-1.75 
+aspiration_int_change_15	-1.5 
+aspiration_int_change_16	-1.25 
+aspiration_int_change_17	-1 
+aspiration_int_change_18	-0.75 
+aspiration_int_change_19	-0.5 
+aspiration_int_change_20	-0.25 
+aspiration_int_change_21	0 
+
+
+###############################################
+Used 0.006 as the VOT cross-fade duration 
+
+###############################################
+Output sounds maintained natural intensity-VOT relationship
+(not equalized for RMS)
+
+###############################################
+Vowel onset intensitying ramping
+Step 1 half-ramped vowel onset intensity over the first 0 s
+Step 2 half-ramped vowel onset intensity over the first 0 s
+Step 3 half-ramped vowel onset intensity over the first 0.0003 s
+Step 4 half-ramped vowel onset intensity over the first 0.001 s
+Step 5 half-ramped vowel onset intensity over the first 0.002 s
+Step 6 half-ramped vowel onset intensity over the first 0.003 s
+Step 7 half-ramped vowel onset intensity over the first 0.004 s
+Step 8 half-ramped vowel onset intensity over the first 0.004 s
+Step 9 half-ramped vowel onset intensity over the first 0.005 s
+Step 10 half-ramped vowel onset intensity over the first 0.006 s
+Step 11 half-ramped vowel onset intensity over the first 0.007 s
+Step 12 half-ramped vowel onset intensity over the first 0.008 s
+Step 13 half-ramped vowel onset intensity over the first 0.009 s
+Step 14 half-ramped vowel onset intensity over the first 0.009 s
+Step 15 half-ramped vowel onset intensity over the first 0.010 s
+Step 16 half-ramped vowel onset intensity over the first 0.011 s
+Step 17 half-ramped vowel onset intensity over the first 0.012 s
+Step 18 half-ramped vowel onset intensity over the first 0.013 s
+Step 19 half-ramped vowel onset intensity over the first 0.014 s
+Step 20 half-ramped vowel onset intensity over the first 0.014 s
+Step 21 half-ramped vowel onset intensity over the first 0.015 s

@@ -147,12 +147,18 @@ options(
   width = 1000,
   mc.cores = min(chains, parallel::detectCores()))
 
+# plot formatting
 colours.voicing <- c("#7EC8E3", "#990033")
 colours.sex <- c("#c1502e", "#2F9FC2")
 remove_all_axes <- theme(axis.title.y = element_blank(),
         axis.title.x = element_blank(),
         axis.text.y = element_blank(),
         axis.ticks.y = element_blank())
+remove_axes_titles <- theme(axis.title.x = element_blank(),
+                            axis.title.y = element_blank())
+remove_x_guides <- theme(axis.text.x = element_blank(),
+                         axis.ticks.x = element_blank(),
+                         axis.title.x = element_blank())
 
 # overwrite conflict between MASS and dplyr
 select <- dplyr::select
