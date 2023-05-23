@@ -234,7 +234,7 @@ fit_mix_block1 <- brm(
 
 
 
-```{r}
+```{r, warning=FALSE}
 # get PSE of Block 1 from model summary
 PSE.fit_mix_block1 <- descale(-(as.numeric(summary(fit_mix_block1)$fixed["mu2_Intercept", 1])) / as.numeric(summary(fit_mix_block1)$fixed["mu2_VOT_gs", 1]), VOT.mean_test, VOT.sd_test)
 
