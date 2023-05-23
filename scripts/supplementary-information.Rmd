@@ -225,7 +225,7 @@ We fit the model using the package \texttt{brms} [@R-brms_a] in R [@R; @RStudio]
 Based on previous experiments, we expected a strong positive effect of VOT, with increasing proportions of "t"-responses for increasing VOTs. We did not have clear expectations for the effect of trial other than that responses should become more uniformed (i.e move towards 50-50 "d"/"t"-bias or 0-log-odds) as the experiment progressed [@liu2018inferring] due to the un-informativeness of the stimuli. 
 Previous studies with similar paradigms have typically found lapse rates of 0-10% [< -2.2 log-odds, e.g., @clayards2008perception; @kleinschmidt2016you]. 
 
-```{r}
+```{r, warning=FALSE}
 # set the mean and SD values for scaling/unscaling purposes
 VOT.mean_exp1 <- mean(d.test.excluded$Item.VOT)
 VOT.sd_exp1 <- sd(d.test.excluded$Item.VOT)
