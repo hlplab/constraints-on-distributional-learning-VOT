@@ -716,28 +716,6 @@ We filtered the database to /d/s and /t/s which gave 92 talkers (4x male and 4x 
 
 
 
-```{r, fig.cap="visualising difference between uncentered and centered exposure fit (dashed line) in experiment 1.", fig.width=6, fig.height=4.5}
-psychometric_fit_exp1 %>% 
-  group_by(sVOT) %>% 
-  summarise(
-    lower__ = quantile(lower__, probs = .025),
-    median = quantile(estimate__, probs = .5),
-    upper__ = quantile(upper__, probs = .975),
-    estimate__ = quantile(estimate__, probs = .5)) %>% 
-    mutate(Item.VOT = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1)) %>% 
-  ggplot(aes(x = Item.VOT, y = estimate__)) +
-  geom_line(colour = "grey", linewidth = 1.5) +
-  geom_line(data = centered_exposure %>% 
-  group_by(sVOT) %>% 
-  summarise(estimate__ = mean(.epred),
-         lower__ = mean(lower__),
-         upper__ = mean(upper__)) %>% 
-    mutate(Item.VOT = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1)),
-  mapping = aes(x = Item.VOT, y = estimate__), 
-  linetype = 2,
-  linewidth = 1.5,
-  inherit.aes = F)
-```
 
 # Session Info
 
