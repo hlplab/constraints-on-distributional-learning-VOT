@@ -227,10 +227,10 @@ knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 ```{r, child="section-1-introduction.Rmd"}
 ```
 
-```{r, child="section-2-materials and method.Rmd"}
+```{r, child="section-2-methods.Rmd"}
 ```
 
-```{r, child="section-3-analysis of results.Rmd"}
+```{r, child="section-3-results-analysis.Rmd"}
 ```
 
 ```{r, child="section-6-general-discussion.Rmd"}
