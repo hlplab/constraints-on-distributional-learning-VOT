@@ -500,7 +500,6 @@ if (file.exists("../models/conditional_effects_fit_mix_f0.csv")){
 }
 
 
-
 # plotting conditional effects of VOT from the 2 models side-by-side
 psychometric_fit_exp1 %>% 
   group_by(sVOT) %>% 
