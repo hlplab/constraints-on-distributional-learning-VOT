@@ -126,9 +126,6 @@ On the next page, participants were informed about the task for the remainder of
 
 Each trial started with a dark-shaded green fixation dot being displayed. At 500ms from trial onset, two minimal pair words appeared on the screen, as shown in Figure \@ref(fig:exp1-example-trial). At 1000ms from trial onset, the fixation dot would turn bright green and an audio recording from the matching minimal pair continuum started playing. Participants were required to click on the word they heard. For each participant, /d/-initial words were either always displayed on the left side or always displayed on the right side. Across participants, this ordering was counter-balanced. After participants clicked on the word, the next trial began.
 
-```{r exp1-example-trial, fig.cap="Example trial display. The words were displayed 500ms after trial onset and the audio recording of the word was played 1000ms after trial onset"}
-knitr::include_graphics("../figures/exp1_trial_example.png")
-```
 
 Participants heard 192 target trials (four minimal pair continua, each with 24 VOT steps, each heard twice). In addition, participants heard 12 catch trials. On catch trials, participant saw two written catch stimuli on the screen (e.g., "flare" and "rare"), and heard one of them (e.g. "rare"). Since these recordings were easily distinguishable, they served as a check on participant attention throughout the experiment. 
 
@@ -559,11 +556,11 @@ psychometric_fit_exp1 %>%
 
 
 ## Experiment 2
-### Making exposure conditions
+
 ### Exclusions analysis
 - reaction time plots
 - catch trial performance plots
-### Regression analysis - model selection
+
 
 ```{r catch-trial-performance, fig.height=4, fig.width=6}
 d.exposure_test %>% 

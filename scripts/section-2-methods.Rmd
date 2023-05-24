@@ -33,12 +33,16 @@ A subset of the materials were used to generate the three exposure conditions; i
 
 We employed a multi-block exposure-test design \@ref(fig:exp2-design-figure) which enabled the assessment of listener perception before informative exposure as well as incrementally at intervals  during informative exposure (after every 48 exposure trials). To have a comparable test between blocks and across conditions, test blocks were made up of a uniform distribution of 12 VOT stimuli (-5, 5, 15, 25, 30, 35, 40, 45, 50, 55, 65, 70), identical across test blocks and between conditions. Each of the test tokens were presented once at random. The test blocks were kept short to minimise distortion of the intended distribution to be presented by the end of the exposure phase. After the final exposure block we tripled the number of test blocks to increase the statistical power to detect exposure induced behavioural changes. 
 
+```{r exp2-design-figure, fig.height=3, fig.width=5, fig.cap="Experiment 2 multi-block design. Test blocks in grey comprised identical stimuli within and between conditions"}
+knitr::include_graphics("../figures/experiment2_design_image.png")
+```
+
 The conditions were created by first generating the baseline distribution (+0ms shift) and then shifting that distribution by +10ms and by +40ms to the right of the VOT continuum to create the remaining two conditions. 
 
-To construct the +0ms shift exposure distribution we first computed the point of subjective equality (PSE) from the perceptual component of the fitted psychometric function of listener responses in the norming experiment. The PSE corresponds to the VOT duration that was perceived as most ambiguous across all participants during norming (i.e. the stimulus that on average, elicited equal chance of being categorised as /d/ or /t/) thus marking the categorical boundary. From a distributional perspective the PSE is where the likelihoods of both categories intersect and have equal probability density (we assumed Gaussian distributions and equal prior probability for each category) [SOMETHING HERE ABOUT GAUSSIANS BEING A CONVENIENT ASSUMPTION?]. To limit the infinite combinations of category likelihoods that could intersect at this value, we set the variances of the /d/ (80ms) and /t/ (270ms (lowered from 398 because of dip-tip pair limitations)) categories based on parameter estimates (@Kurumada_Xie_Jaeger_2022) obtained from the production database of word-initial stops in @chodroff2017structure. To each variance value we added 80ms following (@kronrod2016unified) to account for variability due to perceptual noise since these likelihoods were estimated from perceptual data. We took an additional degree of freedom of setting the *distance between the means* of the categories at 46ms; this too was based on the mean  for /d/ and /t/ estimated from the production database. The means of both categories were then obtained through a grid-search process to find the likelihood distributions that crossed at 25ms VOT (see XX of SI for further detail on this procedure).
+To construct the +0ms shift exposure distribution we first computed the point of subjective equality (PSE) from the perceptual component of the fitted psychometric function of listener responses in the norming experiment. The PSE corresponds to the VOT duration that was perceived as most ambiguous across all participants during norming (i.e. the stimulus that on average, elicited equal chance of being categorised as /d/ or /t/) thus marking the categorical boundary. From a distributional perspective the PSE is where the likelihoods of both categories intersect and have equal probability density (we assumed Gaussian distributions and equal prior probability for each category) [SOMETHING HERE ABOUT GAUSSIANS BEING A CONVENIENT ASSUMPTION?]. To limit the infinite combinations of category likelihoods that could intersect at this value, we set the variances of the /d/ (80ms) and /t/ (270ms <!--/t/ variance lowered from original 398ms estimate because of dip-tip pair variance limitations--> categories based on parameter estimates (@Kurumada_Xie_Jaeger_2022) obtained from the production database of word-initial stops in @chodroff2017structure. To each variance value we added 80ms following (@kronrod2016unified) to account for variability due to perceptual noise since these likelihoods were estimated from perceptual data. We took an additional degree of freedom of setting the *distance between the means* of the categories at 46ms; this too was based on the mean  for /d/ and /t/ estimated from the production database. The means of both categories were then obtained through a grid-search process to find the likelihood distributions that crossed at 25ms VOT (see XX of SI for further detail on this procedure).
 
 The distributional make up was determined through a process of sampling tokens from a discretised normal distribution with values rounded to the nearest multiple of 5 integer (available through the `extraDistr` package in R). 
-For each exposure block 8 VOT tokens per minimal word pair were sampled from discrete normal distributions of each category of the +0ms condition, giving 24 /d/ and 24 /t/ items (48 critical trials) per block. Additionally, each exposure block contained 2 instances of 3 catch items, giving 6 catch trials per block. The sampled distributions of VOT tokens were increased by a margin of +10ms and +40 ms to create the remaining two conditions. Three variants of each condition list were created so that exposure blocks followed a latin-square order. 
+For each exposure block 8 VOT tokens per minimal word pair were sampled from discrete normal distributions of each category of the +0ms condition, giving 24 /d/ and 24 /t/ items (48 critical trials) per block. The sampled distributions of VOT tokens were increased by a margin of +10ms and +40 ms to create the remaining two conditions \@ref(fig:exp2-design-distribution). Additionally, each exposure block contained 2 instances of 3 catch items, giving 6 catch trials per block. These catch trials were recordings of the words, "flare", "share", or "rare", presented in the same manner as critical trials but clearly distinguishable. They served as a check on participant attention during the experiment. Three variants of each condition list were created so that exposure blocks followed a latin-square order. 
 
 Lastly, half of the exposure trials were randomly assigned as labelled trials. In labelled trials, participants receive clear information of the word's category as both orthographic options will always begin with the intended sound. For example if a trial was intended to be "dill" then the two image options will either be "dill" and "dip" or "dill" and "din". Test trials were always *unlabelled*. 
 
@@ -107,68 +111,11 @@ d.exposure %>%
   facet_wrap(~ condition, scales = "free_y") +
   guides(linetype = "none") +
   theme(legend.position = "top",
+        legend.key.width = unit(15, "pt"),
+        legend.key.height = unit(10, "pt"),
+        legend.text.align = 1,
         legend.box.spacing = unit(2, "pt"))
 ```
-```{r}
-d.means <- 
-  crossing(condition = c("+0ms", "+10ms", "+40ms"),
-         category = c("/d/", "/t/")) %>% 
-  mutate(mean = c(5, 50, 15, 60, 45, 90))
-
-d.exposure %>% 
-  na.omit() %>% 
-  filter(image_selection == "forward" & list_LSQ_variant == "A") %>% 
-  mutate(condition = case_when(condition == "Shift0" ~ "+0ms",
-                               condition == "Shift10" ~ "+10ms",
-                               condition == "Shift40" ~ "+40ms"),
-         labelling = as_factor(labelling)) %>% 
-  ggplot() +
-  geom_histogram(aes(x = VOT, fill = paste(condition, category, labelling), 
-                     color = paste(condition, category, labelling),
-                     linetype = labelling), 
-                 alpha = .8) +
-  scale_colour_manual(
-    "Labelling",
-    values = c(
-    "+0ms /d/ labeled" = "#800000", 
-    "+0ms /d/ unlabeled" = "#ff9999",
-    "+0ms /t/ labeled" = "#cc0000", 
-    "+0ms /t/ unlabeled" = "#ffe6e6",
-    "+10ms /d/ labeled" = "#0a751c",
-    "+10ms /d/ unlabeled" = "#b9f9c3",
-    "+10ms /t/ labeled" = "#12D432",
-    "+10ms /t/ unlabeled" = "#e8fdeb",
-    "+40ms /d/ labeled" = "#02427e", 
-    "+40ms /d/ unlabeled" = "#b4dafe",
-    "+40ms /t/ labeled" = "#0481F3", 
-    "+40ms /t/ unlabeled" = "#e6f3ff"),
-    aesthetics = c("color", "category", "fill"),
-    labels = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", "", "", "", "", "", "", "", "")) +
-    guides(colour = guide_legend(override.aes = list(
-    colour = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
-    fill = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
-    linetype = c(2, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0),
-    values = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", 0, 0, 0, 0, 0, 0, 0, 0)), nrow = 1)) +
-  stat_function(fun = function(x) 72 * 5 * dnorm(x, 25, sqrt(var_d)),
-                color = "black", size = .6, alpha = .7, linetype = 2) +
-  stat_function(
-    fun = function(x) 72 * 5 * dnorm(x, 70, sqrt(var_t)),
-    color = "black", size = .6, alpha = .5, linetype = 2) +
-  geom_rug(data = tibble(VOT = c(25, 70)), aes(x = VOT), sides = "t") +
-  scale_x_continuous("VOT (ms)", breaks = seq(-50, 150, 30)) +
-  scale_y_continuous("Count") +
-  geom_text(data = d.means,
-            aes(x = 103, 
-                y = 17,
-                label = paste("mean", category, "=", mean)),
-            size = 2,
-            position = position_dodge2v(height = -8),
-            inherit.aes = F) +
-  facet_wrap(~ condition, scales = "free_y") +
-  guides(linetype = "none") +
-  theme(legend.position = "top")
-```
-
 
 
 

@@ -165,7 +165,7 @@ In addition, participants' categorization during the early phase of the experime
 
 ### Analysis approach
 
-##Results
+## Results
 ## Regression analysis
 The regression analysis addresses two main questions: 
 Do participants shift their categorisation behaviour in an incremental fashion, i.e. do they exhibit categorisation behaviour that draws closer to the ideal categorisation function with each successive exposure block?
@@ -296,51 +296,7 @@ p.fit_block1 <- psychometric_fit_block1 %>%
 ```
 
 
-```{r prepare-production-database}
-# prepare production corpus from Chodroff & Wilson
-d.chodroff_wilson <-
-  get_ChodroffWilson_data(
-    database_filename = "../data/all_observations_with_non-missing_vot_cog_f0.csv",
-    min.n_per_talker_and_stop = 25,
-    limits.VOT = c(-Inf, Inf),
-    limits.f0 = c(0, 350),
-    max.p_for_multimodality = .1
-  ) %>%
-  mutate_at(
-    c("VOT", "f0_Mel"),
-    list("centered" = function(x) apply_ccure(x, data = .)))
 
-d.chodroff_wilson.selected <-
-  d.chodroff_wilson %>%
-  filter(poa == "/d/-/t/") %>%
-  group_by(Talker, category) %>%
-  mutate(n = n()) %>%
-  group_by(Talker) %>%
-  # subsample n tokens, as determined by category with fewer tokens
-  mutate(
-    n_min = min(n),
-    n_category = n_distinct(category)) %>%
-  # select talkers with both /d/ and /t/ observations
-  filter(n_category == 2) %>%
-  group_by(Talker, category) %>%
-  sample_n(size = first(n_min)) %>%
-  ungroup() %>%
-  mutate_at(
-      c("VOT", "f0", "f0_Mel", "f0_semitones"),
-      list("centered" = function(x) apply_ccure(x, data = .))) %>% 
-  mutate(category = factor(category))
-
-d.chodroff_wilson.selected %>% 
-  group_by(Talker, gender, category ) %>% 
-  summarise(
-    mean_VOT = mean(VOT_centered),
-    variance = var(VOT_centered),
-    SD = sqrt(variance)) %>% 
-  ggplot(aes(x = mean_VOT, y = variance, colour = category)) +
-  geom_point() +
-  geom_smooth(method = "lm", formula = y ~x, alpha = .4) +
-  ggpubr::stat_cor(aes(label = after_stat(rr.label))) 
-```
 
 
 
@@ -473,12 +429,79 @@ To analyse the incremental effects of exposure condition on the proportion of "t
 
 Fig. XX summarizes participants’ fitted categorization functions across the different test blocks. A first point to note is the average categorization functions of the respective conditions before exposure to the talker. As depicted in the first panel, the average categorization functions converge on the same boundary or PSE (45ms, 95% QI = 36ms -- 55ms) which suggests that the three exposure groups largely had similar expectations about the cue distribution corresponding to /d/ and /t/ for this type of talker. What it also shows is that in setting our baseline condition we may have underestimated the boundary for our test stimuli by approximately 20ms which implies that the true shifts of our conditions correspond to -20ms, -10ms and +20ms (for +0, +10, and +40) respectively. The misalignment of the expected categorisation function between norming and the present experiment could be due to differences in both the length of and the continua deployed in the experiments. 
 
+
+
+```{r visualising-true-shifts, fig.height=3, fig.width=6, warning=FALSE, message=FALSE}
+d.means <- 
+  crossing(condition = c("+0ms", "+10ms", "+40ms"),
+         category = c("/d/", "/t/")) %>% 
+  mutate(mean = c(5, 50, 15, 60, 45, 90))
+
+d.exposure %>% 
+  na.omit() %>% 
+  filter(image_selection == "forward" & list_LSQ_variant == "A") %>% 
+  mutate(condition = case_when(condition == "Shift0" ~ "+0ms",
+                               condition == "Shift10" ~ "+10ms",
+                               condition == "Shift40" ~ "+40ms"),
+         labelling = as_factor(labelling)) %>% 
+  ggplot() +
+  geom_histogram(aes(x = VOT, fill = paste(condition, category, labelling), 
+                     color = paste(condition, category, labelling),
+                     linetype = labelling), 
+                 alpha = .8) +
+  scale_colour_manual(
+    "Labelling",
+    values = c(
+    "+0ms /d/ labeled" = "#800000", 
+    "+0ms /d/ unlabeled" = "#ff9999",
+    "+0ms /t/ labeled" = "#cc0000", 
+    "+0ms /t/ unlabeled" = "#ffe6e6",
+    "+10ms /d/ labeled" = "#0a751c",
+    "+10ms /d/ unlabeled" = "#b9f9c3",
+    "+10ms /t/ labeled" = "#12D432",
+    "+10ms /t/ unlabeled" = "#e8fdeb",
+    "+40ms /d/ labeled" = "#02427e", 
+    "+40ms /d/ unlabeled" = "#b4dafe",
+    "+40ms /t/ labeled" = "#0481F3", 
+    "+40ms /t/ unlabeled" = "#e6f3ff"),
+    aesthetics = c("color", "category", "fill"),
+    labels = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", "", "", "", "", "", "", "", "")) +
+    guides(colour = guide_legend(override.aes = list(
+    colour = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
+    fill = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
+    linetype = c(2, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0),
+    values = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", 0, 0, 0, 0, 0, 0, 0, 0)), nrow = 1)) +
+  stat_function(fun = function(x) 72 * 5 * dnorm(x, 25, sqrt(var_d)),
+                color = "black", size = .6, alpha = .7, linetype = 2) +
+  stat_function(
+    fun = function(x) 72 * 5 * dnorm(x, 70, sqrt(var_t)),
+    color = "black", size = .6, alpha = .5, linetype = 2) +
+  geom_rug(data = tibble(VOT = c(25, 70)), aes(x = VOT), sides = "t") +
+  scale_x_continuous("VOT (ms)", breaks = seq(-50, 150, 30)) +
+  scale_y_continuous("Count") +
+  geom_text(data = d.means,
+            aes(x = 103, 
+                y = 17,
+                label = paste("mean", category, "=", mean)),
+            size = 2,
+            position = position_dodge2v(height = -8),
+            inherit.aes = F) +
+  facet_wrap(~ condition, scales = "free_y") +
+  guides(linetype = "none") +
+  theme(legend.position = "top",
+        legend.key.width = unit(15, "pt"),
+        legend.key.height = unit(10, "pt"),
+        legend.text.align = 1,
+        legend.box.spacing = unit(2, "pt"))
+```
+
+
 There was a main effect of VOT $\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_VOT_gs", "mu2_VOT_gs > 0")`; participants were more likely to respond "t" as VOT increased. Condition had a main effect on responses such that with larger shifts, participants on average responded with fewer "t"s.  Additionally, the difference in average "t" responses between the +40ms and +10ms conditions ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift40vs.Shift10", "mu2_Condition.Exposure_Shift40vs.Shift10 < 0")` reduction in log-odds) was *larger* than the difference between the +10 and +0 conditions ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift10vs.Shift0", "mu2_Condition.Exposure_Shift10vs.Shift0 < 0")` reduction in log-odds). 
 Qualitatively, the results indicate listeners adjust their expectations to align with the statistics of the exposure talker, consonant with previous findings of studies employing this paradigm (e.g., @clayards2008; @kleinschmidt2016you; @theodore2019distributional). 
 
 While there was weak evidence for a main effect of block its interaction with condition revealed how participants in the respective exposure groups responded as they progressively received more informative input. Most of the change took place after the first exposure block. Participants in the +10ms condition responded with fewer "ts" compared to participants in the +0ms condition in test block 2 relative to that in test block 1 ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1", "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 < 0")`). The difference between the  +40ms and +10ms condition in test block 2 relative to that in block 1 was more pronounced, reflecting the wider separation between the two exposure conditions in block 2 ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1", "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 < 0")`). 
 
-In test block 3, the difference in average log-odds between conditions +0ms and +10ms, relative to test block 2 was *positive* such that the difference between the two conditions in test block 3 was smaller than the corresponding difference in block 2 ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2", "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 >0")`). In test blocks 4 and 5, the  average log-odds difference between +0ms and +10ms increased marginally when compared to the preceding block, respectively (as indicated by the negative signs of the estimates; see table xx) while in test block 6 the difference between the two exposure conditions narrowed substantially. Looking at the block-by-block differences between the +40ms and +10ms conditions, these continued to widen in test blocks 3 and block 4 relative to their respective preceding blocks, albeit by progressively smaller increments. This widening trend would then reverse in test blocks 5 and 6. In all, the respective conditions achieved their maximal shifts by block 3 and began to display a reversal of the exposure effects by the end of block 4. This "unlearning" of the exposure distribution, observed in the final 3 test blocks was expected given previous findings that distributional learning effects can begin to dissipate with prolonged testing with tokens from a uniform distribution. 
+In test block 3, the difference in average log-odds between conditions +0ms and +10ms, relative to test block 2 was *positive* such that the difference between the two conditions in test block 3 was smaller than the corresponding difference in block 2 ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2", "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 > 0")`). In test blocks 4 and 5, the  average log-odds difference between +0ms and +10ms increased marginally when compared to the preceding block, respectively (as indicated by the negative signs of the estimates; see table xx) while in test block 6 the difference between the two exposure conditions narrowed substantially. Looking at the block-by-block differences between the +40ms and +10ms conditions, these continued to widen in test blocks 3 and block 4 relative to their respective preceding blocks, albeit by progressively smaller increments. This widening trend would then reverse in test blocks 5 and 6. In all, the respective conditions achieved their maximal shifts by block 3 and began to display a reversal of the exposure effects by the end of block 4. This "unlearning" of the exposure distribution, observed in the final 3 test blocks was expected given previous findings that distributional learning effects can begin to dissipate with prolonged testing with tokens from a uniform distribution. 
 
 An examination of the block-by-block changes in the intercepts and slopes of the respective conditions, confirmed that the changes in categorization behaviour were driven predominantly by changes in the intercept (fig xx). the slopes of all 3 conditions in test block 4, which immediately follows the final exposure block, and where participants would have had full exposure to their respective distributions, did not differ substantially from each other nor from their estimated starting point in test block 1. Conversely, the intercepts at these points in the experiment were more distinct from each other and from where they were estimated to be at test block 1. 
 
@@ -528,7 +551,7 @@ fit_mix_exposure <- brm(
   warmup = 2000, # samples used to fit
   family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
   control = list(adapt_delta = .99),
-  file = "../models/Exp-AE-DLVOT-lapsing-GLMM-differencecoded-exposureblocks.rds")
+  file = "../models/Exp-AE-DLVOT-lapsing-differencecoded-exposureblocks.rds")
 
 tidy(fit_mix_exposure, effects = "fixed") %>% 
   select(-c(effect, component))
@@ -568,8 +591,8 @@ cond_fit_test <- conditional_effects(
 
 
 
-
-```{r, fig.width=6, fig.height=4.3}
+\begin{landscape}
+```{r, fig.width=11, fig.height=2}
 #combine test and exposure fit
 cond_fit_exposure[[1]] %<>% 
   mutate(Item.VOT = descale(VOT_gs, VOT.mean_exposure, VOT.sd_exposure))
@@ -585,25 +608,39 @@ cond_fit_test_exposure <- tibble(full_join(cond_fit_exposure[[1]], cond_fit_test
     Condition.Exposure == "Shift10" ~ "+10ms",
     Condition.Exposure == "Shift40" ~ "+40ms"),
     Block = factor(case_when(
-      Block == 1 ~ "Test block 1",
-      Block == 3 ~ "Test block 2",
-      Block == 5 ~ "Test block 3",
-      Block == 7 ~ "Test block 4",
-      Block == 8 ~ "Test block 5",
-      Block == 9 ~ "Test block 6",
-      Block == 2 ~ "Exposure block 1",
-      Block == 4 ~ "Exposure block 2",
-      Block == 6 ~ "Exposure block 3")), 
-    Block = fct_relevel(Block, c("Test block 1", "Exposure block 1", "Test block 2", "Exposure block 2", "Test block 3", "Exposure block 3",  "Test block 4", "Test block 5", "Test block 6"))) 
+      Block == 1 ~ "Test 1",
+      Block == 3 ~ "Test 2",
+      Block == 5 ~ "Test 3",
+      Block == 7 ~ "Test 4",
+      Block == 8 ~ "Test 5",
+      Block == 9 ~ "Test 6",
+      Block == 2 ~ "Exposure 1",
+      Block == 4 ~ "Exposure 2",
+      Block == 6 ~ "Exposure 3")), 
+    Block = fct_relevel(Block, c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3",  "Test 4", "Test 5", "Test 6"))) 
+
+label_colour <- tibble(
+  Block = c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3", "Test 4", "Test 5", "Test 6"), 
+  Block.colour = c("grey", "black", "grey", "black", "grey", "black", "grey", "grey", "grey")) %>% mutate(Block = factor(Block, levels = Block, ordered = T))
 
 cond_fit_test_exposure %>% 
-  ggplot(aes(
+  ggplot() +
+  geom_rect(
+    data = label_colour %>% mutate(factor(Block)),
+    aes(xmin = -Inf, xmax = Inf,
+        ymin = 1.05, ymax = 1.29,
+        fill = Block.colour), show.legend = F) +
+  scale_fill_manual(values = c("grey" = "grey", "black" = "black")) +
+  new_scale_fill() +
+  geom_ribbon(aes(
     x = Item.VOT, 
     y = estimate__, 
-    group = Condition.Exposure)) +
-  geom_ribbon(aes(
+    group = Condition.Exposure,
     ymin = lower__, ymax = upper__, fill = Condition.Exposure), alpha = .1) +
   geom_line(aes(
+    x = Item.VOT, 
+    y = estimate__, 
+    group = Condition.Exposure,
     color = Condition.Exposure), 
     size = 1,
     alpha = 0.6) +
@@ -623,15 +660,15 @@ cond_fit_test_exposure %>%
           Condition.Exposure == "Shift10" ~ "+10ms",
           Condition.Exposure == "Shift40" ~ "+40ms"),
         Block = factor(case_when(
-          Block == 1 ~ "Test block 1",
-          Block == 3 ~ "Test block 2",
-          Block == 5 ~ "Test block 3",
-          Block == 7 ~ "Test block 4",
-          Block == 8 ~ "Test block 5",
-          Block == 9 ~ "Test block 6",
-          Block == 2 ~ "Exposure block 1",
-          Block == 4 ~ "Exposure block 2",
-          Block == 6 ~ "Exposure block 3"))) %>%
+          Block == 1 ~ "Test 1",
+          Block == 2 ~ "Exposure 1",
+          Block == 3 ~ "Test 2",
+          Block == 4 ~ "Exposure 2",
+          Block == 5 ~ "Test 3",
+          Block == 6 ~ "Exposure 3",
+          Block == 7 ~ "Test 4",
+          Block == 8 ~ "Test 5",
+          Block == 9 ~ "Test 6"))) %>%
       group_by(Condition.Exposure, Block),
     fun.data = mean_cl_boot,
     mapping = aes(x = Item.VOT,
@@ -642,19 +679,19 @@ cond_fit_test_exposure %>%
     alpha = 0.7,
     position = position_dodge2(width = 2),
     inherit.aes = F) +
-           scale_x_continuous("VOT (msec)") +
-           scale_y_continuous("Proportion \"t\"-responses") +
-           scale_color_manual(
-             "Condition",
-             labels = c("+0ms", "+10ms", "+40ms"),
-             values = c("#cc0000", "#12D432","#0481F3"),
-             aesthetics = c("color", "fill")) +
-           facet_wrap(
-           . ~ Block,
-            nrow = 3) + 
-           theme(legend.position = "top")
+  scale_x_continuous("VOT (msec)") +
+  scale_y_continuous("Proportion \"t\"-responses") +
+  scale_color_manual(
+    "Condition",
+    labels = c("+0ms", "+10ms", "+40ms"),
+    values = c("#cc0000", "#12D432","#0481F3"),
+    aesthetics = c("color", "fill")) +
+  coord_cartesian(clip="off", ylim=c(0, 1)) +
+  facet_wrap(. ~ Block, nrow = 1) + 
+  theme(legend.position = "top",
+        strip.background = element_rect(fill = NA))
 ```
-
+\end{landscape}
 
 ```{r}
 # nested models for extracting the 'intercepts' and 'slopes' for each Block and Condition
@@ -702,6 +739,9 @@ fit_mix_exposure_nested <- brm(
  temp <- 
  fixef(fit_mix_test_nested, summary = F, pars = gsub("^b_(mu2_.*)$", "\\1", variables(fit_mix_test_nested)))
 
+ 
+#mu2 ~ Block / (Condition, VOT_gs sep = "x")) 
+ 
 # temp %>%
 #   as_tibble() %>%
 #   rename_with(~ paste0(.x, ":Intercept"), -ends_with("VOT_gs")) %>%
@@ -743,7 +783,7 @@ Intercepts_slopes_exposure <- tidy(fit_mix_exposure_nested, effects = "fixed") %
 
 Intercepts_slopes <- full_join(Intercepts_slopes_test, Intercepts_slopes_exposure)
 ```
-```{r make-dataframe-for-logistic-regression-on-predicted-probs-by-IOs}
+```{r make-dataframe-for-logistic-regression-on-predicted-probs-by-IOs, warning=FALSE}
 # get the actual means and variances of the exposure stimuli by category
 d.summarystats_exposure <- d.test_exposure_for_analysis %>% 
   filter(Phase == "exposure") %>% 
@@ -1167,14 +1207,58 @@ p.ellipse <- d.category_ellipse %>%
 ```
 
 
-```{r}
+```{r exposure-means-database-density, warning=FALSE}
 (p.density / p.ellipse) +
   plot_layout(ncol = 1, guides = "collect") &
   theme(legend.position = "right")
 ```
 
 
+```{r visualising-variance-mean-correlation-VOT, fig.width=5, fig.height=3.2}
+# prepare production corpus from Chodroff & Wilson
+d.chodroff_wilson <-
+  get_ChodroffWilson_data(
+    database_filename = "../data/all_observations_with_non-missing_vot_cog_f0.csv",
+    min.n_per_talker_and_stop = 25,
+    limits.VOT = c(-Inf, Inf),
+    limits.f0 = c(0, 350),
+    max.p_for_multimodality = .1
+  ) %>%
+  mutate_at(
+    c("VOT", "f0_Mel"),
+    list("centered" = function(x) apply_ccure(x, data = .)))
 
+d.chodroff_wilson.selected <-
+  d.chodroff_wilson %>%
+  filter(poa == "/d/-/t/") %>%
+  group_by(Talker, category) %>%
+  mutate(n = n()) %>%
+  group_by(Talker) %>%
+  # subsample n tokens, as determined by category with fewer tokens
+  mutate(
+    n_min = min(n),
+    n_category = n_distinct(category)) %>%
+  # select talkers with both /d/ and /t/ observations
+  filter(n_category == 2) %>%
+  group_by(Talker, category) %>%
+  sample_n(size = first(n_min)) %>%
+  ungroup() %>%
+  mutate_at(
+      c("VOT", "f0", "f0_Mel", "f0_semitones"),
+      list("centered" = function(x) apply_ccure(x, data = .))) %>% 
+  mutate(category = factor(category))
+
+d.chodroff_wilson.selected %>% 
+  group_by(Talker, gender, category ) %>% 
+  summarise(
+    mean_VOT = mean(VOT_centered),
+    variance = var(VOT_centered),
+    SD = sqrt(variance)) %>% 
+  ggplot(aes(x = mean_VOT, y = variance, colour = category)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~x, alpha = .4) +
+  ggpubr::stat_cor(aes(label = after_stat(rr.label))) 
+```
 
 
 

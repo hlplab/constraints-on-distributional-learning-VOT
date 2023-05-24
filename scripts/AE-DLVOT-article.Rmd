@@ -45,7 +45,6 @@ authornote: |
 # Iva Savic (for discussion, sandboxing, design suggestion, feedback)
 # Shawn Cummings (recording assistance, feedback)
 # Rachel Theodore (feedback on stimuli quality)
-# James Kirby (sharing stimuli)
 
 abstract: |
   YOUR ABSTRACT GOES HERE. All data and code for this study are shared via OSF, including the R markdown document that this article is generated from, and an R library that implements the models we present.
@@ -83,7 +82,9 @@ header-includes:
  - \subsectionfont{\color{black}}
  - \subsubsectionfont{\color{black}}
  - \usepackage{setspace}\doublespacing
- - \usepackage{subfig}
+ - \usepackage{subfig} 
+ - \usepackage{lscape}
+ - \usepackage{pdflscape}
  
 documentclass     : "apa6"
 classoption       : "man"
@@ -233,10 +234,10 @@ knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 ```{r, child="section-3-results-analysis.Rmd"}
 ```
 
-```{r, child="section-6-general-discussion.Rmd"}
+```{r, child="section-4-general-discussion.Rmd"}
 ```
 
-```{r, child="section-7-references.Rmd"}
+```{r, child="section-5-references.Rmd"}
 ```
 
 \newpage
