@@ -184,8 +184,6 @@ We fit the model using the package \texttt{brms} [@R-brms_a] in R [@R; @RStudio]
 To analyse the incremental effects of exposure condition on the proportion of "t"-responses at test, the perceptual model contained exposure condition (backward difference coded, comparing the +10ms against the +0ms shift condition, and the +40ms against the +10ms shift condition), test block (backward difference coded from the first to last test block), VOT (Gelman scaled), and their full factorial interaction. For the perceptual model, "t"-responses were regressed on the three-way interaction of VOT, condition, and block. Random effects were modelled with varying intercepts and slopes by participant and varying intercepts and slopes by minimal pair item. We assumed a uniform bias in participant responses, that is, on lapsing trials participants would respond "t" half the time <!--check that model which fits bias estimate converges, if so use that model--> and fitted a population-level intercept for the lapse rate. Random effects for the lapsing model and lapse rates were not fitted to reduce the number of parameters and to facilitate model convergence.
 
 
-## Behavioral results
-
 
 ```{r load-br-model-block1}
 # make Block 1 subset
