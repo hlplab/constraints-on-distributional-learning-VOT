@@ -168,24 +168,21 @@ In addition, participants' categorization during the early phase of the experime
 ## Results
 ## Regression analysis
 The regression analysis addresses several questions: 
-Do listeners CHANGE their categorization behaviour in the direction predicted by their respective exposure distributions? 
-At what stage in the experiment did the behavioural change first emerge?
-Are differences in categorisation behaviour in proportion to the difference between the exposure conditions?
-Do the differences between exposure conditions diminish with repeated testing and without intermittent exposure?
+
+    1. Do listeners change their categorization behaviour in the direction predicted by their respective exposure distributions? 
+    2. At what stage in the experiment did the behavioural change first emerge?
+    3. Are the shifts in categorisation behaviour proportional to the differences between the exposure conditions?
+    4. Do the differences between exposure conditions diminish with repeated testing and without intermittent exposure?
 
 
-We a Bayesian mixed-effects psychometric models to participants' categorization responses on critical test trials [e.g., @prins2011]. We are primarily interested in the changes in categorization behaviour between test blocks which are presumed to be a consequence of the input from preceding exposure blocks however we fit a separate regression model for exposure in order to visualise participant behaviour during exposure. 
+We fit a Bayesian mixed-effects psychometric model to participants' categorization responses on critical test trials [e.g., @prins2011]. We are primarily interested in the changes in categorization behaviour between test blocks which are presumed to be a consequence of the input from preceding exposure blocks however we fit a separate regression model for exposure in order to visualise participant behaviour during exposure. 
 
 The psychometric model is essentially an extension of mixed-effects logistic regression that also takes into account attentional lapses. Ignoring attentional lapses--while commonplace in research on speech perception [incl. our own work, but see @clayards2008; @kleinschmidt2016you]---can lead to biased estimates of categorization boundaries [e.g., @wichmann2001psychometric]. The mixed-effects psychometric model describes the probability of "t"-responses as a weighted mixture of a lapsing-model and a perceptual model. The lapsing model is a mixed-effects logistic regression [@jaeger2008categorical] that predicts participant responses that are made independent of the stimulus---for example, responses that result from attentional lapses. These responses are independent of the stimulus, and depend only on participants' response bias. The perceptual model is a mixed-effects logistic regression that predicts all other responses, and captures stimulus-dependent aspects of participants' responses. The relative weight of the two models is determined by the lapse rate, which is described by a third mixed-effects logistic regression. 
 
 We fit the model using the package \texttt{brms} [@R-brms_a] in R [@R; @RStudio]. Following previous work from our lab [@horberg2021rational; @xie2021cross], we used weakly regularizing priors to facilitate model convergence. For fixed effect parameters, we standardized continuous predictors (VOT) by dividing through twice their standard deviation [@gelman2008scaling], and used Student priors centered around zero with a scale of 2.5 units [following @gelman2008weakly] and 3 degrees of freedom. For random effect standard deviations, we used a Cauchy prior with location 0 and scale 2, and for random effect correlations, we used an uninformative LKJ-Correlation prior with its only parameter set to 1, describing a uniform prior over correlation matrices [@Lewandowski2009]. Four chains with 2000 warm-up samples and 2000 posterior samples each were fit. No divergent transitions after warm-up were observed, and all $\hat{R}$ were close to 1.
 
-To analyse the incremental effects of exposure condition on the proportion of "t"-responses at test, the perceptual model contained exposure condition (backward difference coded, comparing the +10ms against the +0ms shift condition, and the +40ms against the +10ms shift condition), test block (backward difference coded from the first to last test block), VOT (Gelman scaled), and their full factorial interaction. For the perceptual model, "t"-responses were regressed on the three-way interaction of VOT, condition, and block. Random effects were modelled with varying intercepts and slopes by participant and varying intercepts and slopes by minimal pair item. We assumed uniform bias [*check that model which fits bias estimate converges, if so use that model] and fitted a population-level intercept for the lapse rate. Random effects for the lapsing model and lapse rates were not fitted to limit the number of parameters and to encourage model convergence.
+To analyse the incremental effects of exposure condition on the proportion of "t"-responses at test, the perceptual model contained exposure condition (backward difference coded, comparing the +10ms against the +0ms shift condition, and the +40ms against the +10ms shift condition), test block (backward difference coded from the first to last test block), VOT (Gelman scaled), and their full factorial interaction. For the perceptual model, "t"-responses were regressed on the three-way interaction of VOT, condition, and block. Random effects were modelled with varying intercepts and slopes by participant and varying intercepts and slopes by minimal pair item. We assumed a uniform bias in participant responses, that is, on lapsing trials participants would respond "t" half the time <!--check that model which fits bias estimate converges, if so use that model--> and fitted a population-level intercept for the lapse rate. Random effects for the lapsing model and lapse rates were not fitted to reduce the number of parameters and to facilitate model convergence.
 
-
-### Expectations
-Given previous findings of @kleinschmidt2016you we expected participants in the various exposure conditions to shift their average categorization functions towards the direction of the ideal categorization function implied by their respective exposure distributions. We expected the differences between the groups to be most pronounced after the final exposure block as they would have had the complete exposure to all the tokens that make up the exposure distributions. This follows from predictions of incremental Bayesian belief-updating -- that listeners would integrate their prior expectations with the current input to infer the present talker's cue-to-category-mapping (the posterior distribution). 
-Also based on previous findings, we expected the +40ms group to not fully  converge on the ideal categorization function as it was previously found that the further an exposure talker's cue distributions deviated from a *typical* talker's, the further the distance of categorization function from the ideal boundary. We therefore expected to see differences in categorizations between the +10ms and +40ms conditions such that listeners in the +40ms condition would shift more than those in the +10ms condition but to have an average categorization function located to the left of the ideal function. [@kleinschmidt2016you].
 
 ## Behavioral results
 
@@ -233,8 +230,6 @@ fit_mix_block1 <- brm(
   control = list(adapt_delta = .999),
   file = "../models/Exp-AE-DLVOT-Block1-lapse-no-RTexcl.rds")
 ```
-
-
 
 
 
@@ -302,58 +297,6 @@ p.fit_block1 <- psychometric_fit_block1 %>%
 
 
 
-
-
-
-```{r IO-categorization-VOT-f0-centered-input-block1, message=FALSE}
-# prepare data for IO that centers perceptual input relative to database mean before categorization
-
-# prepare production corpus from Chodroff & Wilson
-d.chodroff_wilson <-
-  get_ChodroffWilson_data(
-    database_filename = "../data/all_observations_with_non-missing_vot_cog_f0.csv",
-    min.n_per_talker_and_stop = 25,
-    limits.VOT = c(-Inf, Inf),
-    limits.f0 = c(0, 350),
-    max.p_for_multimodality = .1
-  ) %>%
-  mutate_at(
-    c("VOT", "f0_Mel"),
-    list("centered" = function(x) apply_ccure(x, data = .)))
-
-d.chodroff_wilson.selected <-
-  d.chodroff_wilson %>%
-  filter(poa == "/d/-/t/") %>%
-  group_by(Talker, category) %>%
-  mutate(n = n()) %>%
-  group_by(Talker) %>%
-  # subsample n tokens, as determined by category with fewer tokens
-  mutate(
-    n_min = min(n),
-    n_category = n_distinct(category)) %>%
-  # select talkers with both /d/ and /t/ observations
-  filter(n_category == 2) %>%
-  group_by(Talker, category) %>%
-  sample_n(size = first(n_min)) %>%
-  ungroup() %>%
-  mutate_at(
-      c("VOT", "f0", "f0_Mel", "f0_semitones"),
-      list("centered" = function(x) apply_ccure(x, data = .))) %>% 
-  mutate(category = factor(category))
-
-chodroff.means <- d.chodroff_wilson.selected %>% 
-  group_by(Talker) %>% 
-  summarise(across(c(VOT, f0_Mel), mean)) %>% 
-  ungroup() %>% 
-  summarise(across(c(VOT, f0_Mel), mean)) 
-
-chodroff.mean_VOT <- chodroff.means %>% pull(VOT)
-chodroff.mean_f0 <- chodroff.means %>% pull(f0_Mel)
-```
-
-
-
-
 ```{r model-test-blocks, warning=FALSE}
 d.test_exposure_for_analysis %<>% 
   mutate(Response.Voiceless = ifelse(Response.Voicing == "voiceless", 1, 0))
@@ -394,90 +337,24 @@ fit_mix_helmert <- read_rds("../models/Exp-AE-DLVOT-labelled-lapsing-GLMM-helmer
 fixed_eff_exp2_helmert <- tidy(fit_mix_helmert, effects = "fixed") %>% 
   select(-c(effect, component))
 
-#fixed_eff_exp2
-#fixed_eff_exp2_helmert
-
 # kable(fixed_eff_exp2, booktabs = TRUE) %>% 
 #   kable_styling(latex_options = c("striped", "repeat_header", "scale_down"), position = "center") 
+
+
+#hypothesis(fit_mix_uniform_bias, "mu2_VOT_gs > 0")
+
 ```
 
 
 
+Figure @\ref(fig:plot-fit-intercept-slope) summarizes participants’ fitted categorization functions across the different test blocks. Of note is the average categorization functions of the respective conditions before exposure informative exposure. As depicted in the first panel, the average categorization functions converge on the same boundary or PSE (45ms, 95% QI = 36ms -- 55ms) which suggests that the three exposure groups largely had similar expectations about the cue distribution corresponding to /d/ and /t/ for this type of talker.  
 
-
-Figure @\ref(fig plot-fit-intercept-slope) summarizes participants’ fitted categorization functions across the different test blocks. A first point to note is the average categorization functions of the respective conditions before exposure to the talker. As depicted in the first panel, the average categorization functions converge on the same boundary or PSE (45ms, 95% QI = 36ms -- 55ms) which suggests that the three exposure groups largely had similar expectations about the cue distribution corresponding to /d/ and /t/ for this type of talker. What it also shows is that in setting our baseline condition we may have underestimated the boundary for our test stimuli by approximately 20ms which implies that the true shifts of our conditions correspond to -20ms, -10ms and +20ms (for +0, +10, and +40) respectively. The misalignment of the expected categorisation function between norming and the present experiment could be due to differences in both the length of and the continua deployed in the experiments. 
-
-
-
-```{r visualising-true-shifts, fig.height=3, fig.width=6, warning=FALSE, message=FALSE}
-d.means <- 
-  crossing(condition = c("+0ms", "+10ms", "+40ms"),
-         category = c("/d/", "/t/")) %>% 
-  mutate(mean = c(5, 50, 15, 60, 45, 90))
-
-d.exposure %>% 
-  na.omit() %>% 
-  filter(image_selection == "forward" & list_LSQ_variant == "A") %>% 
-  mutate(condition = case_when(condition == "Shift0" ~ "+0ms",
-                               condition == "Shift10" ~ "+10ms",
-                               condition == "Shift40" ~ "+40ms"),
-         labelling = as_factor(labelling)) %>% 
-  ggplot() +
-  geom_histogram(aes(x = VOT, fill = paste(condition, category, labelling), 
-                     color = paste(condition, category, labelling),
-                     linetype = labelling), 
-                 alpha = .8) +
-  scale_colour_manual(
-    "Labelling",
-    values = c(
-    "+0ms /d/ labeled" = "#800000", 
-    "+0ms /d/ unlabeled" = "#ff9999",
-    "+0ms /t/ labeled" = "#cc0000", 
-    "+0ms /t/ unlabeled" = "#ffe6e6",
-    "+10ms /d/ labeled" = "#0a751c",
-    "+10ms /d/ unlabeled" = "#b9f9c3",
-    "+10ms /t/ labeled" = "#12D432",
-    "+10ms /t/ unlabeled" = "#e8fdeb",
-    "+40ms /d/ labeled" = "#02427e", 
-    "+40ms /d/ unlabeled" = "#b4dafe",
-    "+40ms /t/ labeled" = "#0481F3", 
-    "+40ms /t/ unlabeled" = "#e6f3ff"),
-    aesthetics = c("color", "category", "fill"),
-    labels = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", "", "", "", "", "", "", "", "")) +
-    guides(colour = guide_legend(override.aes = list(
-    colour = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
-    fill = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
-    linetype = c(2, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0),
-    values = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", 0, 0, 0, 0, 0, 0, 0, 0)), nrow = 1)) +
-  stat_function(fun = function(x) 72 * 5 * dnorm(x, 25, sqrt(var_d)),
-                color = "black", size = .6, alpha = .7, linetype = 2) +
-  stat_function(
-    fun = function(x) 72 * 5 * dnorm(x, 70, sqrt(var_t)),
-    color = "black", size = .6, alpha = .5, linetype = 2) +
-  geom_rug(data = tibble(VOT = c(25, 70)), aes(x = VOT), sides = "t") +
-  scale_x_continuous("VOT (ms)", breaks = seq(-50, 150, 30)) +
-  scale_y_continuous("Count") +
-  geom_text(data = d.means,
-            aes(x = 103, 
-                y = 17,
-                label = paste("mean", category, "=", mean)),
-            size = 2,
-            position = position_dodge2v(height = -8),
-            inherit.aes = F) +
-  facet_wrap(~ condition, scales = "free_y") +
-  guides(linetype = "none") +
-  theme(legend.position = "top",
-        legend.key.width = unit(15, "pt"),
-        legend.key.height = unit(10, "pt"),
-        legend.text.align = 1,
-        legend.box.spacing = unit(2, "pt"))
-```
 
 
 There was a main effect of VOT $\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_VOT_gs", "mu2_VOT_gs > 0")`; participants were more likely to respond "t" as VOT increased. Condition had a main effect on responses such that with larger shifts, participants on average responded with fewer "t"s.  Additionally, the difference in average "t" responses between the +40ms and +10ms conditions ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift40vs.Shift10", "mu2_Condition.Exposure_Shift40vs.Shift10 < 0")` reduction in log-odds) was *larger* than the difference between the +10 and +0 conditions ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift10vs.Shift0", "mu2_Condition.Exposure_Shift10vs.Shift0 < 0")` reduction in log-odds). 
 Qualitatively, the results indicate listeners adjust their expectations to align with the statistics of the exposure talker, consonant with previous findings of studies employing this paradigm (e.g., @clayards2008; @kleinschmidt2016you; @theodore2019distributional). 
 
-While there was weak evidence for a main effect of block its interaction with condition revealed how participants in the respective exposure groups responded as they progressively received more informative input. Most of the change took place after the first exposure block. Participants in the +10ms condition responded with fewer "ts" compared to participants in the +0ms condition in test block 2 relative to that in test block 1 ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1", "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 < 0")`). The difference between the  +40ms and +10ms condition in test block 2 relative to that in block 1 was more pronounced, reflecting the wider separation between the two exposure conditions in block 2 ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1", "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 < 0")`). 
+The interaction of block with condition revealed how participants in the respective exposure groups responded as they progressively received more informative input. Most of the change took place after the first exposure block. Participants in the +10ms condition responded with fewer "ts" compared to participants in the +0ms condition in test block 2 relative to that in test block 1 ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1", "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 < 0")`). The difference between the  +40ms and +10ms condition in test block 2 relative to that in block 1 was more pronounced, reflecting the wider separation between the two exposure conditions in block 2 ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1", "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 < 0")`). 
 
 In test block 3, the difference in average log-odds between conditions +0ms and +10ms, relative to test block 2 was *positive* such that the difference between the two conditions in test block 3 was smaller than the corresponding difference in block 2 ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2", "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 > 0")`). In test blocks 4 and 5, the  average log-odds difference between +0ms and +10ms increased marginally when compared to the preceding block, respectively (as indicated by the negative signs of the estimates; see table xx) while in test block 6 the difference between the two exposure conditions narrowed substantially. Looking at the block-by-block differences between the +40ms and +10ms conditions, these continued to widen in test blocks 3 and block 4 relative to their respective preceding blocks, albeit by progressively smaller increments. This widening trend would then reverse in test blocks 5 and 6. In all, the respective conditions achieved their maximal shifts by block 3 and began to display a reversal of the exposure effects by the end of block 4. This "unlearning" of the exposure distribution, observed in the final 3 test blocks was expected given previous findings that distributional learning effects can begin to dissipate with prolonged testing with tokens from a uniform distribution. 
 
@@ -485,7 +362,7 @@ An examination of the block-by-block changes in the intercepts and slopes of the
 
 In summary, the analysis shows that the groups diverged in their categorisation behaviour very early on in the experiment -- only after 24 exposures to each category. This suggests a readiness to adapt to a new talker by integrating current input with prior expectations. This prompt shift was however tempered by participants reaching the limits of their adaptation almost as quickly; the +40ms condition for example achieved more than 95% of its maximal shift in the experiment in test block 2. Only a marginal change in categorization behaviour was observed after the second exposure block while the third exposure block barely resulted in further shifts. 
 
- **Glaringly, all three conditions undershot the ideal categorization boundaries implied by their respective exposure distributions: 14.5ms in the +0ms, 7.2ms in the +10ms, and 14.5ms in the +40ms conditions. 
+ **all three conditions undershot the ideal categorization boundaries implied by their respective exposure distributions: 14.5ms in the +0ms, 7.2ms in the +10ms, and 14.5ms in the +40ms conditions. 
 
   **Like this study's predecessor, we also find that participants had a greater propensity to shift their categorisations rightwards towards higher VOT values rather than leftwards towards lower VOT values as the +40ms group showed the widest deviation from the baseline.
 
@@ -606,7 +483,7 @@ p.fit <- cond_fit_test_exposure %>%
   geom_rect(
     data = label_colour %>% mutate(factor(Block)),
     aes(xmin = -Inf, xmax = Inf,
-        ymin = 1.05, ymax = 1.32,
+        ymin = 1.05, ymax = 1.35,
         fill = Block.colour), show.legend = F) +
   scale_fill_manual(values = c("grey" = "grey", "black" = "black")) +
   new_scale_fill() +
@@ -717,8 +594,26 @@ fit_mix_exposure_nested <- brm(
  temp <- 
  fixef(fit_mix_test_nested, summary = F, pars = gsub("^b_(mu2_.*)$", "\\1", variables(fit_mix_test_nested)))
 
- 
-#mu2 ~ Block / (Condition, VOT_gs sep = "x")) 
+# nested model to get simple effects of block by condition
+# brm(
+#    bf(
+#      Response.Voiceless ~ 1,
+#      mu1 ~ 0 + offset(0),
+#      mu2 ~ 0 + Block / I(paste(Condition, VOT_gs, sep = "x")) +
+#        (0 + Block / VOT_gs | ParticipantID) +
+#        (0 + Block / I(paste(Condition, VOT_gs, sep = "x")) | Item.MinimalPair),
+#      theta1 ~ 1),
+#    data = d.test_exposure_for_analysis %>% 
+#      filter(Phase == "test") %>% 
+#      prepVars(levels.Condition = levels_Condition.Exposure),
+#    cores = 4,
+#    chains = chains,
+#    init = 0,
+#    iter = 4000, 
+#    warmup = 2000, 
+#    family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
+#    control = list(adapt_delta = .99),
+#    file =""))
  
 # temp %>%
 #   as_tibble() %>%
@@ -996,10 +891,10 @@ p.params <- ((p.intercept) | (p.slope) | p.PSE) +
 ```
 
 
-(ref:plot-fit-intercept-slope) Fitted lapse-rate corrected psychometric plots by exposure condition; point ranges indicate the mean proportion of "t"-responses and their 95% bootstrapped CI (top row).  Changes in intercepts, slopes and categorisation boundary (represented by the point-of-subjective-equality (PSE)) by block. Summary is of 8000 draws from the maximum **a posteriori** estimate. Points represent the mean of posterior draws and line ranges are the 95% quantile interval of all draws. Dashed lines are the predicted intercepts, slopes and PSEs by the ideal observers of the respective conditions that have perfectly learned the exposure distributions. 
+(ref:plot-fit-intercept-slope) **Top row** Fitted lapse-rate corrected psychometric plots by exposure condition; point ranges indicate the mean proportion of "t"-responses and their 95% bootstrapped CI.  **Bottom row** Changes in intercepts, slopes and categorisation boundary (represented by the point-of-subjective-equality (PSE)) by block. Summary is of 8000 draws from the maximum *a posteriori* estimate. Points represent the mean of posterior draws and line ranges are the 95% quantile interval of all draws. Dashed lines show the predicted intercepts, slopes and PSEs by the ideal observers of the respective conditions that have perfectly learned the exposure distributions. 
 
 \begin{landscape}
-```{r plot-fit-intercept-slope, fig.width=11.5, fig.height=3.8, warning=FALSE }
+```{r plot-fit-intercept-slope, fig.width=11.5, fig.height=3.8, warning=FALSE, fig.cap="(ref:plot-fit-intercept-slope)"}
 p.fit / p.params
 ```
 \end{landscape}
@@ -1023,6 +918,41 @@ cond_means <- left_join(cond_means_test_exposure, cond_means_exposure)
 # ensuring that a particular proportion of points are included within each contour line
 # adjusted from https://stackoverflow.com/questions/75598144/interpretation-of-2d-density-estimate-charts
 # we can get the 2d density with MASS::kde2d, then convert to a raster using terra. We can then order the points according to the density in the associated 2d density grid and find the density at which a quantile is passed with approx
+d.chodroff_wilson <-
+  get_ChodroffWilson_data(
+    database_filename = "../data/all_observations_with_non-missing_vot_cog_f0.csv",
+    min.n_per_talker_and_stop = 25,
+    limits.VOT = c(-Inf, Inf),
+    limits.f0 = c(0, 350),
+    max.p_for_multimodality = .1
+  ) %>%
+  mutate_at(
+    c("VOT", "f0_Mel"),
+    list("centered" = function(x) apply_ccure(x, data = .)))
+
+d.chodroff_wilson.selected <-
+  d.chodroff_wilson %>%
+  filter(poa == "/d/-/t/") %>%
+  group_by(Talker, category) %>%
+  mutate(n = n()) %>%
+  group_by(Talker) %>%
+  # subsample n tokens, as determined by category with fewer tokens
+  mutate(
+    n_min = min(n),
+    n_category = n_distinct(category)) %>%
+  # select talkers with both /d/ and /t/ observations
+  filter(n_category == 2) %>%
+  group_by(Talker, category) %>%
+  sample_n(size = first(n_min)) %>%
+  ungroup() %>%
+  mutate_at(
+      c("VOT", "f0", "f0_Mel", "f0_semitones"),
+      list("centered" = function(x) apply_ccure(x, data = .))) %>% 
+  mutate(category = factor(category))
+
+
+
+
 quantile_levels <- c(0, .05, .25, .5, .75, .95, .99)
 
 density_quantiles <- function(x, y, quantiles) {
