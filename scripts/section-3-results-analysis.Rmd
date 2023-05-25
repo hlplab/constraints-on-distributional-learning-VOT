@@ -1,4 +1,4 @@
-```{r}
+```{r load-libraries}
 require(tidyverse)
 require(magrittr)
 
@@ -11,7 +11,7 @@ source("functions.R")
 ```
 
 
-```{r}
+```{r load-format-experimental-data}
 # load formatted exposure and test data from experiment 2
 d.exposure_test <- read_csv("../data/experiment2_raw_formatted.csv", show_col_types = F)
 
@@ -229,12 +229,7 @@ fit_mix_block1 <- brm(
   family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
   control = list(adapt_delta = .999),
   file = "../models/Exp-AE-DLVOT-Block1-lapse-no-RTexcl.rds")
-```
 
-
-
-
-```{r, warning=FALSE}
 # get PSE of Block 1 from model summary
 PSE.fit_mix_block1 <- descale(-(as.numeric(summary(fit_mix_block1)$fixed["mu2_Intercept", 1])) / as.numeric(summary(fit_mix_block1)$fixed["mu2_VOT_gs", 1]), VOT.mean_test, VOT.sd_test)
 
@@ -250,54 +245,11 @@ psychometric_fit_block1 <- conditional_effects(
     effects = "VOT_gs",
     method = "posterior_epred",
     plot = F)[[1]]
-
-# make base plot
-p.fit_block1 <- psychometric_fit_block1 %>% 
-  ggplot(aes(x = descale(VOT_gs, VOT.mean_test, VOT.sd_test), 
-             y = estimate__)) +
-  scale_x_continuous("VOT (ms)", limits = c(-5, 70)) +
-  scale_y_continuous("Fitted proportion of 't' responses") +
-  geom_ribbon(aes(ymin = lower__, ymax = upper__), alpha = .1) +
-  geom_line(linewidth = 1.5, 
-            colour = "#333333",
-            alpha = .8) +
-   geom_errorbarh(
-    data = post_sample_block1 %>% 
-      mutate(y = .01),
-    mapping = aes(xmin = .lower, xmax = .upper, y = y), 
-    color = "#333333",
-    height = 0,
-    alpha = .5,
-    size = 1, 
-    inherit.aes = F) +
-  geom_label(
-    data = post_sample_block1 %>% 
-      median_qi(PSE) %>% 
-      mutate(y = 0.01),
-    mapping = aes(x = PSE, y = y, label = round(PSE)),
-    color = "#333333", 
-    size = 1.8,
-    label.padding = unit(0.18, "lines"),
-    alpha = .5) +
-  annotate(
-    geom = "text",
-    x = 55,
-    y = 0.02, 
-    label = paste(round(post_sample_block1[[2]]), "ms", "-", round(post_sample_block1[[3]]), "ms"),
-    size = 3.5,
-    colour = "darkgray") +
-   geom_rug(
-    data = d.block1 %>% 
-      reframe(Item.VOT) %>% 
-      distinct(Item.VOT),
-    mapping = aes(x = Item.VOT),
-    alpha = .6,
-    inherit.aes = F)
 ```
 
 
 
-```{r model-test-blocks, warning=FALSE}
+```{r model-fit-test-blocks, warning=FALSE}
 d.test_exposure_for_analysis %<>% 
   mutate(Response.Voiceless = ifelse(Response.Voicing == "voiceless", 1, 0))
 levels_Condition.Exposure = c("Shift0", "Shift10", "Shift40")
@@ -342,7 +294,6 @@ fixed_eff_exp2_helmert <- tidy(fit_mix_helmert, effects = "fixed") %>%
 
 
 #hypothesis(fit_mix_uniform_bias, "mu2_VOT_gs > 0")
-
 ```
 
 
@@ -370,7 +321,7 @@ Under the Bayesian ideal adapter framework quick adaptation is characterised as 
 
 
 
-```{r model-exposure-blocks}
+```{r model-fit-exposure-blocks}
 # get VOT mean and sd across exposure blocks and CONDITIONS for scaling purposes
 exposure_block_stats <- d.test_exposure_for_analysis %>% 
   ungroup() %>% 
@@ -413,7 +364,7 @@ tidy(fit_mix_exposure, effects = "fixed") %>%
 ```
 
 
-```{r plot-exposure-fit, fig.width=6, fig.height=2}
+```{r expectation-values-exposure-test}
 cond_fit_exposure <- conditional_effects(
     fit_mix_exposure,
     effects = "VOT_gs:Condition.Exposure",
@@ -425,11 +376,7 @@ cond_fit_exposure <- conditional_effects(
     method = "posterior_epred",
     ndraws = 500,
     re_formula = NA)
-```
 
-
-
-```{r, results='hide', warning=FALSE}
 cond_fit_test <- conditional_effects(
     fit_mix_uniform_bias,
     effects = "VOT_gs:Condition.Exposure",
@@ -445,9 +392,7 @@ cond_fit_test <- conditional_effects(
 
 
 
-
-\begin{landscape}
-```{r, fig.width=11, fig.height=3}
+```{r plot-test-exposure-fit, fig.width=11, fig.height=3}
 #combine test and exposure fit
 cond_fit_exposure[[1]] %<>% 
   mutate(Item.VOT = descale(VOT_gs, VOT.mean_exposure, VOT.sd_exposure))
@@ -483,7 +428,7 @@ p.fit <- cond_fit_test_exposure %>%
   geom_rect(
     data = label_colour %>% mutate(factor(Block)),
     aes(xmin = -Inf, xmax = Inf,
-        ymin = 1.05, ymax = 1.35,
+        ymin = 1.05, ymax = 1.37,
         fill = Block.colour), show.legend = F) +
   scale_fill_manual(values = c("grey" = "grey", "black" = "black")) +
   new_scale_fill() +
@@ -546,10 +491,12 @@ p.fit <- cond_fit_test_exposure %>%
   theme(legend.position = "top",
         strip.background = element_rect(fill = NA))
 ```
-\end{landscape}
 
-```{r}
+
+```{r fit-nested-models-for-intercepts-slopes-simple-effects}
 # nested models for extracting the 'intercepts' and 'slopes' for each Block and Condition
+
+# nested model for test
 fit_mix_test_nested <- brm(
   bf(
     Response.Voiceless ~ 1,
@@ -570,6 +517,7 @@ fit_mix_test_nested <- brm(
   control = list(adapt_delta = .99),
   file = "../models/Exp-AE-DLVOT-labelled-lapsing-GLMM-nested-no-RTexcl.rds")
 
+# nested model for exposure
 fit_mix_exposure_nested <- brm(
   bf(
     Response.Voiceless ~ 1,
@@ -658,7 +606,7 @@ Intercepts_slopes <- full_join(Intercepts_slopes_test, Intercepts_slopes_exposur
 ```
 
 
-```{r make-dataframe-for-logistic-regression-on-predicted-probs-by-IOs, warning=FALSE}
+```{r predictions-of-IOs, warning=FALSE}
 # get the actual means and variances of the exposure stimuli by category
 d.summarystats_exposure <- d.test_exposure_for_analysis %>% 
   filter(Phase == "exposure") %>% 
@@ -729,7 +677,7 @@ d.io.categorisation %<>%
 
 
 
-```{r, warning=FALSE}
+```{r summarising-draws-from-nested-models, warning=FALSE}
 # alternative way to get posterior draws using gather_draws
 d.estimates_test <- fit_mix_test_nested %>% 
   gather_draws(`b_mu2_IpasteCondition.ExposureBlocksepEQ.*`, regex = TRUE, ndraws = 8000) %>% 
@@ -757,7 +705,7 @@ d.estimates <- full_join(d.estimates_test, d.estimates_exposure) %>%
 
 
 
-```{r}
+```{r plot-intercepts-slopes-PSE}
 p.intercept <- d.estimates %>% 
   ggplot(aes(x = Block, y = Intercept_mean, colour = Condition.Exposure, group = Condition.Exposure)) +
     geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 0.75, xmax = 1.25), 
@@ -883,23 +831,22 @@ p.PSE <- d.estimates %>%
 ```
 
 
-```{r, fig.width=8.5, fig.height=2.5, warning=FALSE}
+```{r make-combined-intercept-slope-PSE-plot, fig.width=8.5, fig.height=2.5, warning=FALSE}
 p.params <- ((p.intercept) | (p.slope) | p.PSE) + 
   plot_layout( guides = "collect") &
   theme(legend.position = "none", axis.text = element_text(size = 8))
-#ggsave("p.params_exp2.png", p.params, width = 14, height = 8, units = "cm", path = "~/Desktop/")
 ```
 
 
 (ref:plot-fit-intercept-slope) **Top row** Fitted lapse-rate corrected psychometric plots by exposure condition; point ranges indicate the mean proportion of "t"-responses and their 95% bootstrapped CI.  **Bottom row** Changes in intercepts, slopes and categorisation boundary (represented by the point-of-subjective-equality (PSE)) by block. Summary is of 8000 draws from the maximum *a posteriori* estimate. Points represent the mean of posterior draws and line ranges are the 95% quantile interval of all draws. Dashed lines show the predicted intercepts, slopes and PSEs by the ideal observers of the respective conditions that have perfectly learned the exposure distributions. 
 
 \begin{landscape}
-```{r plot-fit-intercept-slope, fig.width=11.5, fig.height=3.8, warning=FALSE, fig.cap="(ref:plot-fit-intercept-slope)"}
+```{r plot-fit-intercept-slope-PSE, fig.width=11.5, fig.height=3.8, warning=FALSE, fig.cap="(ref:plot-fit-intercept-slope)"}
 p.fit / p.params
 ```
 \end{landscape}
 
-```{r}
+```{r getting-means-at-exposure-by-condition}
 # calculate the various mean VOTs exposed to for each condition, including the labelled trials, with and without accounting for the test trials
 cond_means_test_exposure <- d.test_exposure_for_analysis %>% 
   group_by(Condition.Exposure) %>% 
@@ -914,7 +861,7 @@ cond_means <- left_join(cond_means_test_exposure, cond_means_exposure)
 ```
 
 
-```{r compare-density-database-with-exposure-means, fig.width=6.5, fig.height=4.5}
+```{r non-parametric-density-plot, fig.width=6.5, fig.height=4.5}
 # ensuring that a particular proportion of points are included within each contour line
 # adjusted from https://stackoverflow.com/questions/75598144/interpretation-of-2d-density-estimate-charts
 # we can get the 2d density with MASS::kde2d, then convert to a raster using terra. We can then order the points according to the density in the associated 2d density grid and find the density at which a quantile is passed with approx
@@ -950,10 +897,7 @@ d.chodroff_wilson.selected <-
       list("centered" = function(x) apply_ccure(x, data = .))) %>% 
   mutate(category = factor(category))
 
-
-
-
-quantile_levels <- c(0, .05, .25, .5, .75, .95, .99)
+quantile_levels <- c(0, .05, .25, .5, .75, .95, .99) 
 
 density_quantiles <- function(x, y, quantiles) {
   require(terra)
@@ -1034,7 +978,9 @@ p.density <-
   remove_axes_titles 
 ```
 
-```{r, warning=FALSE}
+
+
+```{r plot-parametric-density-plot, warning=FALSE}
 cov_d <- (d.chodroff_wilson.selected %>% 
   group_by(category) %>% 
   nest(data = -c(category)) %>% 
