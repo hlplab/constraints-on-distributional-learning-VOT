@@ -123,6 +123,7 @@ library(webshot)
 library(ggstance)
 library(ggnewscale)
 library(kableExtra)
+library(gt)
 library(sjPlot)
 
 library(linguisticsdown)    # IPA symbols
