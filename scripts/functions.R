@@ -66,33 +66,39 @@ get_posterior <- function(
 }
 
 # Function for calculating CI from logits of a model summary
-make_CI <- function(model, coef, hypothesis) {
-  paste0(paste(round(plogis(as.numeric(summary(model)$fixed[coef, 1])) * 100, 1), "%, "), " 95%-CI: ",
-         paste(round(plogis(as.numeric(summary(model)$fixed[coef, 3:4])) * 100, 1), collapse = " to "), "%", "; ", get_bf(model = model, hypothesis = hypothesis))
-}
-
-# Function to get identity CI of a model summary
-get_CI <- function(model, coef, hypothesis) {
-  paste0(round(as.numeric(summary(model)$fixed[coef, 1]), 1), " 95%-CI: ",
-         paste(round(as.numeric(summary(model)$fixed[coef, 3:4]), 1), collapse = " to "),
-         "; ",
-         get_bf(model = model, hypothesis = hypothesis))
-}
-
-logit_to_prob <- function(model, coef, index = 1) {
-  paste0(round(plogis(as.numeric(summary(model)$fixed[coef, index])) * 100, 1), "%")
+get_coefficient_fr_model <- function(model, term) {
+  round(as.numeric(summary(model)$fixed[term, 1]), 1)
 }
 
 get_bf <- function(model, hypothesis) {
   paste0("Bayes factor: ", round(hypothesis(model, hypothesis)[[1]]$Evid.Ratio, 2), " 90%-CI : ", round(hypothesis(model, hypothesis)[[1]]$CI.Lower, 2), " to ", round(hypothesis(model, hypothesis)[[1]]$CI.Upper, 2) )
 }
 
+make_CI <- function(model, term, hypothesis) {
+  paste0(paste(round(plogis(as.numeric(summary(model)$fixed[term, 1])) * 100, 1), "%, "), " 95%-CI: ",
+         paste(round(plogis(as.numeric(summary(model)$fixed[term, 3:4])) * 100, 1), collapse = " to "), "%", "; ", get_bf(model = model, hypothesis = hypothesis))
+}
+
+# Function to get identity CI of a model summary
+get_CI <- function(model, term, hypothesis) {
+  paste0(round(as.numeric(summary(model)$fixed[term, 1]), 1), " 95%-CI: ",
+         paste(round(as.numeric(summary(model)$fixed[term, 3:4]), 1), collapse = " to "),
+         "; ",
+         get_bf(model = model, hypothesis = hypothesis))
+}
+
+
+logit_to_prob <- function(model, term, index = 1) {
+  paste0(round(plogis(as.numeric(summary(model)$fixed[term, index])) * 100, 1), "%")
+}
 
 # function to transform Gelman-scaled values back
 descale <- function(x, mean, sd) {
   x_0 = (x * 2 * sd) + mean
   return(x_0)
 }
+
+
 
 get_ChodroffWilson_data <- function(
     database_filename,

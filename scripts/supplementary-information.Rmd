@@ -35,13 +35,20 @@ Four /d-t/ minimal pairs (dill-till, din-tin, dim-tim, dip-tip) were recorded to
 All critical pairs of the talker's recordings were annotated.
 Durational, measurements of voicing lead, VOT, and vowel were taken in addition to the mean F0 of the first 25% of the vowel duration. Annotations were made with a combination of listening to the audio file and inspection of the waveform and spectrogram. The annotation boundaries were made according to the following principles:
 
-* negative VOT (voicing during closure) -- the start was marked as the first sign of periodicity in the waveform before closure release. The end was marked at the point of closure release
+- pre-voicing (voicing during closure) 
+  -**start:** the first sign of periodicity in the waveform before closure release. 
+  -**End:** the point of closure release
 
-* VOT -- start: the point of closure release. End: the beginning of clearly defined periodicity in the waveform and at the appearance of low frequency energy in the spectrogram.
+- VOT 
+  -**start:** the point of closure release. 
+  -**End:** the beginning of clearly defined periodicity in the waveform and at the appearance of low frequency energy in the spectrogram.
 
-* Vowel -- start: the beginning of clearly defined periodicity in the waveform and at the appearance of low frequency energy in the spectrogram. End: if before a stop, when periodicity becomes irregular or at closure onset; if before a lateral, when formant transition approaches steady state; if before a nasal, when formants show a step-wise shift and when intensity shows a steep decline. 
+- Vowel 
+  -**start:** the beginning of clearly defined periodicity in the waveform and at the appearance of low frequency energy in the spectrogram. 
+  -**End:** if before a stop, when periodicity becomes irregular or at closure onset; if before a lateral, when formant transition approaches steady state; if before a nasal, when formants show a step-wise shift and when intensity shows a steep decline. 
 
-* F0 at vowel onset -- the average pitch measurement estimated over the first 25% of the total vowel duration.
+- F0 at vowel onset 
+  -the average pitch measurement estimated over the first 25% of the total vowel duration.
 
 [INSERT EXAMPLE IMAGES]
 
@@ -546,23 +553,19 @@ psychometric_fit_exp1 %>%
 
 
 
+## Main experiment
 
+### Catch trial performance plots
 
-## Experiment 2
-
-### Exclusions analysis
-- reaction time plots
-- catch trial performance plots
-
-
-```{r catch-trial-performance, fig.height=4, fig.width=6}
+(ref:plot-catch-trial-performance) Of the 122 participants, 1 committed more than 3 errors (<84% accuracy)
+```{r plot-catch-trial-performance, fig.height=4, fig.width=6, fig.cap="ref:plot-catch-trial-performance"}
 d.exposure_test %>% 
   group_by(ParticipantID) %>% 
-  summarise(No.CatchTrial.Correct = sum(CatchTrial.Correct, na.rm = T)) %>%
-  ggplot(aes(x = No.CatchTrial.Correct)) +
-  geom_bar(width = .6) +
-  scale_x_continuous("Number of correct catch trials", breaks = seq(0, 18, 1)) +
-  scale_y_continuous("Number of participants") 
+  summarise(Total_errors = 18 -sum(CatchTrial.Correct, na.rm = T)) %>%
+  ggplot(aes(x = Total_errors)) +
+  geom_bar(width = .5) +
+  scale_x_continuous("Total catch trial errors", breaks = seq(0, 6, 1)) +
+  scale_y_continuous("Number of participants", breaks = seq(0, 120, 5)) 
 ```
 
 
@@ -584,10 +587,7 @@ p.labelled <- d.exposure_test %>%
   scale_x_continuous("Total labelled trials correct") +
   scale_y_continuous("No. of participants", breaks  = seq(0, 115, 5)) +
   theme(legend.position = "none") 
-```
 
-
-```{r labeled-trial-performance, fig.width=6, fig.height=4, message=F}
 p.labelled.group <- d.exposure_test %>% 
   filter(Phase == "exposure") %>% 
   group_by(ParticipantID, Condition.Exposure, Block) %>% 
@@ -602,7 +602,8 @@ p.labelled.group <- d.exposure_test %>%
   theme(legend.position = "top") +
   facet_grid(Condition.Exposure ~ Block) 
 
-p.labelled + p.labelled.group + plot_layout(guides = "collect") & theme(legend.position = "top")
+p.labelled | p.labelled.group + 
+  plot_layout(guides = "collect") & theme(legend.position = "top")
 ```
 
 

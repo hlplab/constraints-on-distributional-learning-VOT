@@ -158,7 +158,7 @@ d.test_exposure_for_analysis <- d.exposure_test %>%
 ```
 
 ### Exclusions
-We excluded from analysis participants who committed more than 3 errors out of the 18 catch trials (<84% accuracy, N = 1), participants who committed more than 4 errors out of the 72 labelled trials (<94% accuracy, N = 0), participants with an average reaction time (RT) more than three standard deviations from the mean of the by-participant means (N = 0), and participants who reported not to have used headphones (N = 0) or not to be native (L1) speakers of US English (N = 0). 
+We excluded from analysis participants who committed more than 3 errors out of the 18 catch trials (<83% accuracy, N = 1), participants who committed more than 4 errors out of the 72 labelled trials (<94% accuracy, N = 0), participants with an average reaction time (RT) more than three standard deviations from the mean of the by-participant means (N = 0), and participants who reported not to have used headphones (N = 0) or not to be native (L1) speakers of US English (N = 0). 
 
 In addition, participants' categorization during the early phase of the experiment were scrutinised for their slope orientation and their proportion of "t"-responses at the least ambiguous locations of the VOT continuum. The early phase of the experiment was defined as the first 36 trials and the least ambiguous locations were defined as -20ms below the empirical mean of the /d/ category and +20ms above the empirical mean of the /t/ category. These means were obtained from the production data estimates by @Kurumada_Xie_Jaeger_2022.
 
@@ -182,8 +182,6 @@ The psychometric model is essentially an extension of mixed-effects logistic reg
 We fit the model using the package \texttt{brms} [@R-brms_a] in R [@R; @RStudio]. Following previous work from our lab [@horberg2021rational; @xie2021cross], we used weakly regularizing priors to facilitate model convergence. For fixed effect parameters, we standardized continuous predictors (VOT) by dividing through twice their standard deviation [@gelman2008scaling], and used Student priors centered around zero with a scale of 2.5 units [following @gelman2008weakly] and 3 degrees of freedom. For random effect standard deviations, we used a Cauchy prior with location 0 and scale 2, and for random effect correlations, we used an uninformative LKJ-Correlation prior with its only parameter set to 1, describing a uniform prior over correlation matrices [@Lewandowski2009]. Four chains with 2000 warm-up samples and 2000 posterior samples each were fit. No divergent transitions after warm-up were observed, and all $\hat{R}$ were close to 1.
 
 To analyse the incremental effects of exposure condition on the proportion of "t"-responses at test, the perceptual model contained exposure condition (backward difference coded, comparing the +10ms against the +0ms shift condition, and the +40ms against the +10ms shift condition), test block (backward difference coded from the first to last test block), VOT (Gelman scaled), and their full factorial interaction. For the perceptual model, "t"-responses were regressed on the three-way interaction of VOT, condition, and block. Random effects were modelled with varying intercepts and slopes by participant and varying intercepts and slopes by minimal pair item. We assumed a uniform bias in participant responses, that is, on lapsing trials participants would respond "t" half the time <!--check that model which fits bias estimate converges, if so use that model--> and fitted a population-level intercept for the lapse rate. Random effects for the lapsing model and lapse rates were not fitted to reduce the number of parameters and to facilitate model convergence.
-
-
 
 ```{r load-br-model-block1}
 # make Block 1 subset
@@ -291,15 +289,11 @@ fixed_eff_exp2_helmert <- tidy(fit_mix_helmert, effects = "fixed") %>%
 #   kable_styling(latex_options = c("striped", "repeat_header", "scale_down"), position = "center") 
 
 
-shift10vs_shift0_4vs1<- c("mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 < 0")
-shift40vs_shift10_4vs1 <- c("mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 < 0")
-
-hypothesis(fit_mix_uniform_bias, shift10vs_shift0_4vs1)
-hypothesis(fit_mix_uniform_bias, shift40vs_shift10_4vs1)
-
 # get hypotheses of fixed effects
 hypotheses <- hypothesis(fit_mix_uniform_bias, paste(rownames(fixef(fit_mix_uniform_bias))[-c(1, 2, 3)], "< 0"))
 table <- hypotheses$hypothesis %>% select(-Star)
+
+fixed_eff_exp2
 ```
 
 
@@ -307,11 +301,21 @@ table <- hypotheses$hypothesis %>% select(-Star)
 Figure @\ref(fig:plot-fit-intercept-slope-PSE) summarizes participants’ fitted categorization functions across the different test blocks. Of note is the average categorization functions of the respective conditions before exposure informative exposure. As depicted in the first panel, the average categorization functions converge on the same boundary or PSE (45ms, 95% QI = 36ms -- 55ms) which suggests that the three exposure groups largely had similar expectations about the cue distribution corresponding to /d/ and /t/ for this type of talker.  
 
 
+## Description of the overall pattern of results (main effects)
 
-There was a main effect of VOT $\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_VOT_gs", "mu2_VOT_gs > 0")`; participants were more likely to respond "t" as VOT increased. Condition had a main effect on responses such that with larger shifts, participants on average responded with fewer "t"s.  Additionally, the difference in average "t" responses between the +40ms and +10ms conditions ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift40vs.Shift10", "mu2_Condition.Exposure_Shift40vs.Shift10 < 0")` reduction in log-odds) was *larger* than the difference between the +10 and +0 conditions ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift10vs.Shift0", "mu2_Condition.Exposure_Shift10vs.Shift0 < 0")` reduction in log-odds). 
-Qualitatively, the results indicate listeners adjust their expectations to align with the statistics of the exposure talker, consonant with previous findings of studies employing this paradigm (e.g., @clayards2008; @kleinschmidt2016you; @theodore2019distributional). 
+- The overall lapse rate was negligible $\hat{\beta} =$ `r make_CI(fit_mix_uniform_bias, "theta1_Intercept ", "theta1_Intercept < 0")` indicating that participants were paying attention in the majority of trials. 
+- There was a main effect of VOT $\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_VOT_gs", "mu2_VOT_gs > 0")`: participants were more likely to respond "t" as VOT increased. 
+- Condition had a main effect on responses such that with larger shifts from the baseline, participants responded with fewer "t"s.  
+- Comparing the +10ms condition with the baseline condition across all blocks: there was a reduction in log-odds of responding "t" in the +10ms condition compared to the baseline condition ($\hat{\beta} =$ `r  get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift10vs.Shift0", "mu2_Condition.Exposure_Shift10vs.Shift0 < 0")`
+- Comparing the +40ms against the +10ms condition across all blocks: there was a reduction in log-odds of responding "t" in the +40ms condition compared to the +10ms condition ($\hat{\beta} =$ `r  get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift40vs.Shift10", "mu2_Condition.Exposure_Shift40vs.Shift10 < 0")`
+- Tellingly, the reduction in log-odds was larger in the +40 vs +10ms comparison, reflecting the larger magnitude of shift from the baseline.`r get_bf(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift40vs.Shift10 < mu2_Condition.Exposure_Shift10vs.Shift0 ")`
 
-The interaction of block with condition revealed how participants in the respective exposure groups responded as they progressively received more informative input. Most of the change took place after the first exposure block. Participants in the +10ms condition responded with fewer "ts" compared to participants in the +0ms condition in test block 2 relative to that in test block 1 ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1", "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 < 0")`). The difference between the  +40ms and +10ms condition in test block 2 relative to that in block 1 was more pronounced, reflecting the wider separation between the two exposure conditions in block 2 ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1", "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 < 0")`). 
+### Interactions
+The interactions provide between block comparisons of the differences between conditions. We focus on the first 4 test blocks as they were interspersed with exposure. In order to examine the effects of exposure condition on behaviour within block, and how each condition changed by block (simple effects of condition and block) we fitted 2 nested models that embed condition within block, and block within condition. We report the interactions in conjunction with the simple effects. 
+
+- Comparing the change in differences between +10ms and baseline between blocks: we see an overall reduction in the log-odds of responding "t" between test blocks 1 and 4 however almost all that reduction took place between test blocks 1 and 2 ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test1vs.Test2", "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test1vs.Test2 < 0")`. Between test blocks 2 and 4, differences in behaviour between the two groups did not change significantly in spite of increased input from the exposure blocks. 
+- Comparing the change in differences between +40ms and +10ms between blocks: There was a consistent reduction in log-offs of responding "t" from blocks 1 through 4, indicating an incremental shift in categorisation towards the right as participants received more input. The biggest change was observed between test block 1 and 2 ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1", "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 < 0") `. Between test blocks 2 and 3 the distance between the two conditions increased marginally ($\hat{\beta} =$ `r get_CI(fit_mix_uniform_bias, "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2", "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 < 0") `
+
 
 
 
@@ -355,6 +359,63 @@ fit_mix_exposure <- brm(
   control = list(adapt_delta = .99),
   file = "../models/Exp-AE-DLVOT-lapsing-differencecoded-exposureblocks.rds")
 ```
+
+
+```{r fit-nested-blocks-simple-effects}
+# nested model to get simple effects of Condition embedded in block
+fit_mix_test_nested_block <- brm(
+   bf(
+     Response.Voiceless ~ 1,
+     mu1 ~ 0 + offset(0),
+     mu2 ~ 0 + Block / (Condition.Exposure * VOT_gs) +
+       (0 + Block / VOT_gs | ParticipantID) +
+       (0 + Block / (Condition.Exposure * VOT_gs) | Item.MinimalPair),
+     theta1 ~ 1),
+   data = d.test_exposure_for_analysis %>%
+     filter(Phase == "test") %>%
+     prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = "difference"),
+   cores = 4,
+   chains = chains,
+   init = 0,
+   iter = 4000, # if 1000 warmup then iter can be lowered to 2000
+   warmup = 2000, # 1000 warmup will exceed max tree depth
+   family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
+   control = list(adapt_delta = .99),
+   file ="../models/Exp-AE-DLVOT-nested-block-condVOT.rds")
+
+fit_mix_test_nested_condition <- brm(
+   bf(
+     Response.Voiceless ~ 1,
+     mu1 ~ 0 + offset(0),
+     mu2 ~ 0 + Condition.Exposure / (Block * VOT_gs) +
+       (0 + Block * VOT_gs | ParticipantID) +
+       (0 + Condition.Exposure / (Block * VOT_gs) | Item.MinimalPair),
+     theta1 ~ 1),
+   data = d.test_exposure_for_analysis %>%
+     filter(Phase == "test") %>%
+     prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = "difference"),
+   cores = 4,
+   chains = chains,
+   init = 0,
+   iter = 4000, # if 1000 warmup then iter can be lowered to 2000
+   warmup = 2000, # 1000 warmup will exceed max tree depth
+   family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
+   control = list(adapt_delta = .995),
+   file ="../models/Exp-AE-DLVOT-nested-condition.rds")
+
+# get tidy df of nested test simple effects within block --no divergence in model found
+simple_effects_condition <- tidy(fit_mix_test_nested_block, effects = "fixed") %>% 
+  filter(term != "theta1_(Intercept)") 
+
+simple_effects_block <- tidy(fit_mix_test_nested_condition, effects = "fixed") %>% 
+  filter(term != "theta1_(Intercept)")
+```
+
+
+
+
+
+
 
 
 ```{r expectation-values-exposure-test}
@@ -413,17 +474,19 @@ cond_fit_test_exposure <- tibble(full_join(cond_fit_exposure[[1]], cond_fit_test
     Block = fct_relevel(Block, c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3",  "Test 4", "Test 5", "Test 6"))) 
 
 label_colour <- tibble(
-  Block = c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3", "Test 4", "Test 5", "Test 6"), 
-  Block.colour = c("grey", "black", "grey", "black", "grey", "black", "grey", "grey", "grey")) %>% mutate(Block = factor(Block, levels = Block, ordered = T))
+  Block = c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3", "Test 4"), 
+  Block.colour = c("grey", "black", "grey", "black", "grey", "black", "grey")) %>% 
+  mutate(Block = factor(Block, levels = Block, ordered = T))
 
-p.fit <- cond_fit_test_exposure %>% 
+p.fit_1to7 <- cond_fit_test_exposure %>% 
+  filter(Block %in% c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3", "Test 4")) %>% 
   ggplot() +
   geom_rect(
-    data = label_colour %>% mutate(factor(Block)),
+    data = label_colour,
     aes(xmin = -Inf, xmax = Inf,
-        ymin = 1.05, ymax = 1.37,
+        ymin = 1.05, ymax = 1.31,
         fill = Block.colour), show.legend = F) +
-  scale_fill_manual(values = c("grey" = "grey", "black" = "black")) +
+  scale_fill_manual(values = c("grey" = "grey", "black" = "white")) +
   new_scale_fill() +
   geom_ribbon(aes(
     x = Item.VOT, 
@@ -437,16 +500,16 @@ p.fit <- cond_fit_test_exposure %>%
     color = Condition.Exposure), 
     size = .7,
     alpha = 0.6) +
-  geom_rug(data = d.test_exposure_for_analysis %>%
-             ungroup() %>% 
-             distinct(Item.VOT),
-           aes(x = Item.VOT),
-           alpha = 0.5,
-           colour = "grey",
-           inherit.aes = F) +
+  # geom_rug(data = d.test_exposure_for_analysis %>%
+  #            ungroup() %>% 
+  #            distinct(Item.VOT),
+  #          aes(x = Item.VOT),
+  #          alpha = 0.5,
+  #          colour = "grey",
+  #          inherit.aes = F) +
   stat_summary(
     data = d.test_exposure_for_analysis %>%
-      filter(Item.Labeled == FALSE) %>%
+      filter(Block %in% c(1:7), Item.Labeled == FALSE) %>%
       mutate(
         Condition.Exposure = case_when(
           Condition.Exposure == "Shift0" ~ "+0ms",
@@ -459,6 +522,62 @@ p.fit <- cond_fit_test_exposure %>%
           Block == 4 ~ "Exposure 2",
           Block == 5 ~ "Test 3",
           Block == 6 ~ "Exposure 3",
+          Block == 7 ~ "Test 4"))) %>%
+      group_by(Condition.Exposure, Block),
+    fun.data = mean_cl_boot,
+    mapping = aes(x = Item.VOT,
+                  y = Response.Voiceless,
+                  colour = Condition.Exposure),
+    geom = "pointrange",
+    size = 0.1,
+    alpha = 0.7,
+    position = position_dodge2(width = 2),
+    inherit.aes = F) +
+  scale_x_continuous("VOT (msec)") +
+  scale_y_continuous("Proportion \"t\"-responses") +
+  scale_color_manual(
+    "Condition",
+    labels = c("+0ms", "+10ms", "+40ms"),
+    values = c("#cc0000", "#12D432","#0481F3"),
+    aesthetics = c("color", "fill")) +
+  coord_cartesian(clip="off", ylim=c(0, 1)) +
+  facet_grid(~ Block, scales = "free_x", space = "free_x") + 
+  theme(legend.position = "top",
+        legend.justification = "right",
+        strip.background = element_rect(fill = NA),
+        strip.text.x.top = element_text(colour = "black"))
+
+p.fit_7to9 <- cond_fit_test_exposure %>% 
+  filter(Block %in% c("Test 4", "Test 5", "Test 6")) %>% 
+  ggplot() +
+  geom_ribbon(aes(
+    x = Item.VOT, 
+    y = estimate__, 
+    group = Condition.Exposure,
+    ymin = lower__, ymax = upper__, fill = Condition.Exposure), alpha = .1) +
+  geom_line(aes(
+    x = Item.VOT, 
+    y = estimate__, 
+    group = Condition.Exposure,
+    color = Condition.Exposure), 
+    size = .7,
+    alpha = 0.6) +
+  # geom_rug(data = d.test_exposure_for_analysis %>%
+  #            ungroup() %>% 
+  #            distinct(Item.VOT),
+  #          aes(x = Item.VOT),
+  #          alpha = 0.5,
+  #          colour = "grey",
+  #          inherit.aes = F) +
+  stat_summary(
+    data = d.test_exposure_for_analysis %>%
+      filter(Block %in% c(7:9), Item.Labeled == FALSE) %>%
+      mutate(
+        Condition.Exposure = case_when(
+          Condition.Exposure == "Shift0" ~ "+0ms",
+          Condition.Exposure == "Shift10" ~ "+10ms",
+          Condition.Exposure == "Shift40" ~ "+40ms"),
+        Block = factor(case_when(
           Block == 7 ~ "Test 4",
           Block == 8 ~ "Test 5",
           Block == 9 ~ "Test 6"))) %>%
@@ -473,16 +592,18 @@ p.fit <- cond_fit_test_exposure %>%
     position = position_dodge2(width = 2),
     inherit.aes = F) +
   scale_x_continuous("VOT (msec)") +
-  scale_y_continuous("Proportion \n \"t\"-responses") +
+  scale_y_continuous("Proportion \"t\"-responses") +
   scale_color_manual(
     "Condition",
     labels = c("+0ms", "+10ms", "+40ms"),
     values = c("#cc0000", "#12D432","#0481F3"),
     aesthetics = c("color", "fill")) +
-  coord_cartesian(clip="off", ylim=c(0, 1)) +
   facet_wrap(. ~ Block, nrow = 1) + 
-  theme(legend.position = "top",
-        strip.background = element_rect(fill = NA))
+  theme(legend.position = "none",
+        legend.justification = "right",
+        axis.title.y = element_blank(),
+        strip.background = element_rect(fill = "grey"),
+        strip.text.x = element_text(colour = "black"))
 ```
 
 
@@ -535,49 +656,7 @@ fit_mix_exposure_nested <- brm(
  temp <- 
  fixef(fit_mix_test_nested, summary = F, pars = gsub("^b_(mu2_.*)$", "\\1", variables(fit_mix_test_nested)))
 
-# nested model to get simple effects of block by condition:VOT
-fit_mix_test_nested_block <- brm(
-   bf(
-     Response.Voiceless ~ 1,
-     mu1 ~ 0 + offset(0),
-     mu2 ~ 0 + Block / (Condition.Exposure * VOT_gs) +
-       (0 + Block / VOT_gs | ParticipantID) +
-       (0 + Block / (Condition.Exposure * VOT_gs) | Item.MinimalPair),
-     theta1 ~ 1),
-   data = d.test_exposure_for_analysis %>%
-     filter(Phase == "test") %>%
-     prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = "difference"),
-   cores = 4,
-   chains = chains,
-   init = 0,
-   iter = 4000, # if 1000 warmup then iter can be lowered to 2000
-   warmup = 2000, # 1000 warmup will exceed max tree depth
-   family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
-   control = list(adapt_delta = .99),
-   file ="../models/Exp-AE-DLVOT-nested-block-condVOT.rds")
- 
-# temp %>%
-#   as_tibble() %>%
-#   rename_with(~ paste0(.x, ":Intercept"), -ends_with("VOT_gs")) %>%
-#   mutate(draw = rownames(temp)) %>%
-#   relocate(draw, everything()) %>%
-#   pivot_longer(
-#     cols = -draw, 
-#     names_pattern = "Shift([0-9]+x[0-9]+):(.*)",
-#     names_to = c("ConditionBlock", "Parameter")) %>%
-#   separate(
-#     col = ConditionBlock,
-#     sep = "x",
-#     into = c("Condition", "Block")) %>%
-#   pivot_wider(
-#     values_from = value,
-#     names_from = Parameter) %>%
-#   mutate(PSE = descale(-Intercept / VOT_gs, VOT.mean_test, VOT.sd_test)) %>%
-#   # Get HDCI or SE
-#   group_by(Condition, Block) %>% 
-#   summarise(lower = quantile(PSE, probs = .025),
-#             median = quantile(PSE, probs = .5),
-#             upper = quantile(PSE, probs = .975))
+
 
 # tidy output of nested model and separate terms into intercepts and slopes
 Intercepts_slopes_test <- tidy(fit_mix_test_nested, effects = "fixed") %>% 
@@ -595,15 +674,11 @@ Intercepts_slopes_exposure <- tidy(fit_mix_exposure_nested, effects = "fixed") %
   mutate(Block = ifelse(str_detect(Block, "VOT"), str_replace(Block, "(\\d{1}):VOT_gs", "\\1"), Block)) 
 
 Intercepts_slopes <- full_join(Intercepts_slopes_test, Intercepts_slopes_exposure)
-
-# get tidy df of nested test simple effects within block --no divergence in model found
-simple_effects_test <- tidy(fit_mix_test_nested_block, effects = "fixed") %>% 
-  filter(term != "theta1_(Intercept)") 
 ```
 
 
 ```{r make-hypothesis-tables}
-# get hypothesis for simple effects of condition
+# get hypothesis for simple effects of condition by block
 my_hypotheses <- 
   c(
     "mu2_Block1:Condition.Exposure_Shift10vs.Shift0 > mu2_Block1:Condition.Exposure_Shift40vs.Shift10",
@@ -612,7 +687,7 @@ my_hypotheses <-
     "mu2_Block7:Condition.Exposure_Shift40vs.Shift10 < mu2_Block7:Condition.Exposure_Shift10vs.Shift0",
     "mu2_Block7:Condition.Exposure_Shift40vs.Shift10 < mu2_Block3:Condition.Exposure_Shift40vs.Shift10")
 test_questions <- hypothesis(fit_mix_test_nested_block, my_hypotheses)
-test_questions <- as_tibble(test_questions$hypothesis %>% select(-Star))
+test_questions <- test_questions$hypothesis %>% select(-Star)
 test_questions
 ```
 
@@ -718,7 +793,7 @@ d.io.categorisation %<>%
 
 
 
-```{r prepare-plot-intercepts-slopes-PSE}
+```{r prepare-plot-intercepts-slopes-1to7}
 p.intercept <- d.estimates %>% 
   ggplot(aes(x = Block, y = Intercept_mean, colour = Condition.Exposure, group = Condition.Exposure)) +
     geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 0.75, xmax = 1.25), 
@@ -760,31 +835,33 @@ p.intercept <- d.estimates %>%
   theme(legend.position = "top",
         axis.text.x = element_text(angle = 22.5, hjust = 1))
 
-p.slope <- d.estimates %>% 
-  ggplot(aes(x = Block, y = slope_mean, colour = Condition.Exposure, group = Condition.Exposure)) +
-geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 0.75, xmax = 1.25), 
+p.slope_1to7 <- d.estimates %>% 
+  ggplot(aes(x = Block, y = slope_mean, 
+             colour = Condition.Exposure, 
+             group = Condition.Exposure)) +
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 0.55, xmax = 1.45), 
             fill = "grey", 
             alpha = .009, 
             inherit.aes = F) +
-  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 2.75, xmax = 3.25), 
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 2.55, xmax = 3.45), 
             fill = "grey", 
             alpha = .009, 
             inherit.aes = F) +
-  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 4.75, xmax = 5.25), 
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 4.55, xmax = 5.45), 
             fill = "grey", 
             alpha = .009, 
             inherit.aes = F) +
-   geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 6.75, xmax = 7.25), 
+   geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 6.55, xmax = 7.45), 
             fill = "grey", 
             alpha = .009, 
             inherit.aes = F) +
-   geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 7.75, xmax = 8.25), 
-            fill = "grey", 
-            alpha = .009, 
+   geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 7.55, xmax = 8.45),
+            fill = "grey",
+            alpha = .009,
             inherit.aes = F) +
-  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 8.75, xmax = 9.25), 
-            fill = "grey", 
-            alpha = .009, 
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 8.55, xmax = 9.45),
+            fill = "grey",
+            alpha = .009,
             inherit.aes = F) +
   geom_point(position = position_dodge(.3), size = 1) +
   geom_linerange(aes(ymin = slope_lower, ymax = slope_upper), linewidth = .6, position = position_dodge(.3), alpha = .5) +
@@ -801,31 +878,31 @@ geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 0.75, xmax = 1.25),
   theme(legend.position = "top",
         axis.text.x = element_text(angle = 22.5, hjust = 1))
 
-p.PSE <- d.estimates %>% 
+p.PSE_1to7 <-d.estimates %>% 
   ggplot(aes(x = Block, y = PSE_mean, colour = Condition.Exposure, group = Condition.Exposure)) +
-  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 0.75, xmax = 1.25), 
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 0.55, xmax = 1.45), 
             fill = "grey", 
             alpha = .009, 
             inherit.aes = F) +
-  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 2.75, xmax = 3.25), 
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 2.55, xmax = 3.45), 
             fill = "grey", 
             alpha = .009, 
             inherit.aes = F) +
-  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 4.75, xmax = 5.25), 
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 4.55, xmax = 5.45), 
             fill = "grey", 
             alpha = .009, 
             inherit.aes = F) +
-   geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 6.75, xmax = 7.25), 
+   geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 6.55, xmax = 7.45), 
             fill = "grey", 
             alpha = .009, 
             inherit.aes = F) +
-   geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 7.75, xmax = 8.25), 
-            fill = "grey", 
-            alpha = .009, 
+   geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 7.55, xmax = 8.45),
+            fill = "grey",
+            alpha = .009,
             inherit.aes = F) +
-  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 8.75, xmax = 9.25), 
-            fill = "grey", 
-            alpha = .009, 
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 8.55, xmax = 9.45),
+            fill = "grey",
+            alpha = .009,
             inherit.aes = F) +
   geom_point(position = position_dodge(.3), size = 1) +
   geom_linerange(aes(ymin = PSE_lower, ymax = PSE_upper), linewidth = .6, position = position_dodge(.3), alpha = .5) +
@@ -842,19 +919,31 @@ p.PSE <- d.estimates %>%
   theme(legend.position = "top",
         axis.text.x = element_text(angle = 22.5, hjust = 1))
 
-p.params <- ((p.intercept) | (p.slope) | p.PSE) + 
-  plot_layout( guides = "collect") &
+p.params_1to7 <- (p.slope_1to7 | p.PSE_1to7) + 
+  plot_layout(guides = "collect") &
   theme(legend.position = "none", axis.text = element_text(size = 8))
 ```
 
 
-(ref:plot-fit-intercept-slope-PSE) **Top row** Fitted lapse-rate corrected psychometric plots by exposure condition; point ranges indicate the mean proportion of "t"-responses and their 95% bootstrapped CI.  **Bottom row** Changes in intercepts, slopes and categorisation boundary (represented by the point-of-subjective-equality (PSE)) by block. Summary is of 8000 draws from the maximum *a posteriori* estimate. Points represent the mean of posterior draws and line ranges are the 95% quantile interval of all draws. Dashed lines show the predicted intercepts, slopes and PSEs by the ideal observers of the respective conditions that have perfectly learned the exposure distributions. 
+(ref:plot-fit-slope-PSE-1to7) **Top row** Fitted lapse-rate corrected psychometric plots by exposure condition (all exposure and first 4 test blocks); point ranges indicate the mean proportion of "t"-responses and their 95% bootstrapped CI.  **Bottom row** Changes in intercepts, slopes and categorisation boundary (represented by the point-of-subjective-equality (PSE)) by block. Summary is of 8000 draws from the maximum *a posteriori* estimate. Points represent the mean of posterior draws and line ranges are the 95% quantile interval of all draws. Dashed lines show the predicted intercepts, slopes and PSEs by the ideal observers of the respective conditions that have perfectly learned the exposure distributions. 
 
 \begin{landscape}
-```{r plot-fit-intercept-slope-PSE, fig.width=11.5, fig.height=3.8, warning=FALSE, fig.cap="(ref:plot-fit-intercept-slope)"}
-p.fit / p.params
+```{r plot-fit-slope-PSE-1to7, fig.width=12.5, fig.height=8, warning=FALSE, fig.cap="(ref:plot-fit-slope-PSE-1to7)"}
+layout <- "
+AAAAAAAAA
+######BBB
+CCCCCCCCC
+"
+
+p.fit_1to7 + p.fit_7to9 + p.params_1to7 +
+  plot_layout(
+    design = layout,
+    heights = c(1, 1, 2))
 ```
 \end{landscape}
+
+
+
 
 ```{r getting-means-at-exposure-by-condition}
 # calculate the various mean VOTs exposed to for each condition, including the labelled trials, with and without accounting for the test trials
