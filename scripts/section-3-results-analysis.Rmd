@@ -677,7 +677,7 @@ p.fit_7to9 <- cond_fit_test_exposure %>%
 ```
 
 
-```{r fit-nested-models-for-intercepts-slopes-simple-effects, warning=FALSE, message=FALSE}
+```{r fit-nested-models-for-intercepts-slopes, warning=FALSE, message=FALSE}
 # nested models for extracting the 'intercepts' and 'slopes' for each Block and Condition
 
 # nested model for test
