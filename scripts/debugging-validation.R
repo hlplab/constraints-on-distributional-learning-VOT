@@ -77,19 +77,12 @@ d %>%
 # Interaction = 30
 
 
-# Interaction between Block 3vs1 and Condition BvsA
+# Interaction between Block 2vs1 and Condition CvsA
 d %>% 
-  filter(Block %in% c(1, 3), Condition %in% c("A", "B"))
-# In Block 1, Cond B vs. A = -2.33
-# In Block 3, Cond B vs. A = 10.67
-# Interaction = 13
-
-
-
-
-
-
-
+  filter(Block %in% c(1, 2), Condition %in% c("A", "C"))
+# In Block 1, Cond C vs. A = -5.66
+# In Block 2, Cond C vs. A = 8.33
+# Interaction = 14
 
 
 # Simple effect coding
@@ -114,6 +107,35 @@ d %>%
 # In Block 1, Cond B vs. A = +4.67
 # In Block 2, Cond B vs. A = +7.33
 # Interaction = +2.67
+
+
+d.test_exposure_for_analysis %>%
+           group_by(Phase, Block) %>%
+           mutate(
+             Block = factor(case_when(
+               Block == 1 ~ "Test 1",
+               Block == 3 ~ "Test 2",
+               Block == 5 ~ "Test 3",
+               Block == 7 ~ "Test 4",
+               Block == 8 ~ "Test 5",
+               Block == 9 ~ "Test 6",
+               Block == 2 ~ "Exposure 1",
+               Block == 4 ~ "Exposure 2",
+               Block == 6 ~ "Exposure 3")),
+             Block = fct_relevel(Block, c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3",  "Test 4", "Test 5", "Test 6"))) %>%
+           distinct(Item.VOT)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

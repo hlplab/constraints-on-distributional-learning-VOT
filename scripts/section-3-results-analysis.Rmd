@@ -292,7 +292,6 @@ fixed_eff_exp2_helmert <- tidy(fit_mix_helmert, effects = "fixed") %>%
 # get hypotheses of fixed effects
 hypotheses <- hypothesis(fit_mix_uniform_bias, paste(rownames(fixef(fit_mix_uniform_bias))[-c(1, 2, 3)], "< 0"))
 table <- hypotheses$hypothesis %>% select(-Star)
-
 ```
 
 
@@ -448,9 +447,6 @@ table1 %>%
                 bootstrap_options = c("striped", "hover", "condensed")) %>% 
   column_spec(1, width = "8em")
 
-hypotheses_contrasts_within_condition <- c(
-)
-
 
 # get hypothesis for simple effects of condition by block
 hypotheses_contrasts_within_block <- 
@@ -477,10 +473,25 @@ table2 <- cbind(hypotheses_readable, hypotheses_contrasts_within_block) %>%
 table2 %>% 
   mutate(across(where(is.numeric), ~ round(., digits = 3))) %>% 
   rename_all(~gsub("\\.", " ", .)) %>% 
-  kbl(caption = "Comparing conditions in test blocks 1 to 4", align = align_tab(table2)) %>% 
+  kbl(caption = "Comparing conditions within blocks 1 to 4", align = align_tab(table2)) %>% 
   kable_styling(full_width=FALSE, 
                 bootstrap_options = c("striped", "hover", "condensed")) %>% 
   column_spec(1, width = "8em")
+
+# hypotheses to analyse last 3 test blocks
+hyp_test456 <- c(
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 < 0",
+  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 < 0" 
+)
+
+hyp_test456_block <- c(
+  "mu2_Block8:Condition.Exposure_Shift10vs.Shift0 < mu2_Block7:Condition.Exposure_Shift10vs.Shift0",
+  "mu2_Block9:Condition.Exposure_Shift10vs.Shift0 < mu2_Block8:Condition.Exposure_Shift10vs.Shift0 ",
+  "mu2_Block8:Condition.Exposure_Shift40vs.Shift10 < mu2_Block7:Condition.Exposure_Shift40vs.Shift10",
+  "mu2_Block9:Condition.Exposure_Shift40vs.Shift10 < mu2_Block8:Condition.Exposure_Shift40vs.Shift10")
+
+hypothesis(fit_mix_uniform_bias, hyp_test456) 
+hypothesis(fit_mix_test_nested_block, hyp_test456_block)
 ```
 
 

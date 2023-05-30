@@ -419,6 +419,8 @@ p.vot$labels$x <- MinPair_plot$labels$x <- " "
   theme(legend.position = "top")
 ```
 
+
+
 ```{r by-participant-lapse-bias, warning=FALSE, fig.height=2.6, fig.width=6.5}
 lapse_participant <- fit_mix %>% spread_draws(r_ParticipantID__theta1[ParticipantID, term], b_theta1_Intercept) %>%
   group_by(ParticipantID) %>%

@@ -116,14 +116,12 @@ library(magrittr)           # pipes
 library(rlang)              # quosures (in functions)
 library(assertthat)         # asserts (in functions)
 
-library(cowplot)
 library(patchwork)
 library(magick)
 library(webshot)
 library(ggstance)
 library(ggnewscale)
 library(kableExtra)
-library(gt)
 library(sjPlot)
 
 library(linguisticsdown)    # IPA symbols
