@@ -319,7 +319,7 @@ The interactions provide between block comparisons of the differences between co
 
 
 
-```{r fit-nested-blocks-simple-effects}
+```{r fit-nested-blocks-simple-effects, results='hide'}
 # nested model to get simple effects of Condition embedded in block
 fit_mix_test_nested_block <- brm(
    bf(
@@ -380,12 +380,12 @@ hyp_interactions <- c(
 )
 
 hyp_interactions_readable <- tibble(Hypothesis = c(
-  "10 vs baseline test 2 > 10 vs baseline test 1",
-  "10 vs baseline test 3 > 10 vs baseline test 2",
-  "10 vs baseline test 4 > 10 vs baseline test 3",
-  "40 vs 10 test 2 > 40 vs 10 test 1",
-  "40 vs 10 test 3 > 40 vs 10 test 2",
-  "40 vs 10 test 4 > 40 vs 10 test 3"
+  "diff in 10 vs baseline test 2 > diff in 10 vs baseline test 1",
+  "diff in 10 vs baseline test 3 > diff in 10 vs baseline test 2",
+  "diff in 10 vs baseline test 4 > diff in 10 vs baseline test 3",
+  "diff in 40 vs 10 test 2 > diff in 40 vs 10 test 1",
+  "diff in 40 vs 10 test 3 > diff in 40 vs 10 test 2",
+  "diff in 40 vs 10 test 4 > diff in 40 vs 10 test 3"
 ))
 
 hyp_interactions <- hypothesis(fit_mix_uniform_bias, hyp_interactions)
@@ -420,9 +420,9 @@ hypotheses_contrasts_within_block <-
 
 hypotheses_readable <- tibble(Hypothesis = c(
   "10 vs baseline > diff btwn 40 vs 10 in test 1",
-  "shift in 40 vs 10 > 10 vs baseline in test 2",
-  "shift in 40 vs 10 > 10 vs baseline in test 3",
-  "shift in 40 vs 10 > 10 vs baseline in test 4"
+  "diff in 40 vs 10 > diff in 10 vs baseline in test 2",
+  "diff in 40 vs 10 > diff in 10 vs baseline in test 3",
+  "diff in 40 vs 10 > diff in 10 vs baseline in test 4"
 ))
 
 hypotheses_contrasts_within_block <- hypothesis(fit_mix_test_nested_block, hypotheses_contrasts_within_block)
@@ -433,7 +433,7 @@ table2 <- cbind(hypotheses_readable, hypotheses_contrasts_within_block) %>%
   select(-2)
 
 table2 %>% 
-  mutate(across(where(is.numeric), ~ signif(., digits = 3))) %>% 
+  mutate(across(where(is.numeric), ~ round(., digits = 3))) %>% 
   rename_all(~gsub("\\.", " ", .)) %>% 
   kbl(caption = "Comparing conditions in test blocks 1 to 4", align = align_tab(table2)) %>% 
   kable_styling(full_width=FALSE, 
