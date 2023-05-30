@@ -296,6 +296,44 @@ table <- hypotheses$hypothesis %>% select(-Star)
 ```
 
 
+```{r model-fit-exposure-blocks, warning=FALSE}
+# get VOT mean and sd across exposure blocks and CONDITIONS for scaling purposes
+exposure_block_stats <- d.test_exposure_for_analysis %>% 
+  ungroup() %>% 
+    filter(Phase == "exposure" & Item.Labeled == FALSE) %>% 
+  summarise(VOT.mean_exposure = mean(Item.VOT),
+            VOT.sd_exposure = sd(Item.VOT))
+
+VOT.mean_exposure <- exposure_block_stats[[1]]
+VOT.sd_exposure <- exposure_block_stats[[2]]
+
+# set priors for psychometric model
+my_priors <- c(
+  prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"), # prior 
+  prior(student_t(3, 0, 2.5), class = "b", dpar = "theta1"), 
+  prior(cauchy(0, 2.5), class = "sd"),
+  prior(lkj(1), class = "cor")
+)
+
+# fit difference coded model on exposure block
+fit_mix_exposure <- brm(
+  bf(
+    Response.Voiceless ~ 1,
+    mu1 ~ 0 + offset(0),
+    mu2 ~ 1 + VOT_gs * Condition.Exposure * Block + (1 + VOT_gs * Block | ParticipantID) + (1 + VOT_gs * Condition.Exposure * Block | Item.MinimalPair),
+    theta1 ~ 1),
+  data = d.test_exposure_for_analysis %>% 
+    filter(Phase == "exposure" & Item.Labeled == FALSE) %>% 
+    prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
+  cores = 4,
+  chains = chains,
+  init = 0,
+  iter = 4000, # iterations to run
+  warmup = 2000, # samples used to fit
+  family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
+  control = list(adapt_delta = .99),
+  file = "../models/Exp-AE-DLVOT-lapsing-differencecoded-exposureblocks.rds")
+```
 
 Figure @\ref(fig:plot-fit-intercept-slope-PSE) summarizes participants’ fitted categorization functions across the different test blocks. Of note is the average categorization functions of the respective conditions before exposure informative exposure. As depicted in the first panel, the average categorization functions converge on the same boundary or PSE (45ms, 95% QI = 36ms -- 55ms) which suggests that the three exposure groups largely had similar expectations about the cue distribution corresponding to /d/ and /t/ for this type of talker.  
 
@@ -448,45 +486,6 @@ table2 %>%
 
 
 
-```{r model-fit-exposure-blocks, warning=FALSE}
-# get VOT mean and sd across exposure blocks and CONDITIONS for scaling purposes
-exposure_block_stats <- d.test_exposure_for_analysis %>% 
-  ungroup() %>% 
-    filter(Phase == "exposure" & Item.Labeled == FALSE) %>% 
-  summarise(VOT.mean_exposure = mean(Item.VOT),
-            VOT.sd_exposure = sd(Item.VOT))
-
-VOT.mean_exposure <- exposure_block_stats[[1]]
-VOT.sd_exposure <- exposure_block_stats[[2]]
-
-# set priors for psychometric model
-my_priors <- c(
-  prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"), # prior 
-  prior(student_t(3, 0, 2.5), class = "b", dpar = "theta1"), 
-  prior(cauchy(0, 2.5), class = "sd"),
-  prior(lkj(1), class = "cor")
-)
-
-# fit difference coded model on exposure block
-fit_mix_exposure <- brm(
-  bf(
-    Response.Voiceless ~ 1,
-    mu1 ~ 0 + offset(0),
-    mu2 ~ 1 + VOT_gs * Condition.Exposure * Block + (1 + VOT_gs * Block | ParticipantID) + (1 + VOT_gs * Condition.Exposure * Block | Item.MinimalPair),
-    theta1 ~ 1),
-  data = d.test_exposure_for_analysis %>% 
-    filter(Phase == "exposure" & Item.Labeled == FALSE) %>% 
-    prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
-  cores = 4,
-  chains = chains,
-  init = 0,
-  iter = 4000, # iterations to run
-  warmup = 2000, # samples used to fit
-  family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
-  control = list(adapt_delta = .99),
-  file = "../models/Exp-AE-DLVOT-lapsing-differencecoded-exposureblocks.rds")
-```
-
 
 ```{r expectation-values-exposure-test, message=FALSE, results='hide'}
 cond_fit_exposure <- conditional_effects(
@@ -527,6 +526,7 @@ cond_fit_test[[1]] %<>%
 cond_fit_test_exposure <- tibble(full_join(cond_fit_exposure[[1]], cond_fit_test[[1]])) %>% 
   arrange(as.numeric(as.character(Block))) %>% 
   mutate(
+    Phase = ifelse(Block %in% c(1, 3, 5, 7, 8, 9), "test", "exposure"),
     Condition.Exposure = case_when(
     Condition.Exposure == "Shift0" ~ "+0ms",
     Condition.Exposure == "Shift10" ~ "+10ms",
@@ -570,13 +570,24 @@ p.fit_1to7 <- cond_fit_test_exposure %>%
     color = Condition.Exposure), 
     size = .7,
     alpha = 0.6) +
-  # geom_rug(data = d.test_exposure_for_analysis %>%
-  #            ungroup() %>% 
-  #            distinct(Item.VOT),
-  #          aes(x = Item.VOT),
-  #          alpha = 0.5,
-  #          colour = "grey",
-  #          inherit.aes = F) +
+  geom_rug(data = d.test_exposure_for_analysis %>%
+             group_by(Phase, Block) %>%
+             filter(Block %in% c(1:7)) %>% 
+             mutate(
+               Block = factor(case_when(
+                 Block == 1 ~ "Test 1",
+                 Block == 3 ~ "Test 2",
+                 Block == 5 ~ "Test 3",
+                 Block == 7 ~ "Test 4",
+                 Block == 2 ~ "Exposure 1",
+                 Block == 4 ~ "Exposure 2",
+                 Block == 6 ~ "Exposure 3")),
+               Block = fct_relevel(Block, c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3",  "Test 4"))) %>%
+             distinct(Item.VOT),
+           aes(x = Item.VOT),
+           alpha = 0.5,
+           colour = "grey",
+           inherit.aes = F) +
   stat_summary(
     data = d.test_exposure_for_analysis %>%
       filter(Block %in% c(1:7), Item.Labeled == FALSE) %>%
@@ -632,13 +643,20 @@ p.fit_7to9 <- cond_fit_test_exposure %>%
     color = Condition.Exposure), 
     size = .7,
     alpha = 0.6) +
-  # geom_rug(data = d.test_exposure_for_analysis %>%
-  #            ungroup() %>% 
-  #            distinct(Item.VOT),
-  #          aes(x = Item.VOT),
-  #          alpha = 0.5,
-  #          colour = "grey",
-  #          inherit.aes = F) +
+geom_rug(data = d.test_exposure_for_analysis %>%
+             group_by(Phase, Block) %>%
+             filter(Block %in% c(7:9)) %>% 
+             mutate(
+               Block = factor(case_when(
+                 Block == 7 ~ "Test 4",
+                 Block == 8 ~ "Test 5",
+                 Block == 9 ~ "Test 6")),
+               Block = fct_relevel(Block, c("Test 4", "Test 5", "Test 6"))) %>%
+             distinct(Item.VOT),
+           aes(x = Item.VOT),
+           alpha = 0.5,
+           colour = "grey",
+           inherit.aes = F) +
   stat_summary(
     data = d.test_exposure_for_analysis %>%
       filter(Block %in% c(7:9), Item.Labeled == FALSE) %>%
@@ -674,6 +692,7 @@ p.fit_7to9 <- cond_fit_test_exposure %>%
         axis.title.y = element_blank(),
         strip.background = element_rect(fill = "grey"),
         strip.text.x = element_text(colour = "black"))
+
 ```
 
 
@@ -849,7 +868,7 @@ d.io.categorisation %<>%
 
 
 
-```{r prepare-plot-intercepts-slopes-1to7}
+```{r prepare-plot-intercepts-slopes}
 p.intercept <- d.estimates %>% 
   ggplot(aes(x = Block, y = Intercept_mean, colour = Condition.Exposure, group = Condition.Exposure)) +
     geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 0.75, xmax = 1.25), 
@@ -981,10 +1000,10 @@ p.params_1to7 <- (p.slope_1to7 | p.PSE_1to7) +
 ```
 
 
-(ref:plot-fit-slope-PSE-1to7) **A:** Fitted lapse-rate corrected psychometric plots by exposure condition (all exposure and first 4 test blocks); point ranges indicate the mean proportion of "t"-responses and their 95% bootstrapped CI. **B:** Change in final three test blocks in the absence of more input. **C \& D:** Changes in intercepts, slopes and categorisation boundary (represented by the point-of-subjective-equality (PSE)) by block. Summary is of 8000 draws from the maximum *a posteriori* estimate. Points represent the mean of posterior draws and line ranges are the 95% quantile interval of all draws. Dashed lines show the predicted intercepts, slopes and PSEs by the ideal observers of the respective conditions that have perfectly learned the exposure distributions. 
+(ref:plot-fit-slope-PSE) **A:** Fitted lapse-rate corrected psychometric plots by exposure condition (all exposure and first 4 test blocks); point ranges indicate the mean proportion of "t"-responses and their 95% bootstrapped CI. **B:** Change in final three test blocks in the absence of more input. **C \& D:** Changes in intercepts, slopes and categorisation boundary (represented by the point-of-subjective-equality (PSE)) by block. Summary is of 8000 draws from the maximum *a posteriori* estimate. Points represent the mean of posterior draws and line ranges are the 95% quantile interval of all draws. Dashed lines show the predicted intercepts, slopes and PSEs by the ideal observers of the respective conditions that have perfectly learned the exposure distributions. 
 
 \begin{landscape}
-```{r plot-fit-slope-PSE-1to7, fig.width=12.5, fig.height=8, warning=FALSE, fig.cap="(ref:plot-fit-slope-PSE-1to7)"}
+```{r plot-fit-slope-PSE, fig.width=12.5, fig.height=8, warning=FALSE, fig.cap="(ref:plot-fit-slope-PSE)"}
 layout <- "
 AAAAAAAAA
 ######BBB
