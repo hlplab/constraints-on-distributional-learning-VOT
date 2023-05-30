@@ -1,2 +1,6 @@
 Exp-AE-DLVOT-nested-condition.rds filter=lfs diff=lfs merge=lfs -text
 Exp-AE-DLVOT-nested-block-condVOT.rds filter=lfs diff=lfs merge=lfs -text
+Exp-AE-DLVOT-lapsing-differencecoded-exposureblocks.rds filter=lfs diff=lfs merge=lfs -text
+Exp-AE-DLVOT-lapsing-nested-exposure.rds filter=lfs diff=lfs merge=lfs -text
+Exp-AE-DLVOT-lapsing-nested-test.rds filter=lfs diff=lfs merge=lfs -text
+Exp-AE-DLVOT-lapsing-nested-block.rds filter=lfs diff=lfs merge=lfs -text

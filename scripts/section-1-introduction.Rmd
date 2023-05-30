@@ -7,8 +7,6 @@ In the past two decades the hypothesis that listeners overcome the lack of invar
 
 - For example when listeners are tasked with identifying word pairs like *beach-peach* contrasted by the voice-onset-time (VOT) cue they would exhibit categorisation behaviour that corresponds to the properties of the distributions from which these words are sampled. Listeners exposed to tokens from distribution with wide variances tend to have categorisation functions that are shallower than listeners who hear words sampled from a narrow variance (@clayards2008perception; @theodore2019distributional). In such paradigms, the means the categories are held constant usually at locations where listeners would expect. This is motivated by hypotheses that listeners implicit knowledge about spoken language
 
-- When mean values are moved away from listener. @kleinschmidt2016you tested listener on a wide range of /b-p/ distributions with means at different locations relative to the expected means. 
-
 
 - THE AIM OF THIS STUDY-
 The study we report here builds on the pioneering work of @clayards2008perception and @kleinschmidt2016you with the aim to shed more light on how listeners' initial interpretation of cues from a novel talker incrementally change as they receive progressively more informative input of her cue-to-category mappings.

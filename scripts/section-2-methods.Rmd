@@ -47,7 +47,7 @@ For each exposure block 8 VOT tokens per minimal word pair were sampled from dis
 
 Lastly, half of the exposure trials were randomly assigned as labelled trials. In labelled trials, participants receive clear information of the word's category as both orthographic options will always begin with the intended sound. For example if a trial was intended to be "dill" then the two image options will either be "dill" and "dip" or "dill" and "din". Test trials were always *unlabelled*. 
 
-(ref:exp2-design-distribution) Histogram of all 144 exposure tokens presented over the three exposure blocks. VOT items were counter balanced over
+(ref:exp2-design-distribution) Histogram of all 144 exposure tokens presented over three blocks by exposure condition. 
 
 ```{r exp2-design-distribution, fig.height=2.8, fig.width=6, fig.cap="(ref:exp2-design-distribution)",warning=FALSE, message=FALSE}
 # read in exposure block sampled tokens
