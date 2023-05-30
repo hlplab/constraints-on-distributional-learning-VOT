@@ -1,0 +1,740 @@
+File type = "ooTextFile"
+Object class = "TextGrid"
+
+xmin = 0 
+xmax = 24.978458049886623 
+tiers? <exists> 
+size = 2 
+item []: 
+    item [1]:
+        class = "IntervalTier" 
+        name = "labels" 
+        xmin = 0 
+        xmax = 24.978458049886623 
+        intervals: size = 45 
+        intervals [1]:
+            xmin = 0 
+            xmax = 0.5973696145124716 
+            text = "dilltill_VOT-90_F0243" 
+        intervals [2]:
+            xmin = 0.5973696145124716 
+            xmax = 1.1847392290249434 
+            text = "dilltill_VOT-80_F0243" 
+        intervals [3]:
+            xmin = 1.1847392290249434 
+            xmax = 1.762108843537415 
+            text = "dilltill_VOT-70_F0244" 
+        intervals [4]:
+            xmin = 1.762108843537415 
+            xmax = 2.335487528344671 
+            text = "dilltill_VOT-60_F0244" 
+        intervals [5]:
+            xmin = 2.335487528344671 
+            xmax = 2.844172335600907 
+            text = "dilltill_VOT-5_F0246" 
+        intervals [6]:
+            xmin = 2.844172335600907 
+            xmax = 3.4043310657596373 
+            text = "dilltill_VOT-50_F0244" 
+        intervals [7]:
+            xmin = 3.4043310657596373 
+            xmax = 3.951655328798186 
+            text = "dilltill_VOT-40_F0245" 
+        intervals [8]:
+            xmin = 3.951655328798186 
+            xmax = 4.489002267573697 
+            text = "dilltill_VOT-30_F0245" 
+        intervals [9]:
+            xmin = 4.489002267573697 
+            xmax = 5.018526077097507 
+            text = "dilltill_VOT-25_F0245" 
+        intervals [10]:
+            xmin = 5.018526077097507 
+            xmax = 5.545895691609978 
+            text = "dilltill_VOT-20_F0245" 
+        intervals [11]:
+            xmin = 5.545895691609978 
+            xmax = 6.0645804988662135 
+            text = "dilltill_VOT-15_F0246" 
+        intervals [12]:
+            xmin = 6.0645804988662135 
+            xmax = 6.58514739229025 
+            text = "dilltill_VOT-10_F0246" 
+        intervals [13]:
+            xmin = 6.58514739229025 
+            xmax = 7.192426303854876 
+            text = "dilltill_VOT-100_F0242" 
+        intervals [14]:
+            xmin = 7.192426303854876 
+            xmax = 7.7600907029478465 
+            text = "dilltill_VOT95_F0250" 
+        intervals [15]:
+            xmin = 7.7600907029478465 
+            xmax = 8.324399092970522 
+            text = "dilltill_VOT90_F0250" 
+        intervals [16]:
+            xmin = 8.324399092970522 
+            xmax = 8.885351473922903 
+            text = "dilltill_VOT85_F0249" 
+        intervals [17]:
+            xmin = 8.885351473922903 
+            xmax = 9.442947845804989 
+            text = "dilltill_VOT80_F0249" 
+        intervals [18]:
+            xmin = 9.442947845804989 
+            xmax = 9.997210884353741 
+            text = "dilltill_VOT75_F0249" 
+        intervals [19]:
+            xmin = 9.997210884353741 
+            xmax = 10.548117913832199 
+            text = "dilltill_VOT70_F0249" 
+        intervals [20]:
+            xmin = 10.548117913832199 
+            xmax = 11.095668934240361 
+            text = "dilltill_VOT65_F0249" 
+        intervals [21]:
+            xmin = 11.095668934240361 
+            xmax = 11.63986394557823 
+            text = "dilltill_VOT60_F0248" 
+        intervals [22]:
+            xmin = 11.63986394557823 
+            xmax = 12.146235827664396 
+            text = "dilltill_VOT5_F0246" 
+        intervals [23]:
+            xmin = 12.146235827664396 
+            xmax = 12.687097505668932 
+            text = "dilltill_VOT55_F0248" 
+        intervals [24]:
+            xmin = 12.687097505668932 
+            xmax = 13.224603174603173 
+            text = "dilltill_VOT50_F0248" 
+        intervals [25]:
+            xmin = 13.224603174603173 
+            xmax = 13.75877551020408 
+            text = "dilltill_VOT45_F0248" 
+        intervals [26]:
+            xmin = 13.75877551020408 
+            xmax = 14.289569160997731 
+            text = "dilltill_VOT40_F0248" 
+        intervals [27]:
+            xmin = 14.289569160997731 
+            xmax = 14.817029478458048 
+            text = "dilltill_VOT35_F0247" 
+        intervals [28]:
+            xmin = 14.817029478458048 
+            xmax = 15.34113378684807 
+            text = "dilltill_VOT30_F0247" 
+        intervals [29]:
+            xmin = 15.34113378684807 
+            xmax = 15.86190476190476 
+            text = "dilltill_VOT25_F0247" 
+        intervals [30]:
+            xmin = 15.86190476190476 
+            xmax = 16.379297052154193 
+            text = "dilltill_VOT20_F0247" 
+        intervals [31]:
+            xmin = 16.379297052154193 
+            xmax = 16.893356009070292 
+            text = "dilltill_VOT15_F0247" 
+        intervals [32]:
+            xmin = 16.893356009070292 
+            xmax = 17.404058956916096 
+            text = "dilltill_VOT10_F0247" 
+        intervals [33]:
+            xmin = 17.404058956916096 
+            xmax = 17.9750566893424 
+            text = "dilltill_VOT100_F0250" 
+        intervals [34]:
+            xmin = 17.9750566893424 
+            xmax = 18.48242630385487 
+            text = "dilltill_VOT0_F0246" 
+        intervals [35]:
+            xmin = 18.48242630385487 
+            xmax = 19.053197278911558 
+            text = "dilltill_VOT105_F0250" 
+        intervals [36]:
+            xmin = 19.053197278911558 
+            xmax = 19.690929705215414 
+            text = "dimtim_VOT145_F0252" 
+        intervals [37]:
+            xmin = 19.690929705215414 
+            xmax = 20.29183673469387 
+            text = "dilltill_VOT150_F0252" 
+        intervals [38]:
+            xmin = 20.29183673469387 
+            xmax = 20.889387755102035 
+            text = "dilltill_VOT145_F0252" 
+        intervals [39]:
+            xmin = 20.889387755102035 
+            xmax = 21.483582766439902 
+            text = "dilltill_VOT140_F0252" 
+        intervals [40]:
+            xmin = 21.483582766439902 
+            xmax = 22.07444444444444 
+            text = "dilltill_VOT135_F0251" 
+        intervals [41]:
+            xmin = 22.07444444444444 
+            xmax = 22.66195011337868 
+            text = "dilltill_VOT130_F0251" 
+        intervals [42]:
+            xmin = 22.66195011337868 
+            xmax = 23.246099773242626 
+            text = "dilltill_VOT125_F0251" 
+        intervals [43]:
+            xmin = 23.246099773242626 
+            xmax = 23.826893424036278 
+            text = "dilltill_VOT120_F0251" 
+        intervals [44]:
+            xmin = 23.826893424036278 
+            xmax = 24.404353741496596 
+            text = "dilltill_VOT115_F0250" 
+        intervals [45]:
+            xmin = 24.404353741496596 
+            xmax = 24.978458049886623 
+            text = "dilltill_VOT110_F0250" 
+    item [2]:
+        class = "IntervalTier" 
+        name = "cue" 
+        xmin = 0 
+        xmax = 24.978458049886623 
+        intervals: size = 135 
+        intervals [1]:
+            xmin = 0 
+            xmax = 0.1484097567753742 
+            text = "" 
+        intervals [2]:
+            xmin = 0.1484097567753742 
+            xmax = 0.25356817418325356 
+            text = "vowel" 
+        intervals [3]:
+            xmin = 0.25356817418325356 
+            xmax = 0.5973696145124716 
+            text = "" 
+        intervals [4]:
+            xmin = 0.5973696145124716 
+            xmax = 0.7356176105558822 
+            text = "" 
+        intervals [5]:
+            xmin = 0.7356176105558822 
+            xmax = 0.8439675381354171 
+            text = "vowel" 
+        intervals [6]:
+            xmin = 0.8439675381354171 
+            xmax = 1.1847392290249434 
+            text = "" 
+        intervals [7]:
+            xmin = 1.1847392290249434 
+            xmax = 1.3131264424448306 
+            text = "" 
+        intervals [8]:
+            xmin = 1.3131264424448306 
+            xmax = 1.4247817350878575 
+            text = "vowel" 
+        intervals [9]:
+            xmin = 1.4247817350878575 
+            xmax = 1.762108843537415 
+            text = "" 
+        intervals [10]:
+            xmin = 1.762108843537415 
+            xmax = 1.8866796219200948 
+            text = "" 
+        intervals [11]:
+            xmin = 1.8866796219200948 
+            xmax = 2.001504899578879 
+            text = "vowel" 
+        intervals [12]:
+            xmin = 2.001504899578879 
+            xmax = 2.335487528344671 
+            text = "" 
+        intervals [13]:
+            xmin = 2.335487528344671 
+            xmax = 2.3982643613000754 
+            text = "" 
+        intervals [14]:
+            xmin = 2.3982643613000754 
+            xmax = 2.506688632355299 
+            text = "vowel" 
+        intervals [15]:
+            xmin = 2.506688632355299 
+            xmax = 2.844172335600907 
+            text = "" 
+        intervals [16]:
+            xmin = 2.844172335600907 
+            xmax = 2.955414756919316 
+            text = "" 
+        intervals [17]:
+            xmin = 2.955414756919316 
+            xmax = 3.0670039573100794 
+            text = "vowel" 
+        intervals [18]:
+            xmin = 3.0670039573100794 
+            xmax = 3.4043310657596373 
+            text = "" 
+        intervals [19]:
+            xmin = 3.4043310657596373 
+            xmax = 3.502490579112899 
+            text = "" 
+        intervals [20]:
+            xmin = 3.502490579112899 
+            xmax = 3.614897249135344 
+            text = "vowel" 
+        intervals [21]:
+            xmin = 3.614897249135344 
+            xmax = 3.951655328798186 
+            text = "" 
+        intervals [22]:
+            xmin = 3.951655328798186 
+            xmax = 4.040066554760433 
+            text = "" 
+        intervals [23]:
+            xmin = 4.040066554760433 
+            xmax = 4.149213441845536 
+            text = "vowel" 
+        intervals [24]:
+            xmin = 4.149213441845536 
+            xmax = 4.489002267573697 
+            text = "" 
+        intervals [25]:
+            xmin = 4.489002267573697 
+            xmax = 4.573146377670187 
+            text = "" 
+        intervals [26]:
+            xmin = 4.573146377670187 
+            xmax = 4.682566687280973 
+            text = "vowel" 
+        intervals [27]:
+            xmin = 4.682566687280973 
+            xmax = 5.018526077097507 
+            text = "" 
+        intervals [28]:
+            xmin = 5.018526077097507 
+            xmax = 5.098610425855323 
+            text = "" 
+        intervals [29]:
+            xmin = 5.098610425855323 
+            xmax = 5.2037944405769485 
+            text = "vowel" 
+        intervals [30]:
+            xmin = 5.2037944405769485 
+            xmax = 5.545895691609978 
+            text = "" 
+        intervals [31]:
+            xmin = 5.545895691609978 
+            xmax = 5.619120424562177 
+            text = "" 
+        intervals [32]:
+            xmin = 5.619120424562177 
+            xmax = 5.7263401360544215 
+            text = "vowel" 
+        intervals [33]:
+            xmin = 5.7263401360544215 
+            xmax = 6.0645804988662135 
+            text = "" 
+        intervals [34]:
+            xmin = 6.0645804988662135 
+            xmax = 6.135961718020542 
+            text = "" 
+        intervals [35]:
+            xmin = 6.135961718020542 
+            xmax = 6.248198541480438 
+            text = "vowel" 
+        intervals [36]:
+            xmin = 6.248198541480438 
+            xmax = 6.58514739229025 
+            text = "" 
+        intervals [37]:
+            xmin = 6.58514739229025 
+            xmax = 6.743489579098571 
+            text = "" 
+        intervals [38]:
+            xmin = 6.743489579098571 
+            xmax = 6.854406529636944 
+            text = "vowel" 
+        intervals [39]:
+            xmin = 6.854406529636944 
+            xmax = 7.192426303854876 
+            text = "" 
+        intervals [40]:
+            xmin = 7.192426303854876 
+            xmax = 7.336953172803513 
+            text = "" 
+        intervals [41]:
+            xmin = 7.336953172803513 
+            xmax = 7.420695481377543 
+            text = "vowel" 
+        intervals [42]:
+            xmin = 7.420695481377543 
+            xmax = 7.7600907029478465 
+            text = "" 
+        intervals [43]:
+            xmin = 7.7600907029478465 
+            xmax = 7.899801684483317 
+            text = "" 
+        intervals [44]:
+            xmin = 7.899801684483317 
+            xmax = 7.983634254925211 
+            text = "vowel" 
+        intervals [45]:
+            xmin = 7.983634254925211 
+            xmax = 8.324399092970522 
+            text = "" 
+        intervals [46]:
+            xmin = 8.324399092970522 
+            xmax = 8.45993353794941 
+            text = "" 
+        intervals [47]:
+            xmin = 8.45993353794941 
+            xmax = 8.542482838940565 
+            text = "vowel" 
+        intervals [48]:
+            xmin = 8.542482838940565 
+            xmax = 8.885351473922903 
+            text = "" 
+        intervals [49]:
+            xmin = 8.885351473922903 
+            xmax = 9.014657544836115 
+            text = "" 
+        intervals [50]:
+            xmin = 9.014657544836115 
+            xmax = 9.101909160215811 
+            text = "vowel" 
+        intervals [51]:
+            xmin = 9.101909160215811 
+            xmax = 9.442947845804989 
+            text = "" 
+        intervals [52]:
+            xmin = 9.442947845804989 
+            xmax = 9.567937803692907 
+            text = "" 
+        intervals [53]:
+            xmin = 9.567937803692907 
+            xmax = 9.65273254199639 
+            text = "vowel" 
+        intervals [54]:
+            xmin = 9.65273254199639 
+            xmax = 9.997210884353741 
+            text = "" 
+        intervals [55]:
+            xmin = 9.997210884353741 
+            xmax = 10.117846899377511 
+            text = "" 
+        intervals [56]:
+            xmin = 10.117846899377511 
+            xmax = 10.209681729834791 
+            text = "vowel" 
+        intervals [57]:
+            xmin = 10.209681729834791 
+            xmax = 10.548117913832199 
+            text = "" 
+        intervals [58]:
+            xmin = 10.548117913832199 
+            xmax = 10.664580477831207 
+            text = "" 
+        intervals [59]:
+            xmin = 10.664580477831207 
+            xmax = 10.753114161731839 
+            text = "vowel" 
+        intervals [60]:
+            xmin = 10.753114161731839 
+            xmax = 11.095668934240361 
+            text = "" 
+        intervals [61]:
+            xmin = 11.095668934240361 
+            xmax = 11.206669624371488 
+            text = "" 
+        intervals [62]:
+            xmin = 11.206669624371488 
+            xmax = 11.301645202995823 
+            text = "vowel" 
+        intervals [63]:
+            xmin = 11.301645202995823 
+            xmax = 11.63986394557823 
+            text = "" 
+        intervals [64]:
+            xmin = 11.63986394557823 
+            xmax = 11.696568319635547 
+            text = "" 
+        intervals [65]:
+            xmin = 11.696568319635547 
+            xmax = 11.806529051447418 
+            text = "vowel" 
+        intervals [66]:
+            xmin = 11.806529051447418 
+            xmax = 12.146235827664396 
+            text = "" 
+        intervals [67]:
+            xmin = 12.146235827664396 
+            xmax = 12.251794379656625 
+            text = "" 
+        intervals [68]:
+            xmin = 12.251794379656625 
+            xmax = 12.34633102666354 
+            text = "vowel" 
+        intervals [69]:
+            xmin = 12.34633102666354 
+            xmax = 12.687097505668932 
+            text = "" 
+        intervals [70]:
+            xmin = 12.687097505668932 
+            xmax = 12.787209604633933 
+            text = "" 
+        intervals [71]:
+            xmin = 12.787209604633933 
+            xmax = 12.885923826320651 
+            text = "vowel" 
+        intervals [72]:
+            xmin = 12.885923826320651 
+            xmax = 13.224603174603173 
+            text = "" 
+        intervals [73]:
+            xmin = 13.224603174603173 
+            xmax = 13.320424020959734 
+            text = "" 
+        intervals [74]:
+            xmin = 13.320424020959734 
+            xmax = 13.417179567322425 
+            text = "vowel" 
+        intervals [75]:
+            xmin = 13.417179567322425 
+            xmax = 13.75877551020408 
+            text = "" 
+        intervals [76]:
+            xmin = 13.75877551020408 
+            xmax = 13.850223029586623 
+            text = "" 
+        intervals [77]:
+            xmin = 13.850223029586623 
+            xmax = 13.95230284987046 
+            text = "vowel" 
+        intervals [78]:
+            xmin = 13.95230284987046 
+            xmax = 14.289569160997731 
+            text = "" 
+        intervals [79]:
+            xmin = 14.289569160997731 
+            xmax = 14.376844481063648 
+            text = "" 
+        intervals [80]:
+            xmin = 14.376844481063648 
+            xmax = 14.478901388320732 
+            text = "vowel" 
+        intervals [81]:
+            xmin = 14.478901388320732 
+            xmax = 14.817029478458048 
+            text = "" 
+        intervals [82]:
+            xmin = 14.817029478458048 
+            xmax = 14.897850394125905 
+            text = "" 
+        intervals [83]:
+            xmin = 14.897850394125905 
+            xmax = 15.00042927820479 
+            text = "vowel" 
+        intervals [84]:
+            xmin = 15.00042927820479 
+            xmax = 15.34113378684807 
+            text = "" 
+        intervals [85]:
+            xmin = 15.34113378684807 
+            xmax = 15.417751427007584 
+            text = "" 
+        intervals [86]:
+            xmin = 15.417751427007584 
+            xmax = 15.522176114890401 
+            text = "vowel" 
+        intervals [87]:
+            xmin = 15.522176114890401 
+            xmax = 15.86190476190476 
+            text = "" 
+        intervals [88]:
+            xmin = 15.86190476190476 
+            xmax = 15.932730595343727 
+            text = "" 
+        intervals [89]:
+            xmin = 15.932730595343727 
+            xmax = 16.034197649709782 
+            text = "vowel" 
+        intervals [90]:
+            xmin = 16.034197649709782 
+            xmax = 16.379297052154193 
+            text = "" 
+        intervals [91]:
+            xmin = 16.379297052154193 
+            xmax = 16.445932099547896 
+            text = "" 
+        intervals [92]:
+            xmin = 16.445932099547896 
+            xmax = 16.556135049416948 
+            text = "vowel" 
+        intervals [93]:
+            xmin = 16.556135049416948 
+            xmax = 16.893356009070292 
+            text = "" 
+        intervals [94]:
+            xmin = 16.893356009070292 
+            xmax = 16.954226460724723 
+            text = "" 
+        intervals [95]:
+            xmin = 16.954226460724723 
+            xmax = 17.06162887377173 
+            text = "vowel" 
+        intervals [96]:
+            xmin = 17.06162887377173 
+            xmax = 17.404058956916096 
+            text = "" 
+        intervals [97]:
+            xmin = 17.404058956916096 
+            xmax = 17.553922402294255 
+            text = "" 
+        intervals [98]:
+            xmin = 17.553922402294255 
+            xmax = 17.629447872652403 
+            text = "vowel" 
+        intervals [99]:
+            xmin = 17.629447872652403 
+            xmax = 17.9750566893424 
+            text = "" 
+        intervals [100]:
+            xmin = 17.9750566893424 
+            xmax = 18.033573091672025 
+            text = "" 
+        intervals [101]:
+            xmin = 18.033573091672025 
+            xmax = 18.142434402332363 
+            text = "vowel" 
+        intervals [102]:
+            xmin = 18.142434402332363 
+            xmax = 18.48242630385487 
+            text = "" 
+        intervals [103]:
+            xmin = 18.48242630385487 
+            xmax = 18.63717228317146 
+            text = "" 
+        intervals [104]:
+            xmin = 18.63717228317146 
+            xmax = 18.713052235179788 
+            text = "vowel" 
+        intervals [105]:
+            xmin = 18.713052235179788 
+            xmax = 19.053197278911558 
+            text = "" 
+        intervals [106]:
+            xmin = 19.053197278911558 
+            xmax = 19.247939723152946 
+            text = "" 
+        intervals [107]:
+            xmin = 19.247939723152946 
+            xmax = 19.346319643122047 
+            text = "vowel" 
+        intervals [108]:
+            xmin = 19.346319643122047 
+            xmax = 19.690929705215414 
+            text = "" 
+        intervals [109]:
+            xmin = 19.690929705215414 
+            xmax = 19.88952887537994 
+            text = "" 
+        intervals [110]:
+            xmin = 19.88952887537994 
+            xmax = 19.952584374137665 
+            text = "vowel" 
+        intervals [111]:
+            xmin = 19.952584374137665 
+            xmax = 20.29183673469387 
+            text = "" 
+        intervals [112]:
+            xmin = 20.29183673469387 
+            xmax = 20.485521206013274 
+            text = "" 
+        intervals [113]:
+            xmin = 20.485521206013274 
+            xmax = 20.54855331743087 
+            text = "vowel" 
+        intervals [114]:
+            xmin = 20.54855331743087 
+            xmax = 20.889387755102035 
+            text = "" 
+        intervals [115]:
+            xmin = 20.889387755102035 
+            xmax = 21.077994547025163 
+            text = "" 
+        intervals [116]:
+            xmin = 21.077994547025163 
+            xmax = 21.139714645983005 
+            text = "vowel" 
+        intervals [117]:
+            xmin = 21.139714645983005 
+            xmax = 21.483582766439902 
+            text = "" 
+        intervals [118]:
+            xmin = 21.483582766439902 
+            xmax = 21.66741826875678 
+            text = "" 
+        intervals [119]:
+            xmin = 21.66741826875678 
+            xmax = 21.732127315345615 
+            text = "vowel" 
+        intervals [120]:
+            xmin = 21.732127315345615 
+            xmax = 22.07444444444444 
+            text = "" 
+        intervals [121]:
+            xmin = 22.07444444444444 
+            xmax = 22.253126762900283 
+            text = "" 
+        intervals [122]:
+            xmin = 22.253126762900283 
+            xmax = 22.319191756949696 
+            text = "vowel" 
+        intervals [123]:
+            xmin = 22.319191756949696 
+            xmax = 22.66195011337868 
+            text = "" 
+        intervals [124]:
+            xmin = 22.66195011337868 
+            xmax = 22.836429925203916 
+            text = "" 
+        intervals [125]:
+            xmin = 22.836429925203916 
+            xmax = 22.90373912075883 
+            text = "vowel" 
+        intervals [126]:
+            xmin = 22.90373912075883 
+            xmax = 23.246099773242626 
+            text = "" 
+        intervals [127]:
+            xmin = 23.246099773242626 
+            xmax = 23.41558933777593 
+            text = "" 
+        intervals [128]:
+            xmin = 23.41558933777593 
+            xmax = 23.48690152251377 
+            text = "vowel" 
+        intervals [129]:
+            xmin = 23.48690152251377 
+            xmax = 23.826893424036278 
+            text = "" 
+        intervals [130]:
+            xmin = 23.826893424036278 
+            xmax = 23.991219508005223 
+            text = "" 
+        intervals [131]:
+            xmin = 23.991219508005223 
+            xmax = 24.06354539346603 
+            text = "vowel" 
+        intervals [132]:
+            xmin = 24.06354539346603 
+            xmax = 24.404353741496596 
+            text = "" 
+        intervals [133]:
+            xmin = 24.404353741496596 
+            xmax = 24.563300591264547 
+            text = "" 
+        intervals [134]:
+            xmin = 24.563300591264547 
+            xmax = 24.63816766361717 
+            text = "vowel" 
+        intervals [135]:
+            xmin = 24.63816766361717 
+            xmax = 24.978458049886623 
+            text = "" 
