@@ -484,14 +484,18 @@ hyp_test456 <- c(
   "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 < 0" 
 )
 
+hyp_test456 <- hypothesis(fit_mix_uniform_bias, hyp_test456) 
+
+
 hyp_test456_block <- c(
   "mu2_Block8:Condition.Exposure_Shift10vs.Shift0 < mu2_Block7:Condition.Exposure_Shift10vs.Shift0",
   "mu2_Block9:Condition.Exposure_Shift10vs.Shift0 < mu2_Block8:Condition.Exposure_Shift10vs.Shift0 ",
   "mu2_Block8:Condition.Exposure_Shift40vs.Shift10 < mu2_Block7:Condition.Exposure_Shift40vs.Shift10",
   "mu2_Block9:Condition.Exposure_Shift40vs.Shift10 < mu2_Block8:Condition.Exposure_Shift40vs.Shift10")
 
-hypothesis(fit_mix_uniform_bias, hyp_test456) 
-hypothesis(fit_mix_test_nested_block, hyp_test456_block)
+
+
+hyp_test456_block <- hypothesis(fit_mix_test_nested_block, hyp_test456_block)
 ```
 
 
