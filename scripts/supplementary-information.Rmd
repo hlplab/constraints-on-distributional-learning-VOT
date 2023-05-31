@@ -488,7 +488,7 @@ fit_mix_f0 <- brm(
   file = "../models/Exp-NORM-lapsing-Trial-F0.rds")
 
 if (file.exists("../models/conditional_effects_fit_mix_f0.csv")){
-  fit_mix_f0_data <- read_rds("../models/conditional_effects_fit_mix_f0.csv")
+  fit_mix_f0_data <- read_rds("../models/conditional_effects_fit_mix_f0.rds")
 } else {
   int_conditions <- list(sTrial = sort(unique((d.test.excluded$Trial - Trial.mean)) / (2 * Trial.sd)))
   
@@ -633,6 +633,8 @@ d.test_exposure_for_analysis %>%
   theme(legend.position = "top") +
   facet_grid(Condition.Exposure ~ Block) 
 ```
+
+
 
 ```{r fig,width=8, fig.height=5, fig.width=6}
 d.exposure_test %>%
