@@ -249,7 +249,7 @@ table1 <- cbind(hyp_interactions_readable, hyp_interactions) %>%
 
 
 # hypotheses to answer questions "when did change first emerge?" and "is the difference between groups proportional?"
-hyp_contrasts_within_block <- 
+hyp_contrasts_nested_block <- 
   c(
     "mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 0", 
     "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 < 0", 
@@ -271,7 +271,8 @@ hyp_contrasts_within_block <-
     "mu2_Block7:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 0",
     "mu2_Block7:Condition.Exposure_Shift40vs.Shift10 < 3 * mu2_Block1:Condition.Exposure_Shift10vs.Shift0") # shift in 40vs 10 > 10 vs 0 within test 4
 
-hyp_readable <- tibble(Hypothesis = c(
+# translate hypotheses into intelligible statements
+hyp_contrasts_nested_block_readable <- tibble(Hypothesis = c(
   "+10 vs baseline", 
   "+40 vs +10",
   "+40 vs baseline",
@@ -293,11 +294,11 @@ hyp_readable <- tibble(Hypothesis = c(
   "+40 vs baseline > 3x +10 vs baseline"
 ))
 
-hyp_contrasts_within_block <- hypothesis(fit_mix_test_nested_block, hyp_contrasts_within_block)
-hyp_contrasts_within_block <- hyp_contrasts_within_block$hypothesis %>% 
+hyp_contrasts_nested_block <- hypothesis(fit_mix_test_nested_block, hyp_contrasts_nested_block)
+hyp_contrasts_nested_block <- hyp_contrasts_nested_block$hypothesis %>% 
   select(-Star)
 
-table2 <- cbind(hyp_readable, hyp_contrasts_within_block) %>% 
+table2 <- cbind(hyp_contrasts_nested_block_readable, hyp_contrasts_nested_block) %>% 
   select(-2) %>% 
   mutate(across(where(is.numeric), ~ round(., digits = 3))) %>% 
   rename_all(~gsub("\\.", " ", .)) %>% 
@@ -349,21 +350,6 @@ table3 <- cbind(hyp_test456_readable, hyp_test456) %>%
   column_spec(1, width = "8em") %>% 
   pack_rows("Difference in +10 vs baseline", 1, 3) %>%
   pack_rows("Difference in +40 vs +10", 4, 6) 
-  
-  
-
-
-# hyp_test456_block <- c(
-#   "mu2_Block8:Condition.Exposure_Shift10vs.Shift0 < mu2_Block7:Condition.Exposure_Shift10vs.Shift0",
-#   "mu2_Block9:Condition.Exposure_Shift10vs.Shift0 < mu2_Block8:Condition.Exposure_Shift10vs.Shift0 ",
-#   "mu2_Block8:Condition.Exposure_Shift40vs.Shift10 < mu2_Block7:Condition.Exposure_Shift40vs.Shift10",
-#   "mu2_Block9:Condition.Exposure_Shift40vs.Shift10 < mu2_Block8:Condition.Exposure_Shift40vs.Shift10")
-# 
-# 
-# 
-# hyp_test456_block <- hypothesis(fit_mix_test_nested_block, hyp_test456_block)
-# 
-# hypothesis(fit_mix_test_nested_block, "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 0")
 ```
 
 
