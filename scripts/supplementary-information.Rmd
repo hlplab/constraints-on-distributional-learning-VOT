@@ -622,7 +622,7 @@ d %>%
   facet_grid(Condition.Exposure ~ Block) 
 ```
 ```{r, message=FALSE, fig.width=6, fig.height=5}
-d.test_exposure_for_analysis %>% 
+d_for_analysis %>% 
   filter(Is.CatchTrial == FALSE & Phase == "exposure") %>% 
   mutate(Item.Labeled = factor(ifelse(Item.Labeled == TRUE, "labeled", "unlabeled"))) %>% 
   summarise(Condition.Exposure, Block, Item.Labeled, Response.Correct) %>% 
