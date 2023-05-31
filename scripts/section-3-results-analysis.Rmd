@@ -419,16 +419,18 @@ hyp_interactions <- c(
   "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 < 0"
 )
 
+# translate the hypotheses above into intelligible statements
 hyp_interactions_readable <- tibble(Hypothesis = c(
-  "+10 vs baseline > +10 vs baseline", #  test 2 vs 1
-  "+10 vs baseline  > +10 vs baseline ", # test 3 vs 2
-  "+10 vs baseline test 4 > +10 vs baseline test 3", #test 4 vs test 3
-  "+10 vs baseline < 0", # test 4 vs test 1 
-  
-  "+40 vs +10 > +40 vs +10", #test 2 vs test 1
-  "+40 vs +10 > +40 vs +10", # test 3 vs test 2
-  "+40 vs +10 > +40 vs +10", #test 4 vs test 3
-  "+40 vs +10 < 0" # test 4 vs test 1
+  # Comparing differences in +10 vs baseline between blocks
+  "Test block 2 > Test block 1", 
+  "Test block 3  > Test block 2", 
+  "Test block 4  > Test block 3", 
+  "Test block 4  > Test block 1",  
+  # Comparing differences in +40 vs +10 between blocks
+  "Test block 2 > Test block 1", 
+  "Test block 3  > Test block 2", 
+  "Test block 4  > Test block 3", 
+  "Test block 4  > Test block 1" 
 ))
 
 hyp_interactions <- hypothesis(fit_mix_uniform_bias, hyp_interactions)
@@ -437,17 +439,15 @@ hyp_interactions <- hyp_interactions$hypothesis %>%
 table1 <- cbind(hyp_interactions_readable, hyp_interactions) %>% 
   select(-2)
 
-align_tab <- function(table) {
-  map_chr(table, ~ifelse(class(.x) == "numeric", "r","l"))
-}  
-
 table1 %>% 
   mutate(across(where(is.numeric), ~ round(., digits = 3))) %>% 
   rename_all(~ gsub("\\.", " ", .)) %>% 
   kbl(caption = "Comparing interactions of block and condition", align = align_tab(table1)) %>% 
   kable_styling(full_width=FALSE, 
                 bootstrap_options = c("striped", "hover", "condensed")) %>% 
-  column_spec(1, width = "8em")
+  column_spec(1, width = "8em") %>% 
+  pack_rows("Difference in +10 vs baseline", 1, 4) %>%
+  pack_rows("Difference in +40 vs +10", 5, 8) 
 
 
 # hypotheses to answer questions "when did change first emerge?" and "is the difference between groups proportional?"
@@ -1127,17 +1127,6 @@ d.chodroff_wilson.selected <-
 
 quantile_levels <- c(0, .05, .25, .5, .75, .95, .99) 
 
-density_quantiles <- function(x, y, quantiles) {
-  require(terra)
-  dens <- MASS::kde2d(x, y, n = 500)
-  df   <- cbind(expand.grid(x = dens$x, y = dens$y), z = c(dens$z))
-  r    <- terra::rast(df)
-  ind  <- sapply(seq_along(x), function(i) cellFromXY(r, cbind(x[i], y[i])))
-  ind  <- ind[order(-r[ind][[1]])]
-  vals <- r[ind][[1]]
-  ret  <- approx(seq_along(ind)/length(ind), vals, xout = quantiles)$y
-  replace(ret, is.na(ret), max(r[]))
-}
 
 p.density <- 
   d.chodroff_wilson.selected %>% 
