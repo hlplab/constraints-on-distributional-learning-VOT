@@ -182,6 +182,16 @@ To analyse the incremental effects of exposure condition on the proportion of "t
 
 
 ```{r model-fit-test-blocks, warning=FALSE}
+d.mean_sd_scaling <- d.test_exposure_for_analysis %>% 
+  group_by(Phase) %>% 
+  filter(Item.Labeled == FALSE) %>% 
+  summarise(across(Item.VOT, list(mean = mean, sd = sd)))
+
+VOT.mean_exposure <- (d.mean_sd_scaling %>% pull(Item.VOT_mean))[1]
+VOT.sd_exposure <- (d.mean_sd_scaling %>% pull(Item.VOT_sd))[1]
+VOT.mean_test <- (d.mean_sd_scaling %>% pull(Item.VOT_mean))[2]
+VOT.sd_test <- (d.mean_sd_scaling %>% pull(Item.VOT_sd))[2]
+
 d.test_exposure_for_analysis %<>% 
   mutate(Response.Voiceless = ifelse(Response.Voicing == "voiceless", 1, 0))
 levels_Condition.Exposure = c("Shift0", "Shift10", "Shift40")
