@@ -13,20 +13,22 @@ source("functions.R")
 
 ```{r load-format-experimental-data}
 # mark catch trials rows and mark those to be excluded
-d.exposure_test %<>% 
+d %<>% 
   mutate(
     Is.CatchTrial = ifelse(Item.ExpectedResponse %in% c("flare", "rare", "share"), TRUE, FALSE),
-    CatchTrial.Correct = ifelse(Is.CatchTrial == TRUE, 
-                    ifelse(Item.ExpectedResponse == Response, TRUE, FALSE), NA),
+    CatchTrial.Correct = ifelse(
+      Is.CatchTrial == TRUE, 
+      ifelse(Item.ExpectedResponse == Response, TRUE, FALSE), NA),
     Answer.sex.Correct = ifelse(sex == "woman", TRUE, FALSE)) %>% 
   group_by(ParticipantID) %>% 
   mutate(Exclude_participant.due_to_catch_trials = ifelse(sum(CatchTrial.Correct, na.rm = TRUE) < 17, TRUE, FALSE)) %>%
   ungroup()
 
 # mark labelled trials
-d.exposure_test %<>% 
-  mutate(Response.Correct = ifelse(Item.ExpectedResponse == Response, TRUE, FALSE),
-         LabeledTrial.Correct = ifelse(Item.Labeled == TRUE, ifelse(Response.Correct == TRUE, TRUE, FALSE), NA)) %>% 
+d %<>% 
+  mutate(
+    Response.Correct = ifelse(Item.ExpectedResponse == Response, TRUE, FALSE),
+    LabeledTrial.Correct = ifelse(Item.Labeled == TRUE, ifelse(Response.Correct == TRUE, TRUE, FALSE), NA)) %>% 
   group_by(ParticipantID) %>% 
   mutate(Exclude_participant.due_to_labeled_trials = ifelse(sum(LabeledTrial.Correct, na.rm = T) < 68, TRUE, FALSE))
 ```
@@ -35,7 +37,8 @@ d.exposure_test %<>%
 
 ```{r set-exclusion-due-to-categorisation-slope, warning=FALSE}
 # get data for exclusion due to categorisation slope of first 36 trials. 
-d.VOT_exclusion <- d.exposure_test %>% 
+d.VOT_exclusion <- 
+  d %>% 
   filter(Block == 1 | (Block == 2 & Trial %in% c(13:36))) %>% 
   drop_na(c(ParticipantID, Response.Voicing, Item.VOT)) %>% 
   mutate(Response.ProportionVoiceless = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
@@ -53,20 +56,27 @@ d.VOT_exclusion %<>%
   nest() %>%
   mutate(
     CategorizationModel =
-      map(data, ~ glm(Response.ProportionVoiceless ~ 1 + Item.VOT, data = .x, family = binomial))) %>% 
+      map(
+        data, 
+        ~ glm(
+          Response.ProportionVoiceless ~ 1 + Item.VOT, 
+          data = .x, 
+          family = binomial))) %>% 
   # type = "response" in predict() gives the probability
   summarise(Model.predicted.Reponse = 
-              map(CategorizationModel, ~ predict(object = .x, 
-                                                 newdata = tibble(Item.VOT = VOT_for_targeted_proportion_t), 
-                                                 type = "response"))) %>% 
+              map(
+                CategorizationModel, 
+                ~ predict(object = .x, 
+                          newdata = tibble(Item.VOT = VOT_for_targeted_proportion_t), 
+                          type = "response"))) %>% 
   mutate(Exclude_participant.due_to_VOT_slope = 
            map(Model.predicted.Reponse, ~ ifelse(.x[1] > targeted_proportion_t[1] || .x[2] < targeted_proportion_t[2], TRUE, FALSE)),
          Exclude_participant.due_to_lower_VOT = map(Model.predicted.Reponse, ~ ifelse(.x[1] > targeted_proportion_t[1], TRUE, FALSE)),
          Exclude_participant.due_to_higher_VOT = map(Model.predicted.Reponse, ~ ifelse(.x[2] < targeted_proportion_t[2], TRUE, FALSE))) %>% 
   select(ParticipantID, Experiment, Condition.Exposure, Exclude_participant.due_to_VOT_slope, Exclude_participant.due_to_lower_VOT, Exclude_participant.due_to_higher_VOT) %>% 
-  mutate(across(c(Exclude_participant.due_to_VOT_slope, 
-                  Exclude_participant.due_to_lower_VOT, 
-                  Exclude_participant.due_to_higher_VOT), .fns = unlist)) %>% 
+  mutate(
+    across(c(Exclude_participant.due_to_VOT_slope, Exclude_participant.due_to_lower_VOT, Exclude_participant.due_to_higher_VOT), 
+           unlist)) %>% 
   ungroup()
 
 # counting TRUEs
@@ -74,14 +84,14 @@ n_excluded_VOT_slope <- d.VOT_exclusion %>%
   group_by(Exclude_participant.due_to_VOT_slope, Condition.Exposure) %>% 
   summarise(n())
   
-d.exposure_test %<>% left_join(d.VOT_exclusion)
+d %<>% left_join(d.VOT_exclusion)
 ```
 
 
 
 ```{r set-RT-exclusion-criteria, message=FALSE}
 # calculate RT exclusion AFTER removing excluded participants due to other criteria
-# d.test_exposure_for_analysis <- d.exposure_test %>%
+# d.test_exposure_for_analysis <- d %>%
 #   filter(
 #     Is.CatchTrial == FALSE &
 #     Exclude_participant.due_to_catch_trials == FALSE &
@@ -110,28 +120,28 @@ d.exposure_test %<>% left_join(d.VOT_exclusion)
 # proportion.trials.excluded <- nrow(excl.RT.trial)/nrow(d.test_exposure_for_analysis)
 
 # get number of participants excluded due to catch trial
-excl.catch <- d.exposure_test %>% 
+excl.catch <- d %>% 
   filter(Exclude_participant.due_to_catch_trials == TRUE) %>% 
   group_by(ParticipantID) %>% 
   summarise() %>% 
   tally() 
 
 # get number of participants excluded due to labelled trials
-excl.labeled <- d.exposure_test %>% 
+excl.labeled <- d %>% 
   filter(Exclude_participant.due_to_labeled_trials == TRUE) %>% 
   group_by(ParticipantID) %>% 
   summarise() %>% 
   tally() 
 
 # count number of exclusions due to VOT slope
-excl.VOT <- d.exposure_test %>% 
+excl.VOT <- d %>% 
   filter(Exclude_participant.due_to_VOT_slope == TRUE) %>% 
   group_by(ParticipantID) %>% 
   summarise() %>% 
   tally()
 
 # make dataframe for analysis after exclusions
-d.test_exposure_for_analysis <- d.exposure_test %>%
+d.test_exposure_for_analysis <- d %>%
   filter(
     Is.CatchTrial == FALSE &
     Exclude_participant.due_to_catch_trials == FALSE &
