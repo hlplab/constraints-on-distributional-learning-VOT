@@ -561,7 +561,7 @@ psychometric_fit_exp1 %>%
 
 (ref:plot-catch-trial-performance) Of the 122 participants, 1 committed more than 3 errors (<84% accuracy)
 ```{r plot-catch-trial-performance, fig.height=4, fig.width=6, fig.cap="ref:plot-catch-trial-performance"}
-d.exposure_test %>% 
+d %>% 
   group_by(ParticipantID) %>% 
   summarise(Total_errors = 18 -sum(CatchTrial.Correct, na.rm = T)) %>%
   ggplot(aes(x = Total_errors)) +
@@ -573,7 +573,7 @@ d.exposure_test %>%
 
 -labelled trial performance plots
 ```{r labeled-trial-performance-group, fig.width=6, fig.height=4, message=F}
-p.labelled <- d.exposure_test %>% 
+p.labelled <- d %>% 
   filter(Phase == "exposure") %>% 
   group_by(ParticipantID, Condition.Exposure) %>% 
   summarise(LabeledTrial.Correct = sum(LabeledTrial.Correct, na.rm = TRUE)) %>% 
@@ -590,7 +590,7 @@ p.labelled <- d.exposure_test %>%
   scale_y_continuous("No. of participants", breaks  = seq(0, 115, 5)) +
   theme(legend.position = "none") 
 
-p.labelled.group <- d.exposure_test %>% 
+p.labelled.group <- d %>% 
   filter(Phase == "exposure") %>% 
   group_by(ParticipantID, Condition.Exposure, Block) %>% 
   summarise(LabeledTrial.Correct = sum(LabeledTrial.Correct, na.rm = TRUE)) %>% 
@@ -610,7 +610,7 @@ p.labelled | p.labelled.group +
 
 
 ```{r, message=FALSE, fig.width=6, fig.height=5}
-d.exposure_test %>% 
+d %>% 
   filter(Is.CatchTrial == FALSE & Phase == "exposure") %>% 
   mutate(Item.Labeled = factor(ifelse(Item.Labeled == TRUE, "labeled", "unlabeled"))) %>% 
   summarise(Condition.Exposure, Block, Item.Labeled, Response.Correct) %>% 
@@ -635,7 +635,7 @@ d.test_exposure_for_analysis %>%
 ```
 
 ```{r fig,width=8, fig.height=5, fig.width=6}
-d.exposure_test %>%
+d %>%
   group_by(ParticipantID, Condition.Exposure, Block) %>%
   filter(Is.CatchTrial == FALSE) %>%
   mutate(Response.log_RT = log10(Response.RT)) %>%
@@ -655,7 +655,7 @@ d.exposure_test %>%
 
 
 ```{r, fig.width=8, fig.height=3}
-d.exposure_test %>%
+d %>%
   filter(
     Is.CatchTrial == FALSE &
     Exclude_participant.due_to_catch_trials == FALSE &
@@ -683,7 +683,7 @@ d.exposure_test %>%
 
 
 ```{r, fig.width=8, fig.height=3}
-d.exposure_test %>% 
+d %>% 
   group_by(Trial, Condition.Exposure, Block) %>%
   mutate(Response.log_RT = log10(Response.RT)) %>%
   summarise_at("Response.log_RT", .funs = list("mean" = mean, "sd" = sd)) %>% 

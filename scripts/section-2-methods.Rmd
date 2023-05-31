@@ -10,27 +10,60 @@ require(cowplot)
 
 source("functions.R")
 ```
+To assess how exposure incrementally and cumulatively affects listeners' perception, we employed the repeated exposure-test design shown in \@ref(fig:exp2-design-figure). The use of test blocks that repeated same stimuli across blocks and exposure conditions deviates from previous work [@clayards2008; @kleinschmidt-jaeger2016; @kleinschmidt2020]. This design feature allows us to assess how increasing exposure affects listeners' perception without making strong assumptions about the nature of these changes (e.g., linear changes across trials).
+
+```{r exp2-design-figure, fig.height=3, fig.width=5, fig.cap="Experiment 2 multi-block design. Test blocks in grey comprised identical stimuli within and between conditions"}
+knitr::include_graphics("../figures/experiment2_design_image.png")
+```
 
 
-
+```{r load data}
+d <- 
+  read_csv("../data/experiment2_raw_formatted.csv", show_col_types = F) %>%
+  # load f0 measurements of stimuli (these were taken 5 msecs into the vowel)
+  left_join(
+    read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv", show_col_types = F) %>% 
+      select(filename, VOT, f0_5ms_into_vowel) %>% 
+      rename(Item.VOT = VOT,
+             Item.F0_5ms = f0_5ms_into_vowel,
+             Item.Filename = filename) %>% 
+      mutate(Item.Filename = paste0(Item.Filename, ".wav")),
+    by = c("Item.Filename", "Item.VOT")) %>% 
+  mutate(
+    across(
+      c(Experiment, starts_with("List"), 
+        ParticipantID, Participant.Race, Participant.Ethnicity, Participant.Sex,
+        Condition.Exposure, Phase, 
+        Trial.ImageSelection, Item.ExpectedResponse, Item.ExpectedResponse.Voicing, Item.MinimalPair,
+        Response.ClickPosition, Response.Voicing),
+      factor),
+    Participant.Sex = str_to_lower(Participant.Sex),
+    Item.Mel_F0_5ms = normMel(Item.F0_5ms)) 
+```
 
 ## Methods 
 ### Participants
-Participants were recruited over the Prolific platform and experiment data (but not participant profile data) were collected, stored, and via proliferate (@schuster). They were paid $8.00 each (for a targeted remuneration of \$9.60/hour). The experiment was visible to participants following a selection of Prolific's available pre-screening criteria. Participants had to (1) have US nationality, (2) report to only know English, and (3) had not previously participated in any experiment from our lab on Prolific.
+We recruited `r nlevels(d$ParticipantID) + 4` participants from the Prolific crowdsourcing platform. We used Prolific's pre-screening to limit the experiment to participants (1) of US nationality, (2) who reported to only speak English, and (3) had not previously participated in any experiment from our lab on Prolific. Prior to the start of the experiment, participants had to confirm that they (4) spent at least the first 10 years of their life in the US speaking only English, (5) were in a quiet place and free from distractions, and (6) wore in-ear or over-the-ears headphones that cost at least \$15. An additional XXX participants loaded the experiment but did not start or complete it. <!-- TO DO -->
 
-126 L1 US English listeners (male = 60, female = 59, NA = 3; mean age = 38 years; SD age = 12 years) completed the experiment. Due to data transfer errors 4 participants' data were not stored and therefore not included in this analysis. To be eligible, participants had to confirm that they (1) spent at least the first 10 years of their life in the US speaking only English, (2) were in a quiet place and free from distractions, and (3) wore in-ear or over-the-ears headphones that cost at least \$15. 
+Participants were remunerated \$8.00/hour for completion of the experiment (\$9.60 per hour prorated for the duration of the experiment). An optional post-experiment survery recorded participant demographics using a NIH pre-scribed categories, including participant sex (`r d.Participant <- (d %>% distinct(ParticipantID, Participant.Age, Participant.Sex, Participant.Ethnicity, Participant.Race, Participant.Raceother)); d.Participant %>% group_by(Participant.Sex) %>% tally() %>% mutate(x = paste(n, Participant.Sex, sep = " = ", collapse = ", ")) %>% pull(x) %>% first()`), age (mean = `r mean(d.Participant$Participant.Age, 1)` years; 95% quantiles = `r paste(quantile(d.Participant$Participant.Age, c(.025, .975), na.rm = T), collapse = "-")` years), race (`r d.Participant %>% group_by(Participant.Race) %>% tally() %>% mutate(x = paste(n, Participant.Race, sep = " = ", collapse = ", ")) %>% pull(x) %>% first()`), and ethnicity (`r d.Participant %>% group_by(Participant.Ethnicity) %>% tally() %>% mutate(x = paste(n, Participant.Ethnicity, sep = " = ", collapse = ", ")) %>% pull(x) %>% first()`). 
+
+Participants' responses were collected via Javascript developed by the Human Language Processing Lab at the University of Rochester [@JSEXP] and stored via Proliferate developed at, and hosted by, the ALPs lab at Stanford University [@schuster].
 
 ### Materials 
+We recorded XXX tokens each of four minimal word pairs ("dill"/"till", "dim"/"tim", "din"/"tin", and "dip"/"tip") from a 23-year-old, female L1-US English talker from New Hampshire, judged to have a "general American" accent. These recordings were used to create four natural-sounding minimal pair VOT continua using a script [@winn2020manipulation] in Praat [@praat]. A norming experiment (N = XXX participants) reported in the SI (@\ref(XXX)) was used to select the three minimal pairs that elicited the most similar categorization responses (dill-till, din-tin, and dip-tip).  
 
-We recorded multiple tokens of four minimal word pairs ("dill"/"till", "dim"/"tim", "din"/"tin", and "dip"/"tip") from a 23-year-old, female L1 US English talker from New Hampshire, judged to have a "general American" accent. These recordings were used to create four natural-sounding minimal pair VOT continua (dill-till, dip-tip, din-tin, and dip-tip) using a Praat script [@winn2020manipulation]. In addition to the critical minimal pair continua we also recorded three words that did not did not contain any stop consonant sounds ("flare", "share", and "rare"). These word recordings were used as catch trials. Stimulus intensity was set to 70 dB sound pressure level for all recordings. The full procedure is described in the supplementary information (SI, \@ref(sec:SI-XXX)). 
+The VOTs generated for each continuum ranged from -100 to +120 msec in 5 msec steps.^[For simplicity's sake, we follow previous work [@kleinschmidt2020; @OTHERS] and refer to prevoicing as negative VOTs though we note that prevoicing is perhaps better conceived of as a separate phonetic feature [for discussion, see @REF]. In L1-US English, pevoicing is estimated to occur on XXX% of word-initial voiced stops and 0% of voiceless stops [@REF].] The procedure also maintained the natural correlations between the most important cues to word-initial stop-voicing in L1-US English (VOT, F0, and vowel duration). Specifically, the F0 at vowel onset of each stimulus was set to respect the linear relation with VOT observed in the original recordings of the talker. The duration of the vowel was set to follow the natural trade-off relation with VOT [@allen1999effects]. Further details on the recording and resynthesis procedure are provided in the supplementary information (SI, \@ref(sec:SI-XXX)). 
 
-We also set the F0 at vowel onset to follow the speaker's natural correlation which was estimated through a linear regression analysis of all the recorded speech tokens. We did this so that we could determine the approximate corresponding f0 values at each VOT value along the continua as predicted by this talker's VOT. The duration of the vowel was set to follow the natural trade-off relation with VOT reported in @allen1999effects. This approach resulted in continuum steps that sound highly natural [unlike the robotic-sounding stimuli employed in @clayards2008perception; @kleinschmidt2016you]. All stimuli are available as part of the OSF repository for this article.
+This approach resulted in continuum steps that sound natural [unlike the highly robotic-sounding stimuli employed in @clayards2008perception; @kleinschmidt2016you]. A post-experiment survey asked participants whether "XXX". No participant reported that the stimuli sounded unnatural [in contrast to other experiments we have conducted with robotic-sounding stimuli like those of @clayards]. In addition to the critical minimal pair continua we also recorded three words that did not did not contain any stop consonant sounds ("flare", "share", and "rare"). These word recordings were used for catch trials. Stimulus intensity was normalized to 70 dB sound pressure level for all recordings. 
 
-Prior to creating the three exposure conditions of the experiment, we ran a norming experiment to test US-L1 listeners' perception of our stimuli and to determine a baseline categorisation boundary for this talker. While it is normal and acceptable practice to set the baseline by taking population estimates of mean values from past studies on stops, we reasoned that such estimates were highly variable and therefore aimed to obtained a more accurate estimation of how L1-US English listeners perceived the speech of our talker. To anticipate the outcome, we eventually discovered that the classification boundary from norming underestimated the boundary fitted to our participants' classification in the initial test block. This placed our baseline and baseline +10ms shift exposure conditions slightly leftwards of participants' initial perceptual boundary. This finding, however does not impinge on the conclusions drawn from this study [<!--CALL IT baseline, +10 AND +40-->]
+### Procedure
+
+
+
+Prior to creating the three exposure conditions for the experiment, we conducted a norming experiment (N = XXX participants) to assess US-L1 listeners' perception of our stimuli and to determine a baseline categorisation boundary for this talker. While it is normal and acceptable practice to set the baseline by taking population estimates of mean values from past studies on stops, we reasoned that such estimates were highly variable and therefore aimed to obtained a more accurate estimation of how L1-US English listeners perceived the speech of our talker. To anticipate the outcome, we eventually discovered that the classification boundary from norming underestimated the boundary fitted to our participants' classification in the initial test block. This placed our baseline and baseline +10ms shift exposure conditions slightly leftwards of participants' initial perceptual boundary. This finding, however does not impinge on the conclusions drawn from this study [<!--CALL IT baseline, +10 AND +40-->]
 
 The other purpose of the norming experiment was to detect possible anomalous features present in our stimuli (for e.g. if it would elicit unusual categorisation behaviour or whether certain minimal-pairs had an exaggerated effect on categorisation). For the norming experiment the VOT continua employed 24 VOT steps ranging from -100ms VOT to +130ms (-100, -50, -10, 5  `r paste0(seq(15, 90, 5), collapse = ", ")`, `r paste0(seq(100, 130, 10), collapse = ", ")`). VOT tokens in the lower and upper ends were distributed over larger increments because stimuli in those ranges were expected to elicit floor and ceiling effects, respectively. We found VOT to have the expected effect on the proportion of "t"-responses, i.e. higher VOTs elicited greater "t"-responses and that the word-pairs did not differ substantially from each other. The results and analysis of the norming experiment are reported in full in section \@ref(sec:XX).  
 
-A subset of the materials were used to generate the three exposure conditions; in particular three continua of the minimal pairs, dill-till, din-tin, and dip-tip. The dim-tim continuum was omitted in order to keep the pairs as distinct as possible. 
 
 We employed a multi-block exposure-test design \@ref(fig:exp2-design-figure) which enabled the assessment of listener perception before informative exposure as well as incrementally at intervals  during informative exposure (after every 48 exposure trials). To have a comparable test between blocks and across conditions, test blocks were made up of a uniform distribution of 12 VOT stimuli (-5, 5, 15, 25, 30, 35, 40, 45, 50, 55, 65, 70), identical across test blocks and between conditions. Each of the test tokens were presented once at random. The test blocks were kept short to minimise distortion of the intended distribution to be presented by the end of the exposure phase. After the final exposure block we tripled the number of test blocks to increase the statistical power to detect exposure induced behavioural changes. 
 
@@ -50,8 +83,13 @@ Lastly, half of the exposure trials were randomly assigned as labelled trials. I
 (ref:exp2-design-distribution) Histogram of all 144 exposure tokens presented over three blocks by exposure condition. 
 
 ```{r exp2-design-distribution, fig.height=2.8, fig.width=6, fig.cap="(ref:exp2-design-distribution)",warning=FALSE, message=FALSE}
-# read in exposure block sampled tokens
-d.exposure <- read_csv("../data/exposure_block_tokens.csv", show_col_types = F)
+d.exposure_trials <- 
+  read_csv("../data/exposure_block_tokens.csv", show_col_types = F) %>% 
+  mutate(
+    condition = case_when(condition == "Shift0" ~ "+0ms",
+                          condition == "Shift10" ~ "+10ms",
+                          condition == "Shift40" ~ "+40ms"),
+    labelling = as_factor(labelling))
 
 # set variances of categories
 var_d <- 80
@@ -62,13 +100,9 @@ d.means <-
          category = c("/d/", "/t/")) %>% 
   mutate(mean = c(5, 50, 15, 60, 45, 90))
 
-d.exposure %>% 
+d.exposure_trials %>% 
   na.omit() %>% 
   filter(image_selection == "forward" & list_LSQ_variant == "A") %>% 
-  mutate(condition = case_when(condition == "Shift0" ~ "+0ms",
-                               condition == "Shift10" ~ "+10ms",
-                               condition == "Shift40" ~ "+40ms"),
-         labelling = as_factor(labelling)) %>% 
   ggplot() +
   geom_histogram(aes(x = VOT, fill = paste(condition, category, labelling), 
                      color = paste(condition, category, labelling),

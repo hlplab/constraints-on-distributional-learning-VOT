@@ -12,24 +12,6 @@ source("functions.R")
 
 
 ```{r load-format-experimental-data}
-# load formatted exposure and test data from experiment 2
-d.exposure_test <- read_csv("../data/experiment2_raw_formatted.csv", show_col_types = F)
-
-# load f0-5ms-into-vowel measurements of stimuli
-d.f0.5ms <- 
-  read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv", show_col_types = F) %>% 
-  select(filename, VOT, f0_5ms_into_vowel) %>% 
-  rename(Item.VOT = VOT,
-         Item.F0_5ms = f0_5ms_into_vowel,
-         Item.Filename = filename) %>% 
-  mutate(Item.Filename = paste0(Item.Filename, ".wav"))
-
-# add f0-5ms data
-d.exposure_test %<>% 
-ungroup() %>%
-  left_join(d.f0.5ms, by = c("Item.Filename", "Item.VOT")) %>% 
-              mutate(Item.Mel_F0_5ms = normMel(Item.F0_5ms)) 
-
 # mark catch trials rows and mark those to be excluded
 d.exposure_test %<>% 
   mutate(
@@ -158,6 +140,8 @@ d.test_exposure_for_analysis <- d.exposure_test %>%
 ```
 
 ### Exclusions
+Due to data transfer errors 4 participants' data were not stored and therefore not included in this analysis. 
+
 We excluded from analysis participants who committed more than 3 errors out of the 18 catch trials (<83% accuracy, N = 1), participants who committed more than 4 errors out of the 72 labelled trials (<94% accuracy, N = 0), participants with an average reaction time (RT) more than three standard deviations from the mean of the by-participant means (N = 0), and participants who reported not to have used headphones (N = 0) or not to be native (L1) speakers of US English (N = 0). 
 
 In addition, participants' categorization during the early phase of the experiment were scrutinised for their slope orientation and their proportion of "t"-responses at the least ambiguous locations of the VOT continuum. The early phase of the experiment was defined as the first 36 trials and the least ambiguous locations were defined as -20ms below the empirical mean of the /d/ category and +20ms above the empirical mean of the /t/ category. These means were obtained from the production data estimates by @Kurumada_Xie_Jaeger_2022.
