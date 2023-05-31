@@ -10,9 +10,10 @@ require(cowplot)
 
 source("functions.R")
 ```
+
 We designed the experiment to provide high statistical power to detect effects of exposure, both incrementally within each exposure condition, and cumulatively across exposure conditions. To this end, we employed the repeated exposure-test design shown in Figure \@ref(fig:exp2-design-figure). The use of test blocks that repeated same stimuli across blocks and exposure conditions deviates from previous work [@clayards2008; @kleinschmidt-jaeger2016; @kleinschmidt2020]. This design feature allowed us to assess how increasing exposure affects listeners' perception without making strong assumptions about the nature of these changes (e.g., linear changes across trials). Since previous work has found that repeated testing over uniform test continua can reduce or undo the effects of informative exposure [@liu-jaeger2018, @liu-jaeger2019, @cummings202X], we kept test blocks short, each consisting of only 12 trials. The final test blocks were intended to ameliorate the potential risks of this novel design: in case adaptation remains stable despite repeated testing, those additional test blocks were meant to provide additional statistical power to detect the effects of cumulative exposure. Finally, as we detail below, our design also allowed us to measure adaptation during exposure.
 
-```{r exp2-design-figure, fig.height=3, fig.width=5, fig.cap="Experiment 2 multi-block design. Test blocks in grey comprised identical stimuli within and between conditions"}
+```{r exp2-design-figure, fig.height=3, fig.width=5, fig.cap="Exposure-test design of the experiment. Test blocks presented identical stimuli within and across conditions"}
 knitr::include_graphics("../figures/experiment2_design_image.png")
 ```
 
