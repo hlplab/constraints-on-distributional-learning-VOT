@@ -462,7 +462,7 @@ Overall, there was little evidence that participants substantially changed their
 
 
 
-### Regression analysis - model selection
+### Regression analysis - model selection (norming)
 
 ```{r comparing-regression-models, fig.height=3, fig.width=5.5, fig.cap="Expected effect of VOT interacting with trial on categorisation from model: 1 + (sVOT + sFO) * sTrial shown as red dashed line with pink shaded CI. Grey line and shaded area represents effects of VOT interacting with trial from model: 1 + sVOT * sTrial"}
 # run an alternative model with f0 as a predictor

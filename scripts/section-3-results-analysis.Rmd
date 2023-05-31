@@ -183,65 +183,7 @@ We fit the model using the package \texttt{brms} [@R-brms_a] in R [@R; @RStudio]
 
 To analyse the incremental effects of exposure condition on the proportion of "t"-responses at test, the perceptual model contained exposure condition (backward difference coded, comparing the +10ms against the +0ms shift condition, and the +40ms against the +10ms shift condition), test block (backward difference coded from the first to last test block), VOT (Gelman scaled), and their full factorial interaction. For the perceptual model, "t"-responses were regressed on the three-way interaction of VOT, condition, and block. Random effects were modelled with varying intercepts and slopes by participant and varying intercepts and slopes by minimal pair item. We assumed a uniform bias in participant responses, that is, on lapsing trials participants would respond "t" half the time <!--check that model which fits bias estimate converges, if so use that model--> and fitted a population-level intercept for the lapse rate. Random effects for the lapsing model and lapse rates were not fitted to reduce the number of parameters and to facilitate model convergence.
 
-```{r load-br-model-block1}
-# make Block 1 subset
-d.block1 <- d.test_exposure_for_analysis %>% 
-  filter(Block == 1) 
 
-# set the mean and SD values for scaling/unscaling purposes. 
-d.mean_sd <- d.test_exposure_for_analysis %>% 
-  filter(Phase == "test") %>% 
-  ungroup() %>% 
-  summarise(across(c(Item.VOT, Item.Mel_F0_5ms), list(mean = mean, sd = sd), .names = "{.col}.{.fn}"))
-
-VOT.mean_test <- d.mean_sd %>% pull(Item.VOT.mean)
-VOT.sd_test <- d.mean_sd %>% pull(Item.VOT.sd)
-f0.mean_test <- d.mean_sd %>% pull(Item.Mel_F0_5ms.mean)
-f0.sd_test <- d.mean_sd %>% pull(Item.Mel_F0_5ms.sd)
-
-d.block1 %<>% 
-  mutate(
-    Response.Voiceless = ifelse(Response.Voicing == "voiceless", 1, 0),
-    VOT_gs = (Item.VOT - VOT.mean_test)/ (2 * VOT.sd_test),
-    F0_gs = (Item.Mel_F0_5ms - f0.mean_test) /(2 * f0.sd_test))
-
-# load the full experiment fit to obtain lapse rate
-fit_mix_uniform_bias <- readRDS("../models/Exp-AE-DLVOT-labelled-lapsing-GLMM-difference-no-RTexcl.rds")
-lapse_exp2 <- as.numeric(summary(fit_mix_uniform_bias)$fixed["theta1_Intercept", 1])
-
-# run brms model of data for block 1 using lapse rate from full model (section X.X) 
-fit_mix_block1 <- brm(
-  bf(
-    Response.Voiceless ~ 1,
-    mu1 ~ 0 + offset(0),
-    mu2 ~ 1 + VOT_gs + (1 + VOT_gs | ParticipantID),
-    theta1 ~ 0 + offset(lapse) + (1 | ParticipantID)),
-  data = d.block1 %>% 
-    mutate(lapse = lapse_exp2),
-  cores = 4,
-  iter = 3000, # iterations to run
-  warmup = 1500, # samples used to fit
-  chains = chains,
-  family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
-  control = list(adapt_delta = .999),
-  file = "../models/Exp-AE-DLVOT-Block1-lapse-no-RTexcl.rds")
-
-# get PSE of Block 1 from model summary
-PSE.fit_mix_block1 <- descale(-(as.numeric(summary(fit_mix_block1)$fixed["mu2_Intercept", 1])) / as.numeric(summary(fit_mix_block1)$fixed["mu2_VOT_gs", 1]), VOT.mean_test, VOT.sd_test)
-
-# get posterior samples of intercept and slope, and median qi of the PSE 
-post_sample_block1 <- fit_mix_block1 %>% 
-  spread_draws(b_mu2_Intercept, b_mu2_VOT_gs) %>% 
-  mutate(PSE = descale(-(b_mu2_Intercept/b_mu2_VOT_gs),VOT.mean_test, VOT.sd_test)) %>% 
-  median_qi(PSE)
-
-#plot the fitted psychometric function for Block 1
-psychometric_fit_block1 <- conditional_effects(
-    fit_mix_block1, 
-    effects = "VOT_gs",
-    method = "posterior_epred",
-    plot = F)[[1]]
-```
 
 
 
@@ -959,7 +901,7 @@ d.io.categorisation %<>%
 ```{r prepare-plot-intercepts-slopes}
 p.intercept <- d.estimates %>% 
   ggplot(aes(x = Block, y = Intercept_mean, colour = Condition.Exposure, group = Condition.Exposure)) +
-    geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 0.75, xmax = 1.25), 
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 0.75, xmax = 1.25), 
             fill = "grey", 
             alpha = .009, 
             inherit.aes = F) +
@@ -971,11 +913,11 @@ p.intercept <- d.estimates %>%
             fill = "grey", 
             alpha = .009, 
             inherit.aes = F) +
-   geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 6.75, xmax = 7.25), 
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 6.75, xmax = 7.25), 
             fill = "grey", 
             alpha = .009, 
             inherit.aes = F) +
-   geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 7.75, xmax = 8.25), 
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 7.75, xmax = 8.25), 
             fill = "grey", 
             alpha = .009, 
             inherit.aes = F) +
