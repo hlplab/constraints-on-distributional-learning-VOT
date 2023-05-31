@@ -167,65 +167,7 @@ We fit the model using the package \texttt{brms} [@R-brms_a] in R [@R; @RStudio]
 
 To analyse the incremental effects of exposure condition on the proportion of "t"-responses at test, the perceptual model contained exposure condition (backward difference coded, comparing the +10ms against the +0ms shift condition, and the +40ms against the +10ms shift condition), test block (backward difference coded from the first to last test block), VOT (Gelman scaled), and their full factorial interaction. For the perceptual model, "t"-responses were regressed on the three-way interaction of VOT, condition, and block. Random effects were modelled with varying intercepts and slopes by participant and varying intercepts and slopes by minimal pair item. We assumed a uniform bias in participant responses, that is, on lapsing trials participants would respond "t" half the time <!--check that model which fits bias estimate converges, if so use that model--> and fitted a population-level intercept for the lapse rate. Random effects for the lapsing model and lapse rates were not fitted to reduce the number of parameters and to facilitate model convergence.
 
-```{r load-br-model-block1}
-# make Block 1 subset
-d.block1 <- d.test_exposure_for_analysis %>% 
-  filter(Block == 1) 
 
-# set the mean and SD values for scaling/unscaling purposes. 
-d.mean_sd <- d.test_exposure_for_analysis %>% 
-  filter(Phase == "test") %>% 
-  ungroup() %>% 
-  summarise(across(c(Item.VOT, Item.Mel_F0_5ms), list(mean = mean, sd = sd), .names = "{.col}.{.fn}"))
-
-VOT.mean_test <- d.mean_sd %>% pull(Item.VOT.mean)
-VOT.sd_test <- d.mean_sd %>% pull(Item.VOT.sd)
-f0.mean_test <- d.mean_sd %>% pull(Item.Mel_F0_5ms.mean)
-f0.sd_test <- d.mean_sd %>% pull(Item.Mel_F0_5ms.sd)
-
-d.block1 %<>% 
-  mutate(
-    Response.Voiceless = ifelse(Response.Voicing == "voiceless", 1, 0),
-    VOT_gs = (Item.VOT - VOT.mean_test)/ (2 * VOT.sd_test),
-    F0_gs = (Item.Mel_F0_5ms - f0.mean_test) /(2 * f0.sd_test))
-
-# load the full experiment fit to obtain lapse rate
-fit_mix_uniform_bias <- readRDS("../models/Exp-AE-DLVOT-labelled-lapsing-GLMM-difference-no-RTexcl.rds")
-lapse_exp2 <- as.numeric(summary(fit_mix_uniform_bias)$fixed["theta1_Intercept", 1])
-
-# run brms model of data for block 1 using lapse rate from full model (section X.X) 
-fit_mix_block1 <- brm(
-  bf(
-    Response.Voiceless ~ 1,
-    mu1 ~ 0 + offset(0),
-    mu2 ~ 1 + VOT_gs + (1 + VOT_gs | ParticipantID),
-    theta1 ~ 0 + offset(lapse) + (1 | ParticipantID)),
-  data = d.block1 %>% 
-    mutate(lapse = lapse_exp2),
-  cores = 4,
-  iter = 3000, # iterations to run
-  warmup = 1500, # samples used to fit
-  chains = chains,
-  family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
-  control = list(adapt_delta = .999),
-  file = "../models/Exp-AE-DLVOT-Block1-lapse-no-RTexcl.rds")
-
-# get PSE of Block 1 from model summary
-PSE.fit_mix_block1 <- descale(-(as.numeric(summary(fit_mix_block1)$fixed["mu2_Intercept", 1])) / as.numeric(summary(fit_mix_block1)$fixed["mu2_VOT_gs", 1]), VOT.mean_test, VOT.sd_test)
-
-# get posterior samples of intercept and slope, and median qi of the PSE 
-post_sample_block1 <- fit_mix_block1 %>% 
-  spread_draws(b_mu2_Intercept, b_mu2_VOT_gs) %>% 
-  mutate(PSE = descale(-(b_mu2_Intercept/b_mu2_VOT_gs),VOT.mean_test, VOT.sd_test)) %>% 
-  median_qi(PSE)
-
-#plot the fitted psychometric function for Block 1
-psychometric_fit_block1 <- conditional_effects(
-    fit_mix_block1, 
-    effects = "VOT_gs",
-    method = "posterior_epred",
-    plot = F)[[1]]
-```
 
 
 
@@ -391,6 +333,7 @@ simple_effects_block <- tidy(fit_mix_test_nested_condition, effects = "fixed") %
 ```
 
 ```{r make-hypothesis-tables}
+# hypotheses to answer question, "was the change incremental between blocks?"
 hyp_interactions <- c(
   "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 < 0",
   "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 < 0",
@@ -402,87 +345,159 @@ hyp_interactions <- c(
   "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 < 0"
 )
 
+# translate the hypotheses above into intelligible statements
 hyp_interactions_readable <- tibble(Hypothesis = c(
-  "diff in 10 vs baseline test 2 > diff in 10 vs baseline test 1",
-  "diff in 10 vs baseline test 3 > diff in 10 vs baseline test 2",
-  "diff in 10 vs baseline test 4 > diff in 10 vs baseline test 3",
-  "diff in 10 vs baseline test 4 vs test 1 < 0",
-  "diff in 40 vs 10 test 2 > diff in 40 vs 10 test 1",
-  "diff in 40 vs 10 test 3 > diff in 40 vs 10 test 2",
-  "diff in 40 vs 10 test 4 > diff in 40 vs 10 test 3",
-  "diff in 40 vs 10 test 4 vs test 1 < 0"
+  # Comparing differences in +10 vs baseline between blocks
+  "Test block 2 > Test block 1", 
+  "Test block 3  > Test block 2", 
+  "Test block 4  > Test block 3", 
+  "Test block 4  > Test block 1",  
+  # Comparing differences in +40 vs +10 between blocks
+  "Test block 2 > Test block 1", 
+  "Test block 3  > Test block 2", 
+  "Test block 4  > Test block 3", 
+  "Test block 4  > Test block 1" 
 ))
 
 hyp_interactions <- hypothesis(fit_mix_uniform_bias, hyp_interactions)
 hyp_interactions <- hyp_interactions$hypothesis %>% 
   select(-Star) 
 table1 <- cbind(hyp_interactions_readable, hyp_interactions) %>% 
-  select(-2)
-
-align_tab <- function(table) {
-  map_chr(table, ~ifelse(class(.x) == "numeric", "r","l"))
-}  
-
-table1 %>% 
+  select(-2) %>% 
   mutate(across(where(is.numeric), ~ round(., digits = 3))) %>% 
   rename_all(~ gsub("\\.", " ", .)) %>% 
-  kbl(caption = "Comparing interactions of block and condition", align = align_tab(table1)) %>% 
+  kbl(caption = "Was there incremental change from test blocks 1 to 4?", align = align_tab(table1)) %>% 
   kable_styling(full_width=FALSE, 
                 bootstrap_options = c("striped", "hover", "condensed")) %>% 
-  column_spec(1, width = "8em")
+  column_spec(1, width = "8em") %>% 
+  pack_rows("Difference in +10 vs baseline", 1, 4) %>%
+  pack_rows("Difference in +40 vs +10", 5, 8) 
 
 
-# get hypothesis for simple effects of condition by block
-hypotheses_contrasts_within_block <- 
+# hypotheses to answer questions "when did change first emerge?" and "is the difference between groups proportional?"
+hyp_contrasts_within_block <- 
   c(
-    "mu2_Block1:Condition.Exposure_Shift10vs.Shift0 > mu2_Block1:Condition.Exposure_Shift40vs.Shift10", # diff. between 10 and baseline > diff between +40 and +10 in test 1 
-    "mu2_Block3:Condition.Exposure_Shift40vs.Shift10 < mu2_Block3:Condition.Exposure_Shift10vs.Shift0", # shift in 40vs10 > 10 vs. baseline in test 2 
-    "mu2_Block5:Condition.Exposure_Shift40vs.Shift10 < mu2_Block5:Condition.Exposure_Shift10vs.Shift0", # shift in 40vs10 > 10 vs baseline in test 3 
-    "mu2_Block7:Condition.Exposure_Shift40vs.Shift10 < mu2_Block7:Condition.Exposure_Shift10vs.Shift0") # shift in 40vs 10 > 10 vs 0 within test 4
+    "mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 0", 
+    "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 < 0", 
+    "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 0",
+    "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 < 3 * mu2_Block1:Condition.Exposure_Shift10vs.Shift0", # diff. between 40 and 10 is 3x 10 vs 0 
+    
+    "mu2_Block3:Condition.Exposure_Shift10vs.Shift0 < 0", 
+    "mu2_Block3:Condition.Exposure_Shift40vs.Shift10 < 0", 
+    "mu2_Block3:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 0",
+    "mu2_Block3:Condition.Exposure_Shift40vs.Shift10 < 3 * mu2_Block1:Condition.Exposure_Shift10vs.Shift0",
+    
+    "mu2_Block5:Condition.Exposure_Shift10vs.Shift0 < 0", 
+    "mu2_Block5:Condition.Exposure_Shift40vs.Shift10 < 0", 
+    "mu2_Block5:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 0",
+    "mu2_Block5:Condition.Exposure_Shift40vs.Shift10 < 3 * mu2_Block1:Condition.Exposure_Shift10vs.Shift0",
+    
+    "mu2_Block7:Condition.Exposure_Shift10vs.Shift0 < 0", 
+    "mu2_Block7:Condition.Exposure_Shift40vs.Shift10 < 0", 
+    "mu2_Block7:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 0",
+    "mu2_Block7:Condition.Exposure_Shift40vs.Shift10 < 3 * mu2_Block1:Condition.Exposure_Shift10vs.Shift0") # shift in 40vs 10 > 10 vs 0 within test 4
 
-hypotheses_readable <- tibble(Hypothesis = c(
-  "10 vs baseline > diff btwn 40 vs 10 in test 1",
-  "diff in 40 vs 10 > diff in 10 vs baseline in test 2",
-  "diff in 40 vs 10 > diff in 10 vs baseline in test 3",
-  "diff in 40 vs 10 > diff in 10 vs baseline in test 4"
+hyp_readable <- tibble(Hypothesis = c(
+  "+10 vs baseline", 
+  "+40 vs +10",
+  "+40 vs baseline",
+  "+40 vs baseline > 3x +10 vs baseline",
+  
+  "+10 vs baseline", 
+  "+40 vs +10",
+  "+40 vs baseline",
+  "+40 vs baseline > 3x +10 vs baseline",
+  
+  "+10 vs baseline", 
+  "+40 vs 10",
+  "+40 vs baseline",
+  "+40 vs baseline > 3x +10 vs baseline",
+  
+  "+10 vs baseline", 
+  "+40 vs 10",
+  "+40 vs baseline",
+  "+40 vs baseline > 3x +10 vs baseline"
 ))
 
-hypotheses_contrasts_within_block <- hypothesis(fit_mix_test_nested_block, hypotheses_contrasts_within_block)
-hypotheses_contrasts_within_block <- hypotheses_contrasts_within_block$hypothesis %>% 
+hyp_contrasts_within_block <- hypothesis(fit_mix_test_nested_block, hyp_contrasts_within_block)
+hyp_contrasts_within_block <- hyp_contrasts_within_block$hypothesis %>% 
   select(-Star)
 
-table2 <- cbind(hypotheses_readable, hypotheses_contrasts_within_block) %>% 
-  select(-2)
-
-table2 %>% 
+table2 <- cbind(hyp_readable, hyp_contrasts_within_block) %>% 
+  select(-2) %>% 
   mutate(across(where(is.numeric), ~ round(., digits = 3))) %>% 
   rename_all(~gsub("\\.", " ", .)) %>% 
-  kbl(caption = "Comparing conditions within blocks 1 to 4", align = align_tab(table2)) %>% 
+  kbl(caption = "When did change emerge? Are differences proportional?", align = align_tab(table2)) %>% 
   kable_styling(full_width=FALSE, 
                 bootstrap_options = c("striped", "hover", "condensed")) %>% 
-  column_spec(1, width = "8em")
+  column_spec(1, width = "8em") %>% 
+  pack_rows("Test block 1", 1, 4) %>%
+  pack_rows("Test block 2", 5, 8) %>% 
+  pack_rows("Test block 3", 9, 12) %>% 
+  pack_rows("Test block 4", 13, 16) %>% 
+  add_indent(c(4, 8, 12, 16))
 
-# hypotheses to analyse last 3 test blocks
+# hypotheses to analyse last 3 test blocks (question: what happens with repeated testing)
 hyp_test456 <- c(
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 < 0",
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 < 0",
   "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 < 0",
-  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 < 0" 
+  
+  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 < 0",
+  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 < 0",
+  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 < 0"
 )
 
+# translate hypotheses into intelligible statements
+hyp_test456_readable <- tibble(Hypothesis = c(
+  # Comparing differences in +10 vs baseline between blocks 4 and 6
+  "Test block 5 > Test block 4", 
+  "Test block 6  > Test block 5", 
+  "Test block 6  > Test block 4", 
+
+  # Comparing differences in +40 vs +10 between blocks 4 and 6
+  "Test block 5 > Test block 4", 
+  "Test block 6  > Test block 5", 
+  "Test block 6  > Test block 4"
+))
+
 hyp_test456 <- hypothesis(fit_mix_uniform_bias, hyp_test456) 
+hyp_test456 <- (hyp_test456$hypothesis) %>% 
+  select(-Star) 
+
+table3 <- cbind(hyp_test456_readable, hyp_test456) %>% 
+  select(-2) %>% 
+  mutate(across(where(is.numeric), ~ round(., digits = 3))) %>% 
+  rename_all(~ gsub("\\.", " ", .)) %>% 
+  kbl(caption = "Effects of repeated testing (test blocks 4 to 6)", align = align_tab(table2)) %>% 
+  kable_styling(full_width=FALSE, 
+                bootstrap_options = c("striped", "hover", "condensed"))%>% 
+  column_spec(1, width = "8em") %>% 
+  pack_rows("Difference in +10 vs baseline", 1, 3) %>%
+  pack_rows("Difference in +40 vs +10", 4, 6) 
+  
+  
 
 
-hyp_test456_block <- c(
-  "mu2_Block8:Condition.Exposure_Shift10vs.Shift0 < mu2_Block7:Condition.Exposure_Shift10vs.Shift0",
-  "mu2_Block9:Condition.Exposure_Shift10vs.Shift0 < mu2_Block8:Condition.Exposure_Shift10vs.Shift0 ",
-  "mu2_Block8:Condition.Exposure_Shift40vs.Shift10 < mu2_Block7:Condition.Exposure_Shift40vs.Shift10",
-  "mu2_Block9:Condition.Exposure_Shift40vs.Shift10 < mu2_Block8:Condition.Exposure_Shift40vs.Shift10")
-
-
-
-hyp_test456_block <- hypothesis(fit_mix_test_nested_block, hyp_test456_block)
+# hyp_test456_block <- c(
+#   "mu2_Block8:Condition.Exposure_Shift10vs.Shift0 < mu2_Block7:Condition.Exposure_Shift10vs.Shift0",
+#   "mu2_Block9:Condition.Exposure_Shift10vs.Shift0 < mu2_Block8:Condition.Exposure_Shift10vs.Shift0 ",
+#   "mu2_Block8:Condition.Exposure_Shift40vs.Shift10 < mu2_Block7:Condition.Exposure_Shift40vs.Shift10",
+#   "mu2_Block9:Condition.Exposure_Shift40vs.Shift10 < mu2_Block8:Condition.Exposure_Shift40vs.Shift10")
+# 
+# 
+# 
+# hyp_test456_block <- hypothesis(fit_mix_test_nested_block, hyp_test456_block)
+# 
+# hypothesis(fit_mix_test_nested_block, "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 0")
 ```
 
 
+```{r print-hypotheses-tables}
+table1
+table2
+table3
+```
 
 
 
@@ -870,7 +885,7 @@ d.io.categorisation %<>%
 ```{r prepare-plot-intercepts-slopes}
 p.intercept <- d.estimates %>% 
   ggplot(aes(x = Block, y = Intercept_mean, colour = Condition.Exposure, group = Condition.Exposure)) +
-    geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 0.75, xmax = 1.25), 
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 0.75, xmax = 1.25), 
             fill = "grey", 
             alpha = .009, 
             inherit.aes = F) +
@@ -882,11 +897,11 @@ p.intercept <- d.estimates %>%
             fill = "grey", 
             alpha = .009, 
             inherit.aes = F) +
-   geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 6.75, xmax = 7.25), 
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 6.75, xmax = 7.25), 
             fill = "grey", 
             alpha = .009, 
             inherit.aes = F) +
-   geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 7.75, xmax = 8.25), 
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 7.75, xmax = 8.25), 
             fill = "grey", 
             alpha = .009, 
             inherit.aes = F) +
@@ -1073,17 +1088,6 @@ d.chodroff_wilson.selected <-
 
 quantile_levels <- c(0, .05, .25, .5, .75, .95, .99) 
 
-density_quantiles <- function(x, y, quantiles) {
-  require(terra)
-  dens <- MASS::kde2d(x, y, n = 500)
-  df   <- cbind(expand.grid(x = dens$x, y = dens$y), z = c(dens$z))
-  r    <- terra::rast(df)
-  ind  <- sapply(seq_along(x), function(i) cellFromXY(r, cbind(x[i], y[i])))
-  ind  <- ind[order(-r[ind][[1]])]
-  vals <- r[ind][[1]]
-  ret  <- approx(seq_along(ind)/length(ind), vals, xout = quantiles)$y
-  replace(ret, is.na(ret), max(r[]))
-}
 
 p.density <- 
   d.chodroff_wilson.selected %>% 

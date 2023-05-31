@@ -738,3 +738,23 @@ prepVars <- function(d, levels.Condition = NULL, contrast_type) {
   
   return(d)
 }
+
+### function for non-parametric density plot
+density_quantiles <- function(x, y, quantiles) {
+  require(terra)
+  dens <- MASS::kde2d(x, y, n = 500)
+  df   <- cbind(expand.grid(x = dens$x, y = dens$y), z = c(dens$z))
+  r    <- terra::rast(df)
+  ind  <- sapply(seq_along(x), function(i) cellFromXY(r, cbind(x[i], y[i])))
+  ind  <- ind[order(-r[ind][[1]])]
+  vals <- r[ind][[1]]
+  ret  <- approx(seq_along(ind)/length(ind), vals, xout = quantiles)$y
+  replace(ret, is.na(ret), max(r[]))
+}
+
+
+
+### function for formatting tables
+align_tab <- function(table) {
+  map_chr(table, ~ifelse(class(.x) == "numeric", "r","l"))
+} 
