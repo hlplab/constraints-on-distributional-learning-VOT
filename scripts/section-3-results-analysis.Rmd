@@ -11,152 +11,6 @@ source("functions.R")
 ```
 
 
-```{r load-format-experimental-data}
-# mark catch trials rows and mark those to be excluded
-d %<>% 
-  mutate(
-    Is.CatchTrial = ifelse(Item.ExpectedResponse %in% c("flare", "rare", "share"), TRUE, FALSE),
-    CatchTrial.Correct = ifelse(
-      Is.CatchTrial == TRUE, 
-      ifelse(Item.ExpectedResponse == Response, TRUE, FALSE), NA),
-    Answer.sex.Correct = ifelse(sex == "woman", TRUE, FALSE)) %>% 
-  group_by(ParticipantID) %>% 
-  mutate(Exclude_participant.due_to_catch_trials = ifelse(sum(CatchTrial.Correct, na.rm = TRUE) < 17, TRUE, FALSE)) %>%
-  ungroup()
-
-# mark labelled trials
-d %<>% 
-  mutate(
-    Response.Correct = ifelse(Item.ExpectedResponse == Response, TRUE, FALSE),
-    LabeledTrial.Correct = ifelse(Item.Labeled == TRUE, ifelse(Response.Correct == TRUE, TRUE, FALSE), NA)) %>% 
-  group_by(ParticipantID) %>% 
-  mutate(Exclude_participant.due_to_labeled_trials = ifelse(sum(LabeledTrial.Correct, na.rm = T) < 68, TRUE, FALSE))
-```
-
-
-
-```{r set-exclusion-due-to-categorisation-slope, warning=FALSE}
-# get data for exclusion due to categorisation slope of first 36 trials. 
-d.VOT_exclusion <- 
-  d %>% 
-  filter(Block == 1 | (Block == 2 & Trial %in% c(13:36))) %>% 
-  drop_na(c(ParticipantID, Response.Voicing, Item.VOT)) %>% 
-  mutate(Response.ProportionVoiceless = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
-  select(c(Experiment, ParticipantID, Condition.Exposure, Response.Voicing, Response.ProportionVoiceless, Item.VOT))
-
-# set the VOT criteria 
-empirical_means <- c(17, 62)
-VOT_for_targeted_proportion_t <- empirical_means + c(-20, 20)
-targeted_proportion_t <- c(.15, .80) 
-
-
-# Fit logistic regression by participant to get model predictions (REPLACE WITH LAPSE ESTIMATED NON-LINEAR FIT)
-d.VOT_exclusion %<>%
-  group_by(ParticipantID, Experiment, Condition.Exposure) %>%
-  nest() %>%
-  mutate(
-    CategorizationModel =
-      map(
-        data, 
-        ~ glm(
-          Response.ProportionVoiceless ~ 1 + Item.VOT, 
-          data = .x, 
-          family = binomial))) %>% 
-  # type = "response" in predict() gives the probability
-  summarise(Model.predicted.Reponse = 
-              map(
-                CategorizationModel, 
-                ~ predict(object = .x, 
-                          newdata = tibble(Item.VOT = VOT_for_targeted_proportion_t), 
-                          type = "response"))) %>% 
-  mutate(Exclude_participant.due_to_VOT_slope = 
-           map(Model.predicted.Reponse, ~ ifelse(.x[1] > targeted_proportion_t[1] || .x[2] < targeted_proportion_t[2], TRUE, FALSE)),
-         Exclude_participant.due_to_lower_VOT = map(Model.predicted.Reponse, ~ ifelse(.x[1] > targeted_proportion_t[1], TRUE, FALSE)),
-         Exclude_participant.due_to_higher_VOT = map(Model.predicted.Reponse, ~ ifelse(.x[2] < targeted_proportion_t[2], TRUE, FALSE))) %>% 
-  select(ParticipantID, Experiment, Condition.Exposure, Exclude_participant.due_to_VOT_slope, Exclude_participant.due_to_lower_VOT, Exclude_participant.due_to_higher_VOT) %>% 
-  mutate(
-    across(c(Exclude_participant.due_to_VOT_slope, Exclude_participant.due_to_lower_VOT, Exclude_participant.due_to_higher_VOT), 
-           unlist)) %>% 
-  ungroup()
-
-# counting TRUEs
-n_excluded_VOT_slope <- d.VOT_exclusion %>% 
-  group_by(Exclude_participant.due_to_VOT_slope, Condition.Exposure) %>% 
-  summarise(n())
-  
-d %<>% left_join(d.VOT_exclusion)
-```
-
-
-
-```{r set-RT-exclusion-criteria, message=FALSE}
-# calculate RT exclusion AFTER removing excluded participants due to other criteria
-# d.test_exposure_for_analysis <- d %>%
-#   filter(
-#     Is.CatchTrial == FALSE &
-#     Exclude_participant.due_to_catch_trials == FALSE &
-#     Exclude_participant.due_to_labeled_trials == FALSE &
-#     Exclude_participant.due_to_VOT_slope == FALSE) %>% 
-#   group_by(ParticipantID) %>%
-#   mutate(
-#     Response.log_RT = log10(ifelse(Response.RT <= 0, NA_real_, Response.RT)),
-#     Response.log_RT.scaled = scale(Response.log_RT), # deducts each value with subject's own mean, divide by own SD
-#     Response.log_RT.mean = mean(Response.log_RT, na.rm = T)) %>% 
-#   ungroup() %>% 
-#   mutate(Exclude_participant.due_to_RT = ifelse(abs(scale(Response.log_RT.mean)) > 3, TRUE, FALSE)) %>% 
-#   filter(Exclude_participant.due_to_RT == FALSE) %>% 
-#   mutate(Exclude_trial.due_to_RT = ifelse(abs(Response.log_RT.scaled) > 3, TRUE, FALSE))
-
-# get number of participants excluded due to RT
-# excl.RT.participant <- d.test_exposure_for_analysis %>% 
-#   filter(Exclude_participant.due_to_RT == TRUE) %>% 
-#   tally()
-
-# get number of trials excluded due to RT
-# excl.RT.trial <- d.test_exposure_for_analysis %>%  
-#   filter(Exclude_trial.due_to_RT == TRUE) 
-
-# proportion of trials excluded due to RT
-# proportion.trials.excluded <- nrow(excl.RT.trial)/nrow(d.test_exposure_for_analysis)
-
-# get number of participants excluded due to catch trial
-excl.catch <- d %>% 
-  filter(Exclude_participant.due_to_catch_trials == TRUE) %>% 
-  group_by(ParticipantID) %>% 
-  summarise() %>% 
-  tally() 
-
-# get number of participants excluded due to labelled trials
-excl.labeled <- d %>% 
-  filter(Exclude_participant.due_to_labeled_trials == TRUE) %>% 
-  group_by(ParticipantID) %>% 
-  summarise() %>% 
-  tally() 
-
-# count number of exclusions due to VOT slope
-excl.VOT <- d %>% 
-  filter(Exclude_participant.due_to_VOT_slope == TRUE) %>% 
-  group_by(ParticipantID) %>% 
-  summarise() %>% 
-  tally()
-
-# make dataframe for analysis after exclusions
-d.test_exposure_for_analysis <- d %>%
-  filter(
-    Is.CatchTrial == FALSE &
-    Exclude_participant.due_to_catch_trials == FALSE &
-    Exclude_participant.due_to_labeled_trials == FALSE &
-    Exclude_participant.due_to_VOT_slope == FALSE)
-```
-
-### Exclusions
-Due to data transfer errors 4 participants' data were not stored and therefore not included in this analysis. 
-
-We excluded from analysis participants who committed more than 3 errors out of the 18 catch trials (<83% accuracy, N = 1), participants who committed more than 4 errors out of the 72 labelled trials (<94% accuracy, N = 0), participants with an average reaction time (RT) more than three standard deviations from the mean of the by-participant means (N = 0), and participants who reported not to have used headphones (N = 0) or not to be native (L1) speakers of US English (N = 0). 
-
-In addition, participants' categorization during the early phase of the experiment were scrutinised for their slope orientation and their proportion of "t"-responses at the least ambiguous locations of the VOT continuum. The early phase of the experiment was defined as the first 36 trials and the least ambiguous locations were defined as -20ms below the empirical mean of the /d/ category and +20ms above the empirical mean of the /t/ category. These means were obtained from the production data estimates by @Kurumada_Xie_Jaeger_2022.
-
-
 ### Analysis approach
 
 ## Results
@@ -182,7 +36,7 @@ To analyse the incremental effects of exposure condition on the proportion of "t
 
 
 ```{r model-fit-test-blocks, warning=FALSE}
-d.mean_sd_scaling <- d.test_exposure_for_analysis %>% 
+d.mean_sd_scaling <- d_for_analysis %>% 
   group_by(Phase) %>% 
   filter(Item.Labeled == FALSE) %>% 
   summarise(across(Item.VOT, list(mean = mean, sd = sd)))
@@ -192,7 +46,7 @@ VOT.sd_exposure <- (d.mean_sd_scaling %>% pull(Item.VOT_sd))[1]
 VOT.mean_test <- (d.mean_sd_scaling %>% pull(Item.VOT_mean))[2]
 VOT.sd_test <- (d.mean_sd_scaling %>% pull(Item.VOT_sd))[2]
 
-d.test_exposure_for_analysis %<>% 
+d_for_analysis %<>% 
   mutate(Response.Voiceless = ifelse(Response.Voicing == "voiceless", 1, 0))
 levels_Condition.Exposure = c("Shift0", "Shift10", "Shift40")
 contrast_type <- "difference"
@@ -210,7 +64,7 @@ fit_mix_uniform_bias <- brm(
     mu1 ~ 0 + offset(0),
     mu2 ~ 1 + VOT_gs * Condition.Exposure * Block + (1 + VOT_gs * Block | ParticipantID) + (1 + VOT_gs * Condition.Exposure * Block | Item.MinimalPair),
     theta1 ~ 1),
-  data = d.test_exposure_for_analysis %>% 
+  data = d_for_analysis %>% 
     filter(Phase == "test") %>% 
     prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
   cores = 4,
@@ -243,7 +97,7 @@ table <- hypotheses$hypothesis %>% select(-Star)
 
 ```{r model-fit-exposure-blocks, warning=FALSE}
 # get VOT mean and sd across exposure blocks and CONDITIONS for scaling purposes
-exposure_block_stats <- d.test_exposure_for_analysis %>% 
+exposure_block_stats <- d_for_analysis %>% 
   ungroup() %>% 
     filter(Phase == "exposure" & Item.Labeled == FALSE) %>% 
   summarise(VOT.mean_exposure = mean(Item.VOT),
@@ -267,7 +121,7 @@ fit_mix_exposure <- brm(
     mu1 ~ 0 + offset(0),
     mu2 ~ 1 + VOT_gs * Condition.Exposure * Block + (1 + VOT_gs * Block | ParticipantID) + (1 + VOT_gs * Condition.Exposure * Block | Item.MinimalPair),
     theta1 ~ 1),
-  data = d.test_exposure_for_analysis %>% 
+  data = d_for_analysis %>% 
     filter(Phase == "exposure" & Item.Labeled == FALSE) %>% 
     prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
   cores = 4,
@@ -312,7 +166,7 @@ fit_mix_test_nested_block <- brm(
        (0 + Block / VOT_gs | ParticipantID) +
        (0 + Block / (Condition.Exposure * VOT_gs) | Item.MinimalPair),
      theta1 ~ 1),
-   data = d.test_exposure_for_analysis %>%
+   data = d_for_analysis %>%
      filter(Phase == "test") %>%
      prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = "difference"),
    cores = 4,
@@ -332,7 +186,7 @@ fit_mix_test_nested_condition <- brm(
        (0 + Block * VOT_gs | ParticipantID) +
        (0 + Condition.Exposure / (Block * VOT_gs) | Item.MinimalPair),
      theta1 ~ 1),
-   data = d.test_exposure_for_analysis %>%
+   data = d_for_analysis %>%
      filter(Phase == "test") %>%
      prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = "difference"),
    cores = 4,
@@ -526,7 +380,7 @@ cond_fit_exposure <- conditional_effects(
     fit_mix_exposure,
     effects = "VOT_gs:Condition.Exposure",
     conditions = make_conditions(
-      d.test_exposure_for_analysis %>% 
+      d_for_analysis %>% 
         filter(Phase == "exposure" & Item.Labeled == FALSE) %>% 
         prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = "difference"), 
       vars = c("Block")),
@@ -538,7 +392,7 @@ cond_fit_test <- conditional_effects(
     fit_mix_uniform_bias,
     effects = "VOT_gs:Condition.Exposure",
     conditions = make_conditions(
-      d.test_exposure_for_analysis %>% 
+      d_for_analysis %>% 
         filter(Phase == "test") %>% 
         prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = "difference"), 
       vars = c("Block")),
@@ -604,7 +458,7 @@ p.fit_1to7 <- cond_fit_test_exposure %>%
     color = Condition.Exposure), 
     size = .7,
     alpha = 0.6) +
-  geom_rug(data = d.test_exposure_for_analysis %>%
+  geom_rug(data = d_for_analysis %>%
              group_by(Phase, Block) %>%
              filter(Block %in% c(1:7)) %>% 
              mutate(
@@ -623,7 +477,7 @@ p.fit_1to7 <- cond_fit_test_exposure %>%
            colour = "grey",
            inherit.aes = F) +
   stat_summary(
-    data = d.test_exposure_for_analysis %>%
+    data = d_for_analysis %>%
       filter(Block %in% c(1:7), Item.Labeled == FALSE) %>%
       mutate(
         Condition.Exposure = case_when(
@@ -677,7 +531,7 @@ p.fit_7to9 <- cond_fit_test_exposure %>%
     color = Condition.Exposure), 
     size = .7,
     alpha = 0.6) +
-geom_rug(data = d.test_exposure_for_analysis %>%
+geom_rug(data = d_for_analysis %>%
              group_by(Phase, Block) %>%
              filter(Block %in% c(7:9)) %>% 
              mutate(
@@ -692,7 +546,7 @@ geom_rug(data = d.test_exposure_for_analysis %>%
            colour = "grey",
            inherit.aes = F) +
   stat_summary(
-    data = d.test_exposure_for_analysis %>%
+    data = d_for_analysis %>%
       filter(Block %in% c(7:9), Item.Labeled == FALSE) %>%
       mutate(
         Condition.Exposure = case_when(
@@ -742,7 +596,7 @@ fit_mix_test_nested <- brm(
       (0 + Block / VOT_gs | ParticipantID) + 
       (0 + I(paste(Condition.Exposure, Block, sep = "x")) / VOT_gs | Item.MinimalPair),
     theta1 ~ 1),
-  data = d.test_exposure_for_analysis %>% 
+  data = d_for_analysis %>% 
     filter(Phase == "test") %>% 
     prepVars(levels.Condition = levels_Condition.Exposure, constrast_type = "difference"),
   cores = 4,
@@ -763,7 +617,7 @@ fit_mix_exposure_nested <- brm(
       (0 + Block / VOT_gs | ParticipantID) + 
       (0 + I(paste(Condition.Exposure, Block, sep = "x")) / VOT_gs | Item.MinimalPair),
     theta1 ~ 1),
-  data = d.test_exposure_for_analysis %>% 
+  data = d_for_analysis %>% 
     filter(Phase == "test") %>% 
     prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = "difference"),
   cores = 4,
@@ -833,7 +687,7 @@ d.estimates <- full_join(d.estimates_test, d.estimates_exposure) %>%
 
 ```{r predictions-exposure-conditions- by-IOs, warning=FALSE}
 # get the actual means and variances of the exposure stimuli by category and condition
-d.summarystats_exposure <- d.test_exposure_for_analysis %>% 
+d.summarystats_exposure <- d_for_analysis %>% 
   filter(Phase == "exposure") %>% 
   mutate(Category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")) %>% 
   group_by(Condition.Exposure, Category) %>% 
@@ -852,7 +706,7 @@ exposure_shift40_mean_t <- (d.summarystats_exposure %>% pull(mean))[6]
 exposure_var_d <- (d.summarystats_exposure %>% pull(var))[1]
 exposure_var_t <- (d.summarystats_exposure %>% pull(var))[2] 
 
-x <- d.test_exposure_for_analysis %>% 
+x <- d_for_analysis %>% 
   filter(Phase == "test") %>% 
   distinct(Item.VOT) %>%
   pull()
@@ -1057,11 +911,11 @@ p.fit_1to7 + p.fit_7to9 + p.params_1to7 +
 
 ```{r getting-means-at-exposure-by-condition}
 # calculate the various mean VOTs exposed to for each condition, including the labelled trials, with and without accounting for the test trials
-cond_means_test_exposure <- d.test_exposure_for_analysis %>% 
+cond_means_test_exposure <- d_for_analysis %>% 
   group_by(Condition.Exposure) %>% 
   summarise(across(c(Item.VOT, Item.Mel_F0_5ms), mean, .names = "{.col}_mean_test_exposure"))
   
-cond_means_exposure <- d.test_exposure_for_analysis %>% 
+cond_means_exposure <- d_for_analysis %>% 
   filter(Phase == "exposure") %>% 
   group_by(Condition.Exposure) %>% 
   summarise(across(c(Item.VOT, Item.Mel_F0_5ms), mean, .names = "{.col}_mean_exposure"))
@@ -1132,7 +986,7 @@ p.density <-
   theme(legend.position = "top") +
   #plot the uncentred means
   geom_point(
-    data = d.test_exposure_for_analysis %>% 
+    data = d_for_analysis %>% 
       filter(Phase == "exposure") %>% 
       group_by(Condition.Exposure) %>%
       mutate(
@@ -1146,7 +1000,7 @@ p.density <-
   inherit.aes = F) +
   #plot centred means
   geom_point(
-    data = d.test_exposure_for_analysis %>% 
+    data = d_for_analysis %>% 
       filter(Phase == "exposure") %>% 
       group_by(Condition.Exposure) %>%
       mutate(
@@ -1223,7 +1077,7 @@ p.ellipse <- d.category_ellipse %>%
   new_scale_color() +
   #plot the uncentred means
   geom_point(
-    data = d.test_exposure_for_analysis %>% 
+    data = d_for_analysis %>% 
       filter(Phase == "exposure") %>% 
       group_by(Condition.Exposure) %>%
       mutate(
@@ -1241,7 +1095,7 @@ p.ellipse <- d.category_ellipse %>%
              values = c("#cc0000", "#12D432","#0481F3")) +
   #plot the centered means
   geom_point(
-    data = d.test_exposure_for_analysis %>% 
+    data = d_for_analysis %>% 
       filter(Phase == "exposure") %>% 
       group_by(Condition.Exposure) %>%
       mutate(

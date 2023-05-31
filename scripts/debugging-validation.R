@@ -1,4 +1,4 @@
-add_epred_draws(d.test_exposure_for_analysis %>% 
+add_epred_draws(d_for_analysis %>% 
                     filter(Phase == "test") %>% 
                     prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = "difference") %>% 
                     distinct(Block, Condition.Exposure) %>% 
@@ -8,7 +8,7 @@ add_epred_draws(d.test_exposure_for_analysis %>%
 x
 
 
-add_epred_draws(d.test_exposure_for_analysis %>% 
+add_epred_draws(d_for_analysis %>% 
                     filter(Phase == "test") %>% 
                     prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = "helmert") %>% 
                     distinct(Block, Condition.Exposure) %>% 
@@ -109,7 +109,7 @@ d %>%
 # Interaction = +2.67
 
 
-d.test_exposure_for_analysis %>%
+d_for_analysis %>%
            group_by(Phase, Block) %>%
            mutate(
              Block = factor(case_when(

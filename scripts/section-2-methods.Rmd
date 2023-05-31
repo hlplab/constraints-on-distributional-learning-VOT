@@ -10,9 +10,10 @@ require(cowplot)
 
 source("functions.R")
 ```
+
 We designed the experiment to provide high statistical power to detect effects of exposure, both incrementally within each exposure condition, and cumulatively across exposure conditions. To this end, we employed the repeated exposure-test design shown in Figure \@ref(fig:exp2-design-figure). The use of test blocks that repeated same stimuli across blocks and exposure conditions deviates from previous work [@clayards2008; @kleinschmidt-jaeger2016; @kleinschmidt2020]. This design feature allowed us to assess how increasing exposure affects listeners' perception without making strong assumptions about the nature of these changes (e.g., linear changes across trials). Since previous work has found that repeated testing over uniform test continua can reduce or undo the effects of informative exposure [@liu-jaeger2018, @liu-jaeger2019, @cummings202X], we kept test blocks short, each consisting of only 12 trials. The final test blocks were intended to ameliorate the potential risks of this novel design: in case adaptation remains stable despite repeated testing, those additional test blocks were meant to provide additional statistical power to detect the effects of cumulative exposure. Finally, as we detail below, our design also allowed us to measure adaptation during exposure.
 
-```{r exp2-design-figure, fig.height=3, fig.width=5, fig.cap="Experiment 2 multi-block design. Test blocks in grey comprised identical stimuli within and between conditions"}
+```{r exp2-design-figure, fig.height=3, fig.width=5, fig.cap="Exposure-test design of the experiment. Test blocks presented identical stimuli within and across conditions"}
 knitr::include_graphics("../figures/experiment2_design_image.png")
 ```
 
@@ -60,7 +61,7 @@ A norming experiment (N = 24 participants) reported in the SI (@\ref(XXX)) was u
 ### Procedure
 At the start of the experiment, participants acknowledged that they met all requirements and provided consent, as per the Research Subjects Review Board of the University of Rochester. Participants also had to pass a headphone test [@REF], and were instructed to not change the volume throughout the experiment. Following instructions, participants completed 234 two-alternative forced-choice categorisation trials (Figure \@ref(fig:exp1-example-trial)). Participants were instructed that they would hear a female talker say a single word on each trial, and were asked to select which word they heard. Participants were asked to listen carefully and answer as quickly and as accurately as possible. They were also alerted to the fact that the recordings were subtly different and therefore may sound repetitive. 
 
-```{r example-trial, fig.cap="Example trial display. The words were displayed 500ms after trial onset. The green button would turn bright green signalling participants to click on the dot to play the recording."}
+```{r example-trial, fig.cap="Example trial display. When the green button turned bright green, participants had to click on it to play the recording."}
 knitr::include_graphics("../figures/exp1_trial_example.png")
 ```
 
@@ -69,7 +70,7 @@ Unbeknownst to participants, the 234 trials were split into exposure blocks (54 
 *Test blocks. * The experiment started with a test block. Test blocks were identical within and across conditions, always including 12 minimal pair trials assessing participants' categorization at 12 different VOTs
 (-5, 5, 15, 25, 30, 35, 40, 45, 50, 55, 65, 70 msec). A uniform distribution over VOTs was chosen to maximize the statistical power to determine participants' categorisation function. The assignment of VOTs to minimal pair continua was counter-balanced within and across test blocks, so that each minimal pair continuum appear equally often within each test block (four times), and each minimal pair appear with each VOT equally often (twice) across all six test blocks (and no more than once per test block). <!-- TO DO: correct? -->
 
-Each trial started with a dark-shaded green fixation dot being displayed. At 500ms from trial onset, two minimal pair words appeared on the screen, as shown in Figure \@ref(fig:exp1-example-trial). At 1000ms from trial onset, the fixation dot would turn bright green and participants had to click on the dot to play the recording. Participants responded by clicking on the word they heard and the next trial would begin. 
+Each trial started with a dark-shaded green fixation dot being displayed. At 500ms from trial onset, two minimal pair words appeared on the screen, as shown in Figure \@ref(fig:exp1-example-trial). At 1000ms from trial onset, the fixation dot would turn bright green and participants had to click on the dot to play the recording. This was meant to reduce trial-to-trial correlations by resetting the mouse pointer to the center of the screen at the start of each trial. Participants responded by clicking on the word they heard and the next trial would begin. 
 
 Both the placement of the response options (/d/ on the left vs. right) and the assignment of VOTs to minimal pair continua was counter-balanced across participants, using 2 x 3 Latin-square designed lists. <!-- TO DO: correct? --> Trial order was randomized within each block and participant. 
 
@@ -159,6 +160,113 @@ d.exposure_trials %>%
 
 The order of trials was randomized within each block and participant, with the constraint that no more than two catch trials would occur in a row. <!-- TO DO: more on counter-balancing here, paralleling what I wrote for tets --> Participants were randomly assigned to one of the 3 (exposure condition) x 2 (random seed) x 3 (block order) exposure lists. 
 
+### Exclusions
+
+```{r get-exclusion-indicators}
+# mark catch trials rows and mark those to be excluded
+d %<>% 
+  mutate(
+    Is.CatchTrial = ifelse(Item.ExpectedResponse %in% c("flare", "rare", "share"), TRUE, FALSE),
+    CatchTrial.Correct = ifelse(
+      Is.CatchTrial == TRUE, 
+      ifelse(Item.ExpectedResponse == Response, TRUE, FALSE), NA),
+    Answer.sex.Correct = ifelse(sex == "woman", TRUE, FALSE)) %>% 
+  group_by(ParticipantID) %>% 
+  mutate(Exclude_participant.due_to_catch_trials = ifelse(sum(CatchTrial.Correct, na.rm = TRUE) < 17, TRUE, FALSE)) %>%
+  ungroup()
+
+# mark labelled trials
+d %<>% 
+  mutate(
+    Response.Correct = ifelse(Item.ExpectedResponse == Response, TRUE, FALSE),
+    LabeledTrial.Correct = ifelse(Item.Labeled == TRUE, ifelse(Response.Correct == TRUE, TRUE, FALSE), NA)) %>% 
+  group_by(ParticipantID) %>% 
+  mutate(Exclude_participant.due_to_labeled_trials = ifelse(sum(LabeledTrial.Correct, na.rm = T) < 68, TRUE, FALSE))
+
+# get data for exclusion due to categorisation slope of first 36 trials. 
+# set the range of VOT values for which we require a certain categorisation
+empirical_means <- c(17, 62)
+VOT_for_required_proportion_t <- empirical_means + c(-20, 20)
+required_proportion_t <- c(.15, .80) 
+
+d.VOT_exclusion <- 
+  d %>% 
+  filter(Block == 1 | (Block == 2 & Trial %in% c(13:36))) %>% 
+  drop_na(c(ParticipantID, Response.Voicing, Item.VOT)) %>% 
+  mutate(Response.ProportionVoiceless = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
+  select(c(Experiment, ParticipantID, Condition.Exposure, Response.Voicing, Response.ProportionVoiceless, Item.VOT)) %>%
+  # Fit logistic regression by participant to get model predictions 
+  group_by(ParticipantID, Experiment, Condition.Exposure) %>%
+  nest() %>%
+  mutate(
+    CategorizationModel =
+      map(
+        data, 
+        ~ glm(
+          Response.ProportionVoiceless ~ 1 + Item.VOT, 
+          data = .x, 
+          family = binomial))) %>% 
+  # type = "response" in predict() gives the probability
+  summarise(Model.predicted.Reponse = 
+              map(
+                CategorizationModel, 
+                ~ predict(object = .x, 
+                          newdata = tibble(Item.VOT = VOT_for_required_proportion_t), 
+                          type = "response"))) %>% 
+  mutate(Exclude_participant.due_to_VOT_slope = 
+           map(Model.predicted.Reponse, ~ ifelse(.x[1] > required_proportion_t[1] || .x[2] < required_proportion_t[2], TRUE, FALSE)),
+         Exclude_participant.due_to_lower_VOT = map(Model.predicted.Reponse, ~ ifelse(.x[1] > required_proportion_t[1], TRUE, FALSE)),
+         Exclude_participant.due_to_higher_VOT = map(Model.predicted.Reponse, ~ ifelse(.x[2] < required_proportion_t[2], TRUE, FALSE))) %>% 
+  select(ParticipantID, Experiment, Condition.Exposure, Exclude_participant.due_to_VOT_slope, Exclude_participant.due_to_lower_VOT, Exclude_participant.due_to_higher_VOT) %>% 
+  mutate(
+    across(c(Exclude_participant.due_to_VOT_slope, Exclude_participant.due_to_lower_VOT, Exclude_participant.due_to_higher_VOT), 
+           unlist)) %>% 
+  ungroup()
+
+d %<>% left_join(d.VOT_exclusion)
+```
+
+
+
+```{r set-RT-exclusion-criteria}
+# get number of participants excluded due to catch trial
+excl.catch <- d %>% 
+  filter(Exclude_participant.due_to_catch_trials == TRUE) %>% 
+  group_by(ParticipantID) %>% 
+  summarise() %>% 
+  tally() %>%
+  pull(n)
+
+# get number of participants excluded due to labelled trials
+excl.labeled <- 
+  d %>% 
+  filter(Exclude_participant.due_to_labeled_trials == TRUE) %>% 
+  group_by(ParticipantID) %>% 
+  summarise() %>% 
+  tally() %>%
+  pull(n)
+
+# count number of exclusions due to VOT slope
+excl.VOT <- 
+  d %>% 
+  filter(Exclude_participant.due_to_VOT_slope == TRUE) %>% 
+  group_by(ParticipantID) %>% 
+  summarise() %>% 
+  tally() %>%
+  pull(n)
+```
+
+Due to data transfer errors 4 participants' data were not stored and therefore excluded from analysis.We further excluded from analysis participants who committed more than 3 errors out of the 18 catch trials (<83% accuracy, N = `r excl.catch`), participants who committed more than 4 errors out of the 72 labelled trials (<94% accuracy, N = `r excl.labeled`), participants with an average reaction time more than three standard deviations from the mean of the by-participant means (N = 0), <!-- TO DO: RT exclusions don't actually seem to be included --> participants who had atypical categorisation functions at the start of the experiment (N = `r excl.VOT`, see SI, \@ref(XXX) for details), and participants who reported not to have used headphones (N = 0) or not to be L1 speakers of US English (N = 0). <!-- TO DO: these other exclusion criteria are also not coded -->
+
+```{r make-data-for-analysis}
+d_for_analysis <- 
+  d %>%
+  filter(
+    Is.CatchTrial == FALSE &
+    Exclude_participant.due_to_catch_trials == FALSE &
+    Exclude_participant.due_to_labeled_trials == FALSE &
+    Exclude_participant.due_to_VOT_slope == FALSE)
+```
 
 
 
