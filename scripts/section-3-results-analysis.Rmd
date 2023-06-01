@@ -22,9 +22,11 @@ source("functions.R")
 [MORE HERE]
 
 ### Regression analyses
-Figures \@ref(fig:plot-fit-slope-PSE)A-B summarize participants’ categorisation responses during exposure and test blocks, depending on the exposure condition and VOT. We analyzed participants' categorisation responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric models [@prins2012psychometric; see SI, \@ref(sec:analysis-approach)]. These models account for attentional lapses while estimating participants' categorisation functions. Though we confirmed for the present case that all results would replicate in a simple mixed-effects logistic regression [@jaeger2008categorical], ignoring attentional lapses---while commonplace in research on speech perception [but see @clayards2008perception; @kleinschmidt2016you]---can lead to biased estimates of categorization boundaries [@wichmann2001psychometric]. 
+Figures \@ref(fig:plot-fit-slope-PSE)A-B summarize participants’ categorisation responses during exposure and test blocks, depending on the exposure condition and VOT. We analyzed participants' categorisation responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric models. These models account for attentional lapses while estimating participants' categorisation functions. Though we confirmed for the present case that all results would replicate in a simple mixed-effects logistic regression [@jaeger2008categorical], ignoring attentional lapses---while commonplace in research on speech perception [but see @clayards2008perception; @kleinschmidt2016you]---can lead to biased estimates of categorization boundaries [@prins2012psychometric; @wichmann2001psychometric]. The models were fit using {\tt brms}} [@R-brms_a] in R [@R; @RStudio, for details, see SI, \@ref(sec:analysis-approach)]. 
 
-```{r model-fit-test-blocks, warning=FALSE}
+Here we focus on the model fit to the test blocks, which were identical within and across exposure conditions. Analyses of the exposure blocks are reported in the SI, and replicate all effects found in the test blocks. Tables \@ref(tab:XXX)-\@ref(tab:XXX) present Bayesian hypothesis tests that assess our hypotheses. As shown in Table \@ref(tab:XXX) 
+
+```{r model-fit-test-blocks, include=FALSE}
 # Storing some information about the data set submitted for analysis 
 # (to facilitating unscaling predictions back into the original scales for plotting)
 d.mean_sd_scaling <- 
@@ -1030,14 +1032,3 @@ p.ellipse <- d.category_ellipse %>%
 
 
 
-
-
-
-
-
-
-\newpage
-
-<!-- This is a markdown comment that will NOT show when you knit the document.  -->
-
-All data and code for this article can be downloaded from[https://osf.io/q7gjp/](OSF). This article is written in R markdown, allowing readers to replicate our analyses with the press of a button using freely available software [R, @R; @RStudio], while changing any of the parameters of our models. Readers can revisit any of the assumptions we make---for example, by substituting alternative models of linguistic representations. The supplementary information (SI, \@ref(sec:SI-software)) lists the software/libraries required to compile this document. Beyond our immediate goals here, we hope that this can be helpful to researchers who are interested in developing more informative experimental designs, and to facilitate the interpretation of existing results [see also @tan2021]. 
