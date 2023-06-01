@@ -46,7 +46,7 @@ d <-
 ### Participants
 We recruited `r nlevels(d$ParticipantID) + 4` participants from the Prolific crowdsourcing platform. We used Prolific's pre-screening to limit the experiment to participants (1) of US nationality, (2) who reported to only speak English, and (3) had not previously participated in any experiment from our lab on Prolific. Prior to the start of the experiment, participants had to confirm that they (4) spent at least the first 10 years of their life in the US speaking only English, (5) were in a quiet place and free from distractions, and (6) wore in-ear or over-the-ears headphones that cost at least \$15. An additional XXX participants loaded the experiment but did not start or complete it. <!-- TO DO -->
 
-Participants took an average of 17 minutes to complete the experiment (SD = 9 minutes) <!-- TO DO: is this the full duration or just the core part? --> and were remunerated \$8.00/hour. An optional post-experiment survey recorded participant demographics using a NIH pre-scribed categories, including participant sex (`r d.Participant <- (d %>% distinct(ParticipantID, Participant.Age, Participant.Sex, Participant.Ethnicity, Participant.Race, Participant.Raceother)); d.Participant %>% group_by(Participant.Sex) %>% tally() %>% mutate(x = paste(n, Participant.Sex, sep = " = ", collapse = ", ")) %>% pull(x) %>% first()`), age (mean = `r mean(d.Participant$Participant.Age, 1)` years; 95% quantiles = `r paste(quantile(d.Participant$Participant.Age, c(.025, .975), na.rm = T), collapse = "-")` years), race (`r d.Participant %>% group_by(Participant.Race) %>% tally() %>% mutate(x = paste(n, Participant.Race, sep = " = ", collapse = ", ")) %>% pull(x) %>% first()`), and ethnicity (`r d.Participant %>% group_by(Participant.Ethnicity) %>% tally() %>% mutate(x = paste(n, Participant.Ethnicity, sep = " = ", collapse = ", ")) %>% pull(x) %>% first()`). 
+Participants took an average of 17 minutes to complete the experiment (SD = 9 minutes) --excluding time taken for instructions and survey-- <!-- TO DO: is this the full duration or just the core part? --> and were remunerated \$8.00/hour. An optional post-experiment survey recorded participant demographics using NIH prescribed categories, including participant sex (`r d.Participant <- (d %>% distinct(ParticipantID, Participant.Age, Participant.Sex, Participant.Ethnicity, Participant.Race, Participant.Raceother)); d.Participant %>% group_by(Participant.Sex) %>% tally() %>% mutate(x = paste(n, Participant.Sex, sep = " = ", collapse = ", ")) %>% pull(x) %>% first()`), age (mean = `r mean(d.Participant$Participant.Age, 1)` years; 95% quantiles = `r paste(quantile(d.Participant$Participant.Age, c(.025, .975), na.rm = T), collapse = "-")` years), race (`r d.Participant %>% group_by(Participant.Race) %>% tally() %>% mutate(x = paste(n, Participant.Race, sep = " = ", collapse = ", ")) %>% pull(x) %>% first()`), and ethnicity (`r d.Participant %>% group_by(Participant.Ethnicity) %>% tally() %>% mutate(x = paste(n, Participant.Ethnicity, sep = " = ", collapse = ", ")) %>% pull(x) %>% first()`). 
 
 Participants' responses were collected via Javascript developed by the Human Language Processing Lab at the University of Rochester [@JSEXP] and stored via Proliferate developed at, and hosted by, the ALPs lab at Stanford University [@schuster].
 
@@ -165,7 +165,7 @@ p.histogram_conditions <- d.exposure_trials %>%
 p.histogram_conditions
 ```
 
-The order of trials was randomized within each block and participant, with the constraint that no more than two catch trials would occur in a row. <!-- TO DO: more on counter-balancing here, paralleling what I wrote for tets --> Participants were randomly assigned to one of the 3 (exposure condition) x 2 (random seed) x 3 (block order) exposure lists. 
+The order of trials was randomized within each block and participant, with the constraint that no more than two catch trials would occur in a row. <!-- TO DO: more on counter-balancing here, paralleling what I wrote for tets --> Participants were randomly assigned to one of the 3 (exposure condition) x 3 (block order) x 2 (image mapping) exposure lists. 
 
 ### Exclusions
 
@@ -281,9 +281,18 @@ excl.RT <-
   filter(Exclude_participant.due_to_RT == TRUE) %>% 
   tally() %>% 
   pull(n)
+
+# headphone types
+excl.headphone <- d %>% 
+  group_by(ParticipantID, audio_type) %>% 
+  summarise() %>% 
+  mutate(No_headphones = ifelse(audio_type != "in-ear" | audio_type != "over-ear", FALSE, TRUE)) %>% 
+  filter(No_headphones == TRUE) %>% 
+  tally() %>% 
+  pull(n)
 ```
 
-Due to data transfer errors 4 participants' data were not stored and therefore excluded from analysis.We further excluded from analysis participants who committed more than 3 errors out of the 18 catch trials (<83% accuracy, N = `r excl.catch`), participants who committed more than 4 errors out of the 72 labelled trials (<94% accuracy, N = `r excl.labeled`), participants with an average reaction time more than three standard deviations from the mean of the by-participant means (N = `r excl.RT`),  participants who had atypical categorisation functions at the start of the experiment (N = `r excl.VOT`, see SI, \@ref(XXX) for details), and participants who reported not to have used headphones (N = 0) or not to be L1 speakers of US English (N = 0). <!-- TO DO: these other exclusion criteria are also not coded -->
+Due to data transfer errors 4 participants' data were not stored and therefore excluded from analysis.We further excluded from analysis participants who committed more than 3 errors out of the 18 catch trials (<83% accuracy, N = `r excl.catch`), participants who committed more than 4 errors out of the 72 labelled trials (<94% accuracy, N = `r excl.labeled`), participants with an average reaction time more than three standard deviations from the mean of the by-participant means (N = `r excl.RT`),  participants who had atypical categorisation functions at the start of the experiment (N = `r excl.VOT`, see SI, \@ref(XXX) for details), and participants who reported not to have used headphones (N = `r excl.headphone`) or not to be L1 speakers of US English (N = 0). <!-- TO DO: these other exclusion criteria are also not coded -->
 
 ```{r make-data-for-analysis}
 d_for_analysis <- 

@@ -462,98 +462,6 @@ Overall, there was little evidence that participants substantially changed their
 
 
 
-### Regression analysis - model selection (norming)
-
-```{r comparing-regression-models, fig.height=3, fig.width=5.5, fig.cap="Expected effect of VOT interacting with trial on categorisation from model: 1 + (sVOT + sFO) * sTrial shown as red dashed line with pink shaded CI. Grey line and shaded area represents effects of VOT interacting with trial from model: 1 + sVOT * sTrial"}
-# run an alternative model with f0 as a predictor
-# get f0 mean and sd for scaling
-f0.mean_exp1 <- mean(d.test.excluded$Item.Mel_f0_5ms)
-f0.sd_exp1 <- sd(d.test.excluded$Item.Mel_f0_5ms)
-d.test.excluded %<>% 
-  mutate(sF0 = (Item.Mel_f0_5ms - f0.mean_exp1)/(2 * f0.sd_exp1))
-
-# specify new model formula (priors will be same as previous model without f0)
-fit_mix_f0 <- brm(
-  bf(
-    Response.Voicing == "voiceless" ~ 1,
-    mu1 ~ 1 + (1 | g | ParticipantID),
-    mu2 ~ 1 + (sVOT + sF0) * sTrial + (1 + (sVOT + sF0) * sTrial | g | ParticipantID) + (1 + (sVOT + sF0) * sTrial | h | Item.MinimalPair),
-    theta1 ~ 1 + (1 | g | ParticipantID)),
-  data = d.test.excluded,
-  cores = 4,
-  iter = 4000,
-  warmup = 2000,
-  family = mixture(bernoulli("logit"), bernoulli("logit")),
-  control = list(adapt_delta = .99),
-  file = "../models/Exp-NORM-lapsing-Trial-F0.rds")
-
-if (file.exists("../models/conditional_effects_fit_mix_f0.rds")){
-  fit_mix_f0_data <- read_rds("../models/conditional_effects_fit_mix_f0.rds")
-} else {
-  int_conditions <- list(sTrial = sort(unique((d.test.excluded$Trial - Trial.mean)) / (2 * Trial.sd)))
-  
-  fit_mix_f0_data <- conditional_effects(
-    fit_mix_f0, 
-    effects = "sVOT:sTrial", 
-    int_conditions = int_conditions,
-    ndraws = 1000,
-    plot = F)[[1]] # by default this does not include any group level effects
-  
-  write_rds(fit_mix_f0_data, "../models/conditional_effects_fit_mix_f0.rds")
-}
-
-
-# plotting conditional effects of VOT from the 2 models side-by-side
-psychometric_fit_exp1 %>% 
-  group_by(sVOT) %>% 
-  summarise(estimate__ = mean(estimate__),
-            lower__ = mean(lower__),
-            upper__ = mean(upper__)) %>% mutate(model = "1 + sVOT  * sTrial") %>% 
-     ggplot(aes(x = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1), 
-             y = estimate__, fill = model)) + 
-    geom_ribbon(
-    data = fit_mix_f0_data %>% 
-      group_by(sVOT) %>% 
-      summarise(estimate__ = mean(estimate__),
-            lower__ = mean(lower__),
-            upper__ = mean(upper__)), 
-    mapping = aes(
-      x = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1),
-      ymin = lower__, 
-      ymax = upper__),
-    fill = "red",
-    alpha = 0.05,
-    inherit.aes = F) +
-  geom_ribbon(aes(ymin = lower__, ymax = upper__),
-              fill = "#333333",
-              alpha = .1,
-              show.legend = F) +
-  geom_line(linewidth = 1.5, 
-            linetype = "solid",
-            colour = "#333333",
-            alpha = .2,
-            show.legend = F) +
-    geom_line(
-      data = fit_mix_f0_data %>% 
-      group_by(sVOT) %>% 
-      summarise(estimate__ = mean(estimate__),
-            lower__ = mean(lower__),
-            upper__ = mean(upper__)) %>% mutate(model = "with F0"), 
-      mapping = aes(x = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1), 
-             y = estimate__, fill = model),
-      linetype = "dashed",
-      colour = "red",
-      alpha = .5,
-      linewidth = 1.5,
-      show.legend = T,
-      inherit.aes = F) + 
-  scale_x_continuous("VOT (ms)", limits = c(-100, 130)) +
-  scale_y_continuous("Fitted proportion of 't' responses") +
-  scale_fill_manual("Model", values = c("1 + sVOT  * sTrial" = "#333333", "with F0" = "red"), labels = c("sVOT  * sTrial", "sVOT  * sTrial * F0")) 
-```
-
-
-
 
 ## Main experiment
 
@@ -576,7 +484,7 @@ d %>%
 p.labelled <- d %>% 
   filter(Phase == "exposure") %>% 
   group_by(ParticipantID, Condition.Exposure) %>% 
-  summarise(LabeledTrial.Correct = sum(LabeledTrial.Correct, na.rm = TRUE)) %>% 
+  summarise(LabeledTrial.Correct = 72 - sum(LabeledTrial.Correct, na.rm = TRUE)) %>% 
   group_by(Condition.Exposure, LabeledTrial.Correct) %>% 
   summarise(freq = n()) %>% 
   ggplot(aes(x = LabeledTrial.Correct, y = freq, fill = Condition.Exposure)) +
@@ -586,21 +494,21 @@ p.labelled <- d %>%
                       aesthetics = c("colour", "fill"), 
                       breaks = c("Shift0", "Shift10", "Shift40"), 
                       values = c("#cc0000", "#12D432","#0481F3")) +
-  scale_x_continuous("Total labelled trials correct") +
+  scale_x_continuous("Total labelled trial errors") +
   scale_y_continuous("No. of participants", breaks  = seq(0, 115, 5)) +
   theme(legend.position = "none") 
 
 p.labelled.group <- d %>% 
-  filter(Phase == "exposure") %>% 
+  filter(Phase == "exposure" & Item.Labeled == T) %>% 
   group_by(ParticipantID, Condition.Exposure, Block) %>% 
-  summarise(LabeledTrial.Correct = sum(LabeledTrial.Correct, na.rm = TRUE)) %>% 
-  ggplot(aes(x = LabeledTrial.Correct, fill = Condition.Exposure)) +
+  summarise(LabeledTrial.Errors = 24 - sum(LabeledTrial.Correct, na.rm = TRUE)) %>% 
+  ggplot(aes(x = LabeledTrial.Errors, fill = Condition.Exposure)) +
   geom_bar(position = position_dodge(width = .5, preserve = "single"), width = .5) +
   scale_colour_manual("Exposure condition", 
                       aesthetics = c("colour", "fill"), 
                       breaks = c("Shift0", "Shift10", "Shift40"), 
                       values = c("#cc0000", "#12D432","#0481F3")) +
-  scale_x_continuous("Total labelled trials correct") +
+  scale_x_continuous("Total labelled trial errors") +
   theme(legend.position = "top") +
   facet_grid(Condition.Exposure ~ Block) 
 
@@ -609,18 +517,7 @@ p.labelled | p.labelled.group +
 ```
 
 
-```{r, message=FALSE, fig.width=6, fig.height=5}
-d %>% 
-  filter(Is.CatchTrial == FALSE & Phase == "exposure") %>% 
-  mutate(Item.Labeled = factor(ifelse(Item.Labeled == TRUE, "labeled", "unlabeled"))) %>% 
-  summarise(Condition.Exposure, Block, Item.Labeled, Response.Correct) %>% 
-  ggplot(aes(x = Response.Correct, fill = Item.Labeled)) +
-  geom_bar(position = position_dodge2(width = .5, preserve = "single"), width = .5) +
-  scale_x_discrete("Response", labels = c("incorrect", "correct")) +
-  scale_colour_manual("Labelling", aesthetics = c("colour", "fill"), breaks = c("labeled", "unlabeled"), values = c("#f6546a", "#00ced1")) +
-  theme(legend.position = "top") +
-  facet_grid(Condition.Exposure ~ Block) 
-```
+
 ```{r, message=FALSE, fig.width=6, fig.height=5}
 d_for_analysis %>% 
   filter(Is.CatchTrial == FALSE & Phase == "exposure") %>% 
@@ -704,10 +601,6 @@ d %>%
 ```
 
 
-## Ideal observer training
-We train the IOs on cue distributions extracted from an annotated database of XX L1 US-English talkers' productions (@chodroff2017structure) of word initial stops. We apply Bayes' theorem to derive the IOs' posterior probability of categorising the test stimuli as "t". This is defined as the product of the likelihood of the cue under the hypothesis that the talker produced "t", and the prior probability of that cue. By using IOs trained solely on production data to predict categorization behaviour we avoid additional computational degrees of freedom and limit the risk of overfitting the model to the data thus reducing bias. 
-
-We filtered the database to /d/s and /t/s which gave 92 talkers (4x male and 4x female), each with a minimum of 25 tokens. We then fit ideal observers to each talker under different hypotheses of distributional learning [and evaluated their respective goodness-of-fit to the human data]. In total we fit x IOs to represent the different hypotheses about listeners' implicit knowledge -- models grouped by sex, grouped by sex and   Predictions of the IO were obtained using talker-normalized category statistics for /d/ and /t/ from [@Kurumada_Xie_Jaeger_2022] based on data from [@chodroff2017], perceptual noise estimates for VOT from [@kronrod2016unified], and a lapse rate identical to the psychometric model estimate. 
 
 
 
