@@ -20,12 +20,6 @@ source("functions.R")
  4. Do the differences between exposure conditions diminish with repeated testing and without intermittent exposure?
 
 [MORE HERE]
-
-### Regression analyses
-Figures \@ref(fig:plot-fit-slope-PSE)A-B summarize participants’ categorisation responses during exposure and test blocks, depending on the exposure condition and VOT. We analyzed participants' categorisation responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric models, fit using brms [@R-brms_a] in R [@R; @RStudio, for details, see SI, \@ref(sec:analysis-approach)]. These models account for attentional lapses while estimating participants' categorisation functions. Failing to account for attentional lapses---while commonplace in research on speech perception [but see @clayards2008perception; @kleinschmidt2016you]---can lead to biased estimates of categorization boundaries [@prins2012psychometric; @wichmann2001psychometric]. For the present experiment, however, lapse rates were negligible (`r make_CI(fit_mix_test, "theta1_Intercept")`), and all results replicate in simple mixed-effects logistic regressions [@jaeger2008categorical]. 
-
-Here we focus on the model fit to the test blocks, which were identical within and across exposure conditions. Analyses of the exposure blocks are reported in the SI (\@ref(sec:exposure-analyses)), and replicate all effects found in the test blocks. Tables \@ref(tab:XXX)-\@ref(tab:XXX) present Bayesian hypothesis tests that assess our hypotheses. As shown in Table \@ref(tab:XXX) 
-
 ```{r model-fit-test-blocks, include=FALSE}
 # Storing some information about the data set submitted for analysis 
 # (to facilitating unscaling predictions back into the original scales for plotting)
@@ -80,6 +74,12 @@ fit_mix_exposure <-
       prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
     file = "../models/Exp-AE-DLVOT-lapsing-differencecoded-exposureblocks.rds")
 ```
+### Regression analyses
+Figures \@ref(fig:plot-fit-slope-PSE)A-B summarize participants’ categorisation responses during exposure and test blocks, depending on the exposure condition and VOT. We analyzed participants' categorisation responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric models, fit using brms [@R-brms_a] in R [@R; @RStudio, for details, see SI, \@ref(sec:analysis-approach)]. These models account for attentional lapses while estimating participants' categorisation functions. Failing to account for attentional lapses---while commonplace in research on speech perception [but see @clayards2008perception; @kleinschmidt2016you]---can lead to biased estimates of categorization boundaries [@prins2012psychometric; @wichmann2001psychometric]. For the present experiment, however, lapse rates were negligible (`r make_CI(fit_mix_test, "theta1_Intercept")`), and all results replicate in simple mixed-effects logistic regressions [@jaeger2008categorical]. 
+
+Here we focus on the model fit to the test blocks, which were identical within and across exposure conditions. Analyses of the exposure blocks are reported in the SI (\@ref(sec:exposure-analyses)), and replicate all effects found in the test blocks. Tables \@ref(tab:XXX)-\@ref(tab:XXX) present Bayesian hypothesis tests that assess our hypotheses. As shown in Table \@ref(tab:XXX) 
+
+
 
 ```{r fit-nested-models-for-intercepts-slopes-plot, warning=FALSE, message=FALSE}
 # Refit the same model, formulated as nesting intercepts and slopes within each unique combination of 
@@ -682,44 +682,44 @@ hyp_contrasts_nested_block <-
     "mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 0", 
     "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 < 0", 
     "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 0",
-    "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 < 3 * mu2_Block1:Condition.Exposure_Shift10vs.Shift0", # diff. between 40 and 10 is 3x 10 vs 0 
+    "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 4 * mu2_Block1:Condition.Exposure_Shift10vs.Shift0", # diff. between 40 and 10 is 3x 10 vs 0 
     
     "mu2_Block3:Condition.Exposure_Shift10vs.Shift0 < 0", 
     "mu2_Block3:Condition.Exposure_Shift40vs.Shift10 < 0", 
     "mu2_Block3:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 0",
-    "mu2_Block3:Condition.Exposure_Shift40vs.Shift10 < 3 * mu2_Block1:Condition.Exposure_Shift10vs.Shift0",
+    "mu2_Block3:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 4 * mu2_Block1:Condition.Exposure_Shift10vs.Shift0",
     
     "mu2_Block5:Condition.Exposure_Shift10vs.Shift0 < 0", 
     "mu2_Block5:Condition.Exposure_Shift40vs.Shift10 < 0", 
     "mu2_Block5:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 0",
-    "mu2_Block5:Condition.Exposure_Shift40vs.Shift10 < 3 * mu2_Block1:Condition.Exposure_Shift10vs.Shift0",
+    "mu2_Block5:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 4 * mu2_Block1:Condition.Exposure_Shift10vs.Shift0",
     
     "mu2_Block7:Condition.Exposure_Shift10vs.Shift0 < 0", 
     "mu2_Block7:Condition.Exposure_Shift40vs.Shift10 < 0", 
     "mu2_Block7:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 0",
-    "mu2_Block7:Condition.Exposure_Shift40vs.Shift10 < 3 * mu2_Block1:Condition.Exposure_Shift10vs.Shift0") # shift in 40vs 10 > 10 vs 0 within test 4
+    "mu2_Block7:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 4 * mu2_Block1:Condition.Exposure_Shift10vs.Shift0") # shift in 40vs 10 > 10 vs 0 within test 4
 
 # translate hypotheses into intelligible statements
 hyp_contrasts_nested_block_readable <- tibble(Hypothesis = c(
   "+10 vs baseline", 
   "+40 vs +10",
   "+40 vs baseline",
-  "+40 vs baseline > 3x +10 vs baseline",
+  "+40 vs baseline > 4x +10 vs baseline",
   
   "+10 vs baseline", 
   "+40 vs +10",
   "+40 vs baseline",
-  "+40 vs baseline > 3x +10 vs baseline",
+  "+40 vs baseline > 4x +10 vs baseline",
   
   "+10 vs baseline", 
   "+40 vs 10",
   "+40 vs baseline",
-  "+40 vs baseline > 3x +10 vs baseline",
+  "+40 vs baseline > 4x +10 vs baseline",
   
   "+10 vs baseline", 
   "+40 vs 10",
   "+40 vs baseline",
-  "+40 vs baseline > 3x +10 vs baseline"
+  "+40 vs baseline > 4x +10 vs baseline"
 ))
 
 hyp_contrasts_nested_block <- hypothesis(fit_mix_test_nested_block, hyp_contrasts_nested_block)
