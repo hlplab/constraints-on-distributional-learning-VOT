@@ -75,7 +75,7 @@ Each trial started with a dark-shaded green fixation dot being displayed. At 500
 
 Both the placement of the response options (/d/ on the left vs. right) and the assignment of VOTs to minimal pair continua was counter-balanced across participants, using 2 x 3 Latin-square designed lists. <!-- TO DO: correct? --> Trial order was randomized within each block and participant. 
 
-*Exposure blocks. * Each exposure block consisted of 24 /d/ and 24 /t/ trials, as well as 6 catch trials that served as a check on participant attention throughout the experiment (2 instances for each of three combinations of the three catch recordings). 
+*Exposure blocks. * Each exposure block consisted of 24 /d/ and 24 /t/ trials, as well as 6 catch trials that served as a check on participant attention throughout the experiment (2 instances for each of three combinations of the three catch recordings). With a total of 144 trials, exposure was substantially shorter than in similar previous experiments [cf. 228 trials in @clayards2008; @kleinschmidt2020; 2 x 236 trials, @theodore-monto2019]. <!-- TO DO: check kleinschmidt's later experiments and correct if necessary -->
 
 The distribution of VOTs across the 48 /d/-/t/ trials depended on the exposure condition. Specifically, we first created a *baseline* condition. Although not critical to the purpose of the experiment, we aimed for the VOT distribution in this condition to closely resemble participants' prior expectations for a `typical' female talker of L1-US English (for details, see SI, \@ref(XXX)). The mean and standard deviations for /d/ along VOT were set 5 msecs and 50 msecs, respectively. The mean and standard deviations for /t/ were set 80 msecs and 270 msecs, respectively. 
 
