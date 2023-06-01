@@ -237,7 +237,7 @@ knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 ```{r, child="section-4-general-discussion.Rmd"}
 ```
 
-```{r, child="section-5-references.Rmd"}
+```{r eval=FALSE, child="section-5-references.Rmd", include=FALSE}
 ```
 
 \newpage
