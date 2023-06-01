@@ -23,9 +23,9 @@ The regression analysis addresses several questions:
     4. Do the differences between exposure conditions diminish with repeated testing and without intermittent exposure?
 
 
-We fit a Bayesian mixed-effects psychometric model to participants' categorization responses on critical test trials [e.g., @prins2011]. We are primarily interested in the changes in categorization behaviour between test blocks which are presumed to be a consequence of the input from preceding exposure blocks however we fit a separate regression model for exposure in order to visualise participant behaviour during exposure. 
+We fit a Bayesian mixed-effects psychometric model to participants' categorization responses on critical test trials [e.g., @prins2012psychometric]. We are primarily interested in the changes in categorization behaviour between test blocks which are presumed to be a consequence of the input from preceding exposure blocks however we fit a separate regression model for exposure in order to visualise participant behaviour during exposure. 
 
-The psychometric model is essentially an extension of mixed-effects logistic regression that also takes into account attentional lapses. Ignoring attentional lapses--while commonplace in research on speech perception [incl. our own work, but see @clayards2008; @kleinschmidt2016you]---can lead to biased estimates of categorization boundaries [e.g., @wichmann2001psychometric]. The mixed-effects psychometric model describes the probability of "t"-responses as a weighted mixture of a lapsing-model and a perceptual model. The lapsing model is a mixed-effects logistic regression [@jaeger2008categorical] that predicts participant responses that are made independent of the stimulus---for example, responses that result from attentional lapses. These responses are independent of the stimulus, and depend only on participants' response bias. The perceptual model is a mixed-effects logistic regression that predicts all other responses, and captures stimulus-dependent aspects of participants' responses. The relative weight of the two models is determined by the lapse rate, which is described by a third mixed-effects logistic regression. 
+The psychometric model is essentially an extension of mixed-effects logistic regression that also takes into account attentional lapses. Ignoring attentional lapses--while commonplace in research on speech perception [incl. our own work, but see @clayards2008perception; @kleinschmidt2016you]---can lead to biased estimates of categorization boundaries [e.g., @wichmann2001psychometric]. The mixed-effects psychometric model describes the probability of "t"-responses as a weighted mixture of a lapsing-model and a perceptual model. The lapsing model is a mixed-effects logistic regression [@jaeger2008categorical] that predicts participant responses that are made independent of the stimulus---for example, responses that result from attentional lapses. These responses are independent of the stimulus, and depend only on participants' response bias. The perceptual model is a mixed-effects logistic regression that predicts all other responses, and captures stimulus-dependent aspects of participants' responses. The relative weight of the two models is determined by the lapse rate, which is described by a third mixed-effects logistic regression. 
 
 We fit the model using the package \texttt{brms} [@R-brms_a] in R [@R; @RStudio]. Following previous work from our lab [@horberg2021rational; @xie2021cross], we used weakly regularizing priors to facilitate model convergence. For fixed effect parameters, we standardized continuous predictors (VOT) by dividing through twice their standard deviation [@gelman2008scaling], and used Student priors centered around zero with a scale of 2.5 units [following @gelman2008weakly] and 3 degrees of freedom. For random effect standard deviations, we used a Cauchy prior with location 0 and scale 2, and for random effect correlations, we used an uninformative LKJ-Correlation prior with its only parameter set to 1, describing a uniform prior over correlation matrices [@Lewandowski2009]. Four chains with 2000 warm-up samples and 2000 posterior samples each were fit. No divergent transitions after warm-up were observed, and all $\hat{R}$ were close to 1.
 
@@ -96,16 +96,6 @@ table <- hypotheses$hypothesis %>% select(-Star)
 
 
 ```{r model-fit-exposure-blocks, warning=FALSE}
-# get VOT mean and sd across exposure blocks and CONDITIONS for scaling purposes
-exposure_block_stats <- d_for_analysis %>% 
-  ungroup() %>% 
-    filter(Phase == "exposure" & Item.Labeled == FALSE) %>% 
-  summarise(VOT.mean_exposure = mean(Item.VOT),
-            VOT.sd_exposure = sd(Item.VOT))
-
-VOT.mean_exposure <- exposure_block_stats[[1]]
-VOT.sd_exposure <- exposure_block_stats[[2]]
-
 # set priors for psychometric model
 my_priors <- c(
   prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"), # prior 
