@@ -87,7 +87,7 @@ Next, we created the two additional exposure conditions by shifting these VOT di
 
 (ref:exp2-design-distribution) Histogram of VOTs across the 48 trials of all three exposure blocks by exposure condition. Shown is the parameterization of the VOT samples used across experimental lists. The order of blocks was counter-balanced across participants. <!-- TO DO: could you split this by block, so that readers can understand how it varied by block? call it exposure block A, B, C -->
 
-```{r exp2-design-distribution, fig.height=6, fig.width=6, fig.cap="(ref:exp2-design-distribution)",warning=FALSE, message=FALSE}
+```{r exp2-design-distribution, fig.height=6, fig.width=6, fig.cap="(ref:exp2-design-distribution)", warning=FALSE, message=FALSE}
 d.exposure_trials <- 
   read_csv("../data/exposure_block_tokens.csv", show_col_types = F) %>% 
   mutate(

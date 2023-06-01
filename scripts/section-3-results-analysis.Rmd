@@ -24,7 +24,7 @@ source("functions.R")
 ### Regression analyses
 Figures \@ref(fig:plot-fit-slope-PSE)A-B summarize participants’ categorisation responses during exposure and test blocks, depending on the exposure condition and VOT.
 
-We analyzed participants' categorisation responses during test blocks in a Bayesian mixed-effects psychometric model [e.g., @prins2012psychometric]. The psychometric model is an extension of mixed-effects logistic regression that also takes into account attentional lapses. Though we confirmed for the present case that all results would replicate in a simple mixed-effects logistic regression [@jaeger2008categorical], ignoring attentional lapses---while commonplace in research on speech perception [incl. some of our own work, but see @clayards2008perception; @kleinschmidt2016you]---can lead to biased estimates of categorization boundaries [@wichmann2001psychometric]. 
+We analyzed participants' categorisation responses during test blocks in a Bayesian mixed-effects psychometric model [e.g., @prins2012psychometric]. The psychometric model is an extension of mixed-effects logistic regression that also takes into account attentional lapses. Though we confirmed for the present case that all results would replicate in a simple mixed-effects logistic regression [@jaeger2008categorical], ignoring attentional lapses---while commonplace in research on speech perception [but see @clayards2008perception; @kleinschmidt2016you]---can lead to biased estimates of categorization boundaries [@wichmann2001psychometric]. 
 
 The mixed-effects psychometric model describes the probability of "t"-responses as a weighted mixture of a perceptual and a lapsing model. The perceptual model predicts responses on trials where participants pay attention and respond based on the stimulus. We implemented the perceptual model as used mixed-effects logistic regression, predicting "t"-responses from exposure condition (backward difference coded, comparing the +10ms against the +0ms shift condition, and the +40ms against the +10ms shift condition), test block (backward difference coded from the first to last test block), VOT (Gelman scaled), and their full factorial interaction. The model included by-participant random intercepts and slopes for all within-participant maniplations (block and VOT) and by-item random intercepts and slopes for all within-participant manipulations (exposure condition, block, VOT).
 
@@ -61,7 +61,9 @@ fit_mix_test <-
   bf(
     Response.Voiceless ~ 1,
     mu1 ~ 0 + offset(0),
-    mu2 ~ 1 + VOT_gs * Condition.Exposure * Block + (1 + VOT_gs * Block | ParticipantID) + (1 + VOT_gs * Condition.Exposure * Block | Item.MinimalPair),
+    mu2 ~ 1 + VOT_gs * Condition.Exposure * Block + 
+      (1 + VOT_gs * Block | ParticipantID) + 
+      (1 + VOT_gs * Condition.Exposure * Block | Item.MinimalPair),
     theta1 ~ 1),
   data = d_for_analysis %>% 
     filter(Phase == "test") %>% 
@@ -69,8 +71,8 @@ fit_mix_test <-
   cores = 4,
   chains = chains,
   init = 0,
-  iter = 4000, # iterations to run
-  warmup = 2000, # samples used to fit
+  iter = 4000, 
+  warmup = 2000, 
   family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
   control = list(adapt_delta = .99),
   file = "../models/Exp-AE-DLVOT-labelled-lapsing-GLMM-difference-no-RTexcl.rds")
