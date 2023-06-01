@@ -74,9 +74,12 @@ get_bf <- function(model, hypothesis) {
   paste0("Bayes factor: ", round(hypothesis(model, hypothesis)[[1]]$Evid.Ratio, 2), " 90%-CI : ", round(hypothesis(model, hypothesis)[[1]]$CI.Lower, 2), " to ", round(hypothesis(model, hypothesis)[[1]]$CI.Upper, 2) )
 }
 
-make_CI <- function(model, term, hypothesis) {
-  paste0(paste(round(plogis(as.numeric(summary(model)$fixed[term, 1])) * 100, 1), "%, "), " 95%-CI: ",
-         paste(round(plogis(as.numeric(summary(model)$fixed[term, 3:4])) * 100, 1), collapse = " to "), "%", "; ", get_bf(model = model, hypothesis = hypothesis))
+make_CI <- function(model, term, hypothesis = NULL) {
+  x <- paste0(paste0(round(plogis(as.numeric(summary(model)$fixed[term, 1])) * 100, 1), "%, "), " 95%-CI: ",
+         paste0(round(plogis(as.numeric(summary(model)$fixed[term, 3:4])) * 100, 1), collapse = " to "), "%")
+
+  if (!is.null(hypothesis)) x <- paste0(x, "; ", get_bf(model = model, hypothesis = hypothesis))
+  return(x)
 }
 
 # Function to get identity CI of a model summary
@@ -252,13 +255,13 @@ predict_f0 <- function(VOT, intercept = 245.46968, slope = 0.03827) {
 get_diff_in_likelihood_from_io <- function(x, io, add_f0 = F, io.type) {
   # Since we want to only consider cases that have F0 values that are in a certain linear relation to VOT
   # (the way we created our stimuli), we set the F0 based on the VOT.
-  if (add_f0) x <- c(x, normMel(predict_f0(x))) 
-  else if (add_f0 & io.type == "VOT_F0.centered.input") x <- c(x, normMel(predict_f0(x)) + (chodroff.mean_f0_Mel - f0.mean_exp1)) 
+  if (add_f0) x <- c(x, normMel(predict_f0(x)))
+  else if (add_f0 & io.type == "VOT_F0.centered.input") x <- c(x, normMel(predict_f0(x)) + (chodroff.mean_f0_Mel - f0.mean_exp1))
   else if (add_f0 & io.type == "VOT_F0.centered.input_block1") x <- c(x, normMel(predict_f0(x)) + (chodroff.mean_f0_Mel - f0.mean_test))
-  
+
   # abs(dmvnorm(x, io$mu[[1]], io$Sigma[[1]], log = T) - dmvnorm(x, io$mu[[2]], io$Sigma[[2]], log = T))
   y <- abs(dmvnorm(x, io$mu[[2]], io$Sigma[[2]] + io$Sigma_noise[[2]], log = F) / (dmvnorm(x, io$mu[[1]], io$Sigma[[1]] + io$Sigma_noise[[1]], log = F) + dmvnorm(x, io$mu[[2]], io$Sigma[[2]] + io$Sigma_noise[[2]], log = F)) - .5)
-  
+
   # message(paste("Explored VOT =", x, "and found p(t) of", y, "\n"))
   return(y)
 }
@@ -367,14 +370,14 @@ get_IO_categorization <- function(
             filter(category == "/t/") %>%
             mutate(VOT = map(x, ~ .x[1]) %>% unlist())),
       line = pmap(
-        list(categorization, gender, io.type), 
-        ~ geom_line(data = ..1, 
+        list(categorization, gender, io.type),
+        ~ geom_line(data = ..1,
                     aes(x = if (str_detect(..3, ".*\\.centered\\.input$")) VOT - (chodroff.mean_VOT - VOT.mean_exp1)
                         else if (str_detect(..3, ".*\\.centered\\.input_block1$")) VOT - (chodroff.mean_VOT - VOT.mean_testblock1)
-                        else VOT, 
+                        else VOT,
                         y =  response,
-                        color = ..2), 
-                    alpha = alpha, linewidth = linewidth)), 
+                        color = ..2),
+                    alpha = alpha, linewidth = linewidth)),
       io.type = io.type
     )
 }
@@ -678,9 +681,9 @@ plot_talker_MVGs <- function(
       size = .8,
       alpha = .2,
       inherit.aes = F) +
-    geom_abline(intercept = if (centered == T) normMel(245.46968) + (prod_means[2] - percept_means[2]) else normMel(245.46968), 
-               slope = 0.03827, 
-               linetype = 2, 
+    geom_abline(intercept = if (centered == T) normMel(245.46968) + (prod_means[2] - percept_means[2]) else normMel(245.46968),
+               slope = 0.03827,
+               linetype = 2,
                alpha = .3) +
     guides(colour = "none", category = "none")
 }
@@ -693,38 +696,38 @@ plot_talker_MVGs <- function(
 prepVars <- function(d, levels.Condition = NULL, contrast_type) {
   d %<>%
     drop_na(Condition.Exposure, Phase, Block, Item.MinimalPair, ParticipantID, Item.VOT, Response)
-  
+
   print(paste("VOT mean:", signif(mean(d$Item.VOT, na.rm = T))))
   print(paste("VOT sd:", signif(sd(d$Item.VOT, na.rm = T))))
-  
-  d %<>% 
-    ungroup() %>% 
+
+  d %<>%
+    ungroup() %>%
     mutate(
-      Block_n = as.numeric(as.character(Block)),  
+      Block_n = as.numeric(as.character(Block)),
       across(c(Condition.Exposure, Block, Item.MinimalPair), factor),
-      
-      Condition.Exposure = factor(Condition.Exposure, levels = levels.Condition)) %>% 
-    
-    drop_na(Block, Response, Item.VOT) %>% 
-    mutate(VOT_gs = (Item.VOT - mean(Item.VOT, na.rm = TRUE)) / (2 * sd(Item.VOT, na.rm = TRUE))) %>% 
+
+      Condition.Exposure = factor(Condition.Exposure, levels = levels.Condition)) %>%
+
+    drop_na(Block, Response, Item.VOT) %>%
+    mutate(VOT_gs = (Item.VOT - mean(Item.VOT, na.rm = TRUE)) / (2 * sd(Item.VOT, na.rm = TRUE))) %>%
     droplevels()
-  
+
   print(paste("mean VOT is", mean(d$Item.VOT), "and SD is", sd(d$Item.VOT)))
-  
+
   contrasts(d$Condition.Exposure) = cbind("_Shift10 vs. Shift0" = c(-2/3, 1/3, 1/3),
                                           "_Shift40 vs. Shift10" = c(-1/3,-1/3, 2/3))
   require(MASS)
   if (all(d$Phase == "test") & n_distinct(d$Block) > 1 & contrast_type == "difference") {
-    contrasts(d$Block) <- fractions(contr.sdif(6))  
+    contrasts(d$Block) <- fractions(contr.sdif(6))
     dimnames(contrasts(d$Block))[[2]] <- c("_Test2 vs. Test1", "_Test3 vs. Test2", "_Test4 vs. Test3", "_Test5 vs. Test4", "_Test6 vs. Test5")
-    
+
     print(contrasts(d$Condition.Exposure))
-    print(contrasts(d$Block)) 
+    print(contrasts(d$Block))
   } else if (all(d$Phase == "test") & n_distinct(d$Block) > 1 & contrast_type == "helmert"){
     contrasts(d$Block) <- cbind("_Test2 vs. Test1" = c(-1/2, 1/2, 0, 0, 0, 0),
-                                "_Test3 vs. Test2_1" = c(-1/3, -1/3, 2/3, 0, 0, 0), 
-                                "Test4 vs. Test3_2_1" = c(-1/4, -1/4, -1/4, 3/4, 0, 0), 
-                                "_Test5 vs. Test4_3_2_1" = c(-1/5, -1/5, -1/5, -1/5, 4/5, 0), 
+                                "_Test3 vs. Test2_1" = c(-1/3, -1/3, 2/3, 0, 0, 0),
+                                "Test4 vs. Test3_2_1" = c(-1/4, -1/4, -1/4, 3/4, 0, 0),
+                                "_Test5 vs. Test4_3_2_1" = c(-1/5, -1/5, -1/5, -1/5, 4/5, 0),
                                 "_Test6 vs. Test5_4_3_2_1" = c(-1/6, -1/6, -1/6, -1/6, -1/6, 5/6))
     print(contrasts(d$Condition.Exposure))
     print(contrasts(d$Block))
@@ -735,7 +738,7 @@ prepVars <- function(d, levels.Condition = NULL, contrast_type) {
   } else {
     print(contrasts(d$Condition.Exposure))
   }
-  
+
   return(d)
 }
 
@@ -760,4 +763,4 @@ density_quantiles <- function(x, y, quantiles) {
 ### function for formatting tables
 align_tab <- function(table) {
   map_chr(table, ~ifelse(class(.x) == "numeric", "r","l"))
-} 
+}
