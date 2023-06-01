@@ -740,6 +740,9 @@ prepVars <- function(d, levels.Condition = NULL, contrast_type) {
 }
 
 ### function for non-parametric density plot
+# ensuring that a particular proportion of points are included within each contour line
+# adjusted from https://stackoverflow.com/questions/75598144/interpretation-of-2d-density-estimate-charts
+# we can get the 2d density with MASS::kde2d, then convert to a raster using terra. We can then order the points according to the density in the associated 2d density grid and find the density at which a quantile is passed with approx
 density_quantiles <- function(x, y, quantiles) {
   require(terra)
   dens <- MASS::kde2d(x, y, n = 500)
