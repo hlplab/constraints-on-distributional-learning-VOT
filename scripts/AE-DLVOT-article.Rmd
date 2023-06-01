@@ -245,6 +245,6 @@ knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 \renewcommand{\thesection}{\S \arabic{section}}
 \renewcommand{\theHsection}{sisection. \arabic{section}}
 
-```{r, child="supplementary-information.Rmd"}
+```{r, child="supplementary-information.Rmd", eval=FALSE}
 ```
 
