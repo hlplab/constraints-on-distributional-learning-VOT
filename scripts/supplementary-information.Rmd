@@ -100,6 +100,140 @@ d %>%
 
 ## List creation
 
+## Exclusions
+We provide additional information on participants' performance during catch trials and on labelled trials (for which there is a clearly correct response). Both of these measures were used to exclude participants.
+
+### Performance on catch trials
+
+(ref:plot-catch-trial-performance) Of the 122 participants, 1 committed more than 3 errors (<84% accuracy)
+
+```{r plot-catch-trial-performance, fig.height=4, fig.width=6, fig.cap="ref:plot-catch-trial-performance"}
+d %>% 
+  group_by(ParticipantID) %>% 
+  summarise(Total_errors = 18 -sum(CatchTrial.Correct, na.rm = T)) %>%
+  ggplot(aes(x = Total_errors)) +
+  geom_bar(width = .5) +
+  scale_x_continuous("Total catch trial errors", breaks = seq(0, 6, 1)) +
+  scale_y_continuous("Number of participants", breaks = seq(0, 120, 5)) 
+```
+
+### Performance on labelled exposure trials
+
+```{r labeled-trial-performance-group, fig.width=6, fig.height=4, message=F}
+p.labelled <- d %>% 
+  filter(Phase == "exposure") %>% 
+  group_by(ParticipantID, Condition.Exposure) %>% 
+  summarise(LabeledTrial.Correct = 72 - sum(LabeledTrial.Correct, na.rm = TRUE)) %>% 
+  group_by(Condition.Exposure, LabeledTrial.Correct) %>% 
+  summarise(freq = n()) %>% 
+  ggplot(aes(x = LabeledTrial.Correct, y = freq, fill = Condition.Exposure)) +
+  geom_bar(stat = "identity", position = position_dodge2(width = .5, preserve = "single"), width = .5) +
+  geom_text(aes(label = freq), position = position_dodge(width = .5), vjust = -.5) +
+  scale_colour_manual("Exposure condition", 
+                      aesthetics = c("colour", "fill"), 
+                      breaks = c("Shift0", "Shift10", "Shift40"), 
+                      values = c("#cc0000", "#12D432","#0481F3")) +
+  scale_x_continuous("Total labelled trial errors") +
+  scale_y_continuous("No. of participants", breaks  = seq(0, 115, 5)) +
+  theme(legend.position = "none") 
+
+p.labelled.group <- d %>% 
+  filter(Phase == "exposure" & Item.Labeled == T) %>% 
+  group_by(ParticipantID, Condition.Exposure, Block) %>% 
+  summarise(LabeledTrial.Errors = 24 - sum(LabeledTrial.Correct, na.rm = TRUE)) %>% 
+  ggplot(aes(x = LabeledTrial.Errors, fill = Condition.Exposure)) +
+  geom_bar(position = position_dodge(width = .5, preserve = "single"), width = .5) +
+  scale_colour_manual("Exposure condition", 
+                      aesthetics = c("colour", "fill"), 
+                      breaks = c("Shift0", "Shift10", "Shift40"), 
+                      values = c("#cc0000", "#12D432","#0481F3")) +
+  scale_x_continuous("Total labelled trial errors") +
+  theme(legend.position = "top") +
+  facet_grid(Condition.Exposure ~ Block) 
+
+p.labelled | p.labelled.group + 
+  plot_layout(guides = "collect") & theme(legend.position = "top")
+```
+
+
+```{r, message=FALSE, fig.width=6, fig.height=5}
+d_for_analysis %>% 
+  filter(Is.CatchTrial == FALSE & Phase == "exposure") %>% 
+  mutate(Item.Labeled = factor(ifelse(Item.Labeled == TRUE, "labeled", "unlabeled"))) %>% 
+  summarise(Condition.Exposure, Block, Item.Labeled, Response.Correct) %>% 
+  ggplot(aes(x = Response.Correct, fill = Item.Labeled)) +
+  geom_bar(position = position_dodge2(width = .5, preserve = "single"), width = .5) +
+  scale_x_discrete("Response", labels = c("incorrect", "correct")) +
+  scale_colour_manual("Labelling", aesthetics = c("colour", "fill"), breaks = c("labeled", "unlabeled"), values = c("#f6546a", "#00ced1")) +
+  theme(legend.position = "top") +
+  facet_grid(Condition.Exposure ~ Block) 
+```
+
+
+```{r fig,width=8, fig.height=5, fig.width=6}
+d %>%
+  group_by(ParticipantID, Condition.Exposure, Block) %>%
+  filter(Is.CatchTrial == FALSE) %>%
+  mutate(Response.log_RT = log10(Response.RT)) %>%
+  summarise_at("Response.log_RT", .funs = list("mean" = mean, "sd" = sd)) %>%
+  ggplot(aes(x = mean, y = sd, label = ParticipantID)) +
+  geom_text(aes(colour = Condition.Exposure), alpha = .5) +
+  geom_rug(aes(colour = Condition.Exposure), alpha = .5) +
+  scale_x_continuous("mean log-RT (log10 of msec)") +
+  scale_y_continuous("SD of log-RT") +
+  scale_color_manual("Exposure condition", 
+                      aesthetics = c("colour", "fill"), 
+                      breaks = c("Shift0", "Shift10", "Shift40"), 
+                      values = c("#cc0000", "#12D432","#0481F3")) +
+  theme(legend.position = "top") +
+  facet_wrap( ~ Block )
+```
+
+
+```{r, fig.width=8, fig.height=3}
+d %>%
+  filter(
+    Is.CatchTrial == FALSE &
+    Exclude_participant.due_to_catch_trials == FALSE &
+    Exclude_participant.due_to_labeled_trials == FALSE &
+    Exclude_participant.due_to_VOT_slope == FALSE) %>% 
+  group_by(ParticipantID, Block) %>%
+  mutate(
+    Response.log_RT = log10(ifelse(Response.RT <= 0, NA_real_, Response.RT)),
+    Response.log_RT.scaled = scale(Response.log_RT), # deducts each value with subject's own mean, divide by own SD
+    Response.log_RT.mean = mean(Response.log_RT, na.rm = T)) %>% 
+  ungroup() %>% 
+  mutate(across(c(ParticipantID, Condition.Exposure, Block), factor)) %>%
+  group_by(ParticipantID, Condition.Exposure,Block, Trial) %>% 
+  summarise(Response.log_RT) %>% 
+  ggplot(aes(x = Trial, y = Response.log_RT, colour = ParticipantID, group = Condition.Exposure)) +
+  geom_path(aes(group = ParticipantID), alpha = .3) +
+  scale_x_continuous("Trial", breaks = c(12, 24, 36, 48)) +
+  scale_y_continuous("mean log-RT (log10 of msec)") +
+  facet_grid(Condition.Exposure ~ Block, scales = "free_x", space = "free_x") +
+  theme(legend.position = "none")
+```
+
+```{r, fig.width=8, fig.height=3}
+d %>% 
+  group_by(Trial, Condition.Exposure, Block) %>%
+  mutate(Response.log_RT = log10(Response.RT)) %>%
+  summarise_at("Response.log_RT", .funs = list("mean" = mean, "sd" = sd)) %>% 
+  ggplot(aes(x = Trial, y = mean)) +
+  geom_ribbon(aes(ymin = mean - 2*sd, ymax = mean + 2*sd), colour = "lightgrey", alpha = .1) +
+  geom_line(aes(group = Condition.Exposure, color = Condition.Exposure), size = 1) +
+  scale_x_continuous("Trial", breaks = c(12, 24, 36, 48)) +
+  scale_y_continuous("mean log-RT (log10 of msec)") +
+  coord_trans(y = "log10") +
+      scale_color_manual("Exposure condition", 
+                      aesthetics = c("colour", "fill"), 
+                      breaks = c("Shift0", "Shift10", "Shift40"), 
+                      values = c("#cc0000", "#12D432","#0481F3")) +
+  facet_grid(Condition.Exposure~ Block, scales = "free_x", space = "free_x") +
+  theme(legend.position = "top")
+```
+
+
 ## Analysis approach {sec:analysis-approach}
 We analyzed participants' categorisation responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric model [@prins2012psychometric]. The psychometric model is an extension of mixed-effects logistic regression that also takes into account attentional lapses. 
 
@@ -462,150 +596,6 @@ There was no convincing evidence of a main effect of trial ($\hat{\beta} =$ `r g
 Finally to accomplish the first goal of experiment 1, we look at the interaction between VOT and trial. There was weak evidence that the effect of VOT decreased across trials ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sVOT:sTrial", "mu2_sVOT:sTrial < 0")`). The direction of this change---towards more shallow VOT slopes as the experiment progressed---makes sense since the test stimuli were not informative about the talker's pronunciation. Similar changes throughout prolonged testing have been reported in previous work. [@liu-jaeger2018; @liu-jaeger2019; @REFS].
 
 Overall, there was little evidence that participants substantially changed their categorisation behaviour as the experiment progressed. Still, to err on the cautious side, Experiment 2 employs shorter test phases.
-
-
-
-
-## Main experiment
-
-### Catch trial performance plots
-
-(ref:plot-catch-trial-performance) Of the 122 participants, 1 committed more than 3 errors (<84% accuracy)
-```{r plot-catch-trial-performance, fig.height=4, fig.width=6, fig.cap="ref:plot-catch-trial-performance"}
-d %>% 
-  group_by(ParticipantID) %>% 
-  summarise(Total_errors = 18 -sum(CatchTrial.Correct, na.rm = T)) %>%
-  ggplot(aes(x = Total_errors)) +
-  geom_bar(width = .5) +
-  scale_x_continuous("Total catch trial errors", breaks = seq(0, 6, 1)) +
-  scale_y_continuous("Number of participants", breaks = seq(0, 120, 5)) 
-```
-
-
--labelled trial performance plots
-```{r labeled-trial-performance-group, fig.width=6, fig.height=4, message=F}
-p.labelled <- d %>% 
-  filter(Phase == "exposure") %>% 
-  group_by(ParticipantID, Condition.Exposure) %>% 
-  summarise(LabeledTrial.Correct = 72 - sum(LabeledTrial.Correct, na.rm = TRUE)) %>% 
-  group_by(Condition.Exposure, LabeledTrial.Correct) %>% 
-  summarise(freq = n()) %>% 
-  ggplot(aes(x = LabeledTrial.Correct, y = freq, fill = Condition.Exposure)) +
-  geom_bar(stat = "identity", position = position_dodge2(width = .5, preserve = "single"), width = .5) +
-  geom_text(aes(label = freq), position = position_dodge(width = .5), vjust = -.5) +
-  scale_colour_manual("Exposure condition", 
-                      aesthetics = c("colour", "fill"), 
-                      breaks = c("Shift0", "Shift10", "Shift40"), 
-                      values = c("#cc0000", "#12D432","#0481F3")) +
-  scale_x_continuous("Total labelled trial errors") +
-  scale_y_continuous("No. of participants", breaks  = seq(0, 115, 5)) +
-  theme(legend.position = "none") 
-
-p.labelled.group <- d %>% 
-  filter(Phase == "exposure" & Item.Labeled == T) %>% 
-  group_by(ParticipantID, Condition.Exposure, Block) %>% 
-  summarise(LabeledTrial.Errors = 24 - sum(LabeledTrial.Correct, na.rm = TRUE)) %>% 
-  ggplot(aes(x = LabeledTrial.Errors, fill = Condition.Exposure)) +
-  geom_bar(position = position_dodge(width = .5, preserve = "single"), width = .5) +
-  scale_colour_manual("Exposure condition", 
-                      aesthetics = c("colour", "fill"), 
-                      breaks = c("Shift0", "Shift10", "Shift40"), 
-                      values = c("#cc0000", "#12D432","#0481F3")) +
-  scale_x_continuous("Total labelled trial errors") +
-  theme(legend.position = "top") +
-  facet_grid(Condition.Exposure ~ Block) 
-
-p.labelled | p.labelled.group + 
-  plot_layout(guides = "collect") & theme(legend.position = "top")
-```
-
-
-
-```{r, message=FALSE, fig.width=6, fig.height=5}
-d_for_analysis %>% 
-  filter(Is.CatchTrial == FALSE & Phase == "exposure") %>% 
-  mutate(Item.Labeled = factor(ifelse(Item.Labeled == TRUE, "labeled", "unlabeled"))) %>% 
-  summarise(Condition.Exposure, Block, Item.Labeled, Response.Correct) %>% 
-  ggplot(aes(x = Response.Correct, fill = Item.Labeled)) +
-  geom_bar(position = position_dodge2(width = .5, preserve = "single"), width = .5) +
-  scale_x_discrete("Response", labels = c("incorrect", "correct")) +
-  scale_colour_manual("Labelling", aesthetics = c("colour", "fill"), breaks = c("labeled", "unlabeled"), values = c("#f6546a", "#00ced1")) +
-  theme(legend.position = "top") +
-  facet_grid(Condition.Exposure ~ Block) 
-```
-
-
-
-```{r fig,width=8, fig.height=5, fig.width=6}
-d %>%
-  group_by(ParticipantID, Condition.Exposure, Block) %>%
-  filter(Is.CatchTrial == FALSE) %>%
-  mutate(Response.log_RT = log10(Response.RT)) %>%
-  summarise_at("Response.log_RT", .funs = list("mean" = mean, "sd" = sd)) %>%
-  ggplot(aes(x = mean, y = sd, label = ParticipantID)) +
-  geom_text(aes(colour = Condition.Exposure), alpha = .5) +
-  geom_rug(aes(colour = Condition.Exposure), alpha = .5) +
-  scale_x_continuous("mean log-RT (log10 of msec)") +
-  scale_y_continuous("SD of log-RT") +
-  scale_color_manual("Exposure condition", 
-                      aesthetics = c("colour", "fill"), 
-                      breaks = c("Shift0", "Shift10", "Shift40"), 
-                      values = c("#cc0000", "#12D432","#0481F3")) +
-  theme(legend.position = "top") +
-  facet_wrap( ~ Block )
-```
-
-
-```{r, fig.width=8, fig.height=3}
-d %>%
-  filter(
-    Is.CatchTrial == FALSE &
-    Exclude_participant.due_to_catch_trials == FALSE &
-    Exclude_participant.due_to_labeled_trials == FALSE &
-    Exclude_participant.due_to_VOT_slope == FALSE) %>% 
-  group_by(ParticipantID, Block) %>%
-  mutate(
-    Response.log_RT = log10(ifelse(Response.RT <= 0, NA_real_, Response.RT)),
-    Response.log_RT.scaled = scale(Response.log_RT), # deducts each value with subject's own mean, divide by own SD
-    Response.log_RT.mean = mean(Response.log_RT, na.rm = T)) %>% 
-  ungroup() %>% 
-  mutate(across(c(ParticipantID, Condition.Exposure, Block), factor)) %>%
-  group_by(ParticipantID, Condition.Exposure,Block, Trial) %>% 
-  summarise(Response.log_RT) %>% 
-  ggplot(aes(x = Trial, y = Response.log_RT, colour = ParticipantID, group = Condition.Exposure)) +
-  geom_path(aes(group = ParticipantID), alpha = .3) +
-  scale_x_continuous("Trial", breaks = c(12, 24, 36, 48)) +
-  scale_y_continuous("mean log-RT (log10 of msec)") +
-  facet_grid(Condition.Exposure ~ Block, scales = "free_x", space = "free_x") +
-  theme(legend.position = "none")
-```
-
-
-
-
-
-```{r, fig.width=8, fig.height=3}
-d %>% 
-  group_by(Trial, Condition.Exposure, Block) %>%
-  mutate(Response.log_RT = log10(Response.RT)) %>%
-  summarise_at("Response.log_RT", .funs = list("mean" = mean, "sd" = sd)) %>% 
-  ggplot(aes(x = Trial, y = mean)) +
-  geom_ribbon(aes(ymin = mean - 2*sd, ymax = mean + 2*sd), colour = "lightgrey", alpha = .1) +
-  geom_line(aes(group = Condition.Exposure, color = Condition.Exposure), size = 1) +
-  scale_x_continuous("Trial", breaks = c(12, 24, 36, 48)) +
-  scale_y_continuous("mean log-RT (log10 of msec)") +
-  coord_trans(y = "log10") +
-      scale_color_manual("Exposure condition", 
-                      aesthetics = c("colour", "fill"), 
-                      breaks = c("Shift0", "Shift10", "Shift40"), 
-                      values = c("#cc0000", "#12D432","#0481F3")) +
-  facet_grid(Condition.Exposure~ Block, scales = "free_x", space = "free_x") +
-  theme(legend.position = "top")
-```
-
-
-
-
 
 
 # Session Info
