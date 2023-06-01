@@ -47,7 +47,7 @@ d <-
 ### Participants
 We recruited `r nlevels(d$ParticipantID) + 4` participants from the Prolific crowdsourcing platform. We used Prolific's pre-screening to limit the experiment to participants (1) of US nationality, (2) who reported to only speak English, and (3) had not previously participated in any experiment from our lab on Prolific. Prior to the start of the experiment, participants had to confirm that they (4) spent at least the first 10 years of their life in the US speaking only English, (5) were in a quiet place and free from distractions, and (6) wore in-ear or over-the-ears headphones that cost at least \$15. An additional XXX participants loaded the experiment but did not start or complete it. <!-- TO DO -->
 
-Participants took an average of 17 minutes to complete the experiment (SD = 9 minutes) --excluding time taken for instructions and survey-- <!-- TO DO: is this the full duration or just the core part? --> and were remunerated \$8.00/hour. An optional post-experiment survey recorded participant demographics using NIH prescribed categories, including participant sex (`r d.Participant <- (d %>% distinct(ParticipantID, Participant.Age, Participant.Sex, Participant.Ethnicity, Participant.Race, Participant.Raceother)); d.Participant %>% group_by(Participant.Sex) %>% tally() %>% mutate(x = paste(n, Participant.Sex, sep = " = ", collapse = ", ")) %>% pull(x) %>% first()`), age (mean = `r mean(d.Participant$Participant.Age, 1)` years; 95% quantiles = `r paste(quantile(d.Participant$Participant.Age, c(.025, .975), na.rm = T), collapse = "-")` years), race (`r d.Participant %>% group_by(Participant.Race) %>% tally() %>% mutate(x = paste(n, Participant.Race, sep = " = ", collapse = ", ")) %>% pull(x) %>% first()`), and ethnicity (`r d.Participant %>% group_by(Participant.Ethnicity) %>% tally() %>% mutate(x = paste(n, Participant.Ethnicity, sep = " = ", collapse = ", ")) %>% pull(x) %>% first()`). 
+Participants took an average of XXX minutes to complete the experiment (SD = XXX minutes) <!-- TO DO: is this the full duration or just the core part? --> and were remunerated \$8.00/hour. An optional post-experiment survey recorded participant demographics using NIH prescribed categories, including participant sex (`r d.Participant <- (d %>% distinct(ParticipantID, Participant.Age, Participant.Sex, Participant.Ethnicity, Participant.Race, Participant.Raceother)); d.Participant %>% group_by(Participant.Sex) %>% tally() %>% mutate(x = paste(n, Participant.Sex, sep = " = ", collapse = ", ")) %>% pull(x) %>% first()`), age (mean = `r mean(d.Participant$Participant.Age, 1)` years; 95% quantiles = `r paste(quantile(d.Participant$Participant.Age, c(.025, .975), na.rm = T), collapse = "-")` years), race (`r d.Participant %>% group_by(Participant.Race) %>% tally() %>% mutate(x = paste(n, Participant.Race, sep = " = ", collapse = ", ")) %>% pull(x) %>% first()`), and ethnicity (`r d.Participant %>% group_by(Participant.Ethnicity) %>% tally() %>% mutate(x = paste(n, Participant.Ethnicity, sep = " = ", collapse = ", ")) %>% pull(x) %>% first()`). 
 
 Participants' responses were collected via Javascript developed by the Human Language Processing Lab at the University of Rochester [@JSEXP] and stored via Proliferate developed at, and hosted by, the ALPs lab at Stanford University [@schuster].
 
@@ -56,7 +56,7 @@ We recorded 8 tokens each of four minimal word pairs ("dill"/"till", "dim"/"tim"
 
 This approach resulted in continuum steps that sound natural [unlike the highly robotic-sounding stimuli employed in @clayards2008perception; @kleinschmidt2016you]. A post-experiment survey asked participants whether "XXX". No participant reported that the stimuli sounded unnatural [in contrast to other experiments we have conducted with robotic-sounding stimuli like those of @clayards]. In addition to the critical minimal pair continua we also recorded three words that did not did not contain any stop consonant sounds ("flare", "share", and "rare"). These word recordings were used for catch trials. Stimulus intensity was normalized to 70 dB sound pressure level for all recordings. 
 
-A norming experiment (N = 24 participants) reported in the SI (@\ref(XXX)) was used to select the three minimal pairs that elicited the most similar categorization responses (dill-till, din-tin, and dip-tip). These three continua were used to create the three exposure conditions shown in Figure \@ref(fig:exp2-design-figure).
+A norming experiment (N = 24 participants) reported in the SI (\@ref(sec:norming-experiment)) was used to select the three minimal pairs that elicited the most similar categorization responses (dill-till, din-tin, and dip-tip). These three continua were used to create the three exposure conditions shown in Figure \@ref(fig:exp2-design-figure).
 
 
 ### Procedure
@@ -69,23 +69,19 @@ knitr::include_graphics("../figures/exp1_trial_example.png")
 Unbeknownst to participants, the 234 trials were split into exposure blocks (54 trials each) and test blocks (12 trials each). Participants were given the opportunity to take breaks after every 60 trials, which was always during an exposure block. Finally, participants completed an exit survey and an optional demographics survey.
 
 *Test blocks. * The experiment started with a test block. Test blocks were identical within and across conditions, always including 12 minimal pair trials assessing participants' categorization at 12 different VOTs
-(-5, 5, 15, 25, 30, 35, 40, 45, 50, 55, 65, 70 msec). A uniform distribution over VOTs was chosen to maximize the statistical power to determine participants' categorisation function. The assignment of VOTs to minimal pair continua was counter-balanced within and across test blocks, so that each minimal pair appear equally often within each test block (four times), and each minimal pair appear with each VOT equally often (twice) across all six test blocks (and no more than once per test block). <!-- TO DO: correct? -->
+(-5, 5, 15, 25, 30, 35, 40, 45, 50, 55, 65, 70 msec). A uniform distribution over VOTs was chosen to maximize the statistical power to determine participants' categorisation function. The assignment of VOTs to minimal pair continua was randomized for each participant, while counter-balancing it within and across test blocks. Each minimal pair appear equally often within each test block (four times), and each minimal pair appear with each VOT equally often (twice) across all six test blocks (and no more than once per test block). 
 
 Each trial started with a dark-shaded green fixation dot being displayed. At 500ms from trial onset, two minimal pair words appeared on the screen, as shown in Figure \@ref(fig:exp1-example-trial). At 1000ms from trial onset, the fixation dot would turn bright green and participants had to click on the dot to play the recording. This was meant to reduce trial-to-trial correlations by resetting the mouse pointer to the center of the screen at the start of each trial. Participants responded by clicking on the word they heard and the next trial would begin. 
 
-Both the placement of the response options (/d/ on the left vs. right) and the assignment of VOTs to minimal pair continua was counter-balanced across participants, using 2 x 3 Latin-square designed lists. <!-- TO DO: correct? --> Trial order was randomized within each block and participant. 
-
 *Exposure blocks. * Each exposure block consisted of 24 /d/ and 24 /t/ trials, as well as 6 catch trials that served as a check on participant attention throughout the experiment (2 instances for each of three combinations of the three catch recordings). With a total of 144 trials, exposure was substantially shorter than in similar previous experiments [cf. 228 trials in @clayards2008; @kleinschmidt2020; 2 x 236 trials, @theodore-monto2019]. <!-- TO DO: check kleinschmidt's later experiments and correct if necessary -->
 
-The distribution of VOTs across the 48 /d/-/t/ trials depended on the exposure condition. Specifically, we first created a *baseline* condition. Although not critical to the purpose of the experiment, we aimed for the VOT distribution in this condition to closely resemble participants' prior expectations for a `typical' female talker of L1-US English (for details, see SI, \@ref(XXX)). The mean and standard deviations for /d/ along VOT were set 5 msecs and 50 msecs, respectively. The mean and standard deviations for /t/ were set 80 msecs and 270 msecs, respectively. 
-
-To create more realistic VOT distributions, we *sampled* from the intended VOT distribution (top row of Figure \@ref(fig:exp2-design-distribution)). This creates distributions that more closely resemble the type of distributional input listeners experience in everyday speech perception, deviating from previous work, which exposed listeners to highly unnatural fully symmetric samples [@clayards2008perception; @kleinschmidt-jaeger2016; @kleinschmidt2020]. We created one random sample for each of the three exposure blocks. Both the random seed and the order of exposure blocks was counter-balanced across participants using 3 (block order) Latin-squared designed exposure lists. <!-- TO DO: correct? -->
+The distribution of VOTs across the 48 /d/-/t/ trials depended on the exposure condition. Specifically, we first created a *baseline* condition. Although not critical to the purpose of the experiment, we aimed for the VOT distribution in this condition to closely resemble participants' prior expectations for a `typical' female talker of L1-US English (for details, see SI, \@ref(XXX)). The mean and standard deviations for /d/ along VOT were set 5 msecs and 50 msecs, respectively. The mean and standard deviations for /t/ were set 80 msecs and 270 msecs, respectively. To create more realistic VOT distributions, we *sampled* from the intended VOT distribution (top row of Figure \@ref(fig:exp2-design-distribution)). This creates distributions that more closely resemble the type of distributional input listeners experience in everyday speech perception, deviating from previous work, which exposed listeners to highly unnatural fully symmetric samples [@clayards2008perception; @kleinschmidt-jaeger2016; @kleinschmidt2020]. 
 
 Half of the /d/ and half of the /t/ trials were labeled, the other half was unlabeled [paralleling one of the conditions in @kleinschmidt2015cogsci]. Unlabeled trials were identical to test trials except that the distribution of VOTs across those trials was bimodal (rather than uniform), and determined by the exposure condition. Labeled trials instead presented two response options with identical stop onsets (e.g., *din* and *dill*). This effectively labeled the input as belonging to the intended category (e.g., /d/). 
 
 Next, we created the two additional exposure conditions by shifting these VOT distributions by +10 or +40 msecs (see Figure \@ref(fig:exp2-design-distribution)). This approach exposes participants to heterogenous approximations of normally distributed VOTs for /d/ and /t/ that varied across blocks, while holding all aspects of the input constant across conditions except for the shift in VOT.
 
-(ref:exp2-design-distribution) Histogram of VOTs across the 48 trials of all three exposure blocks by exposure condition. Shown is the parameterization of the VOT samples used across experimental lists. The order of blocks was counter-balanced across participants. <!-- TO DO: could you split this by block, so that readers can understand how it varied by block? call it exposure block A, B, C -->
+(ref:exp2-design-distribution) Histogram of VOTs across the 48 trials of all three exposure blocks by exposure condition. The dashed gray line shows the theoretical (Normal) distribution that the baseline condition was sampled from. The order of blocks was counter-balanced across participants. 
 
 ```{r exp2-design-distribution, fig.height=6, fig.width=6, fig.cap="(ref:exp2-design-distribution)", warning=FALSE, message=FALSE}
 d.exposure_trials <- 
@@ -166,7 +162,7 @@ p.histogram_conditions <- d.exposure_trials %>%
 p.histogram_conditions
 ```
 
-The order of trials was randomized within each block and participant, with the constraint that no more than two catch trials would occur in a row. <!-- TO DO: more on counter-balancing here, paralleling what I wrote for tets --> Participants were randomly assigned to one of the 3 (exposure condition) x 3 (block order) x 2 (image mapping) exposure lists. 
+The order of trials was randomized within each block and participant, with the constraint that no more than two catch trials would occur in a row. Participants were randomly assigned to one of 3 (exposure condition) x 3 (block order) x 2 (placement of response options) lists. 
 
 ### Exclusions
 
@@ -284,13 +280,12 @@ excl.RT <-
   pull(n)
 
 # headphone types
-excl.headphone <- d %>% 
+excl.headphone <- 
+  d %>% 
   group_by(ParticipantID, audio_type) %>% 
   summarise() %>% 
-  mutate(No_headphones = ifelse(audio_type != "in-ear" | audio_type != "over-ear", FALSE, TRUE)) %>% 
-  filter(No_headphones == TRUE) %>% 
-  tally() %>% 
-  pull(n)
+  filter(!(audio_type %in% c("in-ear", "over-ear"))) %>% 
+  nrow()
 ```
 
 ```{r make-data-for-analysis}
@@ -303,7 +298,7 @@ d_for_analysis <-
     Exclude_participant.due_to_VOT_slope == FALSE)
 ```
 
-Due to data transfer errors 4 participants' data were not stored and therefore excluded from analysis. We further excluded from analysis participants who committed more than 3 errors out of the 18 catch trials (<83% accuracy, N = `r excl.catch`), participants who committed more than 4 errors out of the 72 labelled trials (<94% accuracy, N = `r excl.labeled`), participants with an average reaction time more than three standard deviations from the mean of the by-participant means (N = `r excl.RT`),  participants who had atypical categorisation functions at the start of the experiment (N = `r excl.VOT`, see SI, \@ref(XXX) for details), and participants who reported not to have used headphones (N = `r excl.headphone`) or not to be L1 speakers of US English (N = 0). <!-- TO DO: these other exclusion criteria are also not coded --> This left for analysis `r nrow(d_for_analysis %>% filter(Phase == "exposure"))` exposure and `r nrow(d_for_analysis %>% filter(Phase == "test"))` test observations from `r nrow(d_for_analysis %>% distinct(ParticipantID))` participants (94%), evenly split across the three exposure conditions.
+Due to data transfer errors 4 participants' data were not stored and therefore excluded from analysis. We further excluded from analysis participants who committed more than 3 errors out of the 18 catch trials (<83% accuracy, N = `r excl.catch`), participants who committed more than 4 errors out of the 72 labelled trials (<94% accuracy, N = `r excl.labeled`), participants with an average reaction time more than three standard deviations from the mean of the by-participant means (N = `r excl.RT`),  participants who had atypical categorisation functions at the start of the experiment (N = `r excl.VOT`, see SI, \@ref(XXX) for details), and participants who reported not to have used headphones (N = `r excl.headphone`). This left for analysis `r nrow(d_for_analysis %>% filter(Phase == "exposure"))` exposure and `r nrow(d_for_analysis %>% filter(Phase == "test"))` test observations from `r nrow(d_for_analysis %>% distinct(ParticipantID))` participants (94% of total), evenly split across the three exposure conditions.
 
 
 
