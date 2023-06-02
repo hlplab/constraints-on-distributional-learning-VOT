@@ -46,7 +46,7 @@ d <-
 
 ## Methods 
 ### Participants
-We recruited `r nlevels(d$ParticipantID) + 4` participants from the Prolific crowdsourcing platform. We used Prolific's pre-screening to limit the experiment to participants (1) of US nationality, (2) who reported to only speak English, and (3) had not previously participated in any experiment from our lab on Prolific. Prior to the start of the experiment, participants had to confirm that they (4) spent at least the first 10 years of their life in the US speaking only English, (5) were in a quiet place and free from distractions, and (6) wore in-ear or over-the-ears headphones that cost at least \$15. An additional XXX participants loaded the experiment but did not start or complete it. <!-- TO DO -->
+We recruited `r nlevels(d$ParticipantID) + 4` participants from the Prolific crowdsourcing platform. We used Prolific's pre-screening to limit the experiment to participants (1) of US nationality, (2) who reported to be English speaking monolinguals, and (3) had not previously participated in any experiment from our lab on Prolific. Prior to the start of the experiment, participants had to confirm that they (4) had spent the first 10 years of their life in the US, (5) were in a quiet place and free from distractions, and (6) wore in-ear or over-the-ears headphones that cost at least \$15. An additional 115 participants loaded the experiment but did not start or complete it. 
 
 Participants took an average of XXX minutes to complete the experiment (SD = XXX minutes) <!-- TO DO: is this the full duration or just the core part? --> and were remunerated \$8.00/hour. An optional post-experiment survey recorded participant demographics using NIH prescribed categories, including participant sex (`r d.Participant <- (d %>% distinct(ParticipantID, Participant.Age, Participant.Sex, Participant.Ethnicity, Participant.Race, Participant.Raceother)); d.Participant %>% group_by(Participant.Sex) %>% tally() %>% mutate(x = paste(n, Participant.Sex, sep = " = ", collapse = ", ")) %>% pull(x) %>% first()`), age (mean = `r mean(d.Participant$Participant.Age, 1)` years; 95% quantiles = `r paste(quantile(d.Participant$Participant.Age, c(.025, .975), na.rm = T), collapse = "-")` years), race (`r d.Participant %>% group_by(Participant.Race) %>% tally() %>% mutate(x = paste(n, Participant.Race, sep = " = ", collapse = ", ")) %>% pull(x) %>% first()`), and ethnicity (`r d.Participant %>% group_by(Participant.Ethnicity) %>% tally() %>% mutate(x = paste(n, Participant.Ethnicity, sep = " = ", collapse = ", ")) %>% pull(x) %>% first()`). 
 
@@ -55,7 +55,7 @@ Participants' responses were collected via Javascript developed by the Human Lan
 ### Materials 
 We recorded 8 tokens each of four minimal word pairs ("dill"/"till", "dim"/"tim", "din"/"tin", and "dip"/"tip") from a 23-year-old, female L1-US English talker from New Hampshire, judged to have a "general American" accent. These recordings were used to create four natural-sounding minimal pair VOT continua using a script [@winn2020manipulation] in Praat [@praat]. The VOTs generated for each continuum ranged from -100 to +120 msec in 5 msec steps.^[For simplicity's sake, we follow previous work [@kleinschmidt2020; @OTHERS] and refer to prevoicing as negative VOTs though we note that prevoicing is perhaps better conceived of as a separate phonetic feature [for discussion, see @REF]. In L1-US English, pevoicing is estimated to occur on XXX% of word-initial voiced stops and 0% of voiceless stops [@REF].] The procedure also maintained the natural correlations between the most important cues to word-initial stop-voicing in L1-US English (VOT, F0, and vowel duration). Specifically, the F0 at vowel onset of each stimulus was set to respect the linear relation with VOT observed in the original recordings of the talker. The duration of the vowel was set to follow the natural trade-off relation with VOT [@allen1999effects]. Further details on the recording and resynthesis procedure are provided in the supplementary information (SI, \@ref(sec:SI-XXX)). 
 
-This approach resulted in continuum steps that sound natural [unlike the highly robotic-sounding stimuli employed in @clayards2008; @kleinschmidt2016you]. A post-experiment survey asked participants whether "XXX". No participant reported that the stimuli sounded unnatural [in contrast to other experiments we have conducted with robotic-sounding stimuli like those of @clayards]. In addition to the critical minimal pair continua we also recorded three words that did not did not contain any stop consonant sounds ("flare", "share", and "rare"). These word recordings were used for catch trials. Stimulus intensity was normalized to 70 dB sound pressure level for all recordings. 
+This approach resulted in continuum steps that sound natural [unlike the highly robotic-sounding stimuli employed in @clayards2008; @kleinschmidt2016you]. A post-experiment survey asked participants: "*Did you notice anything in particular about how the speaker pronounced the different words (e.g. till, dill, etc.)?*". No participant reported that the stimuli sounded unnatural [in contrast to other experiments we have conducted with robotic-sounding stimuli like those of @clayards]. In addition to the critical minimal pair continua we also recorded three words that did not did not contain any stop consonant sounds ("flare", "share", and "rare"). These word recordings were used for catch trials. Stimulus intensity was normalized to 70 dB sound pressure level for all recordings. 
 
 A norming experiment (N = 24 participants) reported in the SI (\@ref(sec:norming-experiment)) was used to select the three minimal pairs that elicited the most similar categorization responses (dill-till, din-tin, and dip-tip). These three continua were used to create the three exposure conditions shown in Figure \@ref(fig:exp2-design-figure).
 
@@ -104,7 +104,8 @@ d.means <-
   mutate(condition = fct_relevel(condition, c("baseline", "+10ms", "+40ms")),
          mean = c(15, 60, 45, 90, 5, 50))
 
-p.histogram_conditions <- d.exposure_trials %>% 
+p.histogram_conditions <- 
+  d.exposure_trials %>% 
   na.omit() %>% 
   filter(image_selection == "forward" & list_LSQ_variant == "A") %>%
     mutate(block = case_when(
@@ -138,12 +139,12 @@ p.histogram_conditions <- d.exposure_trials %>%
     fill = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
     linetype = c(2, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0),
     values = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", 0, 0, 0, 0, 0, 0, 0, 0)), nrow = 1)) +
-  stat_function(fun = function(x) 72 * 5 * dnorm(x, 5, sqrt(var_d)),
-                color = "black", size = .6, alpha = .7, linetype = 2) +
-  stat_function(
-    fun = function(x) 72 * 5 * dnorm(x, 50, sqrt(var_t)),
-    color = "black", size = .6, alpha = .5, linetype = 2) +
-  geom_rug(data = tibble(VOT = c(5, 50)), aes(x = VOT), sides = "t") +
+  # stat_function(fun = function(x) 72 * 5 * dnorm(x, 5, sqrt(var_d)),
+  #               color = "black", size = .6, alpha = .7, linetype = 2) +
+  # stat_function(
+  #   fun = function(x) 72 * 5 * dnorm(x, 50, sqrt(var_t)),
+  #   color = "black", size = .6, alpha = .5, linetype = 2) +
+  #geom_rug(data = tibble(VOT = c(5, 50)), aes(x = VOT), sides = "t") +
   scale_x_continuous("VOT (ms)", breaks = seq(-50, 150, 30)) +
   scale_y_continuous("Count") +
   geom_text(data = d.means,
@@ -156,10 +157,10 @@ p.histogram_conditions <- d.exposure_trials %>%
   facet_grid(condition ~ block, scales = "free_y", margins = "block") +
   guides(linetype = "none") +
   theme(legend.position = "top",
-        legend.key.width = unit(15, "pt"),
+        legend.key.width = unit(10, "pt"),
         legend.key.height = unit(10, "pt"),
-        legend.text.align = 1,
-        legend.box.spacing = unit(2, "pt"))
+        legend.box.spacing = unit(1, "pt"),
+        legend.box.just = "right")
 p.histogram_conditions
 ```
 
@@ -235,7 +236,8 @@ d %<>% left_join(d.VOT_exclusion)
 
 ```{r set-RT-exclusion-criteria}
 # get number of participants excluded due to catch trial
-excl.catch <- d %>% 
+excl.catch <- 
+  d %>% 
   filter(Exclude_participant.due_to_catch_trials == TRUE) %>% 
   group_by(ParticipantID) %>% 
   summarise() %>% 

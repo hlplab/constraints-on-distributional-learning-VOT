@@ -767,3 +767,16 @@ density_quantiles <- function(x, y, quantiles) {
 align_tab <- function(table) {
   map_chr(table, ~ifelse(class(.x) == "numeric", "r","l"))
 }
+
+make_hyp_table <- function(hyp, hyp_readable, caption, col1_width = "8em") {
+  cbind(hyp_readable, hyp) %>% #order of vector matters
+    select(-2) %>%
+    mutate(across(where(is.numeric), ~ round(., digits = 3))) %>%
+    rename_all(~ gsub("\\.", " ", .)) %>% 
+    kbl(caption = caption, align = align_tab(table),
+        col.names = c("Hypothesis", "Estimate", "SE", "$CI_{lower}$", "$CI_{upper}$", "BF", "$p_{posterior}$")) %>%
+    kable_styling(full_width = FALSE,
+                  bootstrap_options = c("striped", "hover", "condensed"))%>%
+    column_spec(1, width = col1_width)
+}
+

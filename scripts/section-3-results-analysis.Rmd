@@ -86,7 +86,7 @@ Here we focus on the test blocks, which were identical within and across exposur
 This replicates previous findings that exposure to changed VOT distributions changes listeners' categorization responses [for /b/-/p/: @clayards2008; @kleinschmidt-jaeger2016; @kleinschmidt2020; for /g/-/k/, @theodore-monto2018]. Having established that exposure affected categorization, we turn to the questions of primary interest.
 
 ### Incremental changes in listeners' categorisation with increasing exposure (Test 1 to 4)
-As already visible in Figure \@ref(fig:plot-fit-slope-PSE)A, effects of exposure emerged early in the experiment. Table \@ref(tab:XXX) summarizes the simple effects of exposure condition during each of the first four test blocks. <!-- TO DO: remove the shrinkage test from this table --> Prior to any exposure, during Test 1, participants' responses did not differ across exposure condition. <!-- TO DO: fit model with save_priors =T and change hypothesis tests for block one to = 0, not < 0 --> After exposure to only 24 /d/ and 24 /t/ stimuli, during Test 2, participants' responses already differed between exposure conditions. The difference between the +40 condition and the +10 or baseline condition kept increasing with exposure up to Test 4. Additional hypothesis tests in Table \@ref(tab:XXX) <!-- TO DO: let's remove the 4 vs. 1 test from this table --> show that the change from Test 1 to 2 was largest (BF = 27.8), followed by the change from Test 2 to 3 (BF = 19.2), with only minimal changes from Test 3 to 4 (BF = 1.7). Qualitatively paralleling the changes across blocks for the +40 condition, the change in the difference between the +10 and baseline conditions was largest from Test 1 to 2 (BF = 13.5), and then somewhat decreased from Test 2 to Test 4 (BFs < 4). <!-- TO DO: change evid ratio to BF in all tables. Change CI lower/upp to CI_{lower}, CI_{upper} post prob to $p_{posterior}$ and Est. error to SE. -->
+As already visible in Figure \@ref(fig:plot-fit-slope-PSE)A, effects of exposure emerged early in the experiment. Table \@ref(tab:hypothesis-table2) summarizes the simple effects of exposure condition during each of the first four test blocks. Prior to any exposure, during Test 1, participants' responses did not differ across exposure condition. <!-- TO DO: fit model with save_priors =T and change hypothesis tests for block one to = 0, not < 0: fitting--> After exposure to only 24 /d/ and 24 /t/ stimuli, during Test 2, participants' responses already differed between exposure conditions. The difference between the +40 condition and the +10 or baseline condition kept increasing with exposure up to Test 4. Additional hypothesis tests in Table \@ref(tab:hypothesis-table1)  show that the change from Test 1 to 2 was largest (BF = 27.8), followed by the change from Test 2 to 3 (BF = 19.2), with only minimal changes from Test 3 to 4 (BF = 1.7). Qualitatively paralleling the changes across blocks for the +40 condition, the change in the difference between the +10 and baseline conditions was largest from Test 1 to 2 (BF = 13.5), and then somewhat decreased from Test 2 to Test 4 (BFs < 4). 
 
 This pattern of changes is also evident in Figure \@ref(fig:plot-fit-slope-PSE)D, which shows how participants' point of subject equality (PSE)---i.e., the point at which "d" and "t" responses are equally likely---changes with increasing exposure. <!-- TO DO: remove "mean" from y-axis of panel C and D --> This visualization makes apparent two aspects of participants' behavior that were not readily apparent in the statistical comparisons we have summarized so far. First, while the PSEs for the +10 and +40 conditions were indeed shifted rightwards compared to the baseline condition (relatively larger PSEs), both the +10 and the baseline condition actually shift leftwards *relative* to their pre-exposure starting point in Test 1. Second, the reason for the slight decrease in the difference between the +10 and baseline conditions observed in Tables \@ref(tab:XXX) and \@ref(tab:XXX) (visible in Figure \@ref(fig:plot-fit-slope-PSE)D as the decreasing difference between the green and red line) is *not* due to a reversal of the effects in the +10 condition. Rather, both conditions are changing in the same direction but the baseline condition stops changing after Test 2, which brings the +10 condition increasingly closer to the baseline condition. To understand this pattern, it is necessary to relate our exposure conditions to the distribution of VOT in listeners' prior experience.
 
@@ -271,7 +271,7 @@ p.intercept <-
     labels = c("baseline", "+10ms", "+40ms"),
     values = c("#cc0000", "#12D432","#0481F3"),
     aesthetics = "color") +
-  scale_y_continuous("Mean Intercept") +
+  scale_y_continuous("Intercept") +
   scale_x_discrete("Block", labels = c("1" = "Test 1", "2" = "Exposure 1", "3" = "Test 2", "4" = "Exposure 2", "5" = "Test 3", "6" = "Exposure 3", "7" = "Test 4", "8" = "Test 5", "9" = "Test 6")) +
   theme(legend.position = "top",
         axis.text.x = element_text(angle = 22.5, hjust = 1))
@@ -315,7 +315,7 @@ p.slope_1to7 <-
     labels = c("+0ms", "+10ms", "+40ms"),
     values = c("#cc0000", "#12D432","#0481F3"),
     aesthetics = "color") +
-  scale_y_continuous("Mean Slope") +
+  scale_y_continuous("Slope") +
   scale_x_discrete("Block", labels = c("1" = "Test 1", "2" = "Exposure 1", "3" = "Test 2", "4" = "Exposure 2", "5" = "Test 3", "6" = "Exposure 3", "7" = "Test 4", "8" = "Test 5", "9" = "Test 6")) +
   theme(legend.position = "top",
         axis.text.x = element_text(angle = 22.5, hjust = 1))
@@ -356,7 +356,7 @@ p.PSE_1to7 <-d.estimates %>%
     labels = c("baseline", "+10ms", "+40ms"),
     values = c("#cc0000", "#12D432","#0481F3"),
     aesthetics = "color") +
-  scale_y_continuous("Mean PSE") +
+  scale_y_continuous("PSE") +
   scale_x_discrete("Block", labels = c("1" = "Test 1", "2" = "Exposure 1", "3" = "Test 2", "4" = "Exposure 2", "5" = "Test 3", "6" = "Exposure 3", "7" = "Test 4", "8" = "Test 5", "9" = "Test 6")) +
   theme(legend.position = "top",
         axis.text.x = element_text(angle = 22.5, hjust = 1))
@@ -658,7 +658,7 @@ simple_effects_block <- tidy(fit_mix_test_nested_condition, effects = "fixed") %
   filter(term != "theta1_(Intercept)")
 ```
 
-```{r make-hypothesis-table1}
+```{r hypothesis-table1}
 # hypotheses to answer question, "was the change incremental between blocks?"
 hyp_interactions <- c(
   "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 < 0",
@@ -670,6 +670,10 @@ hyp_interactions <- c(
   "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 < 0",
   "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 < 0"
 )
+
+hyp_interactions <- hypothesis(fit_mix_test, hyp_interactions)
+hyp_interactions <- hyp_interactions$hypothesis %>%
+  select(-Star)
 
 # translate the hypotheses above into intelligible statements
 hyp_interactions_readable <- tibble(Hypothesis = c(
@@ -685,23 +689,18 @@ hyp_interactions_readable <- tibble(Hypothesis = c(
   "Test block 4  > Test block 1"
 ))
 
-hyp_interactions <- hypothesis(fit_mix_test, hyp_interactions)
-hyp_interactions <- hyp_interactions$hypothesis %>%
-  select(-Star)
-table1 <- cbind(hyp_interactions_readable, hyp_interactions) %>%
-  select(-2) %>%
-  mutate(across(where(is.numeric), ~ round(., digits = 3))) %>%
-  rename_all(~ gsub("\\.", " ", .)) %>%
-  kbl(caption = "Was there incremental change from test block 1 to 4? This table summarizes the interactions between exposure condition and block, whether the differences between exposure conditions changed from block to block.", align = align_tab(table1)) %>%
-  kable_styling(full_width=FALSE,
-                bootstrap_options = c("striped", "hover", "condensed")) %>%
-  column_spec(1, width = "8em") %>%
+table1 <- 
+  make_hyp_table(
+    hyp_interactions,
+    hyp_interactions_readable,
+    caption = "Was there incremental change from test block 1 to 4? This table summarizes the interactions between exposure condition and block, whether the differences between exposure conditions changed from block to block.") %>% 
   pack_rows("Difference in +10 vs baseline", 1, 4) %>%
-  pack_rows("Difference in +40 vs +10", 5, 8)
+  pack_rows("Difference in +40 vs +10", 5, 8) 
+
 table1
 ```
 
-```{r make-hypothesis-table2}
+```{r hypothesis-table2}
 # hypotheses to answer questions "when did change first emerge?" 
 hyp_contrasts_nested_block <-
   c(
@@ -722,8 +721,13 @@ hyp_contrasts_nested_block <-
     "mu2_Block7:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 0"
 )
 
+hyp_contrasts_nested_block <- hypothesis(fit_mix_test_nested_block, hyp_contrasts_nested_block)
+hyp_contrasts_nested_block <- hyp_contrasts_nested_block$hypothesis %>%
+  select(-Star)
+
 # translate hypotheses into intelligible statements
-hyp_contrasts_nested_block_readable <- tibble(Hypothesis = c(
+hyp_contrasts_nested_block_readable <- 
+  tibble(Hypothesis = c(
   "+10 vs baseline",
   "+40 vs +10",
   "+40 vs baseline",
@@ -741,34 +745,27 @@ hyp_contrasts_nested_block_readable <- tibble(Hypothesis = c(
   "+40 vs baseline"
 ))
 
-hyp_contrasts_nested_block <- hypothesis(fit_mix_test_nested_block, hyp_contrasts_nested_block)
-hyp_contrasts_nested_block <- hyp_contrasts_nested_block$hypothesis %>%
-  select(-Star)
-
-table2 <- cbind(hyp_contrasts_nested_block_readable, hyp_contrasts_nested_block) %>%
-  select(-2) %>%
-  mutate(across(where(is.numeric), ~ round(., digits = 3))) %>%
-  rename_all(~gsub("\\.", " ", .)) %>%
-  kbl(caption = "When did exposure begin to affect participants' categorization responses? This table summarizes the simple effects of the exposure conditions for each of the first four test blocks.", align = align_tab(table2)) %>%
-  kable_styling(full_width=FALSE,
-                bootstrap_options = c("striped", "hover", "condensed")) %>%
-  column_spec(1, width = "8em") %>%
+table2 <- 
+  make_hyp_table(hyp_contrasts_nested_block_readable, hyp_contrasts_nested_block, caption = "When did exposure begin to affect participants' categorization responses? This table summarizes the simple effects of the exposure conditions for each of the first four test blocks.") %>% 
   pack_rows("Test block 1", 1, 3) %>%
   pack_rows("Test block 2", 4, 6) %>% 
   pack_rows("Test block 3", 7, 9) %>% 
   pack_rows("Test block 4", 10, 12)
 table2
-
 ```
 
-```{r make-hypothesis-table3}
+```{r hypothesis-table3}
 # hypotheses test of proportionality (Is the diff between +40 and baseline < 4 * difference between +10 and baseline)
 hyp_proportional <- c(
-  "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 4 * mu2_Block1:Condition.Exposure_Shift10vs.Shift0",
-  "mu2_Block3:Condition.Exposure_Shift40vs.Shift10 + mu2_Block3:Condition.Exposure_Shift10vs.Shift0 < 4 * mu2_Block1:Condition.Exposure_Shift10vs.Shift0",
-  "mu2_Block5:Condition.Exposure_Shift40vs.Shift10 + mu2_Block5:Condition.Exposure_Shift10vs.Shift0 < 4 * mu2_Block1:Condition.Exposure_Shift10vs.Shift0",
-  "mu2_Block7:Condition.Exposure_Shift40vs.Shift10 + mu2_Block7:Condition.Exposure_Shift10vs.Shift0 < 4 * mu2_Block1:Condition.Exposure_Shift10vs.Shift0"
+  "abs(mu2_Block1:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0) < abs(4 * mu2_Block1:Condition.Exposure_Shift10vs.Shift0)",
+  "abs(mu2_Block3:Condition.Exposure_Shift40vs.Shift10 + mu2_Block3:Condition.Exposure_Shift10vs.Shift0) < abs(4 * mu2_Block1:Condition.Exposure_Shift10vs.Shift0)",
+  "abs(mu2_Block5:Condition.Exposure_Shift40vs.Shift10 + mu2_Block5:Condition.Exposure_Shift10vs.Shift0) < abs(4 * mu2_Block1:Condition.Exposure_Shift10vs.Shift0)",
+  "abs(mu2_Block7:Condition.Exposure_Shift40vs.Shift10 + mu2_Block7:Condition.Exposure_Shift10vs.Shift0) < abs(4 * mu2_Block1:Condition.Exposure_Shift10vs.Shift0)"
 )
+
+hyp_proportional <- hypothesis(fit_mix_test_nested_block, hyp_proportional)
+hyp_proportional <- hyp_proportional$hypothesis %>%
+  select(-Star)
 
 # translate hypotheses into intelligible statements
 hyp_proportional_readable <- tibble(Hypothesis = c(
@@ -778,18 +775,10 @@ hyp_proportional_readable <- tibble(Hypothesis = c(
   "+40 vs baseline < 4x +10 vs baseline"
 ))
 
-hyp_proportional <- hypothesis(fit_mix_test_nested_block, hyp_proportional)
-hyp_proportional <- hyp_proportional$hypothesis %>%
-  select(-Star)
-
-table3 <- cbind(hyp_proportional_readable, hyp_proportional) %>%
-  select(-2) %>%
-  mutate(across(where(is.numeric), ~ round(., digits = 3))) %>%
-  rename_all(~gsub("\\.", " ", .)) %>%
-  kbl(caption = "Is the shift in +40 from baseline proportional to the magnitude of shift in the exposure distribution?", align = align_tab(table2)) %>%
-  kable_styling(full_width=FALSE,
-                bootstrap_options = c("striped", "hover", "condensed")) %>%
-  column_spec(1, width = "8em") %>%
+table3 <- 
+  make_hyp_table(hyp_proportional, 
+                 hyp_proportional_readable, 
+                 caption = "Is the shift in +40 from baseline proportional to the magnitude of shift in the exposure distribution?") %>%
   pack_rows("Test block 1", 1, 1) %>%
   pack_rows("Test block 2", 2, 2) %>% 
   pack_rows("Test block 3", 3, 3) %>% 
@@ -800,7 +789,7 @@ table3
 
 
 
-```{r make-hypothesis-table4}
+```{r hypothesis-table4}
 # hypotheses to analyse last 3 test blocks (question: what happens with repeated testing)
 hyp_test456 <- c(
   "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 > 0",
