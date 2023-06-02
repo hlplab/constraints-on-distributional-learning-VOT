@@ -71,15 +71,18 @@ get_coefficient_fr_model <- function(model, term) {
 }
 
 get_bf <- function(model, hypothesis) {
-  paste0("Bayes factor: ", round(hypothesis(model, hypothesis)[[1]]$Evid.Ratio, 2), " 90%-CI : ", round(hypothesis(model, hypothesis)[[1]]$CI.Lower, 2), " to ", round(hypothesis(model, hypothesis)[[1]]$CI.Upper, 2) )
+  h <- hypothesis(model, hypothesis)[[1]]
+  paste0(
+    "\\hat{\\beta} = ", round(h$Estimate, 2),
+    ",\\ 90\\%{\\rm -CI} = [", round(h$CI.Lower, 3), ", ", round(h$CI.Upper, 3),
+    "],\\ BF = ", round(h$Evid.Ratio, 1),
+    ",\\ p_{posterior} = ", signif(h$Post.Prob, 3))
 }
 
-make_CI <- function(model, term, hypothesis = NULL) {
-  x <- paste0(paste0(round(plogis(as.numeric(summary(model)$fixed[term, 1])) * 100, 1), "%, "), " 95%-CI: ",
+make_CI <- function(model, term) {
+  paste0(round(plogis(as.numeric(summary(model)$fixed[term, 1])) * 100, 1),
+         "%, 95%-CI: ",
          paste0(round(plogis(as.numeric(summary(model)$fixed[term, 3:4])) * 100, 1), collapse = " to "), "%")
-
-  if (!is.null(hypothesis)) x <- paste0(x, "; ", get_bf(model = model, hypothesis = hypothesis))
-  return(x)
 }
 
 # Function to get identity CI of a model summary
@@ -697,8 +700,8 @@ prepVars <- function(d, levels.Condition = NULL, contrast_type) {
   d %<>%
     drop_na(Condition.Exposure, Phase, Block, Item.MinimalPair, ParticipantID, Item.VOT, Response)
 
-  print(paste("VOT mean:", signif(mean(d$Item.VOT, na.rm = T))))
-  print(paste("VOT sd:", signif(sd(d$Item.VOT, na.rm = T))))
+  message("VOT mean:", signif(mean(d$Item.VOT, na.rm = T)))
+  message("VOT sd:", signif(sd(d$Item.VOT, na.rm = T)))
 
   d %<>%
     ungroup() %>%
@@ -712,31 +715,31 @@ prepVars <- function(d, levels.Condition = NULL, contrast_type) {
     mutate(VOT_gs = (Item.VOT - mean(Item.VOT, na.rm = TRUE)) / (2 * sd(Item.VOT, na.rm = TRUE))) %>%
     droplevels()
 
-  print(paste("mean VOT is", mean(d$Item.VOT), "and SD is", sd(d$Item.VOT)))
+  message("mean VOT is", mean(d$Item.VOT), "and SD is", sd(d$Item.VOT))
 
-  contrasts(d$Condition.Exposure) = cbind("_Shift10 vs. Shift0" = c(-2/3, 1/3, 1/3),
+  contrasts(d$Condition.Exposure) <- cbind("_Shift10 vs. Shift0" = c(-2/3, 1/3, 1/3),
                                           "_Shift40 vs. Shift10" = c(-1/3,-1/3, 2/3))
   require(MASS)
   if (all(d$Phase == "test") & n_distinct(d$Block) > 1 & contrast_type == "difference") {
     contrasts(d$Block) <- fractions(contr.sdif(6))
     dimnames(contrasts(d$Block))[[2]] <- c("_Test2 vs. Test1", "_Test3 vs. Test2", "_Test4 vs. Test3", "_Test5 vs. Test4", "_Test6 vs. Test5")
 
-    print(contrasts(d$Condition.Exposure))
-    print(contrasts(d$Block))
+    message(contrasts(d$Condition.Exposure))
+    message(contrasts(d$Block))
   } else if (all(d$Phase == "test") & n_distinct(d$Block) > 1 & contrast_type == "helmert"){
     contrasts(d$Block) <- cbind("_Test2 vs. Test1" = c(-1/2, 1/2, 0, 0, 0, 0),
                                 "_Test3 vs. Test2_1" = c(-1/3, -1/3, 2/3, 0, 0, 0),
                                 "Test4 vs. Test3_2_1" = c(-1/4, -1/4, -1/4, 3/4, 0, 0),
                                 "_Test5 vs. Test4_3_2_1" = c(-1/5, -1/5, -1/5, -1/5, 4/5, 0),
                                 "_Test6 vs. Test5_4_3_2_1" = c(-1/6, -1/6, -1/6, -1/6, -1/6, 5/6))
-    print(contrasts(d$Condition.Exposure))
-    print(contrasts(d$Block))
+    message(contrasts(d$Condition.Exposure))
+    message(contrasts(d$Block))
   } else if (all(d$Phase == "exposure") & n_distinct(d$Block) > 1 & contrast_type == "difference"){
     contrasts(d$Block) <- cbind("_Exposure2 vs. Exposure1" = c(-2/3, 1/3, 1/3),
                                 "_Exposure3 vs. Exposure2" = c(-1/3,-1/3, 2/3))
-    print(contrasts(d$Block))
+    message(contrasts(d$Block))
   } else {
-    print(contrasts(d$Condition.Exposure))
+    message(contrasts(d$Condition.Exposure))
   }
 
   return(d)
