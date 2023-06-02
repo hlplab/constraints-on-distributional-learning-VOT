@@ -7,20 +7,10 @@ author:
   - name          : "Maryann Tan"
     affiliation   : "1"
     corresponding : yes    # Define only one corresponding author
-    address       : "YOUR ADDRESS"
+    address       : Department of Bilingualism, Stockholm University, Sweden
     email         : "maryann.tan@biling.su.se"
-    # role: 
-    #   - Conceptualization
-    #   - Writing - Original Draft Preparation
-    #   - Writing - Review & Editing
-    #   - Coding of analyses and visualization
-  - name          : "T F Jaeger"
-    affiliation   : "2,3"
-    # role:
-    #   - Conceptualization & Framing
-    #   - Writing - Original Draft Preparation
-    #   - Writing - Review & Editing
-    #   - Visualization
+  - name          : "T. Florian Jaeger"
+    affiliation   : "2,3
 
 affiliation:
   - id            : "1"
@@ -42,7 +32,7 @@ authornote: |
 abstract: |
   YOUR ABSTRACT GOES HERE. All data and code for this study are shared via OSF, including the R markdown document that this article is generated from, and an R library that implements the models we present.
   
-keywords          : "speech perception; perceptual adaptation; distributional learning; ..."
+keywords          : "speech perception; adaptation; incremental changes; distributional learning"
 wordcount         : "X"
 
 bibliography      : ["latex-stuff/library.bib", "latex-stuff/r-references.bib"]
@@ -224,7 +214,7 @@ knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 ```{r, child="section-4-general-discussion.Rmd"}
 ```
 
-```{r eval=FALSE, child="section-5-references.Rmd", include=FALSE}
+```{r child="section-5-references.Rmd"}
 ```
 
 \newpage
