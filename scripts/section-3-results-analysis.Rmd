@@ -170,7 +170,7 @@ x <-
   pull()
 
 conditions <- tibble(
-  condition = c("shift0", "shift10", "shift40")) 
+  condition = c("baseline", "shift10", "shift40")) 
   
 ios <- 
   tibble(
@@ -249,7 +249,7 @@ p.intercept <-
   geom_hline(yintercept = d.io.categorisation[[7]][2], linetype = 2, linewidth = .8, colour = "#12D432", alpha = 0.5) +
   geom_hline(yintercept = d.io.categorisation[[7]][3], linetype = 2, linewidth = .8, colour = "#0481F3", alpha = 0.5) +
   scale_colour_manual("Condition",
-    labels = c("+0ms", "+10ms", "+40ms"),
+    labels = c("baseline", "+10ms", "+40ms"),
     values = c("#cc0000", "#12D432","#0481F3"),
     aesthetics = "color") +
   scale_y_continuous("Mean Intercept") +
@@ -334,7 +334,7 @@ p.PSE_1to7 <-d.estimates %>%
   geom_hline(yintercept = d.io.categorisation[[9]][2], linetype = 2, linewidth = .8, colour = "#12D432", alpha = 0.5) +
   geom_hline(yintercept = d.io.categorisation[[9]][3], linetype = 2, linewidth = .8, colour = "#0481F3", alpha = 0.5) +
   scale_colour_manual("Condition",
-    labels = c("+0ms", "+10ms", "+40ms"),
+    labels = c("baseline", "+10ms", "+40ms"),
     values = c("#cc0000", "#12D432","#0481F3"),
     aesthetics = "color") +
   scale_y_continuous("Mean PSE") +
@@ -464,7 +464,7 @@ p.fit_1to7 <- cond_fit_test_exposure %>%
   scale_y_continuous("Proportion \"t\"-responses") +
   scale_color_manual(
     "Condition",
-    labels = c("+0ms", "+10ms", "+40ms"),
+    labels = c("baseline", "+10ms", "+40ms"),
     values = c("#cc0000", "#12D432","#0481F3"),
     aesthetics = c("color", "fill")) +
   coord_cartesian(clip="off", ylim=c(0, 1)) +
@@ -529,7 +529,7 @@ geom_rug(data = d_for_analysis %>%
   scale_y_continuous("Proportion \"t\"-responses") +
   scale_color_manual(
     "Condition",
-    labels = c("+0ms", "+10ms", "+40ms"),
+    labels = c("baseline", "+10ms", "+40ms"),
     values = c("#cc0000", "#12D432","#0481F3"),
     aesthetics = c("color", "fill")) +
   facet_wrap(. ~ Block, nrow = 1) + 
@@ -538,6 +538,26 @@ geom_rug(data = d_for_analysis %>%
         axis.title.y = element_blank(),
         strip.background = element_rect(fill = "grey"),
         strip.text.x = element_text(colour = "black"))
+caption <- paste("B :", "the final three test blocks without intervening exposure. More description", collapse = " ")
+
+my_text <- ggplot(data = tibble(x = 0, y = 1, label = caption)) +
+  aes(x = x, y = y, label = label) +
+  geom_textbox(
+    box.color = NA,
+    fill = NA,
+    box.size = unit(10, "cm"),
+    width = unit(10, "cm"),
+    hjust = -2.2, 
+    vjust = 10
+  ) +
+  scale_x_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  theme_void() +
+  theme(
+    plot.margin = margin(0, 0, 0, 0)
+  )
+
+my_text + p.fit_7to9
 ```
 
 (ref:plot-fit-slope-PSE) Summary of results. **Panel A:** Changes in listeners psychometric categorisation functions as a function of exposure, from Test 1 to Test 4 with all intervening exposure blocks. Point ranges indicate the mean proportion of "t"-responses and their 95% bootstrapped CI. Lines and shaded intervals show the MAP predictions and 95% posterior CIs of a Bayesian mixed-effects psychometric model fit to participants' responses. **Panel B:** Same as Panel A but for the final three test blocks without intervening exposure. Test 4 is shown as part of both Panels A and B. **Panels C \& D:** Changes across blocks in the slope and boundary (point-of-subjective-equality, PSE) of the categorisation functions shown in Panels A-B. Point ranges represent the posterior means and their 95% CI. Dashed reference lines show the intercepts and PSEs that naive (non-rational) learner would be expected to converge against after sufficient exposure (an ideal observer model that knows the exposure distributions). 
@@ -545,14 +565,14 @@ geom_rug(data = d_for_analysis %>%
 \begin{landscape}
 ```{r plot-fit-slope-PSE, fig.width=12.5, fig.height=8, warning=FALSE, fig.cap="(ref:plot-fit-slope-PSE)"}
 p.fit_1to7 + p.fit_7to9 + p.params_1to7 +
-  plot_annotation(tag_levels = 'A') +
   plot_layout(
     design = "
 AAAAAAAAA
 ######BBB
 CCCCCCCCC
 ",
-heights = c(1, 1, 2))
+heights = c(1, 1, 2)) +
+   plot_annotation(tag_levels = 'A', tag_suffix = ")") & theme(plot.tag = element_text(face = "bold")) 
 ```
 \end{landscape}
 
@@ -737,8 +757,7 @@ table2 <- cbind(hyp_contrasts_nested_block_readable, hyp_contrasts_nested_block)
   pack_rows("Test block 1", 1, 4) %>%
   pack_rows("Test block 2", 5, 8) %>% 
   pack_rows("Test block 3", 9, 12) %>% 
-  pack_rows("Test block 4", 13, 16) %>% 
-  add_indent(c(4, 8, 12, 16))
+  pack_rows("Test block 4", 13, 16)
 table2
 ```
 
@@ -747,7 +766,7 @@ table2
 hyp_test456 <- c(
   "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 > 0",
   "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 > 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 < 0",
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 < mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4",
   
   "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 > 0",
   "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
@@ -757,13 +776,13 @@ hyp_test456 <- c(
 # translate hypotheses into intelligible statements
 hyp_test456_readable <- tibble(Hypothesis = c(
   # Comparing differences in +10 vs baseline between blocks 4 and 6
-  "Test block 5 < Test block 4", 
-  "Test block 6 < Test block 5", 
+  "Test block 5 > Test block 4", 
+  "Test block 6 > Test block 5", 
   "Test block 6 > Test block 4", 
 
   # Comparing differences in +40 vs +10 between blocks 4 and 6
-  "Test block 5 < Test block 4", 
-  "Test block 6 < Test block 5", 
+  "Test block 5 > Test block 4", 
+  "Test block 6 > Test block 5", 
   "Test block 6 > Test block 4"
 ))
 

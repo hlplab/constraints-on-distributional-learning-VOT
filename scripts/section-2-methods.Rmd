@@ -111,9 +111,9 @@ p.histogram_conditions <- d.exposure_trials %>%
   na.omit() %>% 
   filter(image_selection == "forward" & list_LSQ_variant == "A") %>%
     mutate(block = case_when(
-    block == 2 ~ "Exposure A",
-    block == 4 ~ "Exposure B",
-    block == 6 ~ "Exposure C")) %>% 
+    block == 2 ~ "Block A",
+    block == 4 ~ "Block B",
+    block == 6 ~ "Block C")) %>% 
   ggplot() +
   geom_histogram(aes(x = VOT, fill = paste(condition, category, labelling), 
                      color = paste(condition, category, labelling),
@@ -292,6 +292,7 @@ excl.headphone <- d %>%
   tally() %>% 
   pull(n)
 ```
+
 
 ```{r make-data-for-analysis}
 d_for_analysis <- 
