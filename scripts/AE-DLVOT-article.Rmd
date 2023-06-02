@@ -5,7 +5,7 @@ date              : "`r format(Sys.time(), '%B %d, %Y')`"
 
 author: 
   - name          : "Maryann Tan"
-    affiliation   : "1,2"
+    affiliation   : "1"
     corresponding : yes    # Define only one corresponding author
     address       : "YOUR ADDRESS"
     email         : "maryann.tan@biling.su.se"
@@ -14,15 +14,8 @@ author:
     #   - Writing - Original Draft Preparation
     #   - Writing - Review & Editing
     #   - Coding of analyses and visualization
-  - name          : "Maryann Tan"
-    affiliation   : "2,3"
-    # role:
-    #   - Conceptualization
-    #   - Writing - Original Draft Preparation
-    #   - Writing - Review & Editing
-    #   - Coding of analyses and visualization
   - name          : "T F Jaeger"
-    affiliation   : "2"
+    affiliation   : "2,3"
     # role:
     #   - Conceptualization & Framing
     #   - Writing - Original Draft Preparation
@@ -100,8 +93,6 @@ always_allow_html: true
 
 \setcounter{secnumdepth}{5}
 
-<!-- THIS IS THE DOCUMENT THAT YOU USE FOR KNITTING. IT WILL KNIT ALL THE OTHER SECTIONS, TOO -->
-
 ```{r libraries, include=FALSE, message=FALSE}
 library(curl)               # Check availability of internet for install of remote libraries
 
@@ -111,6 +102,7 @@ if(!requireNamespace("remotes", quietly = TRUE)) if (has_internet()) install.pac
 if (has_internet()) remotes::install_github("crsh/papaja")
 library(papaja)             # APA formatted ms
 
+library(MASS)               # sliding difference coding (load before tidyverse b/c of select-conflict)
 library(tidyverse)
 library(magrittr)           # pipes
 library(rlang)              # quosures (in functions)
@@ -151,18 +143,18 @@ options(
 # plot formatting
 colours.voicing <- c("#7EC8E3", "#990033")
 colours.sex <- c("#c1502e", "#2F9FC2")
-remove_all_axes <- theme(axis.title.y = element_blank(),
+remove_all_axes <- 
+  theme(axis.title.y = element_blank(),
         axis.title.x = element_blank(),
         axis.text.y = element_blank(),
         axis.ticks.y = element_blank())
-remove_axes_titles <- theme(axis.title.x = element_blank(),
-                            axis.title.y = element_blank())
-remove_x_guides <- theme(axis.text.x = element_blank(),
-                         axis.ticks.x = element_blank(),
-                         axis.title.x = element_blank())
-
-# overwrite conflict between MASS and dplyr
-select <- dplyr::select
+remove_axes_titles <- 
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank())
+remove_x_guides <- 
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.x = element_blank())
 ```
 
 
@@ -175,8 +167,6 @@ myGplot.defaults("paper")
 # Get citation information
 r_refs(file = "latex-stuff/r-references.bib")
 ```
-
-
 
 
 ```{r knitr-setup, include=FALSE}
@@ -210,7 +200,6 @@ RESET_FIGURES = F   # switch on/off whether figures that exist as files are rege
 
 
 ```{r analysis-preferences}
-# Seed for random number generation
 set.seed(42007)
 knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 ```
@@ -218,8 +207,6 @@ knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 
 ```{r, child="section-0-TO-DO.Rmd", eval= if (TODO) TRUE else FALSE}
 ```
-
-<!-- Using inline R markdown child definition since only the quiet = T option oppresses both the latex *and* the R output of a child -->
 
 \newpage 
 \setcounter{page}{1}
