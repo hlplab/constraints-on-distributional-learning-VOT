@@ -88,7 +88,7 @@ This replicates previous findings that exposure to changed VOT distributions cha
 ### Incremental changes in listeners' categorisation with increasing exposure (Test 1 to 4)
 As already visible in Figure \@ref(fig:plot-fit-slope-PSE)A, effects of exposure emerged early in the experiment. Table \@ref(tab:hypothesis-table2) summarizes the simple effects of exposure condition during each of the first four test blocks. Prior to any exposure, during Test 1, participants' responses did not differ across exposure condition. <!-- TO DO: fit model with save_priors =T and change hypothesis tests for block one to = 0, not < 0: fitting--> After exposure to only 24 /d/ and 24 /t/ stimuli, during Test 2, participants' responses already differed between exposure conditions. The difference between the +40 condition and the +10 or baseline condition kept increasing with exposure up to Test 4. Additional hypothesis tests in Table \@ref(tab:hypothesis-table1)  show that the change from Test 1 to 2 was largest (BF = 27.8), followed by the change from Test 2 to 3 (BF = 19.2), with only minimal changes from Test 3 to 4 (BF = 1.7). Qualitatively paralleling the changes across blocks for the +40 condition, the change in the difference between the +10 and baseline conditions was largest from Test 1 to 2 (BF = 13.5), and then somewhat decreased from Test 2 to Test 4 (BFs < 4). 
 
-This pattern of changes is also evident in Figure \@ref(fig:plot-fit-slope-PSE)D, which shows how participants' point of subject equality (PSE)---i.e., the point at which "d" and "t" responses are equally likely---changes with increasing exposure. <!-- TO DO: remove "mean" from y-axis of panel C and D --> This visualization makes apparent two aspects of participants' behavior that were not readily apparent in the statistical comparisons we have summarized so far. First, while the PSEs for the +10 and +40 conditions were indeed shifted rightwards compared to the baseline condition (relatively larger PSEs), both the +10 and the baseline condition actually shift leftwards *relative* to their pre-exposure starting point in Test 1. Second, the reason for the slight decrease in the difference between the +10 and baseline conditions observed in Tables \@ref(tab:XXX) and \@ref(tab:XXX) (visible in Figure \@ref(fig:plot-fit-slope-PSE)D as the decreasing difference between the green and red line) is *not* due to a reversal of the effects in the +10 condition. Rather, both conditions are changing in the same direction but the baseline condition stops changing after Test 2, which brings the +10 condition increasingly closer to the baseline condition. To understand this pattern, it is necessary to relate our exposure conditions to the distribution of VOT in listeners' prior experience.
+This pattern of changes is also evident in Figure \@ref(fig:plot-fit-slope-PSE)D, which shows how participants' point of subject equality (PSE)---i.e., the point at which "d" and "t" responses are equally likely---changes with increasing exposure. This visualization makes apparent two aspects of participants' behavior that were not readily apparent in the statistical comparisons we have summarized so far. First, while the PSEs for the +10 and +40 conditions were indeed shifted rightwards compared to the baseline condition (relatively larger PSEs), both the +10 and the baseline condition actually shift leftwards *relative* to their pre-exposure starting point in Test 1. Second, the reason for the slight decrease in the difference between the +10 and baseline conditions observed in Tables \@ref(tab:XXX) and \@ref(tab:XXX) (visible in Figure \@ref(fig:plot-fit-slope-PSE)D as the decreasing difference between the green and red line) is *not* due to a reversal of the effects in the +10 condition. Rather, both conditions are changing in the same direction but the baseline condition stops changing after Test 2, which brings the +10 condition increasingly closer to the baseline condition. To understand this pattern, it is necessary to relate our exposure conditions to the distribution of VOT in listeners' prior experience.
 
 ### Relating incremental changes in categorisation to listeners' prior experience (Test 1 to 4)
 Figure \@ref(fig:exposure-means-database-density) shows the mean and covariance <!-- TO DO: let's 1) add bivariate ellipses *for the +10 condition* to figure, 2) use only non-parametric plot in maintext and keep rest in SI, 3) use only normalized VOT in main text and move rest to SI, 4)  --> of our exposure conditions relative to the distribution of VOT by talkers of L1-US English [based on @chodroff-wilson2018]. This comparison offers an explanation as to why the baseline condition (and to some extent the +10 condition) shift leftwards with increasing exposure, whereas the +40 condition shifts rightwards: relative to listeners' prior experience our baseline condition actually presented lower-than-expected category means; of our three exposure conditions, only the +40 condition presented larger-than-expected category means. That is, once we take into account how our exposure conditions relate to listeners' prior experience, both the direction of changes from Test 1 to 4 *within* each exposure condition, and the direction of differences *between* exposure conditions receive an explanation.
@@ -576,7 +576,7 @@ my_text <- ggplot(data = tibble(x = 0, y = 1, label = caption)) +
     plot.margin = margin(0, 0, 0, 0)
   )
 
-my_text + p.fit_7to9
+#my_text + p.fit_7to9
 ```
 
 (ref:plot-fit-slope-PSE) Summary of results. **Panel A:** Changes in listeners psychometric categorisation functions as a function of exposure, from Test 1 to Test 4 with all intervening exposure blocks (only unlabelled trials were included in the analysis of exposure blocks since labelled trials provide no information about listeners' categorization function). Point ranges indicate the mean proportion of "t"-responses and their 95% bootstrapped CI. Lines and shaded intervals show the MAP predictions and 95% posterior CIs of a Bayesian mixed-effects psychometric model fit to participants' responses. **Panel B:** Same as Panel A but for the final three test blocks without intervening exposure. Test 4 is shown as part of both Panels A and B. **Panels C \& D:** Changes across blocks in the slope and boundary (point-of-subjective-equality, PSE) of the categorisation functions shown in Panels A-B. Point ranges represent the posterior means and their 95% CI. Dashed reference lines show the intercepts and PSEs that naive (non-rational) learner would be expected to converge against after sufficient exposure (an ideal observer model that knows the exposure distributions).
@@ -676,7 +676,7 @@ hyp_interactions <- hyp_interactions$hypothesis %>%
   select(-Star)
 
 # translate the hypotheses above into intelligible statements
-hyp_interactions_readable <- tibble(Hypothesis = c(
+hyp_interactions_readable <- tibble(Hypothesis_readable = c(
   # Comparing differences in +10 vs baseline between blocks
   "Test block 2 > Test block 1",
   "Test block 3  > Test block 2",
@@ -691,8 +691,8 @@ hyp_interactions_readable <- tibble(Hypothesis = c(
 
 table1 <- 
   make_hyp_table(
-    hyp_interactions,
     hyp_interactions_readable,
+    hyp_interactions,
     caption = "Was there incremental change from test block 1 to 4? This table summarizes the interactions between exposure condition and block, whether the differences between exposure conditions changed from block to block.") %>% 
   pack_rows("Difference in +10 vs baseline", 1, 4) %>%
   pack_rows("Difference in +40 vs +10", 5, 8) 
@@ -768,7 +768,7 @@ hyp_proportional <- hyp_proportional$hypothesis %>%
   select(-Star)
 
 # translate hypotheses into intelligible statements
-hyp_proportional_readable <- tibble(Hypothesis = c(
+hyp_proportional_readable <- tibble(Hypothesis_readable = c(
   "+40 vs baseline < 4x +10 vs baseline",
   "+40 vs baseline < 4x +10 vs baseline",
   "+40 vs baseline < 4x +10 vs baseline",
@@ -803,7 +803,7 @@ hyp_test456 <- c(
 )
 
 # translate hypotheses into intelligible statements
-hyp_test456_readable <- tibble(Hypothesis = c(
+hyp_test456_readable <- tibble(Hypothesis_readable = c(
   # Comparing differences in +10 vs baseline between blocks 4 and 6
   "Test block 5 > Test block 4", 
   "Test block 6 > Test block 5", 
@@ -819,7 +819,7 @@ hyp_test456 <- hypothesis(fit_mix_test, hyp_test456)
 hyp_test456 <- (hyp_test456$hypothesis) %>%
   select(-Star)
 
-table3 <- cbind(hyp_test456_readable, hyp_test456) %>%
+table4 <- cbind(hyp_test456_readable, hyp_test456) %>%
   select(-2) %>%
   mutate(across(where(is.numeric), ~ round(., digits = 3))) %>%
   rename_all(~ gsub("\\.", " ", .)) %>%
@@ -829,7 +829,7 @@ table3 <- cbind(hyp_test456_readable, hyp_test456) %>%
   column_spec(1, width = "8em") %>%
   pack_rows("Difference in +10 vs baseline", 1, 3) %>%
   pack_rows("Difference in +40 vs +10", 4, 6)
-table3
+table4
 ```
 
 

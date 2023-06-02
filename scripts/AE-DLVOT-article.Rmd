@@ -112,11 +112,12 @@ library(patchwork)          # plot layouts
 library(magick)
 library(webshot)
 library(ggstance)
+library(ggtext)            # make geom textboxes
 library(ggnewscale)        # extra colour scale in ggplots
 library(kableExtra)        # for formatting tables
 
 library(linguisticsdown)    # IPA symbols
-library(latexdiffr)         # trackchanges
+library(latexdiffr)         # track changes
 
 library(lme4)
 library(brms)
