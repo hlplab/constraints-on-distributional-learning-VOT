@@ -658,7 +658,7 @@ simple_effects_block <- tidy(fit_mix_test_nested_condition, effects = "fixed") %
   filter(term != "theta1_(Intercept)")
 ```
 
-```{r hypothesis-table1}
+```{r hypothesis-table1, results='asis'}
 # hypotheses to answer question, "was the change incremental between blocks?"
 hyp_interactions <- c(
   "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 < 0",
@@ -700,7 +700,7 @@ table1 <-
 table1
 ```
 
-```{r hypothesis-table2}
+```{r hypothesis-table2, results='asis'}
 # hypotheses to answer questions "when did change first emerge?" 
 hyp_contrasts_nested_block <-
   c(
@@ -754,7 +754,7 @@ table2 <-
 table2
 ```
 
-```{r hypothesis-table3}
+```{r hypothesis-table3, results='asis'}
 # hypotheses test of proportionality (Is the diff between +40 and baseline < 4 * difference between +10 and baseline)
 hyp_proportional <- c(
   "mu2_Block3:Condition.Exposure_Shift40vs.Shift10 + mu2_Block3:Condition.Exposure_Shift10vs.Shift0 < 4 * mu2_Block3:Condition.Exposure_Shift10vs.Shift0",
@@ -787,7 +787,7 @@ table3
 
 
 
-```{r hypothesis-table4}
+```{r hypothesis-table4, results='asis'}
 # hypotheses to analyse last 3 test blocks (question: what happens with repeated testing)
 hyp_test456 <- c(
   "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 > 0",
