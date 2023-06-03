@@ -1,5 +1,5 @@
 ---
-title             : "Unravelling the time-course of listener adaptation to an unfamiliar talker."
+title             : "Unravelling the time-course of listener adaptation to an unfamiliar talker"
 shorttitle        : "Cognition draft"
 date              : "`r format(Sys.time(), '%B %d, %Y')`"
 
@@ -7,10 +7,10 @@ author:
   - name          : "Maryann Tan"
     affiliation   : "1"
     corresponding : yes    # Define only one corresponding author
-    address       : Department of Bilingualism, Stockholm University, Sweden
+    address       : "Department of Bilingualism, Stockholm University, Sweden"
     email         : "maryann.tan@biling.su.se"
   - name          : "T. Florian Jaeger"
-    affiliation   : "2,3
+    affiliation   : "2,3"
 
 affiliation:
   - id            : "1"
