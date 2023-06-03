@@ -98,16 +98,16 @@ library(magrittr)           # pipes
 library(rlang)              # quosures (in functions)
 library(assertthat)         # asserts (in functions)
 
-library(patchwork)
+library(patchwork)          # plot layouts  
 library(magick)
 library(webshot)
 library(ggstance)
-library(ggnewscale)
-library(kableExtra)
-library(sjPlot)
+library(ggtext)            # make geom textboxes
+library(ggnewscale)        # extra colour scale in ggplots
+library(kableExtra)        # for formatting tables
 
 library(linguisticsdown)    # IPA symbols
-library(latexdiffr)         # trackchanges
+library(latexdiffr)         # track changes
 
 library(lme4)
 library(brms)
