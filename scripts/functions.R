@@ -772,10 +772,14 @@ make_hyp_table <- function(hyp_readable, hyp, caption, col1_width = "8em") {
     select(-2) %>%
     mutate(across(where(is.numeric), ~ round(., digits = 3))) %>%
     rename_all(~ gsub("\\.", " ", .)) %>% 
-    kbl(caption = caption, align = align_tab(hyp),
-        col.names = c("Hypothesis", "Estimate", "SE", "$CI_{lower}$", "$CI_{upper}$", "BF", "$p_{posterior}$")) %>%
+    kbl(
+      format = "latex",
+      booktabs = T,
+      caption = caption, 
+      align = align_tab(hyp),
+      col.names = c("Hypothesis", "Estimate", "SE", "$CI_{lower}$", "$CI_{upper}$", "BF", "$p_{posterior}$")) %>%
     kable_styling(full_width = FALSE,
-                  bootstrap_options = c("striped", "hover", "condensed"))%>%
+                  latex_options = "striped") %>%
     column_spec(1, width = col1_width)
 }
 

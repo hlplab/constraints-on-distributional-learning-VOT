@@ -53,7 +53,7 @@ Participants took an average of 31.6 minutes to complete the experiment (SD = 20
 Participants' responses were collected via Javascript developed by the Human Language Processing Lab at the University of Rochester [@JSEXP] and stored via Proliferate developed at, and hosted by, the ALPs lab at Stanford University [@schuster].
 
 ### Materials 
-We recorded 8 tokens each of four minimal word pairs ("dill"/"till", "dim"/"tim", "din"/"tin", and "dip"/"tip") from a 23-year-old, female L1-US English talker from New Hampshire, judged to have a "general American" accent. These recordings were used to create four natural-sounding minimal pair VOT continua using a script [@winn2020manipulation] in Praat [@praat]. The VOTs generated for each continuum ranged from -100 to +120 msec in 5 msec steps.^[For simplicity's sake, we follow previous work [@kleinschmidt2020; @OTHERS] and refer to prevoicing as negative VOTs though we note that prevoicing is perhaps better conceived of as a separate phonetic feature [for discussion, see @REF]. In L1-US English, pevoicing is estimated to occur on XXX% of word-initial voiced stops and 0% of voiceless stops [@REF].] The procedure also maintained the natural correlations between the most important cues to word-initial stop-voicing in L1-US English (VOT, F0, and vowel duration). Specifically, the F0 at vowel onset of each stimulus was set to respect the linear relation with VOT observed in the original recordings of the talker. The duration of the vowel was set to follow the natural trade-off relation with VOT [@allen1999effects]. Further details on the recording and resynthesis procedure are provided in the supplementary information (SI, \@ref(sec:SI-XXX)). 
+We recorded 8 tokens each of four minimal word pairs ("dill"/"till", "dim"/"tim", "din"/"tin", and "dip"/"tip") from a 23-year-old, female L1-US English talker from New Hampshire, judged to have a "general American" accent. These recordings were used to create four natural-sounding minimal pair VOT continua using a script [@winn2020manipulation] in Praat [@praat]. The VOTs generated for each continuum ranged from -100 to +130 msec in 5 msec steps.^[For simplicity's sake, we follow previous work [@kleinschmidt2020; @OTHERS] and refer to prevoicing as negative VOTs though we note that prevoicing is perhaps better conceived of as a separate phonetic feature [for discussion, see @REF]. In L1-US English, the occurence of prevoicing varies between study 20% - 48% of word-initial voiced stops and 0% of voiceless stops [@lisker-abramson1967; @smith1978].] The procedure also maintained the natural correlations between the most important cues to word-initial stop-voicing in L1-US English (VOT, F0, and vowel duration). Specifically, the F0 at vowel onset of each stimulus was set to respect the linear relation with VOT observed in the original recordings of the talker. The duration of the vowel was set to follow the natural trade-off relation with VOT [@allen1999effects]. Further details on the recording and resynthesis procedure are provided in the supplementary information (SI, \@ref(sec:SI-XXX)). 
 
 This approach resulted in continuum steps that sound natural [unlike the highly robotic-sounding stimuli employed in @clayards2008; @kleinschmidt2016you]. A post-experiment survey asked participants: "*Did you notice anything in particular about how the speaker pronounced the different words (e.g. till, dill, etc.)?*". No participant reported that the stimuli sounded unnatural [in contrast to other experiments we have conducted with robotic-sounding stimuli like those of @clayards]. In addition to the critical minimal pair continua we also recorded three words that did not did not contain any stop consonant sounds ("flare", "share", and "rare"). These word recordings were used for catch trials. Stimulus intensity was normalized to 70 dB sound pressure level for all recordings. 
 
@@ -84,7 +84,7 @@ Next, we created the two additional exposure conditions by shifting these VOT di
 
 (ref:exp2-design-distribution) Histogram of VOTs across the 48 trials of all three exposure blocks by exposure condition. The dashed gray line shows the theoretical (Normal) distribution that the baseline condition was sampled from. The order of blocks was counter-balanced across participants. 
 
-```{r exp2-design-distribution, fig.height=6, fig.width=6, fig.cap="(ref:exp2-design-distribution)", warning=FALSE, message=FALSE}
+```{r exp2-design-distribution, fig.height=6, fig.width=6.5, fig.cap="(ref:exp2-design-distribution)", warning=FALSE, message=FALSE}
 d.exposure_trials <- 
   read_csv("../data/exposure_block_tokens.csv", show_col_types = F) %>% 
   mutate(
@@ -134,11 +134,12 @@ p.histogram_conditions <-
     "+40ms /t/ unlabeled" = "#e6f3ff"),
     aesthetics = c("color", "category", "fill"),
     labels = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", "", "", "", "", "", "", "", "")) +
-    guides(colour = guide_legend(override.aes = list(
+    guides(colour = guide_legend(
+      override.aes = list(
     colour = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
     fill = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
     linetype = c(2, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0),
-    values = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", 0, 0, 0, 0, 0, 0, 0, 0)), nrow = 1)) +
+    values = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", 0, 0, 0, 0, 0, 0, 0, 0)), nrow = 1), title.position = "right") +
   # stat_function(fun = function(x) 72 * 5 * dnorm(x, 5, sqrt(var_d)),
   #               color = "black", size = .6, alpha = .7, linetype = 2) +
   # stat_function(
@@ -157,6 +158,7 @@ p.histogram_conditions <-
   facet_grid(condition ~ block, scales = "free_y", margins = "block") +
   guides(linetype = "none") +
   theme(legend.position = "top",
+        legend.justification = "right",
         legend.key.width = unit(10, "pt"),
         legend.key.height = unit(10, "pt"),
         legend.box.spacing = unit(1, "pt"),

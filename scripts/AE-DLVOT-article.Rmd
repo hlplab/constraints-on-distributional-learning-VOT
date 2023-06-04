@@ -1,6 +1,6 @@
 ---
 title             : "Unravelling the time-course of listener adaptation to an unfamiliar talker."
-shorttitle        : "Cognition draft"
+shorttitle        : "article 2"
 date              : "`r format(Sys.time(), '%B %d, %Y')`"
 
 author: 
@@ -32,12 +32,7 @@ affiliation:
 
 authornote: |
   We are grateful to ### ommitted for review ###
-# Xin Xie (feedback)
-# C Kurumada (feedback)
-# Rachel Sabatello (for discussion, sandboxing, design suggestion, feedback)
-# Iva Savic (for discussion, sandboxing, design suggestion, feedback)
-# Shawn Cummings (recording assistance, feedback)
-# Rachel Theodore (feedback on stimuli quality)
+
 
 abstract: |
   YOUR ABSTRACT GOES HERE. All data and code for this study are shared via OSF, including the R markdown document that this article is generated from, and an R library that implements the models we present.
