@@ -1,11 +1,6 @@
 ---
-<<<<<<< HEAD
-title             : "Unravelling the time-course of listener adaptation to an unfamiliar talker."
-shorttitle        : "article 2"
-=======
 title             : "Unravelling the time-course of listener adaptation to an unfamiliar talker"
 shorttitle        : "Cognition draft"
->>>>>>> 69a81b11a2b42e5cf35dc8b157e19447c9513495
 date              : "`r format(Sys.time(), '%B %d, %Y')`"
 
 author: 
