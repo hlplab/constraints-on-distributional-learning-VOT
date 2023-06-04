@@ -6,9 +6,9 @@ TO-DO
   * MARYANN
     
 
-### Priority
-  * FLORIAN
-    
+### Lower Priority
+  * Decide on PSE vs. category boundary 
+  * standardize BE vs. AE spelling (categoriz/sation, label(l)ed, synthesiz/sed etc.)
     
 
 
