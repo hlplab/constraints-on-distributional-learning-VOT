@@ -767,15 +767,14 @@ align_tab <- function(hyp) {
   map_chr(hyp, ~ ifelse(class(.x) == "numeric", "r","l"))
 }
 
-make_hyp_table <- function(hyp_readable, hyp, caption, col1_width = "9em") {
-  cbind(hyp_readable, hyp) %>% 
+make_hyp_table <- function(hyp_readable, hyp, caption, col1_width = "14em") {
+  cbind(hyp_readable, hyp) %>%
     select(-2) %>%
     mutate(
       across(where(is.numeric), ~ round(., digits = 3)),
       CI = paste0("[", CI.Lower, ", ", CI.Upper, "]")) %>%
     select(-c(CI.Upper, CI.Lower)) %>%
     relocate(CI, .before = "Evid.Ratio") %>%
-    rename_all(~ gsub("\\.", " ", .)) %>%
     kbl(caption = caption, align = align_tab(hyp),
         format = "latex",
         booktabs = TRUE,
