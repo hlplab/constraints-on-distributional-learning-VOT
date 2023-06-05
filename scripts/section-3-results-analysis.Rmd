@@ -927,7 +927,7 @@ p.density <-
   inherit.aes = F,
   show.legend = T) +
   scale_colour_manual("Condition",
-             labels = c("+0ms", "+10ms", "+40ms"),
+             labels = c("baseline", "+10ms", "+40ms"),
              values = c("#cc0000", "#12D432","#0481F3")) +
   guides(colour = "none",
          linetype = guide_legend(title = "Category"),
@@ -999,10 +999,11 @@ p.shift10_ellipse <-
   shift10_ellipse$path +
   scale_y_continuous("F0 (Mel)") +
   scale_x_continuous("VOT (ms)") +
-  scale_color_gradient("Interval", low = "#000000",
-  high = "#D0D0D0") +
+  scale_color_gradient("Interval", low = "#042f0b",
+  high = "#b9f9c3") +
   guides(linetype = "none")
 
+shift10_ellipse$path[[1]]
 ```
 
 (ref:exposure-means-database-density) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for XXX word-initial /d/ and /t/ productions in L1-US English [based on 92 talkers in @chodroff-wilson2018]. The outermost contour of each category shows the 95% density quantile. Points show the category means of the exposure condition, the green ellipsis shows the covariance of the +10 exposure condition (covariance was identical across conditions).

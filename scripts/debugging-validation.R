@@ -109,21 +109,6 @@ d %>%
 # Interaction = +2.67
 
 
-d_for_analysis %>%
-           group_by(Phase, Block) %>%
-           mutate(
-             Block = factor(case_when(
-               Block == 1 ~ "Test 1",
-               Block == 3 ~ "Test 2",
-               Block == 5 ~ "Test 3",
-               Block == 7 ~ "Test 4",
-               Block == 8 ~ "Test 5",
-               Block == 9 ~ "Test 6",
-               Block == 2 ~ "Exposure 1",
-               Block == 4 ~ "Exposure 2",
-               Block == 6 ~ "Exposure 3")),
-             Block = fct_relevel(Block, c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3",  "Test 4", "Test 5", "Test 6"))) %>%
-           distinct(Item.VOT)
 
 
 
