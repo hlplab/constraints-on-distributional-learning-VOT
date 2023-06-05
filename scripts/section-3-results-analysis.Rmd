@@ -557,38 +557,44 @@ geom_rug(data = d_for_analysis %>%
         axis.title.y = element_blank(),
         strip.background = element_rect(fill = "grey"),
         strip.text.x = element_text(colour = "black"))
-caption <- paste("B :", "the final three test blocks without intervening exposure. More description", collapse = " ")
 
-my_text <- ggplot(data = tibble(x = 0, y = 1, label = caption)) +
-  aes(x = x, y = y, label = label) +
+
+description <- tibble(
+  label = c("Lorem ipsum dolor **sit amet,** consectetur adipiscing elit,
+    sed do *eiusmod tempor incididunt* ut labore et dolore magna
+    aliqua.", "More description about the PSEs and predicted slopes. A naive Bayesian learner is expected to converged on the dashed lines... etc..."),
+  x = c(0.05, .65),
+  y = c(.5, .5),
+  hjust = c(0, 0),
+  vjust = c(1, 1),
+  orientation = c("upright", "upright"),
+  color = c("black", "blue"),
+  fill = c("cornsilk", "white")
+)
+my_text <- description %>% ggplot() +
+  aes(x, y, label = label, colour = color, fill = fill,
+      hjust = hjust, vjust = vjust, 
+      orientation = orientation) +
   geom_textbox(
-    box.color = NA,
-    fill = NA,
-    box.size = unit(10, "cm"),
-    width = unit(10, "cm"),
-    hjust = -2.2, 
-    vjust = 10
+    width = unit(7, "cm") 
   ) +
-  scale_x_continuous(limits = c(0, 1), expand = c(0, 0)) +
-  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+  scale_discrete_identity(aesthetics = c("color", "fill", "orientation")) +
+  xlim(0, 1) + ylim(0, 1) +
   theme_void() +
-  theme(
-    plot.margin = margin(0, 0, 0, 0)
-  )
+  remove_axes_titles
 
-#my_text + p.fit_7to9
 ```
 
 (ref:plot-fit-slope-PSE) Summary of results. **Panel A:** Changes in listeners psychometric categorisation functions as a function of exposure, from Test 1 to Test 4 with all intervening exposure blocks (only unlabelled trials were included in the analysis of exposure blocks since labelled trials provide no information about listeners' categorization function). Point ranges indicate the mean proportion of "t"-responses and their 95% bootstrapped CI. Lines and shaded intervals show the MAP predictions and 95% posterior CIs of a Bayesian mixed-effects psychometric model fit to participants' responses. **Panel B:** Same as Panel A but for the final three test blocks without intervening exposure. Test 4 is shown as part of both Panels A and B. **Panels C \& D:** Changes across blocks in the slope and boundary (point-of-subjective-equality, PSE) of the categorisation functions shown in Panels A-B. Point ranges represent the posterior means and their 95% CI. Dashed reference lines show the intercepts and PSEs that naive (non-rational) learner would be expected to converge against after sufficient exposure (an ideal observer model that knows the exposure distributions).
 
 \begin{landscape}
 ```{r plot-fit-slope-PSE, fig.width=12.5, fig.height=8, warning=FALSE, fig.cap="(ref:plot-fit-slope-PSE)"}
-p.fit_1to7 + p.fit_7to9 + p.params_1to7 +
+p.fit_1to7 + my_text + p.fit_7to9 + p.params_1to7 +
   plot_layout(
     design = "
 AAAAAAAAA
-######BBB
-CCCCCCCCC
+#BBBBBCCC
+DDDDDDDDD
 ",
 heights = c(1, 1, 2)) +
    plot_annotation(tag_levels = 'A', tag_suffix = ")") & theme(plot.tag = element_text(face = "bold")) 
@@ -843,9 +849,6 @@ cond_means <- left_join(cond_means_test_exposure, cond_means_exposure)
 
 
 ```{r non-parametric-density-plot, fig.width=6.5, fig.height=4.5}
-# ensuring that a particular proportion of points are included within each contour line
-# adjusted from https://stackoverflow.com/questions/75598144/interpretation-of-2d-density-estimate-charts
-# we can get the 2d density with MASS::kde2d, then convert to a raster using terra. We can then order the points according to the density in the associated 2d density grid and find the density at which a quantile is passed with approx
 d.chodroff_wilson <-
   get_ChodroffWilson_data(
     database_filename = "../data/all_observations_with_non-missing_vot_cog_f0.csv",
@@ -901,20 +904,6 @@ p.density <-
   scale_x_continuous("VOT (ms)", limits = c(-12, 125), breaks = scales::breaks_width(25)) +
   scale_alpha_continuous(breaks = quantile_levels, range = c(.1, 1), labels = scales::percent(quantile_levels)) +
   theme(legend.position = "top") +
-  #plot the uncentred means
-  geom_point(
-    data = d_for_analysis %>%
-      filter(Phase == "exposure") %>%
-      group_by(Condition.Exposure) %>%
-      mutate(
-        category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))) %>%
-      group_by(Condition.Exposure, category) %>%
-      summarise(across(c(Item.VOT, Item.Mel_F0_5ms), mean)),
-    mapping = aes(x = Item.VOT, y = Item.Mel_F0_5ms, colour = Condition.Exposure, shape = category),
-    size = 2,
-    shape = c(1, 2, 1, 2, 1, 2),
-    alpha = 0.8,
-  inherit.aes = F) +
   #plot centred means
   geom_point(
     data = d_for_analysis %>%
@@ -945,35 +934,56 @@ p.density <-
          shape = guide_legend(title = "Category")) +
  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
   remove_axes_titles
+
+p.density
 ```
 
 
 
-```{r plot-parametric-density-plot, warning=FALSE}
-cov_d <- (d.chodroff_wilson.selected %>%
+```{r plot-parametric-density-10ms, warning=FALSE}
+d_for_analysis %<>% 
+  group_by(Condition.Exposure) %>%
+  mutate(
+    category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")),
+    Item.VOT_centered = case_when(
+      Condition.Exposure == "Shift0" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_test_exposure[1]),
+      Condition.Exposure == "Shift10" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_test_exposure[2]),
+      Condition.Exposure == "Shift40" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_test_exposure[3])),
+    Item.Mel_F0_5ms_centered = case_when(
+      Condition.Exposure == "Shift0" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.Mel_F0_5ms_mean_exposure[1]),
+      Condition.Exposure == "Shift10" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.Mel_F0_5ms_mean_exposure[2]),
+      Condition.Exposure == "Shift40" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.Mel_F0_5ms_mean_exposure[3])))
+  
+shift10_cov_d <- 
+  (d_for_analysis %>% 
+  filter(Condition.Exposure == "Shift10") %>% 
   group_by(category) %>%
   nest(data = -c(category)) %>%
-  mutate(covariance = map_dbl(data, ~ cov(.x$VOT_centered, .x$f0_Mel_centered))) %>%
+  mutate(covariance = map_dbl(data, ~ cov(.x$Item.VOT_centered, .x$Item.Mel_F0_5ms_centered))) %>%
   pull(covariance))[1]
-
-cov_t <- (d.chodroff_wilson.selected %>%
+  
+shift10_cov_t <- 
+  (d_for_analysis %>% 
+  filter(Condition.Exposure == "Shift10") %>% 
   group_by(category) %>%
   nest(data = -c(category)) %>%
-  mutate(covariance = map_dbl(data, ~ cov(.x$VOT_centered, .x$f0_Mel_centered))) %>%
+  mutate(covariance = map_dbl(data, ~ cov(.x$Item.VOT_centered, .x$Item.Mel_F0_5ms_centered))) %>%
   pull(covariance))[2]
-
-cat_d <- d.chodroff_wilson.selected %>%
-  filter(category == "/d/")
-
+  
 cues <- c("VOT", "f0_Mel")
+quantile_levels = c(0, .05, .25, .5, .75, .95)
 
-d.category_ellipse <- d.chodroff_wilson.selected %>%
-  group_by(category) %>%
-  summarise(across(c(VOT_centered, f0_Mel_centered), list(mean = mean, var = var), .names = "{.col}.{.fn}")) %>%
-  mutate(cov = ifelse(category == "/d/", cov_d, cov_t),
-         mu = map2(VOT_centered.mean, f0_Mel_centered.mean, ~ c("VOT" = .x, "f0_Mel" = .y)),
-         Sigma = pmap(list(VOT_centered.var, f0_Mel_centered.var, cov), ~ matrix(c(..1, ..3, ..3, ..2), 2, 2, dimnames = list(cues, cues)))) %>%
-  select(c(category, mu, Sigma)) %>%
+shift10_ellipse <- 
+  d_for_analysis %>% 
+  filter(Phase == "exposure",
+         Condition.Exposure == "Shift10") %>% 
+  group_by(category) %>% 
+  summarise(across(c(Item.VOT_centered, Item.Mel_F0_5ms_centered), list(mean = mean, var = var), .names = "{.col}.{.fn}")) %>% 
+  mutate(cov = ifelse(category == "/d/", shift10_cov_d, shift10_cov_t), 
+         mu = map2(Item.VOT_centered.mean, Item.Mel_F0_5ms_centered.mean, ~ c("VOT" = .x, "f0_Mel" = .y)), 
+         Sigma = pmap(list(
+           Item.VOT_centered.var, Item.Mel_F0_5ms_centered.var, cov), ~ matrix(c(..1, ..3, ..3, ..2), 2, 2, dimnames = list(cues, cues)))) %>%
+  select(c(category, mu, Sigma)) %>% 
   crossing(level = quantile_levels) %>%
   group_by(category) %>%
   mutate(ellipse = c(1:length(quantile_levels)),
@@ -982,66 +992,23 @@ d.category_ellipse <- d.chodroff_wilson.selected %>%
   mutate(path = pmap(list(category, level, ellipse_points),
                      ~ geom_path(data = ..3, mapping = aes(x = ..3[[1]], y = ..3[[2]], linetype = ..1, colour = ..2))))
 
-p.ellipse <- d.category_ellipse %>%
+
+p.shift10_ellipse <- 
+  shift10_ellipse %>% 
   ggplot() +
-  d.category_ellipse$path +
-  scale_y_continuous("F0 (Mel)", limits = c(118, 360)) +
-  scale_x_continuous("VOT (ms)", limits = c(-12, 125), breaks = scales::breaks_width(25)) +
+  shift10_ellipse$path +
+  scale_y_continuous("F0 (Mel)") +
+  scale_x_continuous("VOT (ms)") +
   scale_color_gradient("Interval", low = "#000000",
   high = "#D0D0D0") +
-  # scale_linetype_manual("Category", values = c(1, 2)) +
-  # theme(legend.position = "right") +
-  new_scale_color() +
-  #plot the uncentred means
-  geom_point(
-    data = d_for_analysis %>%
-      filter(Phase == "exposure") %>%
-      group_by(Condition.Exposure) %>%
-      mutate(
-        category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))) %>%
-      group_by(Condition.Exposure, category) %>%
-      summarise(across(c(Item.VOT, Item.Mel_F0_5ms), mean)),
-    mapping = aes(x = Item.VOT, y = Item.Mel_F0_5ms, colour = Condition.Exposure, shape = category),
-    size = 2,
-    shape = c(1, 2, 1, 2, 1, 2),
-    alpha = 0.8,
-  inherit.aes = F,
-  show.legend = F) +
-  scale_colour_manual("Condition",
-             labels = c("+0ms", "+10ms", "+40ms"),
-             values = c("#cc0000", "#12D432","#0481F3")) +
-  #plot the centered means
-  geom_point(
-    data = d_for_analysis %>%
-      filter(Phase == "exposure") %>%
-      group_by(Condition.Exposure) %>%
-      mutate(
-        category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")),
-        Item.VOT_centered = case_when(
-          Condition.Exposure == "Shift0" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_test_exposure[1]),
-          Condition.Exposure == "Shift10" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_test_exposure[2]),
-          Condition.Exposure == "Shift40" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_test_exposure[3])),
-        Item.Mel_F0_5ms_centered = case_when(
-          Condition.Exposure == "Shift0" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.Mel_F0_5ms_mean_test_exposure[1]),
-          Condition.Exposure == "Shift10" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.Mel_F0_5ms_mean_test_exposure[2]),
-          Condition.Exposure == "Shift40" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.Mel_F0_5ms_mean_test_exposure[3]))) %>%
-      group_by(Condition.Exposure, category) %>%
-      summarise(across(c(Item.VOT_centered, Item.Mel_F0_5ms_centered), mean)),
-    mapping = aes(x = Item.VOT_centered, y = Item.Mel_F0_5ms_centered, colour = Condition.Exposure, shape = category),
-    size = 2,
-    alpha = 0.8,
-  inherit.aes = F,
-  show.legend = F) +
   guides(linetype = "none")
-  # scale_colour_manual("Condition",
-  #            labels = c("+0ms", "+10ms", "+40ms"),
-  #            values = c("#cc0000", "#12D432","#0481F3")) +
+
 ```
 
 (ref:exposure-means-database-density) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for XXX word-initial /d/ and /t/ productions in L1-US English [based on 92 talkers in @chodroff-wilson2018]. The outermost contour of each category shows the 95% density quantile. Points show the category means of the exposure condition, the green ellipsis shows the covariance of the +10 exposure condition (covariance was identical across conditions).
 
 ```{r exposure-means-database-density, fig.width= 6, fig.height=4, warning=FALSE, fig.cap="(ref:exposure-means-database-density)"}
-(p.density / p.ellipse) +
+(p.density / p.shift10_ellipse) +
   plot_layout(ncol = 1, guides = "collect") &
   theme(legend.position = "right")
 ```

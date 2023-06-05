@@ -767,8 +767,8 @@ align_tab <- function(hyp) {
   map_chr(hyp, ~ ifelse(class(.x) == "numeric", "r","l"))
 }
 
-make_hyp_table <- function(hyp_readable, hyp, caption, col1_width = "8em") {
-  cbind(hyp_readable, hyp) %>% #order of vector matters
+make_hyp_table <- function(hyp_readable, hyp, caption, col1_width = "9em") {
+  cbind(hyp_readable, hyp) %>% 
     select(-2) %>%
     mutate(
       across(where(is.numeric), ~ round(., digits = 3)),
@@ -778,10 +778,10 @@ make_hyp_table <- function(hyp_readable, hyp, caption, col1_width = "8em") {
     rename_all(~ gsub("\\.", " ", .)) %>%
     kbl(caption = caption, align = align_tab(hyp),
         format = "latex",
+        booktabs = TRUE,
         escape = FALSE,
         col.names = c("Hypothesis", "Estimate", "SE", "90\\%-CI", "BF", "$p_{posterior}$")) %>%
-    kable_styling(full_width = FALSE,
-                  latex_options = "striped") %>%
+    kable_styling(full_width = FALSE) %>%
     column_spec(1, width = col1_width)
 }
 
