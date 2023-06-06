@@ -96,7 +96,7 @@ Figure \@ref(fig:exposure-means-database-density) shows the mean and covariance 
 ### Constraints on cumulative changes
 
 
-### Effects of repeating testing
+### Effects of repeated testing
 Finally, we turn the consequences of repeated testing. As evident in Panel B and D of Figure \@ref(fig:plot-fit-slope-PSE), repeated testing without additional exposure resulting in partial undoing of the effects described so far. Bayesian hypothesis tests confirmed that the difference in the PSE decreased from Test 4 to 6, both for the +40 compared to the +10 condition ($`r get_bf(fit_mix_test, "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0")`$) and the +10 compared to the baseline condition ($`r get_bf(fit_mix_test, "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 > 0")`$). 
 
 This replicates previous findings that repeated testing over uniform test continua can undo the effects of exposure [@cummings; @liu-jaeger2018; @liu-jaeger2019; @others], and extends them from perceptual recalibration paradigms to distributional learning paradigms. One important methodological consequence of this findings is that longer test phases do not necessarily increase the statistical power to detect effects of adaptation [unless analyses take the effects of repeated testing into account, as in the approach developed in @liu-jaeger2018]. Analyses that average across all test tokens---as remains the norm---are bound to systematically underestimate the adaptivity of human speech perception.
@@ -900,8 +900,9 @@ p.density <-
   scale_y_continuous("F0 (Mel)", limits = c(118, 360)) +
   scale_x_continuous("VOT (ms)", limits = c(-12, 125), breaks = scales::breaks_width(25)) +
   scale_alpha_continuous(breaks = quantile_levels, range = c(.1, 1), labels = scales::percent(quantile_levels)) +
+  scale_linetype_manual(labels = c("/d/", "/t/"), values = c(2, 1)) 
   theme(legend.position = "top") +
-  #plot centred means
+  #plot centered means
   geom_point(
     data = d_for_analysis %>%
       filter(Phase == "exposure") %>%
@@ -923,14 +924,21 @@ p.density <-
     alpha = 0.8,
   inherit.aes = F,
   show.legend = T) +
+  geom_point(
+    data = d.chodroff_wilson.selected %>% 
+      group_by(category) %>% 
+      summarise(across(c(VOT_centered, f0_Mel_centered), mean, .names = "{.col}.mean")),
+    aes(x = VOT_centered.mean, y = f0_Mel_centered.mean, shape = category),
+    inherit.aes = F,
+    show.legend = F) +
   scale_colour_manual("Condition",
              labels = c("baseline", "+10ms", "+40ms"),
              values = c("#cc0000", "#12D432","#0481F3")) +
   guides(colour = "none",
          linetype = guide_legend(title = "Category"),
          shape = guide_legend(title = "Category")) +
- theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
-  remove_axes_titles
+ theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) + 
+    remove_axes_titles
 
 p.density
 ```
@@ -949,7 +957,8 @@ d_for_analysis %<>%
     Item.Mel_F0_5ms_centered = case_when(
       Condition.Exposure == "Shift0" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.Mel_F0_5ms_mean_exposure[1]),
       Condition.Exposure == "Shift10" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.Mel_F0_5ms_mean_exposure[2]),
-      Condition.Exposure == "Shift40" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.Mel_F0_5ms_mean_exposure[3])))
+      Condition.Exposure == "Shift40" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.Mel_F0_5ms_mean_exposure[3]))
+    )
   
 shift10_cov_d <- 
   (d_for_analysis %>% 
@@ -968,7 +977,7 @@ shift10_cov_t <-
   pull(covariance))[2]
   
 cues <- c("VOT", "f0_Mel")
-quantile_levels = c(0, .05, .25, .5, .75, .95)
+
 
 shift10_ellipse <- 
   d_for_analysis %>% 
@@ -981,26 +990,29 @@ shift10_ellipse <-
          Sigma = pmap(list(
            Item.VOT_centered.var, Item.Mel_F0_5ms_centered.var, cov), ~ matrix(c(..1, ..3, ..3, ..2), 2, 2, dimnames = list(cues, cues)))) %>%
   select(c(category, mu, Sigma)) %>% 
-  crossing(level = quantile_levels) %>%
+  crossing(level = .95) %>%
   group_by(category) %>%
-  mutate(ellipse = c(1:length(quantile_levels)),
+  mutate(ellipse = c(1:1),
          ellipse_points = pmap(list(mu, Sigma, level), ~ get_bivariate_normal_ellipse(mu = ..1, Sigma = ..2, level = ..3))) %>%
   group_by(ellipse) %>%
   mutate(path = pmap(list(category, level, ellipse_points),
                      ~ geom_path(data = ..3, mapping = aes(x = ..3[[1]], y = ..3[[2]], linetype = ..1, colour = ..2))))
 
 
-p.shift10_ellipse <- 
+shift10_95ellipse <- 
   shift10_ellipse %>% 
-  ggplot() +
-  shift10_ellipse$path +
-  scale_y_continuous("F0 (Mel)") +
-  scale_x_continuous("VOT (ms)") +
-  scale_color_gradient("Interval", low = "#042f0b",
-  high = "#b9f9c3") +
-  guides(linetype = "none")
+  group_by(category) %>% 
+  unnest(ellipse_points)
 
-shift10_ellipse$path[[1]]
+p.density +
+  geom_path(
+    data = shift10_95ellipse,
+    aes(x = VOT, y = F0, linetype = category),
+    colour = "#85e085",
+    show.legend = F,
+    inherit.aes = F) +
+  scale_y_continuous(limits = c(220, 250))
+
 ```
 
 (ref:exposure-means-database-density) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for XXX word-initial /d/ and /t/ productions in L1-US English [based on 92 talkers in @chodroff-wilson2018]. The outermost contour of each category shows the 95% density quantile. Points show the category means of the exposure condition, the green ellipsis shows the covariance of the +10 exposure condition (covariance was identical across conditions).
