@@ -158,11 +158,11 @@ p.histogram_conditions <-
   facet_grid(condition ~ block, scales = "free_y", margins = "block") +
   guides(linetype = "none") +
   theme(legend.position = "top",
-        legend.justification = "right",
-        legend.key.width = unit(10, "pt"),
-        legend.key.height = unit(10, "pt"),
-        legend.box.spacing = unit(1, "pt"),
-        legend.box.just = "right")
+        legend.justification = c(1.4, 0),
+        legend.box.just = "right",
+        legend.key.width = unit(12, "pt"),
+        legend.key.height = unit(12, "pt"),
+        legend.box.spacing = unit(1, "pt"))
 p.histogram_conditions
 ```
 

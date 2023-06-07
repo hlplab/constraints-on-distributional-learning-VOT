@@ -367,6 +367,8 @@ p.params_1to7 <- (p.slope_1to7 | p.PSE_1to7) +
   theme(legend.position = "none", axis.text = element_text(size = 8))
 ```
 
+
+
 ```{r plot-test-exposure-fit, fig.width=11, fig.height=3}
 get_conditional_effects <- function(model, data, phase) {
   conditional_effects(
