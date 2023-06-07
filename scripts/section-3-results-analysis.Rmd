@@ -461,10 +461,10 @@ p.fit_1to7 <- cond_fit_test_exposure %>%
     data = d_for_analysis %>%
       filter(Block %in% c(1:7), Item.Labeled == FALSE) %>%
       mutate(
-        Condition.Exposure = case_when(
+        Condition.Exposure = factor(case_when(
           Condition.Exposure == "Shift0" ~ "baseline",
           Condition.Exposure == "Shift10" ~ "+10ms",
-          Condition.Exposure == "Shift40" ~ "+40ms"),
+          Condition.Exposure == "Shift40" ~ "+40ms")),
         Condition.Exposure = fct_relevel(
           Condition.Exposure, c("baseline", "+10ms", "+40ms")),
         Block = factor(case_when(
@@ -532,10 +532,10 @@ geom_rug(data = d_for_analysis %>%
     data = d_for_analysis %>%
       filter(Block %in% c(7:9), Item.Labeled == FALSE) %>%
       mutate(
-        Condition.Exposure = case_when(
+        Condition.Exposure = factor(case_when(
           Condition.Exposure == "Shift0" ~ "baseline",
           Condition.Exposure == "Shift10" ~ "+10ms",
-          Condition.Exposure == "Shift40" ~ "+40ms"),
+          Condition.Exposure == "Shift40" ~ "+40ms")),
         Condition.Exposure = fct_relevel(
           Condition.Exposure, c("baseline", "+10ms", "+40ms")),
         Block = factor(case_when(
