@@ -110,17 +110,287 @@ d %>%
 
 
 
+p.intercept <-
+  d.estimates %>%
+  ggplot(aes(x = Block, y = Intercept_mean, colour = Condition.Exposure, group = Condition.Exposure)) +
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 0.75, xmax = 1.25),
+            fill = "grey",
+            alpha = .009,
+            inherit.aes = F) +
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 2.75, xmax = 3.25),
+            fill = "grey",
+            alpha = .009,
+            inherit.aes = F) +
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 4.75, xmax = 5.25),
+            fill = "grey",
+            alpha = .009,
+            inherit.aes = F) +
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 6.75, xmax = 7.25),
+            fill = "grey",
+            alpha = .009,
+            inherit.aes = F) +
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 7.75, xmax = 8.25),
+            fill = "grey",
+            alpha = .009,
+            inherit.aes = F) +
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 8.75, xmax = 9.25),
+            fill = "grey",
+            alpha = .009,
+            inherit.aes = F) +
+  geom_point(position = position_dodge(.3), size = 1) +
+  geom_linerange(aes(ymin = Intercept_lower, ymax = Intercept_upper), linewidth = .6, position = position_dodge(.3), alpha = .5) +
+  stat_summary(geom = "line", position = position_dodge(.3)) +
+  geom_hline(yintercept = d.io.categorisation[[7]][1], linetype = 2, linewidth = 0.8, colour = "#cc0000", alpha = 0.5) +
+  geom_hline(yintercept = d.io.categorisation[[7]][2], linetype = 2, linewidth = .8, colour = "#12D432", alpha = 0.5) +
+  geom_hline(yintercept = d.io.categorisation[[7]][3], linetype = 2, linewidth = .8, colour = "#0481F3", alpha = 0.5) +
+  scale_colour_manual("Condition",
+                      labels = c("baseline", "+10ms", "+40ms"),
+                      values = c("#cc0000", "#12D432","#0481F3"),
+                      aesthetics = "color") +
+  scale_y_continuous("Intercept") +
+  scale_x_discrete("Block", labels = c("1" = "Test 1", "2" = "Exposure 1", "3" = "Test 2", "4" = "Exposure 2", "5" = "Test 3", "6" = "Exposure 3", "7" = "Test 4", "8" = "Test 5", "9" = "Test 6")) +
+  theme(legend.position = "top",
+        axis.text.x = element_text(angle = 22.5, hjust = 1))
+
+p.slope_1to7 <-
+  d.estimates %>%
+  ggplot(aes(x = Block, y = slope_mean,
+             colour = Condition.Exposure,
+             group = Condition.Exposure)) +
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 0.55, xmax = 1.45),
+            fill = "grey",
+            alpha = .009,
+            inherit.aes = F) +
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 2.55, xmax = 3.45),
+            fill = "grey",
+            alpha = .009,
+            inherit.aes = F) +
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 4.55, xmax = 5.45),
+            fill = "grey",
+            alpha = .009,
+            inherit.aes = F) +
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 6.55, xmax = 7.45),
+            fill = "grey",
+            alpha = .009,
+            inherit.aes = F) +
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 7.55, xmax = 8.45),
+            fill = "grey",
+            alpha = .009,
+            inherit.aes = F) +
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 8.55, xmax = 9.45),
+            fill = "grey",
+            alpha = .009,
+            inherit.aes = F) +
+  geom_point(position = position_dodge(.3), size = 1) +
+  geom_linerange(aes(ymin = slope_lower, ymax = slope_upper), linewidth = .6, position = position_dodge(.3), alpha = .5) +
+  stat_summary(geom = "line", position = position_dodge(.3)) +
+  geom_hline(yintercept = 23, linetype = 2, linewidth = 0.8, colour = "#cc0000", alpha = 0.5) +
+  geom_hline(yintercept = 23, linetype = 2, linewidth = .8, colour = "#12D432", alpha = 0.5) +
+  geom_hline(yintercept = 23, linetype = 2, linewidth = .8, colour = "#0481F3", alpha = 0.5) +
+  scale_colour_manual("Condition",
+                      labels = c("baseline", "+10ms", "+40ms"),
+                      values = c("#cc0000", "#12D432","#0481F3"),
+                      aesthetics = "color") +
+  scale_y_continuous("Slope") +
+  scale_x_discrete("Block", labels = c("1" = "Test 1", "2" = "Exposure 1", "3" = "Test 2", "4" = "Exposure 2", "5" = "Test 3", "6" = "Exposure 3", "7" = "Test 4", "8" = "Test 5", "9" = "Test 6")) +
+  theme(legend.position = "top",
+        legend.box.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = "cm"),
+        legend.box.just = "right",
+        legend.justification = c(1.3, 0),
+        legend.box.spacing = unit(0, "cm"),
+        legend.text = element_text(size = 6, lineheight = 0),
+        legend.title = element_text(size = 6),
+        axis.text.x = element_blank(),
+        axis.title.x = element_blank(),
+        axis.ticks.x = element_blank())
+
+p.PSE_1to7 <-d.estimates %>%
+  ggplot(aes(x = Block, y = PSE_mean, colour = Condition.Exposure, group = Condition.Exposure)) +
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 0.55, xmax = 1.45),
+            fill = "grey",
+            alpha = .009,
+            inherit.aes = F) +
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 2.55, xmax = 3.45),
+            fill = "grey",
+            alpha = .009,
+            inherit.aes = F) +
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 4.55, xmax = 5.45),
+            fill = "grey",
+            alpha = .009,
+            inherit.aes = F) +
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 6.55, xmax = 7.45),
+            fill = "grey",
+            alpha = .009,
+            inherit.aes = F) +
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 7.55, xmax = 8.45),
+            fill = "grey",
+            alpha = .009,
+            inherit.aes = F) +
+  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 8.55, xmax = 9.45),
+            fill = "grey",
+            alpha = .009,
+            inherit.aes = F) +
+  geom_point(position = position_dodge(.3), size = 1) +
+  geom_linerange(aes(ymin = PSE_lower, ymax = PSE_upper), linewidth = .6, position = position_dodge(.3), alpha = .5) +
+  stat_summary(geom = "line", position = position_dodge(.3)) +
+  geom_hline(yintercept = d.io.categorisation[[9]][1], linetype = 2, linewidth = 0.8, colour = "#cc0000", alpha = 0.5) +
+  geom_hline(yintercept = d.io.categorisation[[9]][2], linetype = 2, linewidth = .8, colour = "#12D432", alpha = 0.5) +
+  geom_hline(yintercept = d.io.categorisation[[9]][3], linetype = 2, linewidth = .8, colour = "#0481F3", alpha = 0.5) +
+  scale_colour_manual("Condition",
+                      labels = c("baseline", "+10ms", "+40ms"),
+                      values = c("#cc0000", "#12D432","#0481F3"),
+                      aesthetics = "color") +
+  scale_y_continuous("PSE") +
+  scale_x_discrete("Block", labels = c("1" = "Test 1", "2" = "Exposure 1", "3" = "Test 2", "4" = "Exposure 2", "5" = "Test 3", "6" = "Exposure 3", "7" = "Test 4", "8" = "Test 5", "9" = "Test 6")) +
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 22.5, hjust = 1)) +
+  guides(colour = "none")
 
 
 
+p.params <- (p.slope_1to7 / p.PSE_1to7) +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "top", 
+        axis.text = element_text(size = 8))
 
 
 
+p.histogram_conditions <- 
+  d.exposure_trials %>% 
+  na.omit() %>% 
+  filter(image_selection == "forward" & list_LSQ_variant == "A") %>%
+  mutate(block = case_when(
+    block == 2 ~ "Block A",
+    block == 4 ~ "Block B",
+    block == 6 ~ "Block C")) %>% 
+  ggplot() +
+  geom_histogram(aes(x = VOT, fill = paste(condition, category, labelling), 
+                     color = paste(condition, category, labelling),
+                     linetype = labelling), 
+                 alpha = .8) +
+  scale_colour_manual(
+    "Labelling",
+    values = c(
+      "baseline /d/ labeled" = "#800000", 
+      "baseline /d/ unlabeled" = "#ff9999",
+      "baseline /t/ labeled" = "#cc0000", 
+      "baseline /t/ unlabeled" = "#ffe6e6",
+      "+10ms /d/ labeled" = "#0a751c",
+      "+10ms /d/ unlabeled" = "#b9f9c3",
+      "+10ms /t/ labeled" = "#12D432",
+      "+10ms /t/ unlabeled" = "#e8fdeb",
+      "+40ms /d/ labeled" = "#02427e", 
+      "+40ms /d/ unlabeled" = "#b4dafe",
+      "+40ms /t/ labeled" = "#0481F3", 
+      "+40ms /t/ unlabeled" = "#e6f3ff"),
+    aesthetics = c("color", "category", "fill"),
+    labels = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", "", "", "", "", "", "", "", "")) +
+  guides(colour = guide_legend(
+    override.aes = list(
+      colour = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
+      fill = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
+      linetype = c(2, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0),
+      values = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", 0, 0, 0, 0, 0, 0, 0, 0)), nrow = 2)) +
+  scale_x_continuous("VOT (ms)", breaks = seq(-50, 150, 30)) +
+  scale_y_continuous("Count") +
+  facet_grid(condition ~ block, scales = "free_y", margins = F) +
+  guides(linetype = "none") +
+  theme(
+    legend.position = "top",
+    strip.text.y = element_blank())
+
+p.histogram_conditions
 
 
+p.histo_true_shift <- d.exposure_trials %>% 
+  na.omit() %>% 
+  filter(image_selection == "forward" & list_LSQ_variant == "A") %>%
+  ggplot() +
+  geom_histogram(aes(
+    x = VOT, fill = paste(condition, category, labelling), 
+    color = paste(condition, category, labelling),
+    linetype = labelling), 
+    alpha = .8) +
+  scale_colour_manual(
+    "Labelling",
+    values = c(
+      "baseline /d/ labeled" = "#800000", 
+      "baseline /d/ unlabeled" = "#ff9999",
+      "baseline /t/ labeled" = "#cc0000", 
+      "baseline /t/ unlabeled" = "#ffe6e6",
+      "+10ms /d/ labeled" = "#0a751c",
+      "+10ms /d/ unlabeled" = "#b9f9c3",
+      "+10ms /t/ labeled" = "#12D432",
+      "+10ms /t/ unlabeled" = "#e8fdeb",
+      "+40ms /d/ labeled" = "#02427e", 
+      "+40ms /d/ unlabeled" = "#b4dafe",
+      "+40ms /t/ labeled" = "#0481F3", 
+      "+40ms /t/ unlabeled" = "#e6f3ff"),
+    aesthetics = c("color", "category", "fill"),
+    labels = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", "", "", "", "", "", "", "", "")) +
+  guides(colour = guide_legend(
+    override.aes = list(
+      colour = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
+      fill = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
+      linetype = c(2, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0),
+      values = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", 0, 0, 0, 0, 0, 0, 0, 0)), nrow = 2)) +
+  stat_function(fun = function(x) 72 * 5 * dnorm(x, 25, sqrt(var_d)),
+                color = "black", linewidth = .6, alpha = .7, linetype = 2) +
+  stat_function(
+    fun = function(x) 72 * 5 * dnorm(x, 70, sqrt(var_t)),
+    color = "black", linewidth = .6, alpha = .5, linetype = 2) +
+  geom_rug(data = tibble(VOT = c(25, 70)), aes(x = VOT), sides = "t") +
+  scale_x_continuous("VOT (ms)", breaks = seq(-50, 150, 30)) +
+  scale_y_continuous("Count") +
+  geom_text(data = d.means,
+            aes(x = 103, 
+                y = 17,
+                label = paste("mean", category, "=", mean)),
+            size = 3,
+            position = position_dodge2v(height = -8),
+            inherit.aes = F) +
+  facet_grid(. ~ condition, scales = "free_y", margins = F) +
+  guides(linetype = "none") +
+  theme(legend.position = "top",
+        legend.text = element_text(size = 6),
+        legend.title = element_text(size = 6),
+        legend.justification = c(1.3, 0),
+        legend.box.just = "right",
+        legend.key.width = unit(12, "pt"),
+        legend.key.height = unit(12, "pt"),
+        legend.box.spacing = unit(1, "pt"))
+
+p.histo_true_shift
+
+ggsave("p.slope_1to7.png", p.slope_1to7, width = 12, height = 6.5, units = "cm", path = "~/Desktop/")
+ggsave("p.PSE_1to7.png", p.PSE_1to7, width = 12, height = 7, units = "cm", path = "~/Desktop/")
+ggsave("p.params.png", p.params, width = 14, height = 12, units = "cm", path = "~/Desktop/")
+
+ggsave("p.histo_true_shift.png", p.histo_true_shift, width = 16.5, height = 8, units = "cm", path = "~/Desktop/")
 
 
+align_tab <- function(hyp) {
+  map_chr(hyp, ~ ifelse(class(.x) == "numeric", "r","l"))
+}
 
+make_hyp_table <- function(hyp_readable, hyp, caption, col1_width = "14em") {
+  cbind(hyp_readable, hyp) %>%
+    select(-2) %>%
+    mutate(
+      across(where(is.numeric), ~ round(., digits = 3)),
+      CI = paste0("[", CI.Lower, ", ", CI.Upper, "]")) %>%
+    select(-c(CI.Upper, CI.Lower)) %>%
+    relocate(CI, .before = "Evid.Ratio") %>%
+    kbl(caption = caption, align = align_tab(hyp),
+        format = "html",
+        #booktabs = TRUE,
+        escape = TRUE,
+        col.names = c("Hypothesis", "Estimate", "SE", "90 %-CI", "BF", "$p_{posterior}$")) %>%
+    kable_styling(full_width = FALSE) %>%
+    column_spec(1, width = col1_width)
+}
 
+p.density
 
+ggsave("p.density.png", p.density, width = 18, height = 12, units = "cm", path = "~/Desktop/")
 

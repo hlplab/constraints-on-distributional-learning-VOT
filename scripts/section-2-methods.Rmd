@@ -139,13 +139,13 @@ p.histogram_conditions <-
     colour = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
     fill = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
     linetype = c(2, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0),
-    values = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", 0, 0, 0, 0, 0, 0, 0, 0)), nrow = 1), title.position = "right") +
-  # stat_function(fun = function(x) 72 * 5 * dnorm(x, 5, sqrt(var_d)),
-  #               color = "black", size = .6, alpha = .7, linetype = 2) +
+    values = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", 0, 0, 0, 0, 0, 0, 0, 0)), nrow = 2)) +
+  # stat_function(fun = function(x) 24 * 5 * dnorm(x, 5, sqrt(var_d)),
+  #               color = "black", linewidth = .6, alpha = .7, linetype = 2) +
   # stat_function(
-  #   fun = function(x) 72 * 5 * dnorm(x, 50, sqrt(var_t)),
-  #   color = "black", size = .6, alpha = .5, linetype = 2) +
-  #geom_rug(data = tibble(VOT = c(5, 50)), aes(x = VOT), sides = "t") +
+  #   fun = function(x) 24 * 5 * dnorm(x, 50, sqrt(var_t)),
+  #   color = "black", linewidth = .6, alpha = .5, linetype = 2) +
+  # geom_rug(data = tibble(VOT = c(5, 50)), aes(x = VOT), sides = "t") +
   scale_x_continuous("VOT (ms)", breaks = seq(-50, 150, 30)) +
   scale_y_continuous("Count") +
   geom_text(data = d.means,
@@ -158,7 +158,10 @@ p.histogram_conditions <-
   facet_grid(condition ~ block, scales = "free_y", margins = "block") +
   guides(linetype = "none") +
   theme(legend.position = "top",
-        legend.justification = c(1.4, 0),
+        legend.title = element_text(size = 10),
+        legend.title.align = 0,
+        legend.text.align = 0,
+        legend.justification = c(1.12, 0),
         legend.box.just = "right",
         legend.key.width = unit(12, "pt"),
         legend.key.height = unit(12, "pt"),
