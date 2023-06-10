@@ -22,7 +22,7 @@ Contrastive tests against alternative hypotheses remain lacking [@xie2023]. This
 
 
 - THE AIM OF THIS STUDY-
-The study we report here builds on the pioneering work of @clayards2008 and @kleinschmidt2016you with the aim to shed more light on how listeners' initial interpretation of cues from a novel talker incrementally change as they receive progressively more informative input of her cue-to-category mappings.
+The study we report here builds on the pioneering work of @clayards2008 and @kleinschmidt-jaeger2016 with the aim to shed more light on how listeners' initial interpretation of cues from a novel talker incrementally change as they receive progressively more informative input of her cue-to-category mappings.
 
 
 POINTS-TO-MAKE

@@ -262,7 +262,7 @@ Participants were recruited over Amazon's Mechanical Turk platform, and paid $2.
 ### Materials 
 The VOT continua ranged from -100ms VOT to +130ms VOT in 5ms steps. Experiment 1 employs 24 of these steps (-100, -50, -10, 5  `r paste0(seq(15, 90, 5), collapse = ", ")`, `r paste0(seq(100, 130, 10), collapse = ", ")`). VOT tokens in the lower and upper ends were distributed over larger increments because stimuli in those ranges were expected to elicit floor and ceiling effects, respectively. 
 
-We further set the F0 at vowel onset to follow the speaker's natural correlation which was estimated through a linear regression analysis of all the recorded speech tokens. We did this so that we could determine the approximate corresponding f0 values at each VOT value along the continua as predicted by this talker's VOT. The duration of the vowel was set to follow the natural trade-off relation with VOT reported in @allen1999effects. This approach closely resembles that taken in @theodore2019distributional, and resulted in continuum steps that sound highly natural [unlike the robotic-sounding stimuli employed in @clayards2008; @kleinschmidt2016you]. All stimuli are available as part of the OSF repository for this article.
+We further set the F0 at vowel onset to follow the speaker's natural correlation which was estimated through a linear regression analysis of all the recorded speech tokens. We did this so that we could determine the approximate corresponding f0 values at each VOT value along the continua as predicted by this talker's VOT. The duration of the vowel was set to follow the natural trade-off relation with VOT reported in @allen1999effects. This approach closely resembles that taken in @theodore2019distributional, and resulted in continuum steps that sound highly natural [unlike the robotic-sounding stimuli employed in @clayards2008; @kleinschmidt-jaeger2016]. All stimuli are available as part of the OSF repository for this article.
 
 In addition to the critical minimal pair continua we also recorded three words that did not did not contain any stop consonant sounds ("flare", "share", and "rare"). These word recordings were used as catch trials. Stimulus intensity was set to 70 dB sound pressure level for all recordings. 
 
@@ -364,7 +364,7 @@ We fit the model using the package \texttt{brms} [@R-brms_a] in R [@R; @RStudio]
 
 ### Expectations 
 Based on previous experiments, we expected a strong positive effect of VOT, with increasing proportions of "t"-responses for increasing VOTs. We did not have clear expectations for the effect of trial other than that responses should become more uniformed (i.e move towards 50-50 "d"/"t"-bias or 0-log-odds) as the experiment progressed [@liu2018inferring] due to the un-informativeness of the stimuli. 
-Previous studies with similar paradigms have typically found lapse rates of 0-10% [< -2.2 log-odds, e.g., @clayards2008; @kleinschmidt2016you]. 
+Previous studies with similar paradigms have typically found lapse rates of 0-10% [< -2.2 log-odds, e.g., @clayards2008; @kleinschmidt-jaeger2016]. 
 
 ```{r, warning=FALSE}
 # set the mean and SD values for scaling/unscaling purposes
