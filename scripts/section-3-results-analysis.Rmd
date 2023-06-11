@@ -83,7 +83,7 @@ Figures \@ref(fig:plot-fit-slope-PSE)A-B summarize participants’ categorisatio
 ### Does exposure affect participants' categorisations?
 Here we focus on the test blocks, which were identical within and across exposure conditions. Analyses of the exposure blocks are reported in the SI (\@ref(sec:exposure-analyses)), and replicate all effects found in the test blocks. Unsurprisingly, participants were more likely to respond "t" the larger the VOT ($`r get_bf(fit_mix_test, "mu2_VOT_gs > 0")`$). Critically, exposure affects participants' categorisation responses in the expected direction. Marginalizing across all blocks, participants in the +40 condition were less likely to respond "t" than participants in the +10 condition ($`r get_bf(fit_mix_test, "mu2_Condition.Exposure_Shift40vs.Shift10 < 0")`$) or the baseline condition ($`r get_bf(fit_mix_test, "mu2_Condition.Exposure_Shift40vs.Shift10 + mu2_Condition.Exposure_Shift10vs.Shift0 < 0")`$). There was also evidence---albeit less decisive---that participants in the +10 condition were less likely to respond "t" than participants in the baseline condition ($`r get_bf(fit_mix_test, "mu2_Condition.Exposure_Shift10vs.Shift0 < 0")`$). That is, the +10 and +40 conditions resulted in categorisation functions that were shifted rightwards compared to the baseline condition, as also visible in Figures \@ref(fig:plot-fit-slope-PSE).
 
-This replicates previous findings that exposure to changed VOT distributions changes listeners' categorization responses [for /b/-/p/: @clayards2008; @kleinschmidt-jaeger2016; @kleinschmidt2020; for /g/-/k/, @theodore-monto2018]. Having established that exposure affected categorization, we turn to the questions of primary interest.
+This replicates previous findings that exposure to changed VOT distributions changes listeners' categorization responses [for /b/-/p/: @clayards2008; @kleinschmidt-jaeger2016; @kleinschmidt2020; for /g/-/k/, @theodore-monto2019]. Having established that exposure affected categorization, we turn to the questions of primary interest.
 
 ### Incremental changes in listeners' categorisation with increasing exposure (Test 1 to 4)
 As already visible in Figure \@ref(fig:plot-fit-slope-PSE)A, effects of exposure emerged early in the experiment. Table \@ref(tab:hypothesis-table2) summarizes the simple effects of exposure condition during each of the first four test blocks. Prior to any exposure, during Test 1, participants' responses did not differ across exposure condition. <!-- TO DO: fit model with save_priors =T and change hypothesis tests for block one to = 0, not < 0: fitting--> After exposure to only 24 /d/ and 24 /t/ stimuli, during Test 2, participants' responses already differed between exposure conditions. The difference between the +40 condition and the +10 or baseline condition kept increasing with exposure up to Test 4. Additional hypothesis tests in Table \@ref(tab:hypothesis-table1)  show that the change from Test 1 to 2 was largest (BF = 27.8), followed by the change from Test 2 to 3 (BF = 19.2), with only minimal changes from Test 3 to 4 (BF = 1.7). Qualitatively paralleling the changes across blocks for the +40 condition, the change in the difference between the +10 and baseline conditions was largest from Test 1 to 2 (BF = 13.5), and then somewhat decreased from Test 2 to Test 4 (BFs < 4). 
@@ -91,7 +91,7 @@ As already visible in Figure \@ref(fig:plot-fit-slope-PSE)A, effects of exposure
 This pattern of changes is also evident in Figure \@ref(fig:plot-fit-slope-PSE)D, which shows how participants' point of subject equality (PSE)---i.e., the point at which "d" and "t" responses are equally likely---changes with increasing exposure. This visualization makes apparent two aspects of participants' behavior that were not readily apparent in the statistical comparisons we have summarized so far. First, while the PSEs for the +10 and +40 conditions were indeed shifted rightwards compared to the baseline condition (relatively larger PSEs), both the +10 and the baseline condition actually shift leftwards *relative* to their pre-exposure starting point in Test 1. Second, the reason for the slight decrease in the difference between the +10 and baseline conditions observed in Tables \@ref(tab:hypothesis-table1) and \@ref(tab:hypothesis-table2) (visible in Figure \@ref(fig:plot-fit-slope-PSE)D as the decreasing difference between the green and red line) is *not* due to a reversal of the effects in the +10 condition. Rather, both conditions are changing in the same direction but the baseline condition stops changing after Test 2, which brings the +10 condition increasingly closer to the baseline condition. To understand this pattern, it is necessary to relate our exposure conditions to the distribution of VOT in listeners' prior experience.
 
 ### Relating incremental changes in categorisation to listeners' prior experience (Test 1 to 4)
-Figure \@ref(fig:exposure-means-database-density) shows the mean and covariance <!-- TO DO: let's 1) add bivariate ellipses *for the +10 condition* to figure, 2) use only non-parametric plot in maintext and keep rest in SI, 3) use only normalized VOT in main text and move rest to SI, 4)  --> of our exposure conditions relative to the distribution of VOT by talkers of L1-US English [based on @chodroff-wilson2018]. This comparison offers an explanation as to why the baseline condition (and to some extent the +10 condition) shift leftwards with increasing exposure, whereas the +40 condition shifts rightwards: relative to listeners' prior experience our baseline condition actually presented lower-than-expected category means; of our three exposure conditions, only the +40 condition presented larger-than-expected category means. That is, once we take into account how our exposure conditions relate to listeners' prior experience, both the direction of changes from Test 1 to 4 *within* each exposure condition, and the direction of differences *between* exposure conditions receive an explanation.
+Figure \@ref(fig:exposure-means-database-density) shows the mean and covariance of our exposure conditions relative to the distribution of VOT by talkers of L1-US English [based on @chodroff-wilson2017]. This comparison offers an explanation as to why the baseline condition (and to some extent the +10 condition) shift leftwards with increasing exposure, whereas the +40 condition shifts rightwards: relative to listeners' prior experience our baseline condition actually presented lower-than-expected category means; of our three exposure conditions, only the +40 condition presented larger-than-expected category means. That is, once we take into account how our exposure conditions relate to listeners' prior experience, both the direction of changes from Test 1 to 4 *within* each exposure condition, and the direction of differences *between* exposure conditions receive an explanation.
 
 ### Constraints on cumulative changes
 
@@ -99,7 +99,7 @@ Figure \@ref(fig:exposure-means-database-density) shows the mean and covariance 
 ### Effects of repeated testing
 Finally, we turn the consequences of repeated testing. As evident in Panel B and D of Figure \@ref(fig:plot-fit-slope-PSE), repeated testing without additional exposure resulting in partial undoing of the effects described so far. Bayesian hypothesis tests confirmed that the difference in the PSE decreased from Test 4 to 6, both for the +40 compared to the +10 condition ($`r get_bf(fit_mix_test, "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0")`$) and the +10 compared to the baseline condition ($`r get_bf(fit_mix_test, "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 > 0")`$). 
 
-This replicates previous findings that repeated testing over uniform test continua can undo the effects of exposure [@cummings2023; @liu-jaeger2018; @liu-jaeger2019; @others], and extends them from perceptual recalibration paradigms to distributional learning paradigms. One important methodological consequence of these findings is that longer test phases do not necessarily increase the statistical power to detect effects of adaptation [unless analyses take the effects of repeated testing into account, as in the approach developed in @liu-jaeger2018]. Analyses that average across all test tokens---as remains the norm---are bound to systematically underestimate the adaptivity of human speech perception.
+This replicates previous findings that repeated testing over uniform test continua can undo the effects of exposure [@cummings2023; @liu-jaeger2018; @liu-jaeger2019; @kleinschmidt2020], and extends them from perceptual recalibration paradigms to distributional learning paradigms. One important methodological consequence of these findings is that longer test phases do not necessarily increase the statistical power to detect effects of adaptation, as similarly indicated by @kleinschmidt2020  [unless analyses take the effects of repeated testing into account, as in the approach developed in @liu-jaeger2018]. Analyses that average across all test tokens---as remains the norm---are bound to systematically underestimate the adaptivity of human speech perception.
 
 ```{r fit-nested-models-for-intercepts-slopes-plot, warning=FALSE, message=FALSE}
 # Refit the same model, formulated as nesting intercepts and slopes within each unique combination of
@@ -885,29 +885,37 @@ d.chodroff_wilson.selected <-
       list("centered" = function(x) apply_ccure(x, data = .))) %>%
   mutate(category = factor(category))
 
-quantile_levels <- c(0, .05, .25, .5, .75, .95)
+quantile_levels <- c(.05, .25, .5, .75, .95)
+d_breaks <- density_quantiles(x = d.chodroff_wilson.selected %>% filter(category == "/d/") %>% pull(VOT_centered),
+                               y = d.chodroff_wilson.selected %>% filter(category == "/d/") %>% pull(f0_Mel_centered),
+                               quantiles = quantile_levels)
+t_breaks <- density_quantiles(x = d.chodroff_wilson.selected %>% filter(category == "/t/") %>% pull(VOT_centered),
+                               y = d.chodroff_wilson.selected %>% filter(category == "/t/") %>% pull(f0_Mel_centered),
+                               quantiles = quantile_levels)
+d_quantile <- quantile_levels
+t_quantile <- quantile_levels
+names(d_quantile) <- d_breaks
+names(t_quantile) <- t_breaks
 
-p.density <-
+
+p.density 
   d.chodroff_wilson.selected %>%
   ggplot(aes(x = VOT_centered, y = f0_Mel_centered, linetype = category, group = category)) +
   geom_density2d(
     data = . %>% filter(category == "/d/"),
-    contour_var = "density", aes(alpha = after_stat(level)),
+    aes(alpha = d_quantile[as.character(after_stat(level))]),
+    contour_var = "density", 
     colour = "black",
-    breaks = density_quantiles(x = d.chodroff_wilson.selected %>% filter(category == "/d/") %>% pull(VOT_centered),
-                               y = d.chodroff_wilson.selected %>% filter(category == "/d/") %>% pull(f0_Mel_centered),
-                               quantiles = quantile_levels[-1])) +
+    breaks = d_breaks) +
   geom_density2d(
     data = . %>% filter(category == "/t/"),
-    contour_var = "density", aes(alpha = after_stat(level)),
+    aes(alpha = t_quantile[as.character(after_stat(level))]),
+    contour_var = "density", 
     colour = "black",
-    breaks = density_quantiles(x = d.chodroff_wilson.selected %>% filter(category == "/t/") %>% pull(VOT_centered),
-                               y = d.chodroff_wilson.selected %>% filter(category == "/t/") %>% pull(f0_Mel_centered),
-                               quantiles = quantile_levels[-1])) +
+    breaks = t_breaks) +
   scale_y_continuous("F0 (Mel)", limits = c(118, 360)) +
   scale_x_continuous("VOT (ms)", limits = c(-12, 125), breaks = scales::breaks_width(25)) +
-  scale_alpha_continuous(breaks = quantile_levels, range = c(.1, 1), labels = scales::percent(quantile_levels)) +
-  #scale_linetype_manual(labels = c("/d/", "/t/"), values = c(2, 1)) +
+  scale_alpha_continuous("Quantiles", breaks = quantile_levels, range = c(.1, 1), labels = scales::percent(quantile_levels)) +
   theme(legend.position = "top") +
   #plot centered means
   geom_point(
@@ -931,23 +939,35 @@ p.density <-
     alpha = 0.8,
   inherit.aes = F,
   show.legend = T) +
-    
-  # geom_point(
-  #   data = d.chodroff_wilson.selected %>% 
-  #     group_by(category) %>% 
-  #     summarise(across(c(VOT_centered, f0_Mel_centered), mean, .names = "{.col}.mean")),
-  #   aes(x = VOT_centered.mean, y = f0_Mel_centered.mean, shape = category),
-  #   inherit.aes = F,
-  #   show.legend = F) +
-    
   scale_colour_manual("Condition",
              labels = c("baseline", "+10ms", "+40ms"),
              values = c("#cc0000", "#12D432","#0481F3")) +
   guides(colour = "none",
          linetype = guide_legend(title = "Category"),
          shape = guide_legend(title = "Category"))
-
-p.density
+  
+  
+d.chodroff_wilson.selected %>%
+  ggplot(aes(x = VOT_centered, y = f0_Mel_centered, linetype = category, group = category)) +
+  geom_density2d_filled(
+    data = . %>% filter(category == "/d/"),
+    aes(fill = after_stat(level)),
+    contour_var = "density", 
+    alpha = .7,
+    colour = "black",
+    breaks = d_breaks) +
+  geom_density2d_filled(
+    data = . %>% filter(category == "/t/"),
+    aes(fill = t_quantile[as.character(after_stat(level))]),
+    contour_var = "density", 
+    alpha = .7,
+    colour = "black",
+    breaks = t_breaks) +
+  scale_y_continuous("F0 (Mel)", limits = c(118, 360)) +
+  scale_x_continuous("VOT (ms)", limits = c(-12, 125), breaks = scales::breaks_width(25)) +
+  scale_fill_viridis_d('Quantiles', labels = scales::percent(quantile_levels),
+                       direction = -1) +
+  theme(legend.position = "top")  
 ```
 
 
@@ -1022,7 +1042,7 @@ p.density +
 
 ```
 
-(ref:exposure-means-database-density) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for XXX word-initial /d/ and /t/ productions in L1-US English [based on 92 talkers in @chodroff-wilson2018]. The outermost contour of each category shows the 95% density quantile. Points show the category means of the exposure condition, the green ellipsis shows the covariance of the +10 exposure condition (covariance was identical across conditions).
+(ref:exposure-means-database-density) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for XXX word-initial /d/ and /t/ productions in L1-US English [based on 92 talkers in @chodroff-wilson2017]. The outermost contour of each category shows the 95% density quantile. Points show the category means of the exposure condition, the green ellipsis shows the covariance of the +10 exposure condition (covariance was identical across conditions).
 
 ```{r exposure-means-database-density, fig.width= 6, fig.height=4, warning=FALSE, fig.cap="(ref:exposure-means-database-density)"}
 (p.density / p.shift10_ellipse) +

@@ -369,28 +369,55 @@ ggsave("p.params.png", p.params, width = 14, height = 12, units = "cm", path = "
 ggsave("p.histo_true_shift.png", p.histo_true_shift, width = 16.5, height = 8, units = "cm", path = "~/Desktop/")
 
 
-align_tab <- function(hyp) {
-  map_chr(hyp, ~ ifelse(class(.x) == "numeric", "r","l"))
-}
 
-make_hyp_table <- function(hyp_readable, hyp, caption, col1_width = "14em") {
-  cbind(hyp_readable, hyp) %>%
-    select(-2) %>%
-    mutate(
-      across(where(is.numeric), ~ round(., digits = 3)),
-      CI = paste0("[", CI.Lower, ", ", CI.Upper, "]")) %>%
-    select(-c(CI.Upper, CI.Lower)) %>%
-    relocate(CI, .before = "Evid.Ratio") %>%
-    kbl(caption = caption, align = align_tab(hyp),
-        format = "html",
-        #booktabs = TRUE,
-        escape = TRUE,
-        col.names = c("Hypothesis", "Estimate", "SE", "90 %-CI", "BF", "$p_{posterior}$")) %>%
-    kable_styling(full_width = FALSE) %>%
-    column_spec(1, width = col1_width)
-}
+quantile_levels <- c(.05, .25, .5, .75, .95)
 
-p.density
+d.chodroff_wilson.selected %>%
+  ggplot(aes(x = VOT_centered, y = f0_Mel_centered, linetype = category, group = category)) +
+  geom_density2d_filled(
+    data = . %>% filter(category == "/d/"),
+    aes(fill = d_quantile[as.character(after_stat(level))]),
+    contour_var = "density", 
+    alpha = .7,
+    colour = "black",
+    breaks = d_breaks) +
+  geom_density2d_filled(
+    data = . %>% filter(category == "/t/"),
+    contour_var = "density", aes(fill = t_quantile[as.character(after_stat(level))]),
+    alpha = .7,
+    colour = "black",
+    breaks = t_breaks) +
+  scale_y_continuous("F0 (Mel)", limits = c(118, 360)) +
+  scale_x_continuous("VOT (ms)", limits = c(-12, 125), breaks = scales::breaks_width(25)) +
+  scale_fill_viridis_d('Quantiles', labels = scales::percent(quantile_levels),
+                       direction = -1) +
+  theme(legend.position = "top")
 
-ggsave("p.density.png", p.density, width = 18, height = 12, units = "cm", path = "~/Desktop/")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
