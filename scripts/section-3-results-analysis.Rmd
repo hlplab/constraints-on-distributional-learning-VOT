@@ -892,13 +892,14 @@ d_breaks <- density_quantiles(x = d.chodroff_wilson.selected %>% filter(category
 t_breaks <- density_quantiles(x = d.chodroff_wilson.selected %>% filter(category == "/t/") %>% pull(VOT_centered),
                                y = d.chodroff_wilson.selected %>% filter(category == "/t/") %>% pull(f0_Mel_centered),
                                quantiles = quantile_levels)
+
 d_quantile <- quantile_levels
 t_quantile <- quantile_levels
 names(d_quantile) <- d_breaks
 names(t_quantile) <- t_breaks
+quantile_breaks <- tibble(quantile_levels, d_breaks, t_breaks)
 
-
-p.density 
+p.density <- 
   d.chodroff_wilson.selected %>%
   ggplot(aes(x = VOT_centered, y = f0_Mel_centered, linetype = category, group = category)) +
   geom_density2d(
@@ -915,9 +916,10 @@ p.density
     breaks = t_breaks) +
   scale_y_continuous("F0 (Mel)", limits = c(118, 360)) +
   scale_x_continuous("VOT (ms)", limits = c(-12, 125), breaks = scales::breaks_width(25)) +
-  scale_alpha_continuous("Quantiles", breaks = quantile_levels, range = c(.1, 1), labels = scales::percent(quantile_levels)) +
+  scale_colour_gradient(name = "Quantiles", high = "#f0f0f0", low = "#282828", guide = "colourbar", breaks = quantile_levels, labels = scales::percent(quantile_levels)) +
   theme(legend.position = "top") +
   #plot centered means
+  new_scale_color() +
   geom_point(
     data = d_for_analysis %>%
       filter(Phase == "exposure") %>%
@@ -945,29 +947,6 @@ p.density
   guides(colour = "none",
          linetype = guide_legend(title = "Category"),
          shape = guide_legend(title = "Category"))
-  
-  
-d.chodroff_wilson.selected %>%
-  ggplot(aes(x = VOT_centered, y = f0_Mel_centered, linetype = category, group = category)) +
-  geom_density2d_filled(
-    data = . %>% filter(category == "/d/"),
-    aes(fill = after_stat(level)),
-    contour_var = "density", 
-    alpha = .7,
-    colour = "black",
-    breaks = d_breaks) +
-  geom_density2d_filled(
-    data = . %>% filter(category == "/t/"),
-    aes(fill = t_quantile[as.character(after_stat(level))]),
-    contour_var = "density", 
-    alpha = .7,
-    colour = "black",
-    breaks = t_breaks) +
-  scale_y_continuous("F0 (Mel)", limits = c(118, 360)) +
-  scale_x_continuous("VOT (ms)", limits = c(-12, 125), breaks = scales::breaks_width(25)) +
-  scale_fill_viridis_d('Quantiles', labels = scales::percent(quantile_levels),
-                       direction = -1) +
-  theme(legend.position = "top")  
 ```
 
 
