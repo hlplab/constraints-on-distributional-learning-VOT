@@ -4,6 +4,10 @@
  
  + discuss consequences of findings for other accounts (decision-making; normalization)
  
+ + discuss fact that test stimuli deviate from exposure stimuli to different extent.  on the one hand, it's just 1/4 of all trials. on the other hand, we do see relatively systematic changes in slopes each time we test. so there is evidence that even these 12 trials can affect categorisation slopes (though it is worth keeping in mind that this is a comparison across different sets of stimuli). could this explain shrinkage? unlikely since it wasn't the case in kleinschmidt and jaeger. could it explain the constraint on adaptation? that's less clear. we can, however, compare the relative mean of exposure and test.
+ 
+<!-- TO DO: take note to make test stimuli relative to exposure stims in your next experiment? -->
+ 
  + discuss potential that observed adaptation maximizes accuracy under the choice rule. use psychometric function fit during unlabeled exposure trials to calculate *accuracy* (not likelihood) on labeled trials under criterion and under proportional matching decision rules. compare against accuracy if ideal observers categorization functions are used instead.
 
 
