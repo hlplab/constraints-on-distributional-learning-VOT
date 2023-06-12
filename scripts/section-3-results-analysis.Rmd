@@ -904,20 +904,26 @@ p.density <-
   ggplot(aes(x = VOT_centered, y = f0_Mel_centered, linetype = category, group = category)) +
   geom_density2d(
     data = . %>% filter(category == "/d/"),
-    aes(alpha = d_quantile[as.character(after_stat(level))]),
+    aes(colour = d_quantile[as.character(after_stat(level))]),
     contour_var = "density", 
-    colour = "black",
+    #colour = "black",
     breaks = d_breaks) +
   geom_density2d(
     data = . %>% filter(category == "/t/"),
-    aes(alpha = t_quantile[as.character(after_stat(level))]),
+    aes(colour = t_quantile[as.character(after_stat(level))]),
     contour_var = "density", 
-    colour = "black",
+    #colour = "black",
     breaks = t_breaks) +
   scale_y_continuous("F0 (Mel)", limits = c(118, 360)) +
   scale_x_continuous("VOT (ms)", limits = c(-12, 125), breaks = scales::breaks_width(25)) +
-  scale_colour_gradient(name = "Quantiles", high = "#f0f0f0", low = "#282828", guide = "colourbar", breaks = quantile_levels, labels = scales::percent(quantile_levels)) +
-  theme(legend.position = "top") +
+  scale_colour_gradient("Quantiles", 
+                        high = "#DCDCDC", 
+                        low = "#000000", 
+                        guide = "colourbar", 
+                        breaks = quantile_levels, 
+                        labels = scales::percent(quantile_levels)) +
+  theme(legend.position = "top",
+        legend.text = element_text(size = 7)) +
   #plot centered means
   new_scale_color() +
   geom_point(
@@ -984,7 +990,6 @@ shift10_cov_t <-
   
 cues <- c("VOT", "f0_Mel")
 
-
 shift10_ellipse <- 
   d_for_analysis %>% 
   filter(Phase == "exposure",
@@ -1010,7 +1015,7 @@ shift10_95ellipse <-
   group_by(category) %>% 
   unnest(ellipse_points)
 
-p.density +
+p.shift10_ellipse <- p.density +
   geom_path(
     data = shift10_95ellipse,
     aes(x = VOT, y = F0, linetype = category),

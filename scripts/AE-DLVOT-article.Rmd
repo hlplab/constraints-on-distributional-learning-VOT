@@ -113,6 +113,8 @@ library(posterior)
 library(rsample)
 
 #if (has_internet()) remotes::install_github("hlplab/MVBeliefUpdatr")
+#devtools::install_github('kleinschmidt/phonetic-sup-unsup')
+library(supunsup)           # for plotting Kleinschmidt & Jaeger 2016 data
 library(MVBeliefUpdatr)  # for generating Ideal Observers
 ```
 
