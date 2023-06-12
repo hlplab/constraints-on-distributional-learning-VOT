@@ -767,12 +767,14 @@ table2
 ```
 
 ```{r hypothesis-table3, results='asis'}
-# hypotheses test of proportionality (Is the diff between +40 and baseline < 4 * difference between +10 and baseline)
+# hypotheses test of proportionality (Is the magnitude of the difference between +40 and 
+# baseline < 4 * magnitude of the difference between +10 and baseline). Since the effects 
+# are all negative, we're testing whether +40 vs baseline is *larger* than 4 * + 10 vs. 
+# baseline.
 hyp_proportional <- c(
-  "mu2_Block3:Condition.Exposure_Shift40vs.Shift10 + mu2_Block3:Condition.Exposure_Shift10vs.Shift0 < 4 * mu2_Block3:Condition.Exposure_Shift10vs.Shift0",
-  "mu2_Block5:Condition.Exposure_Shift40vs.Shift10 + mu2_Block5:Condition.Exposure_Shift10vs.Shift0 < 4 * mu2_Block5:Condition.Exposure_Shift10vs.Shift0",
-  "mu2_Block7:Condition.Exposure_Shift40vs.Shift10 + mu2_Block7:Condition.Exposure_Shift10vs.Shift0 < 4 * mu2_Block7:Condition.Exposure_Shift10vs.Shift0"
-)
+  "mu2_Block3:Condition.Exposure_Shift40vs.Shift10 > 3 * mu2_Block3:Condition.Exposure_Shift10vs.Shift0",
+  "mu2_Block5:Condition.Exposure_Shift40vs.Shift10 > 3 * mu2_Block5:Condition.Exposure_Shift10vs.Shift0",
+  "mu2_Block7:Condition.Exposure_Shift40vs.Shift10 > 3 * mu2_Block7:Condition.Exposure_Shift10vs.Shift0")
 
 hyp_proportional <- hypothesis(fit_mix_test_nested_block, hyp_proportional, robust = T)
 hyp_proportional <- hyp_proportional$hypothesis %>%
