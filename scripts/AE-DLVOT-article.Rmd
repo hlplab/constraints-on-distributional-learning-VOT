@@ -159,7 +159,7 @@ r_refs(file = "latex-stuff/r-references.bib")
 ```{r knitr-setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = FALSE, message = FALSE, warning = TRUE, 
-  results = "markup", cache = FALSE,
+  results = "markup", cache = TRUE,
   interval = .2,
   fig.align = "center", fig.height = 2.5, fig.width = 2.5)
 

@@ -12,9 +12,7 @@ source("functions.R")
 ```
 
 # Experiment
-The use of test blocks that repeat the same stimuli across blocks and exposure conditions deviates from previous work [@clayards2008; @kleinschmidt-jaeger2016; @kleinschmidt2020]. This design feature allowed us to assess how increasing exposure affects listeners' perception without making strong assumptions about the nature of these changes (e.g., linear changes across trials). We kept test blocks short for two reasons. First, previous work has found that repeated testing over uniform test continua can reduce or undo the effects of informative exposure [@liu-jaeger2018; @liu-jaeger2019; @cummings202X]. Second, since we held test stimuli constant across exposure conditions, the distribution---and thus the relative unexpectedness---of test stimuli differed to different degrees from the three exposure distributions. By keeping tests short relative exposure (12 vs. 48 trials), we aimed to minimize the influence of test trials on adaptation. 
-
-The final three test blocks were intended to ameliorate the potential risks of this novel design: in case adaptation remains stable despite repeated testing, those additional test blocks were meant to provide additional statistical power to detect the effects of cumulative exposure.
+The use of test blocks that repeat the same stimuli across blocks and exposure conditions deviates from previous work [@clayards2008; @kleinschmidt-jaeger2016; @theodore-monto2019]. This design feature allowed us to assess how increasing exposure affects listeners' perception without making strong assumptions about the nature of these changes (e.g., linear changes across trials). We kept test blocks short for two reasons. First, previous work has found that repeated testing over uniform test continua can reduce or undo the effects of informative exposure [@liu-jaeger2018; @liu-jaeger2019; @cummings202X]. Second, since we held test stimuli constant across exposure conditions, the distribution---and thus the relative unexpectedness---of test stimuli differed to different degrees from the three exposure distributions. By keeping tests short relative exposure (12 vs. 48 trials), we aimed to minimize the influence of test trials on adaptation. The final three test blocks were intended to ameliorate the potential risks of this novel design: in case adaptation remains stable despite repeated testing, those additional test blocks were meant to provide additional statistical power to detect the effects of cumulative exposure.
 
 ```{r load data}
 d <- 
@@ -43,28 +41,27 @@ d <-
 
 ## Methods 
 ### Participants
-We recruited `r nlevels(d$ParticipantID) + 4` participants from the Prolific crowdsourcing platform. We used Prolific's pre-screening to limit the experiment to participants (1) of US nationality, (2) who reported to be English speaking monolinguals, and (3) had not previously participated in any experiment from our lab on Prolific. Prior to the start of the experiment, participants had to confirm that they (4) had spent the first 10 years of their life in the US, (5) were in a quiet place and free from distractions, and (6) wore in-ear or over-the-ears headphones that cost at least \$15. An additional 115 participants loaded the experiment but did not start or complete it. 
+We recruited `r nlevels(d$ParticipantID) + 4` participants from the Prolific crowdsourcing platform. We used Prolific's pre-screening to limit the experiment to participants (1) of US nationality, (2) who reported to be English speaking monolinguals, and (3) had not previously participated in any experiment from our lab on Prolific. Prior to the start of the experiment, participants had to confirm that they (4) had spent the first 10 years of their life in the US, (5) were in a quiet place and free from distractions, and (6) wore in-ear or over-the-ears headphones that cost at least \$15. An additional 115 participants loaded the experiment but did not start or complete it.^[Unlike in lab-based experiments, for which participants' right to stop the experiment at any point is costly (both in terms of physical effort and perceived social cost), exercising this right in web-based experiments is essentially cost free---in particular, if exercised early in the experiment.] 
 
 Participants took an average of 31.6 minutes to complete the experiment (SD = 20 minutes) and were remunerated \$8.00/hour. An optional post-experiment survey recorded participant demographics using NIH prescribed categories, including participant sex (`r d.Participant <- (d %>% distinct(ParticipantID, Participant.Age, Participant.Sex, Participant.Ethnicity, Participant.Race, Participant.Raceother)); d.Participant %>% group_by(Participant.Sex) %>% tally() %>% mutate(x = paste(n, Participant.Sex, sep = " = ", collapse = ", ")) %>% pull(x) %>% first()`), age (mean = `r mean(d.Participant$Participant.Age, 1)` years; 95% quantiles = `r paste(quantile(d.Participant$Participant.Age, c(.025, .975), na.rm = T), collapse = "-")` years), race (`r d.Participant %>% group_by(Participant.Race) %>% tally() %>% mutate(x = paste(n, Participant.Race, sep = " = ", collapse = ", ")) %>% pull(x) %>% first()`), and ethnicity (`r d.Participant %>% group_by(Participant.Ethnicity) %>% tally() %>% mutate(x = paste(n, Participant.Ethnicity, sep = " = ", collapse = ", ")) %>% pull(x) %>% first()`). 
 
 Participants' responses were collected via Javascript developed by the Human Language Processing Lab at the University of Rochester [@JSEXP] and stored via Proliferate developed at, and hosted by, the ALPs lab at Stanford University [@schuster].
 
 ### Materials 
-We recorded 8 tokens each of four minimal word pairs ("dill"/"till", "dim"/"tim", "din"/"tin", and "dip"/"tip") from a 23-year-old, female L1-US English talker from New Hampshire, judged to have a "general American" accent. These recordings were used to create four natural-sounding minimal pair VOT continua using a script [@winn2020manipulation] in Praat [@praat]. The VOTs generated for each continuum ranged from -100 to +130 msec in 5 msec steps.^[For simplicity's sake, we follow previous work [@kleinschmidt2020; @OTHERS] and refer to prevoicing as negative VOTs though we note that prevoicing is perhaps better conceived of as a separate phonetic feature [for discussion, see @REF]. In L1-US English, the occurence of prevoicing varies between study 20% - 48% of word-initial voiced stops and 0% of voiceless stops [@lisker-abramson1967; @smith1978].] The procedure also maintained the natural correlations between the most important cues to word-initial stop-voicing in L1-US English (VOT, F0, and vowel duration). Specifically, the F0 at vowel onset of each stimulus was set to respect the linear relation with VOT observed in the original recordings of the talker. The duration of the vowel was set to follow the natural trade-off relation with VOT [@allen1999effects]. Further details on the recording and resynthesis procedure are provided in the supplementary information (SI, \@ref(sec:SI-XXX)). 
+We recorded 8 tokens each of four minimal word pairs (*dill/till*, *dim/tim*, *din/tin*, and *dip/tip*) from a 23-year-old, female L1-US English talker from New Hampshire, judged to have a "general American" accent. In addition to these critical minimal pairs we also recorded three words that did not did not contain any stop consonant sounds ("flare", "share", and "rare"). These word recordings were used for catch trials. Stimulus intensity was normalized to 70 dB sound pressure level for all recordings. 
 
-This approach resulted in continuum steps that sound natural [unlike the highly robotic-sounding stimuli employed in @clayards2008; @kleinschmidt-jaeger2016]. A post-experiment survey asked participants: "*Did you notice anything in particular about how the speaker pronounced the different words (e.g. till, dill, etc.)?*". No participant reported that the stimuli sounded unnatural [in contrast to other experiments we have conducted with robotic-sounding stimuli like those of @clayards]. In addition to the critical minimal pair continua we also recorded three words that did not did not contain any stop consonant sounds ("flare", "share", and "rare"). These word recordings were used for catch trials. Stimulus intensity was normalized to 70 dB sound pressure level for all recordings. 
+The critical minimal pair recordings were used to create four VOT continua using a script [@winn2020manipulation] in Praat [@praat]. This approach resulted in continuum steps that sound natural [unlike the highly robotic-sounding stimuli employed in @clayards2008; @kleinschmidt-jaeger2016]. A post-experiment survey asked participants: "*Did you notice anything in particular about how the speaker pronounced the different words (e.g. till, dill, etc.)?*" No participant reported that the stimuli sounded unnatural. The procedure also maintained the natural correlations between the most important cues to word-initial stop-voicing in L1-US English (VOT, F0, and vowel duration). Specifically, the F0 at vowel onset of each stimulus was set to respect the linear relation with VOT observed in the original recordings of the talker. The duration of the vowel was set to follow the natural trade-off relation with VOT [@allen1999effects]. Further details on the recording and resynthesis procedure are provided in the supplementary information (SI, \@ref(sec:SI-XXX)). 
 
-A norming experiment (N = 24 participants) reported in the SI (\@ref(sec:norming-experiment)) was used to select the three minimal pairs that elicited the most similar categorization responses (dill-till, din-tin, and dip-tip). These three continua were used to create the three exposure conditions shown in Figure \@ref(fig:exp2-design-figure).
-
+The VOTs generated for each continuum ranged from -100 to +130 msec in 5 msec steps.^[We follow previous work [@kleinschmidt2020; @OTHERS] and refer to prevoicing as negative VOTs though we note that prevoicing is perhaps better conceived of as a separate phonetic feature [for discussion, see @REF]. In L1-US English, prevoicing occurs on about 20%-48% of word-initial voiced stops and ~0% of voiceless stops [@lisker-abramson1967; @smith1978].] A norming experiment (N = 24 participants) reported in the SI (\@ref(sec:norming-experiment)) was used to select the three minimal pair continua that elicited the most similar categorization responses (*dill-till*, *din-tin*, and *dip-tip*). These three continua were used to create the exposure conditions shown in Figure \@ref(fig:exp2-design-figure).
 
 ### Procedure
-At the start of the experiment, participants acknowledged that they met all requirements and provided consent, as per the Research Subjects Review Board of the University of Rochester. Participants also had to pass a headphone test [@REF], and were instructed to not change the volume throughout the experiment. Following instructions, participants completed 234 two-alternative forced-choice categorisation trials (Figure \@ref(fig:exp1-example-trial)). Participants were instructed that they would hear a female talker say a single word on each trial, and were asked to select which word they heard. Participants were asked to listen carefully and answer as quickly and as accurately as possible. They were also alerted to the fact that the recordings were subtly different and therefore may sound repetitive. 
+At the start of the experiment, participants acknowledged that they met all requirements and provided consent, as per the Research Subjects Review Board of the University of Rochester. Participants also had to pass a headphone test [@REF], and were instructed to not change the volume throughout the experiment. Following instructions, participants completed 234 two-alternative forced-choice categorisation trials (Figure \@ref(fig:example-trial)). Participants were instructed that they would hear a female talker say a single word on each trial, and were asked to select which word they heard. Participants were asked to listen carefully and answer as quickly and as accurately as possible. They were also alerted to the fact that the recordings were subtly different and therefore may sound repetitive. 
 
 ```{r example-trial, fig.cap="Example trial display. When the green button turned bright green, participants had to click on it to play the recording."}
 knitr::include_graphics("../figures/exp1_trial_example.png")
 ```
 
-Unbeknownst to participants, the 234 trials were split into exposure blocks (54 trials each) and test blocks (12 trials each). Participants were given the opportunity to take breaks after every 60 trials, which was always during an exposure block. Finally, participants completed an exit survey and an optional demographics survey.
+Unbeknownst to participants, the 234 trials were split into exposure (54 trials each) and test blocks (12 trials each). Participants were given the opportunity to take breaks after every 60 trials, which was always during an exposure block. Finally, participants completed an exit survey and an optional demographics survey.
 
 *Test blocks. * The experiment started with a test block. Test blocks were identical within and across conditions, always including 12 minimal pair trials assessing participants' categorization at 12 different VOTs (-5, 5, 15, 25, 30, 35, 40, 45, 50, 55, 65, 70 msec). A uniform distribution over VOTs was chosen to maximize the statistical power to determine participants' categorisation function. The assignment of VOTs to minimal pair continua was randomized for each participant, while counter-balancing it within and across test blocks. Each minimal pair appear equally often within each test block (four times), and each minimal pair appear with each VOT equally often (twice) across all six test blocks (and no more than once per test block). 
 
@@ -74,13 +71,13 @@ Each trial started with a dark-shaded green fixation dot being displayed. At 500
 
 The distribution of VOTs across the 48 /d/-/t/ trials depended on the exposure condition. Specifically, we first created a *baseline* condition. Although not critical to the purpose of the experiment, we aimed for the VOT distribution in this condition to closely resemble participants' prior expectations for a `typical' female talker of L1-US English (for details, see SI, \@ref(XXX)). The mean and standard deviations for /d/ along VOT were set 5 msecs and 50 msecs, respectively. The mean and standard deviations for /t/ were set 80 msecs and 270 msecs, respectively. To create more realistic VOT distributions, we *sampled* from the intended VOT distribution (top row of Figure \@ref(fig:exp2-design-distribution)). This creates distributions that more closely resemble the type of distributional input listeners experience in everyday speech perception, deviating from previous work, which exposed listeners to highly unnatural fully symmetric samples [@clayards2008; @kleinschmidt-jaeger2016; @kleinschmidt2020]. 
 
-Half of the /d/ and half of the /t/ trials were labeled, the other half was unlabeled [paralleling one of the conditions in @kleinschmidt2015cogsci]. Unlabeled trials were identical to test trials except that the distribution of VOTs across those trials was bimodal (rather than uniform), and determined by the exposure condition.^[Since previous studies largely lacked test blocks, these studies estimated changes in participants' categorisation responses by analyzing responses on unlabeled exposure trials [e.g., @clayards2008; @kleinschmidt-jaeger2016; @theodore-monto2019]. This approach compares responses across different values of acoustic-phonetic cues (since the exposure inputs differed by exposure condition), so that assumptions baked into the analysis approach (e.g., linearity along the acoustic-phonetic continuum) can potentially bias the results. Here we avoid this issue by holding test stimuli constant.] Labeled trials instead presented two response options with identical stop onsets (e.g., *din* and *dill*). This effectively labeled the input as belonging to the intended category (e.g., /d/). 
+Half of the /d/ and half of the /t/ trials were labeled, the other half was unlabeled [paralleling one of the conditions in @kleinschmidt2015cogsci]. Unlabeled trials were identical to test trials except that the distribution of VOTs across those trials was bimodal (rather than uniform), and determined by the exposure condition.^[Previous studies have estimated changes in participants' categorisation responses by analyzing responses on unlabeled exposure trials [e.g., @clayards2008; @kleinschmidt-jaeger2016; @theodore-monto2019]. This approach compares responses across different values of acoustic-phonetic cues (since the exposure inputs differed by exposure condition), so that assumptions baked into the analysis approach (e.g., linearity along the acoustic-phonetic continuum) can potentially bias the results. Here we avoid this issue by holding test stimuli constant [see also @kleinschmidt2020, Experiment 4].] Labeled trials instead presented two response options with identical stop onsets (e.g., *din* and *dill*). This effectively labeled the input as belonging to the intended category (e.g., /d/). 
 
 Next, we created the two additional exposure conditions by shifting these VOT distributions by +10 or +40 msecs (see Figure \@ref(fig:exp2-design-distribution)). This approach exposes participants to heterogenous approximations of normally distributed VOTs for /d/ and /t/ that varied across blocks, while holding all aspects of the input constant across conditions except for the shift in VOT.
 
-(ref:exp2-design-distribution) Histogram of VOTs across the 48 trials of all three exposure blocks by exposure condition. The dashed gray line shows the theoretical (Normal) distribution that the baseline condition was sampled from. The order of blocks was counter-balanced across participants. 
+(ref:exp2-design-distribution) Histogram of VOTs across the 48 trials of all three exposure blocks by exposure condition. The order of blocks was counter-balanced across participants. 
 
-```{r exp2-design-distribution, fig.height=6, fig.width=6.5, fig.cap="(ref:exp2-design-distribution)", warning=FALSE, message=FALSE}
+```{r exp2-design-distribution, fig.height=4.5, fig.width=4.5, fig.cap="(ref:exp2-design-distribution)", warning=FALSE, message=FALSE}
 d.exposure_trials <- 
   read_csv("../data/exposure_block_tokens.csv", show_col_types = F) %>% 
   mutate(
@@ -94,11 +91,24 @@ d.exposure_trials <-
 var_d <- 80
 var_t <- 270
 
+# from https://stackoverflow.com/questions/44283852/merging-expressions-for-plotting
+comb_plotmath <- function(...) {
+  Reduce(function(x, y) substitute(x ~ y, env = list(x = x, y = y)), 
+         list(...))
+}
+
 d.means <- 
-  crossing(condition = c("baseline", "+10ms", "+40ms"),
-         category = c("/d/", "/t/")) %>% 
-  mutate(condition = fct_relevel(condition, c("baseline", "+10ms", "+40ms")),
-         mean = c(15, 60, 45, 90, 5, 50))
+  crossing(
+    condition = c("baseline", "+10ms", "+40ms"),
+    category = c("/d/", "/t/")) %>% 
+  mutate(
+    block = "Block A", 
+    condition = fct_relevel(condition, c("baseline", "+10ms", "+40ms")),
+    mu = c(15, 60, 45, 90, 5, 50),
+    sigma = c(80, 270, 80, 270, 80, 270)^.5, 
+    mu_label = map2(category, mu, ~ bquote(mu[.(.x)]==.(.y))),
+    sigma_label = map2(category, sigma, ~ bquote(sigma[.(.x)]==.(round(.y, 1)))),
+    label = map2(mu_label, sigma_label, ~ comb_plotmath(.x, ", ", .y)))
 
 p.histogram_conditions <- 
   d.exposure_trials %>% 
@@ -109,56 +119,53 @@ p.histogram_conditions <-
     block == 4 ~ "Block B",
     block == 6 ~ "Block C")) %>% 
   ggplot() +
-  geom_histogram(aes(x = VOT, fill = paste(condition, category, labelling), 
-                     color = paste(condition, category, labelling),
-                     linetype = labelling), 
-                 alpha = .8) +
+  geom_histogram(
+    aes(x = VOT, 
+        fill = paste(condition, category, labelling), 
+        color = paste(condition, category, labelling),
+        linetype = labelling), 
+    alpha = .8) +
   scale_colour_manual(
     "Labelling",
     values = c(
-    "baseline /d/ labeled" = "#800000", 
-    "baseline /d/ unlabeled" = "#ff9999",
-    "baseline /t/ labeled" = "#cc0000", 
-    "baseline /t/ unlabeled" = "#ffe6e6",
-    "+10ms /d/ labeled" = "#0a751c",
-    "+10ms /d/ unlabeled" = "#b9f9c3",
-    "+10ms /t/ labeled" = "#12D432",
-    "+10ms /t/ unlabeled" = "#e8fdeb",
-    "+40ms /d/ labeled" = "#02427e", 
-    "+40ms /d/ unlabeled" = "#b4dafe",
-    "+40ms /t/ labeled" = "#0481F3", 
-    "+40ms /t/ unlabeled" = "#e6f3ff"),
+      "baseline /d/ labeled" = "#800000", 
+      "baseline /d/ unlabeled" = "#ff9999",
+      "baseline /t/ labeled" = "#cc0000", 
+      "baseline /t/ unlabeled" = "#ffe6e6",
+      "+10ms /d/ labeled" = "#0a751c",
+      "+10ms /d/ unlabeled" = "#b9f9c3",
+      "+10ms /t/ labeled" = "#12D432",
+      "+10ms /t/ unlabeled" = "#e8fdeb",
+      "+40ms /d/ labeled" = "#02427e", 
+      "+40ms /d/ unlabeled" = "#b4dafe",
+      "+40ms /t/ labeled" = "#0481F3", 
+      "+40ms /t/ unlabeled" = "#e6f3ff"),
     aesthetics = c("color", "category", "fill"),
     labels = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", "", "", "", "", "", "", "", "")) +
-    guides(colour = guide_legend(
+  guides(
+    colour = guide_legend(
       override.aes = list(
-    colour = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
-    fill = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
-    linetype = c(2, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0),
-    values = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", 0, 0, 0, 0, 0, 0, 0, 0)), nrow = 2)) +
-  # stat_function(fun = function(x) 24 * 5 * dnorm(x, 5, sqrt(var_d)),
-  #               color = "black", linewidth = .6, alpha = .7, linetype = 2) +
-  # stat_function(
-  #   fun = function(x) 24 * 5 * dnorm(x, 50, sqrt(var_t)),
-  #   color = "black", linewidth = .6, alpha = .5, linetype = 2) +
-  # geom_rug(data = tibble(VOT = c(5, 50)), aes(x = VOT), sides = "t") +
-  scale_x_continuous("VOT (ms)", breaks = seq(-50, 150, 30)) +
+        colour = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
+        fill = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
+        linetype = c(2, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0),
+        values = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", 0, 0, 0, 0, 0, 0, 0, 0)), nrow = 2)) +
+  scale_x_continuous("VOT (ms)", breaks = seq(-50, 150, 50)) +
   scale_y_continuous("Count") +
-  geom_text(data = d.means,
-            aes(x = 103, 
-                y = 17,
-                label = paste("mean", category, "=", mean)),
-            size = 2,
-            position = position_dodge2v(height = -8),
-            inherit.aes = F) +
+  geom_text(
+    data = d.means,
+    aes(x = 0,  y = 17, 
+        label = label),
+    parse = T,
+    size = 2, hjust = 0, position = position_dodge2v(height = -8),
+    inherit.aes = F) +
   facet_grid(condition ~ block, scales = "free_y", margins = "block") +
   guides(linetype = "none") +
   theme(legend.position = "top",
         legend.title = element_text(size = 10),
         legend.title.align = 0,
         legend.text.align = 0,
-        legend.justification = c(1.12, 0),
-        legend.box.just = "right",
+        legend.justification = c(.5, .5),
+        legend.box.just = "center",
         legend.key.width = unit(12, "pt"),
         legend.key.height = unit(12, "pt"),
         legend.box.spacing = unit(1, "pt"))
