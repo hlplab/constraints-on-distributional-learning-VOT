@@ -63,7 +63,7 @@ fit_KJ16 <- brm(
   warmup = 2000,
   family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
   control = list(adapt_delta = .99),
-  file = "../models/KJ16-semisupervised-GLMM.rds")
+  file = "../models/KJ16-semisupervised-GLMM-12June.rds")
 summary(fit_KJ16)
 ```
 
