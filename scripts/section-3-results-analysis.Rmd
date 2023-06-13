@@ -331,6 +331,9 @@ p.PSE_1to7 <- d.estimates %>%
   geom_hline(yintercept = d.io.categorisation[[9]][1], linetype = 2, linewidth = 0.8, colour = "#cc0000", alpha = 0.5) +
   geom_hline(yintercept = d.io.categorisation[[9]][2], linetype = 2, linewidth = .8, colour = "#12D432", alpha = 0.5) +
   geom_hline(yintercept = d.io.categorisation[[9]][3], linetype = 2, linewidth = .8, colour = "#0481F3", alpha = 0.5) +
+  annotate("label", x = 5.2, y = 64, label = "true shift = +21ms \n (max prop. of shift = 38%)", size = 2, colour = "blue") +
+  annotate("label", x = 7.3, y = 32, label = "true shift = -10ms \n (max prop. of shift = 40%)", size = 2, colour = "dark green") +
+  annotate("label", x = 3.3, y = 30, label = "true shift = -18ms \n (max prop. of shift = 22%)", size = 2, colour = "red") +
   scale_colour_manual("Condition",
     labels = c("baseline", "+10ms", "+40ms"),
     values = c("#cc0000", "#12D432","#0481F3"),
@@ -573,15 +576,19 @@ my_text <- description %>% ggplot() +
 
 \begin{landscape}
 ```{r plot-fit-slope-PSE, fig.width=12.5, fig.height=8, fig.cap="(ref:plot-fit-slope-PSE)"}
-p.fit_1to7 + my_text + p.fit_7to9 + p.params_1to7 +
+p.fit_1to7 + p.fit_7to9 + my_text + p.params_1to7 +
   plot_layout(
     design = "
 AAAAAAAAA
-CCCBBBBB#
+BBB##CCCC
 DDDDDDDDD
 ",
 heights = c(1, 1, 2)) +
    plot_annotation(tag_levels = 'A', tag_suffix = ")") & theme(plot.tag = element_text(face = "bold")) 
+
+p.row1 <- p.fit_1to7
+p.row2 <- p.fit_7to9 + my_text
+p.row3 <- p.params_1to7
 ```
 \end{landscape}
 
