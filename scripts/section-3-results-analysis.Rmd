@@ -84,7 +84,7 @@ This replicates previous findings that exposure to changed VOT distributions cha
 [MORE HERE]
 
 
-```{r fit-nested-models-for-intercepts-slopes-plot, warning=FALSE, message=FALSE}
+```{r fit-nested-models-for-intercepts-slopes-plot, message=FALSE}
 # Refit the same model, formulated as nesting intercepts and slopes within each unique combination of
 # exposure condition and block. This makes it easier to extract the intercept, slope, and PSE for the
 # large result figure (Panels C and D).
@@ -578,7 +578,7 @@ my_text <- description %>% ggplot() +
 (ref:plot-fit-slope-PSE) Summary of results. **Panel A:** Changes in listeners psychometric categorisation functions as a function of exposure, from Test 1 to Test 4 with all intervening exposure blocks (only unlabelled trials were included in the analysis of exposure blocks since labelled trials provide no information about listeners' categorization function). Point ranges indicate the mean proportion of "t"-responses and their 95% bootstrapped CI. Lines and shaded intervals show the MAP predictions and 95% posterior CIs of a Bayesian mixed-effects psychometric model fit to participants' responses. **Panel B:** Same as Panel A but for the final three test blocks without intervening exposure. Test 4 is shown as part of both Panels A and B. **Panels C \& D:** Changes across blocks in the slope and boundary (point-of-subjective-equality, PSE) of the categorisation functions shown in Panels A-B. Point ranges represent the posterior means and their 95% CI. Dashed reference lines show the intercepts and PSEs that naive (non-rational) learner would be expected to converge against after sufficient exposure (an ideal observer model that knows the exposure distributions).
 
 \begin{landscape}
-```{r plot-fit-slope-PSE, fig.width=12.5, fig.height=8, warning=FALSE, fig.cap="(ref:plot-fit-slope-PSE)"}
+```{r plot-fit-slope-PSE, fig.width=12.5, fig.height=8, fig.cap="(ref:plot-fit-slope-PSE)"}
 p.fit_1to7 + my_text + p.fit_7to9 + p.params_1to7 +
   plot_layout(
     design = "
@@ -610,7 +610,7 @@ XXX
 
 Second, the reason for the slight decrease in the difference between the +10 and baseline conditions observed in Tables \@ref(tab:hypothesis-table1) and \@ref(tab:hypothesis-table2) (visible in Figure \@ref(fig:plot-fit-slope-PSE)D as the decreasing difference between the green and red line) is *not* due to a reversal of the effects in the +10 condition. Rather, both conditions are changing in the same direction but the baseline condition stops changing after Test 2, which brings the +10 condition increasingly closer to the baseline condition. 
 
-```{r fit-nested-blocks-simple-effects, results='hide', warning=FALSE}
+```{r fit-nested-blocks-simple-effects, results='hide'}
 # nested model to get simple effects of Condition embedded in block
 fit_mix_test_nested_block <- brm(
    bf(

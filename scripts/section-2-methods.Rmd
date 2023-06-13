@@ -168,6 +168,7 @@ p.histogram_conditions <-
         legend.box.just = "center",
         legend.key.width = unit(12, "pt"),
         legend.key.height = unit(12, "pt"),
+        legend.text = element_text(size = 6),
         legend.box.spacing = unit(1, "pt"))
 p.histogram_conditions
 ```
