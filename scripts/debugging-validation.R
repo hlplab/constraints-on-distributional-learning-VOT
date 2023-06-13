@@ -370,44 +370,85 @@ ggsave("p.histo_true_shift.png", p.histo_true_shift, width = 16.5, height = 8, u
 
 
 
-quantile_levels <- c(.05, .25, .5, .75, .95)
+mean.vowel_duration <- mean(d.chodroff_wilson.selected$vowel_duration)
+sd.vowel_duration <- sd(d.chodroff_wilson.selected$vowel_duration)
+mean.VOT <- mean(d.chodroff_wilson.selected$VOT)
+sd.VOT <- sd(d.chodroff_wilson.selected$VOT)
 
-d.chodroff_wilson.selected %>%
-  ggplot(aes(x = VOT_centered, y = f0_Mel_centered, linetype = category, group = category)) +
-  geom_density2d_filled(
-    data = . %>% filter(category == "/d/"),
-    aes(fill = d_quantile[as.character(after_stat(level))]),
-    contour_var = "density", 
-    alpha = .7,
-    colour = "black",
-    breaks = d_breaks) +
-  geom_density2d_filled(
-    data = . %>% filter(category == "/t/"),
-    contour_var = "density", aes(fill = t_quantile[as.character(after_stat(level))]),
-    alpha = .7,
-    colour = "black",
-    breaks = t_breaks) +
-  scale_y_continuous("F0 (Mel)", limits = c(118, 360)) +
-  scale_x_continuous("VOT (ms)", limits = c(-12, 125), breaks = scales::breaks_width(25)) +
-  scale_fill_viridis_d('Quantiles', labels = scales::percent(quantile_levels),
-                       direction = -1) +
-  theme(legend.position = "top")
+get_speech_rate_model <- function(data) {
+    mean.vowel_duration <- mean(data$vowel_duration)
+    sd.vowel_duration <- sd(data$vowel_duration)
+    mean.VOT <- mean(data$VOT)
+    sd.VOT <- sd(data$VOT)
+    # scale variables
+    data %>% 
+      mutate(
+      VOT.scaled = (VOT - mean.VOT)/sd.VOT,
+      vowel_duration.scaled = (vowel_duration - mean.vowel_duration)/sd.vowel_duration
+    ) 
+    
+    m <- lmer(VOT.scaled ~ 1 + vowel_duration.scaled + (1 + vowel_duration.scaled | Talker), data = data)
+    intercept <- fixef(m)[[1]]
+    slope <- fixef(m)[[2]]
+    }
+
+get_speech.corrected.VOT <- function(data){
+  mean.vowel_duration <- mean(data$vowel_duration)
+  sd.vowel_duration <- sd(data$vowel_duration)
+  mean.VOT <- mean(data$VOT)
+  sd.VOT <- sd(data$VOT)
+  # scale variables
+  data %<>% 
+    mutate(
+      VOT.scaled = (VOT - mean.VOT)/sd.VOT,
+      vowel_duration.scaled = (vowel_duration - mean.vowel_duration)/sd.vowel_duration
+    ) 
+  
+  m <- lmer(VOT.scaled ~ 1 + vowel_duration.scaled + (1 + vowel_duration.scaled | Talker), data = data)
+  intercept <- fixef(m)[[1]]
+  slope <- fixef(m)[[2]]
+  
+  data %>% mutate(
+    VOT.predict_scaled = predict(m),
+    VOT.resid_scaled = VOT.scaled - VOT.predict_scaled,
+    VOT.speech_corrected.scaled = VOT.resid_scaled + intercept,
+    VOT.speech_corrected = (VOT.speech_corrected.scaled * sd.VOT) + mean.VOT
+    )
+}
+
+
+d.temp <- 
+  d.chodroff_wilson %>%
+  filter(poa == "/d/-/t/") %>%
+  group_by(Talker, category) %>%
+  mutate(n = n()) %>%
+  group_by(Talker) %>%
+  # subsample n tokens, as determined by category with fewer tokens
+  mutate(
+    n_min = min(n),
+    n_category = n_distinct(category)) %>%
+  # select talkers with both /d/ and /t/ observations
+  filter(n_category == 2) %>%
+  group_by(Talker, category) %>%
+  sample_n(size = first(n_min)) %>%
+  ungroup() %>% 
+  nest(data = everything()) %>% 
+  mutate(speech_corrected = map(data, ~ get_speech.corrected.VOT(.x))) %>% 
+  select(-data) %>% 
+  unnest(speech_corrected) 
 
 
 
+  mutate_at(
+    c("VOT", "f0", "f0_Mel", "f0_semitones", "VOT.speech_corrected"),
+    list("centered" = function(x) apply_ccure(x, data = .))) %>%
+  mutate(category = factor(category))
+  
 
 
-
-
-
-
-
-
-
-
-
-
-
+d.temp %>% 
+  ggplot(aes(y = VOT.speech_corrected, x = vowel_duration)) +
+  geom_point(alpha = .1) 
 
 
 

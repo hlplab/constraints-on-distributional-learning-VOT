@@ -19,10 +19,10 @@ The final three test blocks were intended to ameliorate the potential risks of t
 ```{r load data}
 d <- 
   read_csv("../data/experiment2_raw_formatted.csv", show_col_types = F) %>%
-  # load f0 measurements of stimuli (these were taken 5 msecs into the vowel)
+  # load f0 measurements of stimuli
   left_join(
     read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv", show_col_types = F) %>% 
-      select(filename, VOT, f0_5ms_into_vowel) %>% 
+      select(filename, VOT, f0_5ms_into_vowel, vowel_duration) %>% 
       rename(Item.VOT = VOT,
              Item.F0_5ms = f0_5ms_into_vowel,
              Item.Filename = filename) %>% 

@@ -59,7 +59,7 @@ fit_mix_test <-
   data = d_for_analysis %>%
     filter(Phase == "test") %>%
     prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
-  cores = 4,
+  cores = chains,
   chains = chains,
   init = 0,
   iter = 4000,
@@ -859,11 +859,7 @@ d.chodroff_wilson <-
     min.n_per_talker_and_stop = 25,
     limits.VOT = c(-Inf, Inf),
     limits.f0 = c(0, 350),
-    max.p_for_multimodality = .1
-  ) %>%
-  mutate_at(
-    c("VOT", "f0_Mel"),
-    list("centered" = function(x) apply_ccure(x, data = .)))
+    max.p_for_multimodality = .1)
 
 d.chodroff_wilson.selected <-
   d.chodroff_wilson %>%
@@ -884,6 +880,8 @@ d.chodroff_wilson.selected <-
       c("VOT", "f0", "f0_Mel", "f0_semitones"),
       list("centered" = function(x) apply_ccure(x, data = .))) %>%
   mutate(category = factor(category))
+
+
 
 quantile_levels <- c(.05, .25, .5, .75, .95)
 d_breaks <- density_quantiles(x = d.chodroff_wilson.selected %>% filter(category == "/d/") %>% pull(VOT_centered),
@@ -906,13 +904,11 @@ p.density <-
     data = . %>% filter(category == "/d/"),
     aes(colour = d_quantile[as.character(after_stat(level))]),
     contour_var = "density", 
-    #colour = "black",
     breaks = d_breaks) +
   geom_density2d(
     data = . %>% filter(category == "/t/"),
     aes(colour = t_quantile[as.character(after_stat(level))]),
     contour_var = "density", 
-    #colour = "black",
     breaks = t_breaks) +
   scale_y_continuous("F0 (Mel)", limits = c(118, 360)) +
   scale_x_continuous("VOT (ms)", limits = c(-12, 125), breaks = scales::breaks_width(25)) +

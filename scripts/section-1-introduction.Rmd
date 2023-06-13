@@ -8,6 +8,64 @@ We investigate an important constraints on this type of adaptivity that is sugge
 
 
 ```{r kleinschmidt-jaeger-2016-replotted, fig.cap="(ref:kleinschmidt-jaeger-2016-replotted)"}
+# load K&J2016 data and filter to semi-supervised rows
+d.KJ16 <- 
+  supunsup_clean %>% 
+  filter(supCond == "mixed" | supCond == "supervised") %>% 
+  # rename variables so that they are easily recognised
+  rename(ParticipantID = subject,
+         Item.VOT = vot,
+         Condition.Exposure = bvotCond,
+         Response.Voiceless = respP,
+         Item.MinimalPair = wordClass) %>% 
+  mutate(
+    Condition.Exposure = factor(case_when(
+      Condition.Exposure == 0 ~ "+0ms",
+      Condition.Exposure == 10 ~ "+10ms",
+      Condition.Exposure == 20 ~ "+20ms",
+      Condition.Exposure == 30 ~ "+30ms")),  
+    Condition.Exposure = fct_relevel(
+      Condition.Exposure, c("+0ms", "+10ms", "+20ms", "+30ms"))) %>% 
+  filter(labeled == "unlabeled") %>% 
+  group_by(ParticipantID) %>%
+  # filter to final 6th of total trials
+  slice_tail(n = 37) 
+
+VOT.mean_d.KJ16 <- mean(d.KJ16$Item.VOT)
+VOT.sd_d.KJ16 <- sd(d.KJ16$Item.VOT)
+
+d.KJ16 %<>%
+  mutate(VOT_gs = (Item.VOT - VOT.mean_d.KJ16) / (2 * VOT.sd_d.KJ16))
+
+contrasts(d.KJ16$Condition.Exposure) <- cbind(" 10vs0" = c(-3/4, 1/4, 1/4, 1/4),
+                                          " 20vs10" = c(-1/2, -1/2, 1/2, 1/2),
+                                          " 30vs20" = c(-1/4, -1/4, -1/4, 3/4))
+
+write_csv(d.KJ16, "bluehive_cluster_files/data_KJ16.csv")
+
+my_priors <- c(
+  prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),
+  prior(student_t(3, 0, 2.5), class = "b", dpar = "theta1"),
+  prior(cauchy(0, 2.5), class = "sd"),
+  prior(lkj(1), class = "cor"))
+
+fit_KJ16 <- brm(
+  bf(
+    Response.Voiceless ~ 1,
+    mu1 ~ 0 + offset(0),
+    mu2 ~ 1 + VOT_gs * Condition.Exposure +
+      (1 + VOT_gs | ParticipantID) +
+      (1 + VOT_gs * Condition.Exposure | Item.MinimalPair),
+    theta1 ~ 1),
+  data = d.KJ16,
+  cores = chains,
+  chains = chains,
+  init = 0,
+  iter = 4000,
+  warmup = 2000,
+  family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
+  control = list(adapt_delta = .99),
+  file = "../models/KJ16-semisupervised-GLMM.rds")
 ```
 
 For example, influential existing *models* of adaptive speech perception do predict proportional, rather than sublinear, shifts (see SI \@ref(sec:ibbu-proof)). This is the case both for incremental Bayesian belief-updating model [@kleinschmidt-jaeger2011] and general purpose normalization accounts [@mcmurray-jongman2011]---models that have been found to explain listeners' behavior well in experiments with less substantial changes in exposure. There are, however, proposals that can accommodate this finding. Xie and colleagues [-@xie2018, p. 229] distinguish between two types of mechanisms that might underlie representational changes, <!--- link representational change and distributional learning --> *model learning* and *model selection*. The former refers to the learning of a new category representations---for example, learning a new generative model for the talker [@kleinschmidt-jaeger2015, Part II] or storage of new talker-specific exemplars [@johnson1997; @sumner2011]. @xie2018 hypothesize that this process might be much slower than is often assumed in the literature, potentially requiring multiple days of exposure and memory consolidation during sleep [see also @fenn2013; @tamminen2012; @xie2018sleep]. Rapid adaptation that occurs within minutes of exposure might instead be achieved by selecting between *existing* talker-specific representations that were learned from previous speech input---e.g., previously learned talker-specific generative models [see mixture model in @kleinschmidt-jaeger2015, p. 180-181] or previously stored exemplars from other talkers [@johnson1997]. Model learning and model selection both offer explanations for the sublinear effects observed in @kleinschmidt-jaeger2016. But they suggest different predictions for the evolution of this effect over the course of exposure.
