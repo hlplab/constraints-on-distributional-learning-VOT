@@ -105,12 +105,11 @@ library(kableExtra)        # for formatting tables
 library(linguisticsdown)    # IPA symbols
 library(latexdiffr)         # track changes
 
-library(lme4)
-library(brms)
-library(tidybayes)
-library(broom.mixed)
+library(lme4)               # c-CuRE fn and cue adjustments
+library(brms)               # fit Bayesian regression models
+library(tidybayes)          # posterior samples and plots in tidy format
+library(broom.mixed)        # extracting effects from lmer models
 library(posterior)
-library(rsample)
 
 library(phonR)              # normalization of f0
 library(supunsup)           # Kleinschmidt & Jaeger 2016 data

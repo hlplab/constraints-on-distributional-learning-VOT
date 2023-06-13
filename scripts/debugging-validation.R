@@ -388,54 +388,11 @@ get_speech_rate_model <- function(data) {
     ) 
     
     m <- lmer(VOT.scaled ~ 1 + vowel_duration.scaled + (1 + vowel_duration.scaled | Talker), data = data)
-    intercept <- fixef(m)[[1]]
-    slope <- fixef(m)[[2]]
+    tidy(m, effects = "fixed")
     }
 
-get_speech.corrected.VOT <- function(data){
-  mean.vowel_duration <- mean(data$vowel_duration)
-  sd.vowel_duration <- sd(data$vowel_duration)
-  mean.VOT <- mean(data$VOT)
-  sd.VOT <- sd(data$VOT)
-  # scale variables
-  data %<>% 
-    mutate(
-      VOT.scaled = (VOT - mean.VOT)/sd.VOT,
-      vowel_duration.scaled = (vowel_duration - mean.vowel_duration)/sd.vowel_duration
-    ) 
-  
-  m <- lmer(VOT.scaled ~ 1 + vowel_duration.scaled + (1 + vowel_duration.scaled | Talker), data = data)
-  intercept <- fixef(m)[[1]]
-  slope <- fixef(m)[[2]]
-  
-  data %>% mutate(
-    VOT.predict_scaled = predict(m),
-    VOT.resid_scaled = VOT.scaled - VOT.predict_scaled,
-    VOT.speech_corrected.scaled = VOT.resid_scaled + intercept,
-    VOT.speech_corrected = (VOT.speech_corrected.scaled * sd.VOT) + mean.VOT
-    )
-}
 
 
-d.temp <- 
-  d.chodroff_wilson %>%
-  filter(poa == "/d/-/t/") %>%
-  group_by(Talker, category) %>%
-  mutate(n = n()) %>%
-  group_by(Talker) %>%
-  # subsample n tokens, as determined by category with fewer tokens
-  mutate(
-    n_min = min(n),
-    n_category = n_distinct(category)) %>%
-  # select talkers with both /d/ and /t/ observations
-  filter(n_category == 2) %>%
-  group_by(Talker, category) %>%
-  sample_n(size = first(n_min)) %>%
-  ungroup() %>% 
-  nest(data = everything()) %>% 
-  mutate(speech_corrected = map(data, ~ get_speech.corrected.VOT(.x))) %>% 
-  select(-data) %>% 
-  unnest(speech_corrected) 
 
 
 
