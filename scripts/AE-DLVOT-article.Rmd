@@ -79,16 +79,17 @@ always_allow_html: true
 \setcounter{secnumdepth}{5}
 
 ```{r libraries, include=FALSE, message=FALSE}
-library(curl)               # Check availability of internet for install of remote libraries
+# If installation of remote libraries is necessary, uncomment this code:
+# library(curl)               # Check availability of internet for install of remote libraries
+# if(!requireNamespace("remotes", quietly = TRUE)) if (has_internet()) install.packages("remotes")
+# if (has_internet()) remotes::install_github("crsh/papaja")
+# if (has_internet()) remotes::install_github("hlplab/MVBeliefUpdatr")
+# if (has_internet()) remotes::install_github('kleinschmidt/phonetic-sup-unsup')
 
-# Install remotes package if necessary
-if(!requireNamespace("remotes", quietly = TRUE)) if (has_internet()) install.packages("remotes")
-# Install the stable development version from GitHub
-if (has_internet()) remotes::install_github("crsh/papaja")
 library(papaja)             # APA formatted ms
 
 library(MASS)               # sliding difference coding (load before tidyverse b/c of select-conflict)
-library(tidyverse)
+library(tidyverse)          # keeping things tidy
 library(magrittr)           # pipes
 library(rlang)              # quosures (in functions)
 library(assertthat)         # asserts (in functions)
@@ -106,16 +107,14 @@ library(latexdiffr)         # track changes
 
 library(lme4)
 library(brms)
-library(phonR)
 library(tidybayes)
 library(broom.mixed)
 library(posterior)
 library(rsample)
 
-#if (has_internet()) remotes::install_github("hlplab/MVBeliefUpdatr")
-# devtools::install_github('kleinschmidt/phonetic-sup-unsup')
-library(supunsup)           # for plotting Kleinschmidt & Jaeger 2016 data
-library(MVBeliefUpdatr)  # for generating Ideal Observers
+library(phonR)              # normalization of f0
+library(supunsup)           # Kleinschmidt & Jaeger 2016 data
+library(MVBeliefUpdatr)     # generating Ideal Observers
 ```
 
 
