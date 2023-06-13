@@ -604,7 +604,7 @@ XXX
 
 Second, the reason for the slight decrease in the difference between the +10 and baseline conditions observed in Tables \@ref(tab:hypothesis-table1) and \@ref(tab:hypothesis-table2) (visible in Figure \@ref(fig:plot-fit-slope-PSE)D as the decreasing difference between the green and red line) is *not* due to a reversal of the effects in the +10 condition. Rather, both conditions are changing in the same direction but the baseline condition stops changing after Test 2, which brings the +10 condition increasingly closer to the baseline condition. 
 
-```{r fit-nested-blocks-simple-effects, results='hide'}
+```{r fit-nested-blocks-simple-effects, results='hide', warning=FALSE}
 # nested model to get simple effects of Condition embedded in block
 fit_mix_test_nested_block <- brm(
    bf(
