@@ -12,11 +12,12 @@ d.KJ16 <-
   supunsup_clean %>% 
   filter(supCond == "mixed" | supCond == "supervised") %>% 
   # rename variables so that they are easily recognised
-  rename(ParticipantID = subject,
-         Item.VOT = vot,
-         Condition.Exposure = bvotCond,
-         Response.Voiceless = respP,
-         Item.MinimalPair = wordClass) %>% 
+  rename(
+    ParticipantID = subject,
+    Item.VOT = vot,
+    Condition.Exposure = bvotCond,
+    Response.Voiceless = respP,
+    Item.MinimalPair = wordClass) %>% 
   mutate(
     Condition.Exposure = factor(case_when(
       Condition.Exposure == 0 ~ "+0ms",
@@ -33,13 +34,12 @@ d.KJ16 <-
 VOT.mean_d.KJ16 <- mean(d.KJ16$Item.VOT)
 VOT.sd_d.KJ16 <- sd(d.KJ16$Item.VOT)
 
-d.KJ16 %<>%
-  mutate(VOT_gs = (Item.VOT - VOT.mean_d.KJ16) / (2 * VOT.sd_d.KJ16))
+d.KJ16 %<>% mutate(VOT_gs = (Item.VOT - VOT.mean_d.KJ16) / (2 * VOT.sd_d.KJ16))
 
-contrasts(d.KJ16$Condition.Exposure) <- cbind(" 10vs0" = c(-3/4, 1/4, 1/4, 1/4),
-                                          " 20vs10" = c(-1/2, -1/2, 1/2, 1/2),
-                                          " 30vs20" = c(-1/4, -1/4, -1/4, 3/4))
-
+contrasts(d.KJ16$Condition.Exposure) <- 
+  cbind(" 10vs0" = c(-3/4, 1/4, 1/4, 1/4),
+        " 20vs10" = c(-1/2, -1/2, 1/2, 1/2),
+        " 30vs20" = c(-1/4, -1/4, -1/4, 3/4))
 
 my_priors <- c(
   prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),
@@ -47,23 +47,24 @@ my_priors <- c(
   prior(cauchy(0, 2.5), class = "sd"),
   prior(lkj(1), class = "cor"))
 
-fit_KJ16 <- brm(
-  bf(
-    Response.Voiceless ~ 1,
-    mu1 ~ 0 + offset(0),
-    mu2 ~ 1 + VOT_gs * Condition.Exposure +
-      (1 + VOT_gs | ParticipantID) +
-      (1 + VOT_gs * Condition.Exposure | Item.MinimalPair),
-    theta1 ~ 1),
-  data = d.KJ16,
-  cores = chains,
-  chains = chains,
-  init = 0,
-  iter = 4000,
-  warmup = 2000,
-  family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
-  control = list(adapt_delta = .99),
-  file = "../models/KJ16-semisupervised-GLMM.rds")
+fit_KJ16 <- 
+  brm(
+    bf(
+      Response.Voiceless ~ 1,
+      mu1 ~ 0 + offset(0),
+      mu2 ~ 1 + VOT_gs * Condition.Exposure +
+        (1 + VOT_gs | ParticipantID) +
+        (1 + VOT_gs * Condition.Exposure | Item.MinimalPair),
+      theta1 ~ 1),
+    data = d.KJ16,
+    cores = chains,
+    chains = chains,
+    init = 0,
+    iter = 4000,
+    warmup = 2000,
+    family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
+    control = list(adapt_delta = .99),
+    file = "../models/KJ16-semisupervised-GLMM.rds")
 summary(fit_KJ16)
 ```
 

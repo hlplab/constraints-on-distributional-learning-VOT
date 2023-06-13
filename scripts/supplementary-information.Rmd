@@ -393,14 +393,6 @@ d.test.excluded %<>%
     sVOT = (Item.VOT - VOT.mean_exp1) / (2 * VOT.sd_exp1),
     sTrial = (Trial - Trial.mean) / (2 * Trial.sd))
 
-# set priors for psychometric model
-my_priors <- c(
-  prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"), # prior 
-  prior(student_t(3, 0, 2.5), class = "b", dpar = "theta1"), 
-  prior(cauchy(0, 2.5), class = "sd"),
-  prior(lkj(1), class = "cor")
-)
-
 # load (or run) the psychometric model with interaction
 fit_mix <- brm(
   bf(
