@@ -6,7 +6,6 @@ require(brms)
 require(tidybayes)
 require(MVBeliefUpdatr)
 require(phonR)
-require(cowplot)
 
 source("functions.R")
 ```

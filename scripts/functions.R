@@ -784,6 +784,22 @@ make_hyp_table <- function(hyp_readable, hyp, caption, col1_width = "15em") {
     column_spec(1, width = col1_width)
 }
 
+get_speech_rate_model <- function(data) {
+  mean.vowel_duration <- mean(data$vowel_duration)
+  sd.vowel_duration <- sd(data$vowel_duration)
+  mean.VOT <- mean(data$VOT)
+  sd.VOT <- sd(data$VOT)
+  # scale variables
+  data %>% 
+    mutate(
+      VOT.scaled = (VOT - mean.VOT)/sd.VOT,
+      vowel_duration.scaled = (vowel_duration - mean.vowel_duration)/sd.vowel_duration
+    ) 
+  
+  m <- lmer(VOT.scaled ~ 1 + vowel_duration.scaled + (1 + vowel_duration.scaled | Talker), data = data)
+  tidy(m, effects = "fixed")
+}
+
 # speech rate correction
 get_speech.corrected.VOT <- function(data){
   mean.vowel_duration <- mean(data$vowel_duration)

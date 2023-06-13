@@ -800,8 +800,20 @@ chodroff.sd_VOT <- sd(d.chodroff_wilson.selected$VOT)
 chodroff.mean_vowel_duration <- mean(d.chodroff_wilson.selected$vowel_duration)
 chodroff.sd_vowel_duration <- sd(d.chodroff_wilson.selected$vowel_duration)
 
+# get estimates from speech rate model to predict VOT
+intercept.speech_rate <- 
+  get_speech_rate_model(d.chodroff_wilson.selected)$estimate[1] 
+slope.speech_rate <- 
+  get_speech_rate_model(d.chodroff_wilson.selected)$estimate[2]
+
 # center exposure cues to speech corpus means
 d_for_analysis %<>% 
+  mutate(
+    VOT.scaled = (Item.VOT - chodroff.mean_VOT) / chodroff.sd_VOT,
+    vowel_duration.scaled = (vowel_duration - chodroff.mean_vowel_duration) / chodroff.sd_vowel_duration,
+    VOT.scaled_predict = intercept.speech_rate + (slope.speech_rate * vowel_duration.scaled),
+    VOT.scaled_corrected = (VOT.scaled - VOT.scaled_predict) + intercept.speech_rate,
+    VOT.speech_corrected = VOT.scaled_corrected * chodroff.sd_vowel_duration + chodroff.mean_vowel_duration) %>% 
   group_by(Condition.Exposure) %>%
   mutate(
     category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")),
@@ -813,8 +825,7 @@ d_for_analysis %<>%
       Condition.Exposure == "Shift0" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.Mel_F0_5ms_mean_exposure[1]),
       Condition.Exposure == "Shift10" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.Mel_F0_5ms_mean_exposure[2]),
       Condition.Exposure == "Shift40" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.Mel_F0_5ms_mean_exposure[3]))
-    ) 
-
+  ) 
 
 # specify quantiles for density plots
 quantile_levels <- c(.05, .25, .5, .75, .95)
@@ -848,7 +859,7 @@ p.density <-
   scale_y_continuous("F0 (Mel)", limits = c(118, 360)) +
   scale_x_continuous("VOT (ms)", limits = c(-12, 125), breaks = scales::breaks_width(25)) +
   scale_colour_gradient("Quantiles", 
-                        high = "#DCDCDC", 
+                        high = "#e6e6e6", 
                         low = "#000000", 
                         guide = "colourbar", 
                         breaks = quantile_levels, 
@@ -959,12 +970,6 @@ table.unlearning <- make_hyp_table(hyp_test456_readable, hyp_test456, caption = 
   pack_rows("Difference in +40 vs. +10", 4, 6)
 table.unlearning
 ```
-
-
-
-
-
-
 
 
 
