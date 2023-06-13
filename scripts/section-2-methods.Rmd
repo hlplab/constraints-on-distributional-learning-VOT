@@ -77,7 +77,7 @@ Next, we created the two additional exposure conditions by shifting these VOT di
 
 (ref:exp2-design-distribution) Histogram of VOTs across the 48 trials of all three exposure blocks by exposure condition. The order of blocks was counter-balanced across participants. 
 
-```{r exp2-design-distribution, fig.height=4.5, fig.width=4.5, fig.cap="(ref:exp2-design-distribution)", warning=FALSE, message=FALSE}
+```{r exp2-design-distribution, fig.height=4.8, fig.width=4.8, fig.cap="(ref:exp2-design-distribution)", warning=FALSE, message=FALSE}
 d.exposure_trials <- 
   read_csv("../data/exposure_block_tokens.csv", show_col_types = F) %>% 
   mutate(
@@ -174,7 +174,7 @@ p.histogram_conditions
 
 ### Exclusions
 
-```{r get-exclusion-indicators}
+```{r get-exclusion-indicators, warning=FALSE}
 # mark catch trials rows and mark those to be excluded
 d %<>% 
   mutate(
