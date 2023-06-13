@@ -1,22 +1,23 @@
 # Introduction
 One of the hallmarks of human speech perception is its adaptivity. Listeners' interpretation of acoustic input can change within minutes of exposure to an unfamiliar talker, supporting robust speech recognition across talkers [@bradlow2008perceptual; @clarke2004rapid; @xie2018rapid; @xie2021cross]. Recent reviews have identified distributional learning of marginal cue statistics ['normalization', @apfelbaum-mcmurray2015; @mcmurray-jongman2011] or the statistics of cue-to-category mappings as an important mechanisms affording this adaptivity ['representational learning', @clayards2008; @idemaru-hold2011; @kleinschmidt-jaeger2015; @davis-sohoglu2020; for review, @schertz-clare2019; @xie2023]. This hypothesis has gained considerable influence over the past decade, with findings that changes in listener perception are qualitatively predicted by the statistics of exposure stimuli [@bejjanki2011; @clayards2008; @idemaru2021; @kleinschmidt2012; @munson2011-thesis; @nixon2016; @theodore2019distributional; @tan2021; for important caveats, see @harmon2018]. <!-- TO DO: find fMRI paper that claims to have rejected kleinschmidt-jaeger15 [wrongly], published somewhere around 2018-2020 -->
 
-We investigate an important constraints on this type of adaptivity that is suggested by recent findings. @kleinschmidt-jaeger2016 exposed L1-US English listeners to recordings of /b/-/p/ minimal pair words like *beach* and *peach* that were acoustically manipulated. Separate groups of listeners were exposed to distributions of voice onset times (VOTs)---the primary cue distinguishing between *beach* and *peach*---that were shifted by XXX to XXX msecs, respectively, relative to what one might expect from a 'typical' talker (Figure \@ref(fig:kleinschmidt-jaeger-2016-replotted)A). In line with the distributional learning hypothesis, listeners' category boundary or point of subjective equality (PSE)---i.e., the VOT for which listeners are equally likely to respond "d" or "t"---shifted in the same direction as the exposure distribution (Figure \@ref(fig:kleinschmidt-jaeger-2016-replotted)B). Also in line with the distributional learning hypothesis, these shifts were larger the further the exposure distributions were shifted. However, Kleinschmidt and Jaeger also observed a previously undocumented property of these adaptive changes: shifts in the exposure distribution had less than proportional (sublinear) effect on shifts in PSE (Figure \@ref(fig:kleinschmidt-jaeger-2016-replotted)C). While this finding---recently replicated in one more experiment [@kleinschmidt2020, Experiment 4]---<!-- TO DO: is this correct: did K's final experiment replicate 'shrinkage'?-->is broadly compatible with the hypothesis of distributional learning, it points to important not well-understood constraints on adaptive speech perception. 
+We investigate an important constraints on this type of adaptivity that is suggested by recent findings. @kleinschmidt-jaeger2016 exposed L1-US English listeners to recordings of /b/-/p/ minimal pair words like *beach* and *peach* that were acoustically manipulated. Separate groups of listeners were exposed to distributions of voice onset times (VOTs)---the primary cue distinguishing between *beach* and *peach*---that were shifted by XXX to XXX msecs, respectively, relative to what one might expect from a 'typical' talker (Figure \@ref(fig:kleinschmidt-jaeger-2016-replotted)A). In line with the distributional learning hypothesis, listeners' category boundary or point of subjective equality (PSE)---i.e., the VOT for which listeners are equally likely to respond "d" or "t"---shifted in the same direction as the exposure distribution (Figure \@ref(fig:kleinschmidt-jaeger-2016-replotted)B). Also in line with the distributional learning hypothesis, these shifts were larger the further the exposure distributions were shifted. However, Kleinschmidt and Jaeger also observed a previously undocumented property of these adaptive changes: shifts in the exposure distribution had less than proportional (sublinear) effect on shifts in PSE (Figure \@ref(fig:kleinschmidt-jaeger-2016-replotted)C). While this finding---recently replicated in one more experiment [@kleinschmidt2020, Experiment 4]---<!-- TO DO: is this correct: did K's final experiment replicate 'shrinkage'?-->is broadly compatible with the hypothesis of distributional learning, it points to important not well-understood constraints on adaptive speech perception.
 
 
-(ref:kleinschmidt-jaeger-2016-replotted) Design and results of @kleinschmidt-jaeger2016 replotted. **Panel A:** Different groups of participants were exposed to different shifts in the mean VOT of /b/ and /p/. **Panel B:** Categorisation functions of individual participants depending on the exposure condition (shift in VOT means of /b/ and /p/). For reference, the black dashed line shows the categorisation function of the 0-shift condition. The colored dashed lines shows the categorisation function expected for an ideal observer that has fully learned the exposure distributions. **Panel C:** Mean and 95% CI of participants' points of subjective equality (PSEs), relative to the PSE of the ideal observers. <!-- TO DO: download KJ16 data, fit our psychometric model (no block) to all unlabelled trials. Plot panel B like in that paper. plot panel C, the same way we're plotting our results (i.e., a single 'block' of point ranges with references lines like the PSE panel of your main plot. --> 
+(ref:kleinschmidt-jaeger-2016-replotted) Design and results of @kleinschmidt-jaeger2016 replotted. **Panel A:** Different groups of participants were exposed to different shifts in the mean VOT of /b/ and /p/. **Panel B:** Categorisation functions of individual participants depending on the exposure condition (shift in VOT means of /b/ and /p/). For reference, the black dashed line shows the categorisation function of the 0-shift condition. The colored dashed lines shows the categorisation function expected for an ideal observer that has fully learned the exposure distributions. **Panel C:** Mean and 95% CI of participants' points of subjective equality (PSEs), relative to the PSE of the ideal observers. <!-- TO DO: download KJ16 data, fit our psychometric model (no block) to all unlabelled trials. Plot panel B like in that paper. plot panel C, the same way we're plotting our results (i.e., a single 'block' of point ranges with references lines like the PSE panel of your main plot. -->
 
 ```{r kleinschmidt-jaeger-2016-replotted, fig.cap="(ref:kleinschmidt-jaeger-2016-replotted)"}
 # load K&J2016 data and filter to semi-supervised rows
-d.KJ16 <- 
-  supunsup_clean %>% 
-  filter(supCond == "mixed" | supCond == "supervised") %>% 
+d.KJ16 <-
+  supunsup_clean %>%
+  filter(supCond == "mixed" | supCond == "supervised") %>%
   # rename variables so that they are easily recognised
-  rename(ParticipantID = subject,
-         Item.VOT = vot,
-         Condition.Exposure = bvotCond,
-         Response.Voiceless = respP,
-         Item.MinimalPair = wordClass) %>% 
+  rename(
+    ParticipantID = subject,
+    Item.VOT = vot,
+    Condition.Exposure = bvotCond,
+    Response.Voiceless = respP,
+    Item.MinimalPair = wordClass) %>%
   mutate(
     Condition.Exposure = factor(case_when(
       Condition.Exposure == 0 ~ "+0ms",
@@ -24,22 +25,21 @@ d.KJ16 <-
       Condition.Exposure == 20 ~ "+20ms",
       Condition.Exposure == 30 ~ "+30ms")),  
     Condition.Exposure = fct_relevel(
-      Condition.Exposure, c("+0ms", "+10ms", "+20ms", "+30ms"))) %>% 
-  filter(labeled == "unlabeled") %>% 
+      Condition.Exposure, c("+0ms", "+10ms", "+20ms", "+30ms"))) %>%
+  filter(labeled == "unlabeled") %>%
   group_by(ParticipantID) %>%
   # filter to final 6th of total trials
-  slice_tail(n = 37) 
+  slice_tail(n = 37)
 
 VOT.mean_d.KJ16 <- mean(d.KJ16$Item.VOT)
 VOT.sd_d.KJ16 <- sd(d.KJ16$Item.VOT)
 
-d.KJ16 %<>%
-  mutate(VOT_gs = (Item.VOT - VOT.mean_d.KJ16) / (2 * VOT.sd_d.KJ16))
+d.KJ16 %<>% mutate(VOT_gs = (Item.VOT - VOT.mean_d.KJ16) / (2 * VOT.sd_d.KJ16))
 
-contrasts(d.KJ16$Condition.Exposure) <- cbind(" 10vs0" = c(-3/4, 1/4, 1/4, 1/4),
-                                          " 20vs10" = c(-1/2, -1/2, 1/2, 1/2),
-                                          " 30vs20" = c(-1/4, -1/4, -1/4, 3/4))
-
+contrasts(d.KJ16$Condition.Exposure) <-
+  cbind(" 10vs0" = c(-3/4, 1/4, 1/4, 1/4),
+        " 20vs10" = c(-1/2, -1/2, 1/2, 1/2),
+        " 30vs20" = c(-1/4, -1/4, -1/4, 3/4))
 
 my_priors <- c(
   prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),
@@ -47,23 +47,25 @@ my_priors <- c(
   prior(cauchy(0, 2.5), class = "sd"),
   prior(lkj(1), class = "cor"))
 
-fit_KJ16 <- brm(
-  bf(
-    Response.Voiceless ~ 1,
-    mu1 ~ 0 + offset(0),
-    mu2 ~ 1 + VOT_gs * Condition.Exposure +
-      (1 + VOT_gs | ParticipantID) +
-      (1 + VOT_gs * Condition.Exposure | Item.MinimalPair),
-    theta1 ~ 1),
-  data = d.KJ16,
-  cores = chains,
-  chains = chains,
-  init = 0,
-  iter = 4000,
-  warmup = 2000,
-  family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
-  control = list(adapt_delta = .99),
-  file = "../models/KJ16-semisupervised-GLMM-12June.rds")
+fit_KJ16 <-
+  brm(
+    bf(
+      Response.Voiceless ~ 1,
+      mu1 ~ 0 + offset(0),
+      mu2 ~ 1 + VOT_gs * Condition.Exposure +
+        (1 + VOT_gs | ParticipantID) +
+        (1 + VOT_gs * Condition.Exposure | Item.MinimalPair),
+      theta1 ~ 1),
+    data = d.KJ16,
+    cores = chains,
+    chains = chains,
+    init = 0,
+    iter = 4000,
+    warmup = 2000,
+    family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
+    control = list(adapt_delta = .99),
+    file = "../models/KJ16-semisupervised-GLMM-12June.rds")
+summary(fit_KJ16)
 ```
 
 For example, influential *models* of adaptive speech perception predict proportional, rather than sublinear, shifts (for proof, see SI \@ref(sec:ibbu-proof)). This is the case both for incremental Bayesian belief-updating model [@kleinschmidt-jaeger2011] and general purpose normalization accounts [@mcmurray-jongman2011]---models that have been found to explain listeners' behavior well in experiments with less substantial changes in exposure. There are, however, proposals that can accommodate this finding. Some proposals distinguish between two types of mechanisms that might underlie representational changes, <!--- link representational change and distributional learning --> *model learning* and *model selection* [@xie2018, p. 229]. The former refers to the learning of a new category representations---for example, learning a new generative model for the talker [@kleinschmidt-jaeger2015, Part II] or storage of new talker-specific exemplars [@johnson1997; @sumner2011]. Xie and colleagues hypothesized that this process might be much slower than is often assumed in the literature, potentially requiring multiple days of exposure and memory consolidation during sleep [see also @fenn2013; @tamminen2012; @xie2018sleep]. Rapid adaptation that occurs within minutes of exposure might instead be achieved by selecting between *existing* talker-specific representations that were learned from previous speech input---e.g., previously learned talker-specific generative models [see mixture model in @kleinschmidt-jaeger2015, p. 180-181] or previously stored exemplars from other talkers [@johnson1997]. Model learning and model selection both offer explanations for the sublinear effects observed in @kleinschmidt-jaeger2016. But they suggest different predictions for the evolution of this effect over the course of exposure.
@@ -82,6 +84,6 @@ To test these predictions, we revise the standard paradigm used to investigate d
 knitr::include_graphics("../figures/experiment2_design_image.png")
 ```
 
-A secondary aim of the present study was to ameliorate possible concerns about the ecological validity of research on distributional learning. The pioneering works that inspired the present study employed highly unnatural sounding stimuli that were clearly identifiable as robotic speech [@clayards2008; @kleinschmidt-jaeger2016]. These studies also followed the majority of research on distributional learning in language [e.g., @maye2003; @pajak2012] and *designed* rather than *sampled* the exposure distributions. As a consequence, exposure distributions in these experiments tend to be symmetrically balanced around the category means---unlike in everyday speech input. Indeed, all of the works we follow here further used categories with *identical* variances [e.g., identical variance along VOT for /b/ and /p/, @clayards2008; @kleinschmidt-jaeger2016; or /g/ and /k/, @theodore-monto2019]. This, too, is highly atypical for everyday speech input [@chodroff2017structure; @lisker-abrahamson1964]. The present study takes several modest steps to address these issues, with the goal to improve the ecological validity of our stimuli and exposure distributions. 
+A secondary aim of the present study was to ameliorate possible concerns about the ecological validity of research on distributional learning. The pioneering works that inspired the present study employed highly unnatural sounding stimuli that were clearly identifiable as robotic speech [@clayards2008; @kleinschmidt-jaeger2016]. These studies also followed the majority of research on distributional learning in language [e.g., @maye2003; @pajak2012] and *designed* rather than *sampled* the exposure distributions. As a consequence, exposure distributions in these experiments tend to be symmetrically balanced around the category means---unlike in everyday speech input. Indeed, all of the works we follow here further used categories with *identical* variances [e.g., identical variance along VOT for /b/ and /p/, @clayards2008; @kleinschmidt-jaeger2016; or /g/ and /k/, @theodore-monto2019]. This, too, is highly atypical for everyday speech input [@chodroff2017structure; @lisker-abrahamson1964]. The present study takes several modest steps to address these issues, with the goal to improve the ecological validity of our stimuli and exposure distributions.
 
-All data and code for this article can be downloaded from [XXX](OSF). <!-- TO DO: fill in URL --> The article is written in R markdown, allowing readers to replicate our analyses with the press of a button using freely available software [R, @R; @RStudio], while changing any of the parameters of our models (see SI, \@ref(sec:software)). 
+All data and code for this article can be downloaded from [XXX](OSF). <!-- TO DO: fill in URL --> The article is written in R markdown, allowing readers to replicate our analyses with the press of a button using freely available software [R, @R; @RStudio], while changing any of the parameters of our models (see SI, \@ref(sec:software)).
