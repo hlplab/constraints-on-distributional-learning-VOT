@@ -767,7 +767,7 @@ align_tab <- function(hyp) {
   map_chr(hyp, ~ ifelse(class(.x) == "numeric", "r","l"))
 }
 
-make_hyp_table <- function(hyp_readable, hyp, caption, col1_width = "14em") {
+make_hyp_table <- function(hyp_readable, hyp, caption, col1_width = "15em") {
   cbind(hyp_readable, hyp) %>%
     select(-2) %>%
     mutate(
