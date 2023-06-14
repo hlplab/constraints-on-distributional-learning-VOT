@@ -6,7 +6,7 @@ We investigate an important constraints on this type of adaptivity that is sugge
 
 (ref:kleinschmidt-jaeger-2016-replotted) Design and results of @kleinschmidt-jaeger2016 replotted. **Panel A:** Different groups of participants were exposed to different shifts in the mean VOT of /b/ and /p/. **Panel B:** Categorisation functions of individual participants depending on the exposure condition (shift in VOT means of /b/ and /p/). For reference, the black dashed line shows the categorisation function of the 0-shift condition. The colored dashed lines shows the categorisation function expected for an ideal observer that has fully learned the exposure distributions. **Panel C:** Mean and 95% CI of participants' points of subjective equality (PSEs), relative to the PSE of the ideal observers. <!-- TO DO: download KJ16 data, fit our psychometric model (no block) to all unlabelled trials. Plot panel B like in that paper. plot panel C, the same way we're plotting our results (i.e., a single 'block' of point ranges with references lines like the PSE panel of your main plot. -->
 
-```{r kleinschmidt-jaeger-2016-replotted, fig.cap="(ref:kleinschmidt-jaeger-2016-replotted)"}
+```{r kleinschmidt-jaeger-2016-replotted, fig.height=.5, fig.width=5.5 fig.cap="(ref:kleinschmidt-jaeger-2016-replotted)"}
 # load K&J2016 data and filter to semi-supervised rows
 d.KJ16 <-
   supunsup_clean %>%
@@ -47,23 +47,52 @@ my_priors <- c(
   prior(cauchy(0, 2.5), class = "sd"),
   prior(lkj(1), class = "cor"))
 
-# fit_KJ16 <-
-#   brm(
-#     bf(
-#       Response.Voiceless ~ 1,
-#       mu1 ~ 0 + offset(0),
-#       mu2 ~ 1 + VOT_gs * Condition.Exposure +
-#         (1 + VOT_gs | ParticipantID) +
-#         (1 + VOT_gs * Condition.Exposure | Item.MinimalPair),
-#       theta1 ~ 1),
-#     data = d.KJ16,
-#     cores = chains,
-#     chains = chains,
-#     init = 0,
-#     iter = 4000,
-#     warmup = 2000,
-#     family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
-#     control = list(adapt_delta = .99))
+fit_KJ16 <-
+  brm(
+    bf(
+      Response.Voiceless ~ 1,
+      mu1 ~ 0 + offset(0),
+      mu2 ~ 1 + VOT_gs * Condition.Exposure +
+        (1 + VOT_gs | ParticipantID) +
+        (1 + VOT_gs * Condition.Exposure | Item.MinimalPair),
+      theta1 ~ 1),
+    data = d.KJ16,
+    cores = chains,
+    chains = chains,
+    init = 0,
+    iter = 4000,
+    warmup = 2000,
+    family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
+    control = list(adapt_delta = .99),
+    file = "../models/KJ16-semisupervised-GLMM.rds")
+
+cond_fit_KJ16 <- fit_KJ16 %>% 
+  conditional_effects(
+  effects = "VOT_gs:Condition.Exposure",
+  method = "posterior_epred",
+  ndraws = 500,
+  re_formula = NA) %>% 
+  .[[1]] %>% 
+  mutate(Item.VOT = descale(VOT_gs, VOT.mean_d.KJ16, VOT.sd_d.KJ16))
+
+cond_fit_KJ16 %>% 
+  ggplot() +
+  geom_ribbon(aes(
+    x = Item.VOT,
+    y = estimate__,
+    group = Condition.Exposure,
+    ymin = lower__, ymax = upper__, fill = Condition.Exposure), alpha = .1) +
+  geom_line(aes(
+    x = Item.VOT,
+    y = estimate__,
+    group = Condition.Exposure,
+    color = Condition.Exposure),
+    linewidth = .7,
+    alpha = 0.6) +
+  scale_x_continuous("VOT (msec)") +
+  scale_y_continuous("Proportion \"p\"-response") +
+  facet_wrap(~ Condition.Exposure, nrow = 1) +
+  theme(legend.position = "top")
 ```
 
 For example, influential *models* of adaptive speech perception predict proportional, rather than sublinear, shifts (for proof, see SI \@ref(sec:ibbu-proof)). This is the case both for incremental Bayesian belief-updating model [@kleinschmidt-jaeger2011] and general purpose normalization accounts [@mcmurray-jongman2011]---models that have been found to explain listeners' behavior well in experiments with less substantial changes in exposure. There are, however, proposals that can accommodate this finding. Some proposals distinguish between two types of mechanisms that might underlie representational changes, <!--- link representational change and distributional learning --> *model learning* and *model selection* [@xie2018, p. 229]. The former refers to the learning of a new category representations---for example, learning a new generative model for the talker [@kleinschmidt-jaeger2015, Part II] or storage of new talker-specific exemplars [@johnson1997; @sumner2011]. Xie and colleagues hypothesized that this process might be much slower than is often assumed in the literature, potentially requiring multiple days of exposure and memory consolidation during sleep [see also @fenn2013; @tamminen2012; @xie2018sleep]. Rapid adaptation that occurs within minutes of exposure might instead be achieved by selecting between *existing* talker-specific representations that were learned from previous speech input---e.g., previously learned talker-specific generative models [see mixture model in @kleinschmidt-jaeger2015, p. 180-181] or previously stored exemplars from other talkers [@johnson1997]. Model learning and model selection both offer explanations for the sublinear effects observed in @kleinschmidt-jaeger2016. But they suggest different predictions for the evolution of this effect over the course of exposure.

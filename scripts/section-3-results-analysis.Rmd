@@ -17,7 +17,7 @@ Figure \@ref(fig:plot-fit-slope-PSE) summarizes the results. Panels A and B show
 
 ```{r model-fit-test-blocks, include=FALSE}
 # Storing some information about the data set submitted for analysis
-# (to facilitating unscaling predictions back into the original scales for plotting)
+# (to facilitate unscaling predictions back into the original scales for plotting)
 d.mean_sd_scaling <-
   d_for_analysis %>%
   group_by(Phase) %>%
