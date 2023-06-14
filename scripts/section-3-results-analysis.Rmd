@@ -64,24 +64,7 @@ fit_mix_exposure <-
     file = "../models/Exp-AE-DLVOT-lapsing-differencecoded-exposureblocks.rds")
 
 # fit test block with sampled priors
-brm(
-  bf(
-    Response.Voiceless ~ 1,
-    mu1 ~ 1,
-    mu2 ~ 1 + VOT_gs * Condition.Exposure * Block + (1 + VOT_gs * Block | ParticipantID) + (1 + VOT_gs * Condition.Exposure * Block | Item.MinimalPair),
-    theta1 ~ 1),
-  data = d.test_exposure_for_analysis %>% 
-    filter(Phase == "test") %>% 
-    prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
-  cores = 4,
-  chains = chains,
-  init = 0,
-  iter = 4000, 
-  warmup = 2000, 
-  family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
-  sample_prior = "yes",
-  control = list(adapt_delta = .995),
-  file = "../models/Exp-AE-DLVOT-lapse-bias-test.rds")
+
 ```
 
 We analyzed participants' categorisation responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric models, fit using brms [@R-brms_a] in R [@R; @RStudio, for details, see SI, \@ref(sec:analysis-approach)]. These models account for attentional lapses while estimating participants' categorisation functions. Failing to account for attentional lapses---while commonplace in research on speech perception [but see @clayards2008; @kleinschmidt-jaeger2016]---can lead to biased estimates of categorization boundaries [@prins2012; @wichmann2001]. For the present experiment, however, lapse rates were negligible (`r make_CI(fit_mix_test, "theta1_Intercept")`), and all results replicate in simple mixed-effects logistic regressions [@jaeger2008].
