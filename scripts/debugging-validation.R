@@ -394,14 +394,17 @@ get_speech_rate_model <- function(data) {
 
 
 
+d.temp <- tibble(VOT = d.chodroff_wilson.selected$VOT,
+                 VOT.speech_corrected = d.chodroff_wilson.selected$VOT.speech_corrected,
+                   Talker = factor(d.chodroff_wilson.selected$Talker))
 
+d.temp %>% group_by(Talker) %>% 
+  mutate(VOT.speech_corrected_centered = apply_ccure(VOT.speech_corrected, data = .))
 
-  mutate_at(
-    c("VOT", "f0", "f0_Mel", "f0_semitones", "VOT.speech_corrected"),
-    list("centered" = function(x) apply_ccure(x, data = .))) %>%
-  mutate(category = factor(category))
-  
+lmer(VOT ~ 1 + (1 | Talker), data = d.temp)
 
+mean(d.temp$VOT.speech_corrected)
+mean(d.temp$VOT)
 
 d.temp %>% 
   ggplot(aes(y = VOT.speech_corrected, x = vowel_duration)) +

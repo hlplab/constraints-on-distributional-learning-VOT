@@ -946,36 +946,16 @@ p.shift10_ellipse <- p.density +
   scale_y_continuous("F0 (Mel)", limits = c(220, 250))
 ```
 
-(ref:exposure-means-database-density) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for XXX word-initial /d/ and /t/ productions in L1-US English [based on 92 talkers in @chodroff-wilson2017]. The outermost contour of each category shows the 95% density quantile. Points show the category means of the exposure condition, the green ellipsis shows the covariance of the +10 exposure condition (covariance was identical across conditions).
+(ref:exposure-means-database-density) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for XXX word-initial /d/ and /t/ productions in L1-US English [based on 92 talkers in @chodroff-wilson2017]. The outermost contour of each category shows the 95% density quantile. Points show the category means of the exposure condition.
 
 ```{r exposure-means-database-density, fig.width= 6, fig.height=4, warning=FALSE, fig.cap="(ref:exposure-means-database-density)"}
-(p.density / p.shift10_ellipse) +
+p.density +
   plot_layout(ncol = 1, guides = "collect") &
   theme(legend.position = "right")
 
 ```
 
-```{r hypothesis-table-unlearning, results='asis'}
-# hypotheses to analyse last 3 test blocks (question: what happens with repeated testing)
-hyp_test456 <- c(
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 > 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 > 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 > 0",
-  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 > 0",
-  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
-  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0")
 
-# translate hypotheses into intelligible statements
-hyp_test456_readable <- tibble(Hypothesis_readable = rep(c("Predicted change from test block 4 to 5", "Predicted change from test block 5 to 6", "Predicted total change from test block 4 to 6"), 2))
-
-hyp_test456 <- hypothesis(fit_mix_test, hyp_test456, robust = T)
-hyp_test456 <- (hyp_test456$hypothesis) %>% select(-Star)
-
-table.unlearning <- make_hyp_table(hyp_test456_readable, hyp_test456, caption = "Effects of repeated testing (test blocks 4 to 6)" ) %>%
-  pack_rows("Difference in +10 vs. baseline", 1, 3) %>%
-  pack_rows("Difference in +40 vs. +10", 4, 6)
-table.unlearning
-```
 
 
 
