@@ -6,7 +6,7 @@ We investigate an important constraints on this type of adaptivity that is sugge
 
 (ref:kleinschmidt-jaeger-2016-replotted) Design and results of @kleinschmidt-jaeger2016 replotted. **Panel A:** Different groups of participants were exposed to different shifts in the mean VOT of /b/ and /p/. **Panel B:** Categorisation functions of individual participants depending on the exposure condition (shift in VOT means of /b/ and /p/). For reference, the black dashed line shows the categorisation function of the 0-shift condition. The colored dashed lines shows the categorisation function expected for an ideal observer that has fully learned the exposure distributions. **Panel C:** Mean and 95% CI of participants' points of subjective equality (PSEs), relative to the PSE of the ideal observers. <!-- TO DO: download KJ16 data, fit our psychometric model (no block) to all unlabelled trials. Plot panel B like in that paper. plot panel C, the same way we're plotting our results (i.e., a single 'block' of point ranges with references lines like the PSE panel of your main plot. -->
 
-```{r kleinschmidt-jaeger-2016-replotted, fig.height=.5, fig.width=5.5 fig.cap="(ref:kleinschmidt-jaeger-2016-replotted)"}
+```{r kleinschmidt-jaeger-2016-replotted, fig.height=.5, fig.width=5.5, fig.cap="(ref:kleinschmidt-jaeger-2016-replotted)"}
 # load K&J2016 data and filter to semi-supervised rows
 d.KJ16 <-
   supunsup_clean %>%
