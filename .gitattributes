@@ -13,3 +13,4 @@ Exp-AE-DLVOT-labelled-lapsing-GLMM-helmert-no-RTexcl.rds filter=lfs diff=lfs mer
 Exp-AE-DLVOT-Block1-lapse-no-RTexcl.rds filter=lfs diff=lfs merge=lfs -text
 Exp-NORM-lapsing-Trial-F0.rds filter=lfs diff=lfs merge=lfs -text
 models/KJ16-semisupervised-GLMM.rds filter=lfs diff=lfs merge=lfs -text
+*.rds filter=lfs diff=lfs merge=lfs -text
