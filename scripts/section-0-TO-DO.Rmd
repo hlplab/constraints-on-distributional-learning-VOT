@@ -1,47 +1,44 @@
 <!-- Do NOT knit this document. It is part of a larger document. Instead knit the main document (my-apa-formatted-article) -->
 
-TO-DO
+# TO-DO
 
 ## Highest priority
  * MARYANN
-  * KJ16 plot: fix legends, fix y-axis to conform to current convention, add 0 reference line *typical talker + IO references lines (predicted PSEs) ,medium priority: include point rqanges in PSE comparison plot
+  * KJ16 plot: fix legends, fix y-axis to conform to current convention, add 0 reference line *typical talker + IO references lines (predicted PSEs)
   * main plot:
-    *remove vertical gridlines
-    *reference dashed lines: put labels for e.g. +21.x ms (100%) on the right edge.
-    * change point estimate to a label with +x% : data frame must have all info necessary to calculate data for that label geom. % in the label must have +/-, rounded to 1 digit
-    
-  * fit nested model: Condition/ (block*VOT). Sample prior = "yes". This is to make the argument of block-to-block change within each condition. 
-  * make a hypothesis table that summarises the main effect of block for each exposure condition
-  * take only top part of non-parametric density plot. Change caption
+    * remove vertical gridlines
+    * reference dashed lines: put labels for e.g. "+21.x ms (100%)" on the right edge.
+    * change point estimate to a label with "+/-XX.X%" (rounded to 1 digit). data frame must have all info necessary to calculate data for that label geom.
+  * fit nested model: Condition / (block*VOT). Sample prior = "yes". This is to make the argument of block-to-block change within each condition. 
+    * make a hypothesis table that summarises the main effect of block for each exposure condition
+  * Non-parametric density plot. 
+    * Apply correction for vowel duration!
   * Try an add line to table 2 to separate the unlearning hypothesis from the others (low priority). Add +40 vs baseline sub-heading
-    
-    
 
 ## Medium priority
 
-* MARYANN
-
-  *Fix a lot of the outstanding XXXes. Fill in the references -- in library.bib
+ * MARYANN
+  * KJ16 plot: include point ranges in PSE comparison plot
+  * Fix a lot of the outstanding XXXes. Fill in the references -- in library.bib
   * Heterogenous normal distribution
   * fix appearance of annotations in histogram file
   
-  • Florian
-    *think about table 1 and 2: how to change the wording on tables to actually refer to intercepts rather than PSEs or change the figures? Changing current representations of analyses to improve intuitive-ity. 
-    * write overview of results
-    * restructure results presentation.
-    * write SI sections with proofs
+ * FLORIAN
+  * think about table 1 and 2: how to change the wording on tables to actually refer to intercepts rather than PSEs or change the figures? Changing current representations of analyses to improve intuitive-ity. 
+  * write overview of results
+  * restructure results presentation.
+  * write SI sections with proofs
   
 ### Lower Priority
 
-* MARYANN
-
+ * MARYANN
+  * standardize "ms" vs. "msec"
   * Decide on PSE vs. category boundary 
   * standardize BE vs. AE spelling (categoriz/sation, label(l)ed, synthesiz/sed etc.)
    * Figure 2: A small figure to anticipate the type of format in the main figure. Exposure is x-axis (less to more exposure). Under one prediciton you keep growing 00 prediction o BBU model. The other one is plataeuing and converging against something. 
     
-  * Florian
-      * compare IBBU predictions over blocks with human behavioural data
-
+ * Florian
+  * compare IBBU predictions over blocks with human behavioural data
 
 ## To do later
   
