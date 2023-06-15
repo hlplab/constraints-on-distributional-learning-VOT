@@ -23,7 +23,7 @@ TO-DO
 
   *Fix a lot of the outstanding XXXes. Fill in the references -- in library.bib
   * Heterogenous normal distribution
-  * fix appearance of annotations in histogram file
+  * fix appearance of annotations in histogram plot
   
   • Florian
     *think about table 1 and 2: how to change the wording on tables to actually refer to intercepts rather than PSEs or change the figures? Changing current representations of analyses to improve intuitive-ity. 

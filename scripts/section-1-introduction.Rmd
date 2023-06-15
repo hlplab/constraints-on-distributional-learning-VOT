@@ -8,8 +8,7 @@ We investigate an important constraints on this type of adaptivity that is sugge
 
 ```{r kleinschmidt-jaeger-2016-replotted, fig.height=2.5, fig.width=6.5, fig.cap="(ref:kleinschmidt-jaeger-2016-replotted)"}
 # load K&J2016 data and filter to semi-supervised rows
-d.KJ16 <-
-  supunsup_clean %>%
+d.KJ16 <- supunsup_clean %>%
   filter(supCond == "mixed" | supCond == "supervised") %>%
   # rename variables so that they are easily recognised
   rename(
@@ -25,18 +24,21 @@ d.KJ16 <-
       Condition.Exposure == 20 ~ "+20ms",
       Condition.Exposure == 30 ~ "+30ms")),  
     Condition.Exposure = fct_relevel(
-      Condition.Exposure, c("+0ms", "+10ms", "+20ms", "+30ms"))) %>%
+      Condition.Exposure, c("+0ms", "+10ms", "+20ms", "+30ms")))
+
+d.KJ16_unlabeled <-
+  d.KJ16 %>%
   filter(labeled == "unlabeled") %>%
   group_by(ParticipantID) %>%
   # filter to final 6th of total trials
   slice_tail(n = 37)
 
-VOT.mean_d.KJ16 <- mean(d.KJ16$Item.VOT)
-VOT.sd_d.KJ16 <- sd(d.KJ16$Item.VOT)
+VOT.mean_d.KJ16_unlabeled <- mean(d.KJ16_unlabeled$Item.VOT)
+VOT.sd_d.KJ16_unlabeled <- sd(d.KJ16_unlabeled$Item.VOT)
 
-d.KJ16 %<>% mutate(VOT_gs = (Item.VOT - VOT.mean_d.KJ16) / (2 * VOT.sd_d.KJ16))
+d.KJ16_unlabeled %<>% mutate(VOT_gs = (Item.VOT - VOT.mean_d.KJ16_unlabeled) / (2 * VOT.sd_d.KJ16_unlabeled))
 
-contrasts(d.KJ16$Condition.Exposure) <-
+contrasts(d.KJ16_unlabeled$Condition.Exposure) <-
   cbind(" 10vs0" = c(-3/4, 1/4, 1/4, 1/4),
         " 20vs10" = c(-1/2, -1/2, 1/2, 1/2),
         " 30vs20" = c(-1/4, -1/4, -1/4, 3/4))
@@ -56,7 +58,7 @@ fit_KJ16 <-
         (1 + VOT_gs | ParticipantID) +
         (1 + VOT_gs * Condition.Exposure | Item.MinimalPair),
       theta1 ~ 1),
-    data = d.KJ16,
+    data = d.KJ16_unlabeled,
     cores = chains,
     chains = chains,
     init = 0,
@@ -74,26 +76,56 @@ cond_fit_KJ16 <- fit_KJ16 %>%
   ndraws = 500,
   re_formula = NA) %>% 
   .[[1]] %>% 
-  mutate(Item.VOT = descale(VOT_gs, VOT.mean_d.KJ16, VOT.sd_d.KJ16))
+  mutate(Item.VOT = descale(VOT_gs, VOT.mean_d.KJ16_unlabeled, VOT.sd_d.KJ16_unlabeled))
 
-
+# make histograms of exposure distributions
+d.KJ16 %>% 
+  group_by(Condition.Exposure) %>%
+  slice_head(n = 222) %>% 
+  ggplot(aes(x = Item.VOT,
+             fill = paste(Condition.Exposure, trueCat),
+             colour = paste(Condition.Exposure, trueCat))) +
+  geom_histogram(binwidth = 5) +
+  scale_colour_manual(
+    "Category", 
+    values = c("+0ms b" = "#f8766d",
+               "+0ms p" = "#fdd1ce",
+               "+10ms b" = "#00bfc4",
+               "+10ms p" = "#99fcff",
+               "+20ms b" = "#7cae00",
+               "+20ms p" = "#d4ff66",
+               "+30ms b" = "#c77cff",
+               "+30ms p" = "#e9ccff"),
+    aesthetics = c("color", "fill"),
+    labels = c("/b/", "/p/", "", "", "", "", "", "")) +
+   guides(
+    colour = guide_legend(
+      override.aes = list(
+        colour = c("#383838", "#C0C0C0", 0, 0, 0, 0, 0, 0),
+        fill = c("#383838", "#C0C0C0", 0, 0, 0, 0, 0, 0),
+        values = c("b", "p", 0, 0, 0, 0, 0, 0)))) +
+  scale_x_continuous("VOT (msec)", breaks = seq(-30, 90, 10)) +
+  facet_wrap(~ Condition.Exposure, nrow = 1)
+  
+  
 p.KJ16 <- cond_fit_KJ16 %>% 
+  rename(Condition = Condition.Exposure) %>% 
   ggplot() +
   geom_ribbon(aes(
     x = Item.VOT,
     y = estimate__,
-    group = Condition.Exposure,
-    ymin = lower__, ymax = upper__, fill = Condition.Exposure), alpha = .1) +
+    group = Condition,
+    ymin = lower__, ymax = upper__, fill = Condition), alpha = .1) +
   geom_line(aes(
     x = Item.VOT,
     y = estimate__,
-    group = Condition.Exposure,
-    color = Condition.Exposure),
+    group = Condition,
+    color = Condition),
     linewidth = .7,
     alpha = 0.6) +
   scale_x_continuous("VOT (msec)") +
-  scale_y_continuous("Proportion \"p\"-response") +
-  facet_wrap(~ Condition.Exposure, nrow = 1) +
+  scale_y_continuous("Proportion \"p\"-responses") +
+  facet_wrap(~ Condition, nrow = 1) +
   theme(legend.position = "top")
 ```
 
