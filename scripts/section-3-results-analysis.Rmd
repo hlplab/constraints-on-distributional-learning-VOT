@@ -955,38 +955,3 @@ Finally, Figures \@ref(fig:plot-fit-slope-PSE)C & D also compare participants' r
 
 
 
-```{r hypothesis-table-proportionality, results='asis'}
-# hypotheses test of proportionality (Is the magnitude of the difference between +40 and 
-# baseline < 4 * magnitude of the difference between +10 and baseline). Since the effects 
-# are all negative, we're testing whether +40 vs baseline is *larger* than 4 * + 10 vs. 
-# baseline.
-hyp_proportional <- c(
-  "mu2_Block3:Condition.Exposure_Shift40vs.Shift10 > 3 * mu2_Block3:Condition.Exposure_Shift10vs.Shift0",
-  "mu2_Block5:Condition.Exposure_Shift40vs.Shift10 > 3 * mu2_Block5:Condition.Exposure_Shift10vs.Shift0",
-  "mu2_Block7:Condition.Exposure_Shift40vs.Shift10 > 3 * mu2_Block7:Condition.Exposure_Shift10vs.Shift0")
-
-hyp_proportional <- hypothesis(fit_mix_test_nested_block, hyp_proportional, robust = T)
-hyp_proportional <- hyp_proportional$hypothesis %>%
-  select(-Star)
-
-# translate hypotheses into intelligible statements
-hyp_proportional_readable <- tibble(Hypothesis_readable = c(
-  "+40 vs. baseline < 4x +10 vs. baseline",
-  "+40 vs. baseline < 4x +10 vs. baseline",
-  "+40 vs. baseline < 4x +10 vs. baseline"))
-
-table.proportionality <- 
-  make_hyp_table(
-    hyp_proportional_readable,
-    hyp_proportional, 
-    caption = "Is the shift in +40 from baseline proportional to the magnitude of shift in the exposure distribution?") %>%
-  pack_rows("Test block 2", 1, 1) %>%
-  pack_rows("Test block 3", 2, 2) %>% 
-  pack_rows("Test block 4", 3, 3) 
-table.proportionality
-```
-
-
-
-
-
