@@ -68,16 +68,15 @@ Each trial started with a dark-shaded green fixation dot being displayed. At 500
 
 *Exposure blocks. * Each exposure block consisted of 24 /d/ and 24 /t/ trials, as well as 6 catch trials that served as a check on participant attention throughout the experiment (2 instances for each of three combinations of the three catch recordings). With a total of 144 trials, exposure was substantially shorter than in similar previous experiments [cf. 228 trials in @clayards2008; 222 trials in @kleinschmidt2020; 2 x 236 trials, @theodore-monto2019; 456 trials, @nixon2016]. 
 
-The distribution of VOTs across the 48 /d/-/t/ trials depended on the exposure condition. Specifically, we first created a *baseline* condition. Although not critical to the purpose of the experiment, we aimed for the VOT distribution in this condition to closely resemble participants' prior expectations for a `typical' female talker of L1-US English (for details, see SI, \@ref(XXX)). The mean and standard deviations for /d/ along VOT were set 5 msecs and 50 msecs, respectively. The mean and standard deviations for /t/ were set 80 msecs and 270 msecs, respectively. To create more realistic VOT distributions, we *sampled* from the intended VOT distribution (top row of Figure \@ref(fig:exp2-design-distribution)). This creates distributions that more closely resemble the type of distributional input listeners experience in everyday speech perception, deviating from previous work, which exposed listeners to highly unnatural fully symmetric samples [@clayards2008; @kleinschmidt-jaeger2016; @kleinschmidt2020]. 
+The distribution of VOTs across the 48 /d/-/t/ trials depended on the exposure condition. Specifically, we first created a *baseline* condition. Although not critical to the purpose of the experiment, we aimed for the VOT distribution in this condition to closely resemble participants' prior expectations for a `typical' female talker of L1-US English (for details, see SI, \@ref(XXX)). The mean and standard deviations for /d/ along VOT were set 5 msecs and 50 msecs, respectively. The mean and standard deviations for /t/ were set 80 msecs and 270 msecs, respectively.<!-- TO DO: the standard deviations here don't match the sigmas (or sigma^2 for that matter) given in the figure. Please fix whichever ones are wrong --> To create more realistic VOT distributions, we *sampled* from the intended VOT distribution (top row of Figure \@ref(fig:exp2-design-distribution)). This creates distributions that more closely resemble the type of distributional input listeners experience in everyday speech perception, deviating from previous work, which exposed listeners to highly unnatural fully symmetric samples [@clayards2008; @kleinschmidt-jaeger2016; @kleinschmidt2020]. 
 
 Half of the /d/ and half of the /t/ trials were labeled, the other half was unlabeled [paralleling one of the conditions in @kleinschmidt2015cogsci]. Unlabeled trials were identical to test trials except that the distribution of VOTs across those trials was bimodal (rather than uniform), and determined by the exposure condition.^[Previous studies have estimated changes in participants' categorisation responses by analyzing responses on unlabeled exposure trials [e.g., @clayards2008; @kleinschmidt-jaeger2016; @theodore-monto2019]. This approach compares responses across different values of acoustic-phonetic cues (since the exposure inputs differed by exposure condition), so that assumptions baked into the analysis approach (e.g., linearity along the acoustic-phonetic continuum) can potentially bias the results. Here we avoid this issue by holding test stimuli constant [see also @kleinschmidt2020, Experiment 4].] Labeled trials instead presented two response options with identical stop onsets (e.g., *din* and *dill*). This effectively labeled the input as belonging to the intended category (e.g., /d/). 
 
-Next, we created the two additional exposure conditions by shifting these VOT distributions by +10 or +40 msecs (see Figure \@ref(fig:exp2-design-distribution)). This approach exposes participants to heterogenous approximations of normally distributed VOTs for /d/ and /t/ that varied across blocks, while holding all aspects of the input constant across conditions except for the shift in VOT. The order of trials was randomized within each block and participant, with the constraint that no more than two catch trials would occur in a row. Participants were randomly assigned to one of 3 (exposure condition) x 3 (block order) x 2 (placement of response options) lists. 
+Next, we created the two additional exposure conditions by shifting these VOT distributions by +10 or +40 msecs (see Figure \@ref(fig:exp2-design-distribution)). This approach exposes participants to heterogeneous approximations of normally distributed VOTs for /d/ and /t/ that varied across blocks, while holding all aspects of the input constant across conditions except for the shift in VOT. The order of trials was randomized within each block and participant, with the constraint that no more than two catch trials would occur in a row. Participants were randomly assigned to one of 3 (exposure condition) x 3 (block order) x 2 (placement of response options) lists. 
 
+(ref:exp2-design-distribution) Histogram of voice onset times (VOTs) for each of the three exposure blocks A-C by trial type (/d/ or /t/, labeled or unlabeled) and exposure condition (baseline vs. +10 vs. +40). Each exposure block contained 12 labeled /d/, 12 labeled /t/, 12 unlabeled /d/, and 12 unlabeled /t/ trials, as well as 6 catch trials (not shown). Except for the shift in VOTs (+0, 10 or 40 msecs VOT to each trial), the VOT distribution of these trials was identical across exposure conditions. The order of exposure blocks A-C was counter-balanced across participants using a Latin-square design.
 
-(ref:exp2-design-distribution) Histogram of VOTs across the 48 trials of all three exposure blocks by exposure condition. The order of blocks was counter-balanced across participants. 
-
-```{r exp2-design-distribution, fig.height=4.8, fig.width=4.8, fig.cap="(ref:exp2-design-distribution)", warning=FALSE, message=FALSE}
+```{r exp2-design-distribution, fig.height=base.height*3+1/2, fig.width=base.width*4, fig.cap="(ref:exp2-design-distribution)", warning=FALSE, message=FALSE}
 d.exposure_trials <- 
   read_csv("../data/exposure_block_tokens.csv", show_col_types = F) %>% 
   mutate(
@@ -153,7 +152,7 @@ p.histogram_conditions <-
   scale_y_continuous("Count") +
   geom_text(
     data = d.means,
-    aes(x = 0,  y = 17, 
+    aes(x = -10,  y = 17, 
         label = label),
     parse = T,
     size = 2, hjust = 0, position = position_dodge2v(height = -8),
@@ -161,15 +160,15 @@ p.histogram_conditions <-
   facet_grid(condition ~ block, scales = "free_y", margins = "block") +
   guides(linetype = "none") +
   theme(legend.position = "top",
-        legend.title = element_text(size = 10),
         legend.title.align = 0,
         legend.text.align = 0,
         legend.justification = c(.5, .5),
         legend.box.just = "center",
         legend.key.width = unit(12, "pt"),
         legend.key.height = unit(12, "pt"),
-        legend.text = element_text(size = 6),
-        legend.box.spacing = unit(1, "pt"))
+        legend.box.spacing = unit(1, "pt"), 
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank())
 p.histogram_conditions
 ```
 

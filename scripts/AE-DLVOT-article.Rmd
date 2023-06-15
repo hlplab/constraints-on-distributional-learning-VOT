@@ -158,8 +158,8 @@ r_refs(file = "latex-stuff/r-references.bib")
 # and then refer to those variables in the knitr chunk options that describe the figure width and height for a 
 # specific R chunk.
 options(width = 200, digits = 2, OutDec = ".", tinytex.verbose = TRUE)
-base.width = 1.75
-base.height = 1.75
+base.width = 1.25
+base.height = 1.25
 
 knitr::opts_chunk$set(
   echo = FALSE, message = FALSE, warning = FALSE, 
