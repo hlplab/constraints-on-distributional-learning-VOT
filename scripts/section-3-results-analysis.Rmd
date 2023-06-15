@@ -11,9 +11,6 @@ source("functions.R")
 ```
 
 ## Results
-Figure \@ref(fig:plot-fit-slope-PSE) summarizes the results. Panels A and B show participants’ categorisation responses during exposure and test blocks, along with the categorisation function estimated from those responses via a mixed-effects psychometric model that we describe next. These panels facilitate comparison between exposure conditions within each block. Panels C and D show the slope and point of subject equality (PSE)---i.e., the point at which participants are equally likely to respond "d" and "t"---of the categorisation function across blocks and conditions. These panels facilitate comparison across blocks within each exposure condition.
-
-### Analysis approach
 
 ```{r model-fit-test-blocks, include=FALSE}
 # Storing some information about the data set submitted for analysis
@@ -67,19 +64,11 @@ fit_mix_exposure <-
 
 ```
 
-We analyzed participants' categorisation responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric models, fit using brms [@R-brms_a] in R [@R; @RStudio, for details, see SI, \@ref(sec:analysis-approach)]. These models account for attentional lapses while estimating participants' categorisation functions. Failing to account for attentional lapses---while commonplace in research on speech perception [but see @clayards2008; @kleinschmidt-jaeger2016]---can lead to biased estimates of categorization boundaries [@prins2012; @wichmann2001]. For the present experiment, however, lapse rates were negligible (`r make_CI(fit_mix_test, "theta1_Intercept")`), and all results replicate in simple mixed-effects logistic regressions [@jaeger2008].
+We analyzed participants' categorisation responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric models, using brms [@R-brms_a] in R [@R; @RStudio, for details, see SI, \@ref(sec:analysis-approach)]. Psychometric models account for attentional lapses while estimating participants' categorisation functions. Failing to account for attentional lapses---while commonplace in research on speech perception [but see @clayards2008; @kleinschmidt-jaeger2016]---can lead to biased estimates of categorization boundaries [@prins2012; @wichmann2001]. For the present experiment, however, lapse rates were negligible (`r make_CI(fit_mix_test, "theta1_Intercept")`), and all results replicate in simple mixed-effects logistic regressions [@jaeger2008]. 
 
-### Does exposure affect participants' categorisations (averaging across all blocks)?
-Here we focus on the test blocks, which were identical within and across exposure conditions. Analyses of the exposure blocks are reported in the SI (\@ref(sec:exposure-analyses)), and replicate all effects found in the test blocks. We first assessed whether the exposure conditions had the expected effects across all test blocks *relative to each other*. Unsurprisingly, participants were more likely to respond "t" the larger the VOT ($`r get_bf(fit_mix_test, "mu2_VOT_gs > 0")`$). Critically, exposure affects participants' categorisation responses in the expected direction. Marginalizing across all blocks, participants in the +40 condition were less likely to respond "t" than participants in the +10 condition ($`r get_bf(fit_mix_test, "mu2_Condition.Exposure_Shift40vs.Shift10 < 0")`$) or the baseline condition ($`r get_bf(fit_mix_test, "mu2_Condition.Exposure_Shift40vs.Shift10 + mu2_Condition.Exposure_Shift10vs.Shift0 < 0")`$). There was also evidence---albeit less decisive---that participants in the +10 condition were less likely to respond "t" than participants in the baseline condition ($`r get_bf(fit_mix_test, "mu2_Condition.Exposure_Shift10vs.Shift0 < 0")`$). That is, the +10 and +40 conditions resulted in categorisation functions that were shifted rightwards compared to the baseline condition, as also visible in Figures \@ref(fig:plot-fit-slope-PSE).
+Each psychometric model regressed participants' categorisation responses against the full factorial interaction of VOT, exposure condition, and block, while including the maximal random effect structure (see SI, \@ref(sec:analysis-approach). Figure \@ref(fig:plot-fit-slope-PSE) summarizes the results that we describe in more detail next. Panels A and B show participants’ categorisation responses during exposure and test blocks, along with the categorisation function estimated from those responses via the mixed-effects psychometric models. These panels facilitate comparison between exposure conditions within each block. Panels C and D show the slope and point of subject equality (PSE)---i.e., the point at which participants are equally likely to respond "d" and "t"---of the categorisation function across blocks and conditions. These panels facilitate comparison across blocks within each exposure condition. Here we focus on the test blocks, which were identical within and across exposure conditions. Analyses of the exposure blocks are reported in the SI (\@ref(sec:exposure-analyses)), and replicate all effects found in the test blocks. 
 
-This replicates previous findings that exposure to changed VOT distributions changes listeners' categorization responses [for /b/-/p/: @clayards2008; @kleinschmidt-jaeger2016; @kleinschmidt2020; for /g/-/k/, @theodore-monto2019]. Having established that exposure affected categorization, we turn to the questions of primary interest.
-
- 1. How quickly does exposure begin to affect participants' responses? And do they dissipate with repeated testing?
- 2. Are the shifts in categorisation behaviour proportional to the differences between the exposure conditions?
- 3. [model learning vs. selection]
-
-[MORE HERE]
-
+We begin by presenting the overall effects, averaging across all test blocks. This part of our analysis matches previous work, which has focused on the overall effect of exposure across the entire experiment ['batch tests', e.g., @clayards2008; @kleinschmidt2016; @nixon2016; @theodore-monto2019] and/or during a single post-exposure test block [e.g., @kleinschmidt2020]. Then we turn to the goals of this study---to characterize the incremental changes in participants' categorisation responses as a function of exposure and, in particular, to test 1) whether we replicate the sublinear effects of exposure observed in previous work under the ecologically more valid stimuli and distributions employed in the present work, and 2) whether we can begin to distinguish between the predictions of the model learning and selection hypotheses. 
 
 ```{r fit-nested-models-for-intercepts-slopes-plot, message=FALSE}
 # Refit the same model, formulated as nesting intercepts and slopes within each unique combination of
@@ -596,24 +585,15 @@ p.row3 <- p.params_1to7
 ```
 \end{landscape}
 
-Next, we compared the effects of exposure conditions for all test blocks with intervening exposure. These effects can be compared from three complementing perspectives. First, we can compare how exposure affects listeners' categorisation responses relative to other exposure conditions. Second, we can compare how exposure affects listeners' categorisation responses within each condition relative to listeners' responses prior to any exposure. Third, we can compare changes in listeners' responses to those expected from an ideal observer that has fully learned the exposure distributions. 
+### Does exposure affect participants' categorisations (averaging across all blocks)?
+We first used the psychometric mixed-effects model to assess whether the exposure conditions had the expected effects across all test blocks *relative to each other*. Unsurprisingly, participants were more likely to respond "t" the larger the VOT ($`r get_bf(fit_mix_test, "mu2_VOT_gs > 0")`$). Critically, exposure affects participants' categorisation responses in the expected direction. Marginalizing across all blocks, participants in the +40 condition were less likely to respond "t" than participants in the +10 condition ($`r get_bf(fit_mix_test, "mu2_Condition.Exposure_Shift40vs.Shift10 < 0")`$) or the baseline condition ($`r get_bf(fit_mix_test, "mu2_Condition.Exposure_Shift40vs.Shift10 + mu2_Condition.Exposure_Shift10vs.Shift0 < 0")`$). There was also evidence---albeit less decisive---that participants in the +10 condition were less likely to respond "t" than participants in the baseline condition ($`r get_bf(fit_mix_test, "mu2_Condition.Exposure_Shift10vs.Shift0 < 0")`$). That is, the +10 and +40 conditions resulted in categorisation functions that were shifted rightwards compared to the baseline condition, as also visible in Figures \@ref(fig:plot-fit-slope-PSE).
+
+This replicates previous findings that exposure to changed VOT distributions changes listeners' categorization responses [for /b/-/p/: @clayards2008; @kleinschmidt-jaeger2016; @kleinschmidt2020; for /g/-/k/, @theodore-monto2019]. Having established that exposure affected categorization, we turn to the questions of primary interest. Incremental changes in participants' categorisation responses can be assessed from three mutually complementing perspectives. First, we compare how exposure affects listeners' categorisation responses relative to other exposure conditions. This tests how early in the experiment differences between exposure conditions began to emerge. Second, we compare how exposure affects listeners' categorisation responses within each condition relative to listeners' responses prior to any exposure. This assesses how the exposure conditions relate to participants' prior expectations. Most importantly, however, it tests the subtly different predictions of the model learning and selection hypotheses---whether changes in listeners' categorisation responses are strongly constrained. Third and finally, we compare changes in listeners' responses to those expected from an ideal observer that has fully learned the exposure distributions. This tests whether the sublinear effects observed in @kleinschmidt-jaeger2016 replicate in our repeated exposure-test paradigm with the improvements the present study makes to ecological validity.
 
 ### Comparing across exposure conditions: How quickly does exposure begin to affect participants' responses? 
-Figure \@ref(fig:plot-fit-slope-PSE)A suggests that differences between exposure conditions emerged early in the experiment: already in Test 2, listener's categorisation functions seem to be shifted rightwards (larger PSEs) in the +40 condition compared to the +10 condition, and in the +10 condition compared to the baseline condition. This is confirmed by the Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-effects). Prior to any exposure, during Test 1, participants' responses did not differ across exposure condition. <!-- TO DO: fit model with save_priors =T and change hypothesis tests for block one to = 0, not < 0: fitting--> After exposure to only 24 /d/ and 24 /t/ stimuli, during Test 2, participants' responses differed between exposure conditions. The difference between the +40 condition and the +10 or baseline condition kept increasing with exposure up to Test 4. Additional hypothesis tests in Table \@ref(tab:hypothesis-table-interactions) show that the change from Test 1 to 2 was largest (BF = 27.8), followed by the change from Test 2 to 3 (BF = 19.2), with only minimal changes from Test 3 to 4 (BF = 1.7). Qualitatively paralleling the changes across blocks for the +40 condition, the change in the difference between the +10 and baseline conditions was largest from Test 1 to 2 (BF = 13.5), and then somewhat decreased from Test 2 to Test 4 (BFs < 4). <!-- TO DO: could integrate repeated testing data here -->
+Figure \@ref(fig:plot-fit-slope-PSE)A suggests that differences between exposure conditions emerged early in the experiment: already in Test 2, listener's categorisation functions seem to be shifted rightwards (larger PSEs) in the +40 condition compared to the +10 condition, and in the +10 condition compared to the baseline condition. This is confirmed by the Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-effects). Prior to any exposure, during Test 1, participants' responses did not differ across exposure condition (all BFs > XXX). <!-- TO DO: fit model with save_priors =T and change hypothesis tests for block one to = 0, not < 0: fitting--> After exposure to only 24 /d/ and 24 /t/ stimuli, during Test 2, participants' responses differed between exposure conditions (BFs > 17.35). The difference between the +40 condition and the +10 or baseline condition kept increasing with exposure up to Test 4. Additional hypothesis tests in Table \@ref(tab:hypothesis-table-interactions) show that the change from Test 1 to 2 was largest (BF = 27.8), followed by the change from Test 2 to 3 (BF = 19.2), with only minimal changes from Test 3 to 4 (BF = 1.7). Qualitatively paralleling the changes across blocks for the +40 condition, the change in the difference between the +10 and baseline conditions was largest from Test 1 to 2 (BF = 13.5), and then somewhat decreased from Test 2 to Test 4 (BFs < 4). The comparison across exposure conditions thus suggests that changes in listeners' categorisation responses emerged quickly---indeed, they were present already *during* the first exposure block (see SI, \@ref(sec:exposure-analyses))---but then leveled off. The comparison across exposure conditions also yields one result that is, at first blush, surprising: while the difference between the +10 and the baseline condition emerged already after the first exposure block, this difference *de*creased, rather than increased, with additional exposure from Test 2 to 3 (see second row of Table \@ref(tab:hypothesis-table-interactions)). We return to this effect below.
 
-Tables \@ref(tab:hypothesis-table-simple-effects) and \@ref(tab:hypothesis-table-interactions) also summarize the consequences of repeated testing. The difference in the PSE decreased from Test 4 to 6, both for the +40 compared to the +10 condition ($`r get_bf(fit_mix_test, "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0")`$) and the +10 compared to the baseline condition ($`r get_bf(fit_mix_test, "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 > 0")`$, see also Figure \@ref(fig:plot-fit-slope-PSE)B & D). On the final test block, the +10 condition did not differ any longer from the baseline condition. Only the differences between the +40 condition relative to the +10 and baseline conditions persisted, albeit substantially reduced compared to Test 4.
-
-This replicates previous findings that repeated testing over uniform test continua can undo the effects of exposure [@cummings2023; @liu-jaeger2018; @liu-jaeger2019], and extends them from perceptual recalibration paradigms to distributional learning paradigms [see also @kleinschmidt2020]. One important methodological consequence of these findings is that longer test phases do not necessarily increase the statistical power to detect effects of adaptation [unless analyses take the effects of repeated testing into account, as in the approach developed in @liu-jaeger2018]. Analyses that average across all test tokens---as remains the norm---are bound to systematically underestimate the adaptivity of human speech perception.
-
-### Comparing within exposure conditions: How quickly does exposure begin to affect participants' responses? 
-Second, we can compare how exposure affects listeners' categorisation reponses within each condition relative to listeners' responses prior to any exposure. These changes are summarised for the slope and PSE in Figure \@ref(fig:plot-fit-slope-PSE)C & D, respectively. This visualization makes apparent an aspect of participants' behavior that were not readily apparent in the statistical comparisons we have summarized so far: while the PSEs for the +40 and +10 conditions were shifted rightwards compared to the baseline condition, both the +10 and the baseline condition actually shift leftwards relative to their pre-exposure starting point in Test 1. To understand this pattern, it is helpful to relate our exposure conditions to the distribution of VOT in listeners' prior experience. Figure \@ref(fig:exposure-means-database-density) shows the mean and covariance of our exposure conditions relative to the distribution of VOT by talkers of L1-US English [based on @chodroff-wilson2017]. This comparison offers an explanation as to why the baseline condition (and to some extent the +10 condition) shift leftwards with increasing exposure, whereas the +40 condition shifts rightwards: relative to listeners' prior experience our baseline condition actually presented lower-than-expected category means; of our three exposure conditions, only the +40 condition presented larger-than-expected category means. That is, once we take into account how our exposure conditions relate to listeners' prior experience, both the direction of changes from Test 1 to 4 *within* each exposure condition, and the direction of differences *between* exposure conditions receive an explanation.
-
-### Constraints on cumulative changes
-Most relevant to the purpose of the present study, Figure \@ref(fig:plot-fit-slope-PSE)D also suggests that there are strong constraints on listeners' ability to adapt. To some extent, this already follows from the analysis of how the differences between exposure conditions change with exposure. 
-
-XXX
-
-Second, the reason for the slight decrease in the difference between the +10 and baseline conditions observed in Tables \@ref(tab:hypothesis-table1) and \@ref(tab:hypothesis-table2) (visible in Figure \@ref(fig:plot-fit-slope-PSE)D as the decreasing difference between the green and red line) is *not* due to a reversal of the effects in the +10 condition. Rather, both conditions are changing in the same direction but the baseline condition stops changing after Test 2, which brings the +10 condition increasingly closer to the baseline condition. 
+Tables \@ref(tab:hypothesis-table-simple-effects) and \@ref(tab:hypothesis-table-interactions) also reveal the consequences of repeated testing. The difference between exposure conditions decreased from Test 4 to 6 (BFs > 4.3; see also Figure \@ref(fig:plot-fit-slope-PSE)B & D). On the final test block, the +10 condition did not differ any longer from the baseline condition. Only the differences between the +40 condition relative to the +10 and baseline conditions persisted, albeit substantially reduced compared to Test 4. This pattern of results replicates previous findings that repeated testing over uniform test continua can undo the effects of exposure [@cummings2023; @liu-jaeger2018; @liu-jaeger2019], and extends them from perceptual recalibration paradigms to distributional learning paradigms [see also @kleinschmidt2020]. One important methodological consequence of these findings is that longer test phases do not necessarily increase the statistical power to detect effects of adaptation [unless analyses take the effects of repeated testing into account, as in the approach developed in @liu-jaeger2018]. Analyses that average across all test tokens---as remains the norm---are bound to systematically underestimate the adaptivity of human speech perception.
 
 ```{r fit-nested-blocks-simple-effects, results='hide'}
 # nested model to get simple effects of Condition embedded in block
@@ -724,7 +704,19 @@ hyp_interactions <- c(
   
   "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 > 0",
   "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
-  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0")
+  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
+  
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 < 0",
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 < 0",
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 < 0",
+  "(mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 + 
+    mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 + 
+    mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1) < 0",
+  
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 > 0",
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + 
+   mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0")
 
 hyp_interactions <- hypothesis(fit_mix_test, hyp_interactions, robust = T)
 hyp_interactions <- hyp_interactions$hypothesis %>% select(-Star)
@@ -739,7 +731,7 @@ hyp_interactions_readable <-
   "{\\em Block 1 to 4: increased $\\Delta_{PSE}$}",
   "Block 4 to 5: decreased $\\Delta_{PSE}$",
   "Block 5 to 6: decreased $\\Delta_{PSE}$",
-  "{\\em Block 4 to 6: decreased $\\Delta_{PSE}$}"), 2))
+  "{\\em Block 4 to 6: decreased $\\Delta_{PSE}$}"), 3))
 
 table.interactions <- 
   make_hyp_table(
@@ -747,10 +739,16 @@ table.interactions <-
     hyp_interactions,
     caption = "Was there incremental change from test block 1 to 4? Did these changes dissipate with repeated testing from block 4 to 6? This table summarizes the interactions between exposure condition and block, whether the differences between exposure conditions changed from test block to test block.") %>% 
   pack_rows("Difference in +10 vs. baseline", 1, 7) %>%
-  pack_rows("Difference in +40 vs. +10", 8, 14) 
+  pack_rows("Difference in +40 vs. +10", 8, 14) %>%
+  pack_rows("Difference in +40 vs. baseline", 15, 21) 
 
 table.interactions
 ```
+
+### Comparing within exposure conditions: How quickly does exposure begin to affect participants' responses? 
+Next, we compared how exposure affects listeners' categorisation reponses within each condition relative to listeners' responses prior to any exposure. These changes are summarised for the slope and PSE in Figure \@ref(fig:plot-fit-slope-PSE)C & D, respectively. This visualization makes apparent two aspects of participants' behavior that were not readily apparent in the statistical comparisons we have summarized so far. First, while the PSEs for the +40 and +10 conditions were shifted rightwards compared to the baseline condition, both the +10 and the baseline condition actually shift leftwards relative to their pre-exposure starting point in Test 1. This is confirmed by Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-block-effects). 
+
+(ref:exposure-means-database-density) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for XXX word-initial /d/ and /t/ productions in L1-US English [based on 92 talkers in @chodroff-wilson2017]. The outermost contour of each category shows the 95% density quantile. Points show the category means of the exposure condition.
 
 ```{r getting-means-at-exposure-by-condition}
 # calculate the various mean VOTs exposed to for each condition, including the labelled trials, with and without accounting for the test trials
@@ -764,20 +762,14 @@ cond_means_exposure <- d_for_analysis %>%
   summarise(across(c(Item.VOT, Item.Mel_F0_5ms), mean, .names = "{.col}_mean_exposure"))
 
 cond_means <- left_join(cond_means_test_exposure, cond_means_exposure)
-```
 
-
-```{r non-parametric-density-plot, fig.width=6.5, fig.height=4.5}
-d.chodroff_wilson <-
+d.chodroff_wilson.selected <-
   get_ChodroffWilson_data(
     database_filename = "../data/all_observations_with_non-missing_vot_cog_f0.csv",
     min.n_per_talker_and_stop = 25,
     limits.VOT = c(-Inf, Inf),
     limits.f0 = c(0, 350),
-    max.p_for_multimodality = .1)
-
-d.chodroff_wilson.selected <-
-  d.chodroff_wilson %>%
+    max.p_for_multimodality = .1) %>%
   filter(poa == "/d/-/t/") %>%
   group_by(Talker, category) %>%
   mutate(n = n()) %>%
@@ -830,8 +822,7 @@ d_for_analysis %<>%
     Item.Mel_F0_5ms_centered = case_when(
       Condition.Exposure == "Shift0" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.Mel_F0_5ms_mean_exposure[1]),
       Condition.Exposure == "Shift10" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.Mel_F0_5ms_mean_exposure[2]),
-      Condition.Exposure == "Shift40" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.Mel_F0_5ms_mean_exposure[3]))
-  ) 
+      Condition.Exposure == "Shift40" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.Mel_F0_5ms_mean_exposure[3]))) 
 
 # specify quantiles for density plots
 quantile_levels <- c(.05, .25, .5, .75, .95)
@@ -892,8 +883,7 @@ p.density <-
          shape = guide_legend(title = "Category"))
 ```
 
-
-```{r plot-parametric-density-10ms, warning=FALSE}
+```{r exposure-means-database-density, fig.width=base.width*2.5+1, fig.height=base.height*2.5, warning=FALSE, fig.cap="(ref:exposure-means-database-density)"}
 shift10_cov_d <- 
   (d_for_analysis %>% 
   filter(Condition.Exposure == "Shift10") %>% 
@@ -944,19 +934,22 @@ p.shift10_ellipse <- p.density +
     show.legend = F,
     inherit.aes = F) +
   scale_y_continuous("F0 (Mel)", limits = c(220, 250))
-```
 
-(ref:exposure-means-database-density) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for XXX word-initial /d/ and /t/ productions in L1-US English [based on 92 talkers in @chodroff-wilson2017]. The outermost contour of each category shows the 95% density quantile. Points show the category means of the exposure condition.
-
-```{r exposure-means-database-density, fig.width= 6, fig.height=4, warning=FALSE, fig.cap="(ref:exposure-means-database-density)"}
 p.density +
   plot_layout(ncol = 1, guides = "collect") &
   theme(legend.position = "right")
-
 ```
 
+To understand this pattern, it is helpful to relate our exposure conditions to the distribution of VOT in listeners' prior experience. Figure \@ref(fig:exposure-means-database-density) shows the mean and covariance of our exposure conditions relative to the distribution of VOT by talkers of L1-US English [based on @chodroff-wilson2017]. This comparison offers an explanation as to why the baseline condition (and to some extent the +10 condition) shift leftwards with increasing exposure, whereas the +40 condition shifts rightwards: relative to listeners' prior experience our baseline condition actually presented lower-than-expected category means; of our three exposure conditions, only the +40 condition presented larger-than-expected category means. That is, once we take into account how our exposure conditions relate to listeners' prior experience, both the direction of changes from Test 1 to 4 *within* each exposure condition, and the direction of differences *between* exposure conditions receive an explanation.
 
+```{r hypothesis-table-simple-block-effects, results='asis'}
+caption = "In what direction did exposure shift participants' responses compared from block to block? This table summarizes the simple effect of block for each exposure condition."
+```
 
+Second, the reason for the slight decrease in the difference between the +10 and baseline conditions observed in Tables \@ref(tab:hypothesis-table-simple-condition-effects) and \@ref(tab:hypothesis-table-interactions) (visible in Figure \@ref(fig:plot-fit-slope-PSE)D as the decreasing difference between the green and red line) is *not* due to a reversal of the effects in the +10 condition. Rather, both conditions are changing in the same direction but the baseline condition stops changing after Test 2, which reduces the difference between the +10 and baseline conditions (see Table \@ref(tab:hypothesis-table-simple-block-effects)). The comparison across blocks thus suggests a rather uniform picture across all exposure conditions: participants' responses initially changed rapidly with exposure; with increasing exposure, these changes did not only slow down but seem to hit a hard constraint. Participants in the leftwards-shifted baseline condition did not exhibit any further changes in their categorisation responses beyond Test 2. Similarly, participants in the rightwards-shifted +40 condition did not exhibit any further changes in their categorisation responses beyond Test 3. Only participants in the leftward-shifted +10 condition still exhibit changes across blocks even form Test 3 to 4. But, perhaps tellingly, those participants also never reached the degree of shift that was evident in the baseline condition.  
+
+### Constraints on cumulative changes
+Finally, Figures \@ref(fig:plot-fit-slope-PSE)C & D also compare participants' responses against those of an ideal observer that has fully learned the exposure distributions.
 
 
 
