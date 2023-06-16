@@ -195,145 +195,66 @@ d.io.categorisation <-
 d.io.categorisation %<>%
   group_by(condition) %>%
   nest() %>%
-  mutate(model_unscaled = map(data, ~ glm(cbind(n_t, n_d) ~ 1 + VOT, family = binomial, data = .x)),
-         intercept_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[1, 2] %>% pull()),
-         slope_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[2, 2] %>% pull()),
-         model_scaled = map(data, ~ glm(cbind(n_t, n_d) ~ 1 + I((VOT - VOT.mean_test)/ (2 * VOT.sd_test)), family = binomial, data = .x)),
-         intercept_scaled = map_dbl(model_scaled, ~ tidy(.x)[1, 2] %>% pull()),
-         slope_scaled = map_dbl(model_scaled, ~ tidy(.x)[2, 2] %>% pull()),
-           PSE = -intercept_unscaled/slope_unscaled)
+  mutate(
+    model_unscaled = map(data, ~ glm(cbind(n_t, n_d) ~ 1 + VOT, family = binomial, data = .x)),
+    intercept_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[1, 2] %>% pull()),
+    slope_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[2, 2] %>% pull()),
+    model_scaled = map(data, ~ glm(cbind(n_t, n_d) ~ 1 + I((VOT - VOT.mean_test)/ (2 * VOT.sd_test)), family = binomial, data = .x)),
+    intercept_scaled = map_dbl(model_scaled, ~ tidy(.x)[1, 2] %>% pull()),
+    slope_scaled = map_dbl(model_scaled, ~ tidy(.x)[2, 2] %>% pull()),
+    PSE = -intercept_unscaled/slope_unscaled)
 ```
 
 ```{r prepare-plot-intercepts-slopes}
-p.intercept <-
+p.across_blocks <-
   d.estimates %>%
-  ggplot(aes(x = Block, y = Intercept_mean, colour = Condition.Exposure, group = Condition.Exposure)) +
-  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 0.75, xmax = 1.25),
-            fill = "grey",
-            alpha = .009,
-            inherit.aes = F) +
-  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 2.75, xmax = 3.25),
-            fill = "grey",
-            alpha = .009,
-            inherit.aes = F) +
-  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 4.75, xmax = 5.25),
-            fill = "grey",
-            alpha = .009,
-            inherit.aes = F) +
-  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 6.75, xmax = 7.25),
-            fill = "grey",
-            alpha = .009,
-            inherit.aes = F) +
-  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 7.75, xmax = 8.25),
-            fill = "grey",
-            alpha = .009,
-            inherit.aes = F) +
-  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 8.75, xmax = 9.25),
-            fill = "grey",
-            alpha = .009,
-            inherit.aes = F) +
+  ggplot(aes(
+    x = Block, y = Intercept_mean, 
+    ymin = Intercept_lower, ymax = Intercept_upper,
+    colour = Condition.Exposure, group = Condition.Exposure)) +
+  geom_rect(
+    data = tibble(
+      xmin = c(seq(0.55, 6.55, 2), seq(7.55, 8.55, 1)), 
+      xmax = c(seq(1.45, 7.45, 2), seq(8.45, 9.45, 1))),
+    aes(xmin = xmin, xmax = xmax),
+    ymin = -Inf, ymax = Inf, fill = "grey", alpha = .1, inherit.aes = F) +
   geom_point(position = position_dodge(.3), size = 1) +
-  geom_linerange(aes(ymin = Intercept_lower, ymax = Intercept_upper), linewidth = .6, position = position_dodge(.3), alpha = .5) +
+  geom_linerange(linewidth = .6, position = position_dodge(.3), alpha = .5) +
   stat_summary(geom = "line", position = position_dodge(.3)) +
-  geom_hline(yintercept = d.io.categorisation[[7]][1], linetype = 2, linewidth = 0.8, colour = "#cc0000", alpha = 0.5) +
-  geom_hline(yintercept = d.io.categorisation[[7]][2], linetype = 2, linewidth = .8, colour = "#12D432", alpha = 0.5) +
-  geom_hline(yintercept = d.io.categorisation[[7]][3], linetype = 2, linewidth = .8, colour = "#0481F3", alpha = 0.5) +
-  scale_colour_manual("Condition",
-    labels = c("baseline", "+10ms", "+40ms"),
-    values = c("#cc0000", "#12D432","#0481F3"),
-    aesthetics = "color") +
   scale_y_continuous("Intercept") +
   scale_x_discrete("Block", labels = c("1" = "Test 1", "2" = "Exposure 1", "3" = "Test 2", "4" = "Exposure 2", "5" = "Test 3", "6" = "Exposure 3", "7" = "Test 4", "8" = "Test 5", "9" = "Test 6")) +
-  theme(legend.position = "top",
-        axis.text.x = element_text(angle = 22.5, hjust = 1))
-
-p.slope_1to7 <-
-  d.estimates %>%
-  ggplot(aes(x = Block, y = slope_mean,
-             colour = Condition.Exposure,
-             group = Condition.Exposure)) +
-  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 0.55, xmax = 1.45),
-            fill = "grey",
-            alpha = .009,
-            inherit.aes = F) +
-  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 2.55, xmax = 3.45),
-            fill = "grey",
-            alpha = .009,
-            inherit.aes = F) +
-  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 4.55, xmax = 5.45),
-            fill = "grey",
-            alpha = .009,
-            inherit.aes = F) +
-   geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 6.55, xmax = 7.45),
-            fill = "grey",
-            alpha = .009,
-            inherit.aes = F) +
-   geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 7.55, xmax = 8.45),
-            fill = "grey",
-            alpha = .009,
-            inherit.aes = F) +
-  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 8.55, xmax = 9.45),
-            fill = "grey",
-            alpha = .009,
-            inherit.aes = F) +
-  geom_point(position = position_dodge(.3), size = 1) +
-  geom_linerange(aes(ymin = slope_lower, ymax = slope_upper), linewidth = .6, position = position_dodge(.3), alpha = .5) +
-  stat_summary(geom = "line", position = position_dodge(.3)) +
-  geom_hline(yintercept = 23, linetype = 2, linewidth = 0.8, colour = "#cc0000", alpha = 0.5) +
-  geom_hline(yintercept = 23, linetype = 2, linewidth = .8, colour = "#12D432", alpha = 0.5) +
-  geom_hline(yintercept = 23, linetype = 2, linewidth = .8, colour = "#0481F3", alpha = 0.5) +
-  scale_colour_manual("Condition",
-    labels = c("+0ms", "+10ms", "+40ms"),
-    values = c("#cc0000", "#12D432","#0481F3"),
-    aesthetics = "color") +
-  scale_y_continuous("Slope") +
-  scale_x_discrete("Block", labels = c("1" = "Test 1", "2" = "Exposure 1", "3" = "Test 2", "4" = "Exposure 2", "5" = "Test 3", "6" = "Exposure 3", "7" = "Test 4", "8" = "Test 5", "9" = "Test 6")) +
-  theme(legend.position = "top",
-        axis.text.x = element_text(angle = 22.5, hjust = 1))
-
-p.PSE_1to7 <- d.estimates %>%
-  ggplot(aes(x = Block, y = PSE_mean, colour = Condition.Exposure, group = Condition.Exposure)) +
-  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 0.55, xmax = 1.45),
-            fill = "grey",
-            alpha = .009,
-            inherit.aes = F) +
-  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 2.55, xmax = 3.45),
-            fill = "grey",
-            alpha = .009,
-            inherit.aes = F) +
-  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 4.55, xmax = 5.45),
-            fill = "grey",
-            alpha = .009,
-            inherit.aes = F) +
-   geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 6.55, xmax = 7.45),
-            fill = "grey",
-            alpha = .009,
-            inherit.aes = F) +
-   geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 7.55, xmax = 8.45),
-            fill = "grey",
-            alpha = .009,
-            inherit.aes = F) +
-  geom_rect(aes(ymin = -Inf, ymax = Inf, xmin = 8.55, xmax = 9.45),
-            fill = "grey",
-            alpha = .009,
-            inherit.aes = F) +
-  geom_point(position = position_dodge(.3), size = 1) +
-  geom_linerange(aes(ymin = PSE_lower, ymax = PSE_upper), linewidth = .6, position = position_dodge(.3), alpha = .5) +
-  stat_summary(geom = "line", position = position_dodge(.3)) +
-  geom_hline(yintercept = d.io.categorisation[[9]][1], linetype = 2, linewidth = 0.8, colour = "#cc0000", alpha = 0.5) +
-  geom_hline(yintercept = d.io.categorisation[[9]][2], linetype = 2, linewidth = .8, colour = "#12D432", alpha = 0.5) +
-  geom_hline(yintercept = d.io.categorisation[[9]][3], linetype = 2, linewidth = .8, colour = "#0481F3", alpha = 0.5) +
-  annotate("label", x = 5.2, y = 64, label = "true shift = +21ms \n (max prop. of shift = 38%)", size = 2, colour = "blue") +
-  annotate("label", x = 7.3, y = 32, label = "true shift = -10ms \n (max prop. of shift = 40%)", size = 2, colour = "dark green") +
-  annotate("label", x = 3.3, y = 30, label = "true shift = -18ms \n (max prop. of shift = 22%)", size = 2, colour = "red") +
   scale_colour_manual("Condition",
     labels = c("baseline", "+10ms", "+40ms"),
-    values = c("#cc0000", "#12D432","#0481F3"),
+    values = colours.condition,
     aesthetics = "color") +
-  scale_y_continuous("PSE (msec)") +
-  scale_x_discrete("Block", labels = c("1" = "Test 1", "2" = "Exposure 1", "3" = "Test 2", "4" = "Exposure 2", "5" = "Test 3", "6" = "Exposure 3", "7" = "Test 4", "8" = "Test 5", "9" = "Test 6")) +
   theme(legend.position = "top",
         axis.text.x = element_text(angle = 22.5, hjust = 1))
+
+p.intercept_1to7 <-
+  p.across_blocks +  
+  geom_hline(
+    data = d.io.categorisation,
+    aes(yintercept = intercept_scaled, color = condition),
+    linetype = 2, linewidth = .8, alpha = 0.5)
+
+p.slope_1to7 <-
+  p.across_blocks +  
+  aes(y = slope_mean, ymin = slope_lower, ymax = slope_upper) +
+  geom_hline(
+    data = d.io.categorisation,
+    aes(yintercept = slope_scaled, color = condition),
+    linetype = 2, linewidth = .8, alpha = 0.5) 
+
+p.PSE_1to7 <- 
+  p.across_blocks +  
+  aes(y = PSE_mean, ymin = PSE_lower, ymax = PSE_upper) +
+  geom_hline(
+    data = d.io.categorisation,
+    aes(yintercept = PSE, color = condition),
+    linetype = 2, linewidth = .8, alpha = 0.5) +
+  annotate("label", x = 5.2, y = 64, label = "true shift = +21ms \n (max prop. of shift = 38%)", size = 2, colour = "blue") +
+  annotate("label", x = 7.3, y = 32, label = "true shift = -10ms \n (max prop. of shift = 40%)", size = 2, colour = "dark green") +
+  annotate("label", x = 3.3, y = 30, label = "true shift = -18ms \n (max prop. of shift = 22%)", size = 2, colour = "red") 
 
 p.params_1to7 <- (p.slope_1to7 | p.PSE_1to7) +
   plot_layout(guides = "collect") &
@@ -463,7 +384,7 @@ p.fit_1to7 <- cond_fit_test_exposure %>%
   scale_color_manual(
     "Condition",
     labels = c("baseline", "+10ms", "+40ms"),
-    values = c("#cc0000", "#12D432","#0481F3"),
+    values = colours.condition,
     aesthetics = c("color", "fill")) +
   coord_cartesian(clip="off", ylim=c(0, 1)) +
   facet_grid(~ Block, scales = "free_x", space = "free_x") +
@@ -530,7 +451,7 @@ geom_rug(data = d_for_analysis %>%
   scale_color_manual(
     "Condition",
     labels = c("baseline", "+10ms", "+40ms"),
-    values = c("#cc0000", "#12D432","#0481F3"),
+    values = colours.condition,
     aesthetics = c("color", "fill")) +
   facet_wrap(. ~ Block, nrow = 1) +
   theme(legend.position = "none",
@@ -763,7 +684,7 @@ cond_means_exposure <- d_for_analysis %>%
 
 cond_means <- left_join(cond_means_test_exposure, cond_means_exposure)
 
-d.chodroff_wilson.selected <-
+d.chodroff_wilson <-
   get_ChodroffWilson_data(
     database_filename = "../data/all_observations_with_non-missing_vot_cog_f0.csv",
     min.n_per_talker_and_stop = 25,
@@ -793,16 +714,16 @@ d.chodroff_wilson.selected <-
   mutate(category = factor(category))
 
 # corpus mean and sd values for VOT and speech
-chodroff.mean_VOT <- mean(d.chodroff_wilson.selected$VOT)
-chodroff.sd_VOT <- sd(d.chodroff_wilson.selected$VOT)
-chodroff.mean_vowel_duration <- mean(d.chodroff_wilson.selected$vowel_duration)
-chodroff.sd_vowel_duration <- sd(d.chodroff_wilson.selected$vowel_duration)
+chodroff.mean_VOT <- mean(d.chodroff_wilson$VOT)
+chodroff.sd_VOT <- sd(d.chodroff_wilson$VOT)
+chodroff.mean_vowel_duration <- mean(d.chodroff_wilson$vowel_duration)
+chodroff.sd_vowel_duration <- sd(d.chodroff_wilson$vowel_duration)
 
 # get estimates from speech rate model to predict VOT
 intercept.speech_rate <- 
-  get_speech_rate_model(d.chodroff_wilson.selected)$estimate[1] 
+  get_speech_rate_model(d.chodroff_wilson)$estimate[1] 
 slope.speech_rate <- 
-  get_speech_rate_model(d.chodroff_wilson.selected)$estimate[2]
+  get_speech_rate_model(d.chodroff_wilson)$estimate[2]
 
 # center exposure cues to speech corpus means
 d_for_analysis %<>% 
@@ -826,11 +747,11 @@ d_for_analysis %<>%
 
 # specify quantiles for density plots
 quantile_levels <- c(.05, .25, .5, .75, .95)
-d_breaks <- density_quantiles(x = d.chodroff_wilson.selected %>% filter(category == "/d/") %>% pull(VOT_centered),
-                               y = d.chodroff_wilson.selected %>% filter(category == "/d/") %>% pull(f0_Mel_centered),
+d_breaks <- density_quantiles(x = d.chodroff_wilson %>% filter(category == "/d/") %>% pull(VOT_centered),
+                               y = d.chodroff_wilson %>% filter(category == "/d/") %>% pull(f0_Mel_centered),
                                quantiles = quantile_levels)
-t_breaks <- density_quantiles(x = d.chodroff_wilson.selected %>% filter(category == "/t/") %>% pull(VOT_centered),
-                               y = d.chodroff_wilson.selected %>% filter(category == "/t/") %>% pull(f0_Mel_centered),
+t_breaks <- density_quantiles(x = d.chodroff_wilson %>% filter(category == "/t/") %>% pull(VOT_centered),
+                               y = d.chodroff_wilson %>% filter(category == "/t/") %>% pull(f0_Mel_centered),
                                quantiles = quantile_levels)
 
 # matching breaks in each category to corresponding quantile
@@ -841,7 +762,7 @@ names(t_quantile) <- t_breaks
 quantile_breaks <- tibble(quantile_levels, d_breaks, t_breaks)
 
 p.density <- 
-  d.chodroff_wilson.selected %>%
+  d.chodroff_wilson %>%
   ggplot(aes(x = VOT_centered, y = f0_Mel_centered, linetype = category, group = category)) +
   geom_density2d(
     data = . %>% filter(category == "/d/"),

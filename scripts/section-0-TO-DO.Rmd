@@ -4,6 +4,7 @@
 
 ## Highest priority
  * MARYANN
+  * rename conditions to have consistent names across data files and ios. e.g., always baseline, shift10, shift40, or always Shift0, Shift10, Shift40 (pay attention to casing!). Currently, it is a MESS.
   * KJ16 plot: fix legends, fix y-axis to conform to current convention, add 0 reference line *typical talker + IO references lines (predicted PSEs)
   * main plot:
     * remove vertical gridlines
