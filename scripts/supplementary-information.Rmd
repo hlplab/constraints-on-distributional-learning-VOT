@@ -27,6 +27,52 @@ We emphasize that our discussion deliberately focuses on *models*, not theories.
 ## Incremental Bayesian belief-updating [@kleinschmidt-jaeger2011, @kleinschmidt-jaeger2012, @kleinschmidt-jaeger 2015, @kleinschmidt-jaeger2016; @kleinschmidt2020]
 The only distributional learning model that has been more repeatedly tested against adaptive speech perception---incremental Bayesian belief-updating [@kleinschmidt-jaeger2011]---predicts proportional, rather than sublinear, shifts. This model had previously been found to closely predict the cumulative effects of exposure in perceptual recalibration to audio-visually [@kleinschmidt2011-jaeger; @kleinschmidt-jaeger2012] or lexically labeled speech [@cummings2023], as well as the type of exposure to unlabelled minimal pair words employed by Kleinschmidt and Jaeger [@theodore-monto2019]. However, all of these studies employed comparatively small changes in cue distributions, and lacked the design necessary to detect deviation from proportionality (we return to this point below). The findings presented in @kleinschmidt-jaeger2016 would seem to reject this specific distributional learning model [though not necessarily the theory it is derived from, @kleinschmidt-jaeger2015; for discussion of the relation between theory and model, see also @kleinschmidt2020]  <!-- TO DO: make sure we do --> 
 
+```{r}
+get_IBBU_updates <- function(condition, kappa = 72, nu = 72) {
+  d.exposure <- 
+    d_for_analysis %>% 
+    ungroup() %>%
+    filter(
+      Condition.Exposure == condition,
+      Phase == "exposure") %>%
+    filter(ParticipantID == first(ParticipantID)) %>%
+    mutate(
+      category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")) %>%
+    rename(
+      VOT = Item.VOT,
+      f0 = Item.F0)
+  
+  update_NIW_ideal_adaptor_incrementally(
+    prior = d.chodroff_wilson %>%
+      make_NIW_ideal_adaptor_from_data(cues = c("VOT", "f0"), kappa = kappa, nu = nu),
+    exposure = d.exposure,
+    exposure.order = "Trial",
+    noise_treatment = "no_noise",
+    lapse_treatment = "no_lapses",
+    method = "label-certain") %>%
+    filter(observation.n %in% c(0, 48, 96, 144)) %>%
+    nest(ia = -observation.n) %>%
+    mutate(
+      observation.n = as.numeric(factor(observation.n, levels = sort(observation.n))),
+      observation.n = observation.n / max(observation.n),
+      cf = map(ia, ~ get_categorization_function_from_NIW_ideal_adaptor(.x, noise_treatment = "no_noise")),
+      sf = map2(cf, observation.n, ~ stat_function(fun = function(x) as.numeric(.x(map(as.list(x), function(y) c(y, predict_f0(y))), target_category = 2)), alpha = .y, color = colours.condition[condition])))
+}
+
+d.exposure %>% 
+  distinct(VOT) %>%
+  ggplot(aes(x = VOT)) +
+  get_IBBU_updates("Shift0")$sf +
+  get_IBBU_updates("Shift10")$sf +
+  get_IBBU_updates("Shift40")$sf +
+  scale_x_continuous(limits = c(10, 90)) 
+```
+
+```{r}
+m <- readRDS("../models/IBBU-Tan-Jaeger2022-Experiment2-scaled.RDS")
+summary(m)
+```
+
 ## Centering cues relative to expecations [C-CuRE, @apfelbaum-mcmurray2015; @mcmurray-jongman2011]
 Similarly, existing models of perceptual normalization---an alternative, but mutually compatible, hypothesis---also predict proportional changes in PSE. <!-- TO DO: write these sections for SI. along a single continuum normalization shift of cue mean just shifts cat function. for multi-dimensional cues, the same is true under cue integration models (variance and thus weighting does not change; shift along each dimension follows same logic as for single cue). for multi-dimensional multivariate models with interacting cues viewed from the perspective of a single cue, shifts can *appear* non-proportional but the pattern observed in KJ16---non proportionality without changes in slopes---would seem to be impossible to create as long as the test stimuli form a line in the multidimensional cue space -->
 
