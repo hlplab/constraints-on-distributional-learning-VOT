@@ -412,7 +412,31 @@ d.temp %>%
 
 
 
+description <- tibble(
+  label = c("Lorem ipsum dolor **sit amet,** consectetur adipiscing elit,
+    sed do *eiusmod tempor incididunt* ut labore et dolore magna
+    aliqua.", "More description about the PSEs and predicted slopes. A naive Bayesian learner is expected to converged on the dashed lines... etc..."),
+  x = c(0.05, .65),
+  y = c(.5, .5),
+  hjust = c(0, 0),
+  vjust = c(1, 1),
+  orientation = c("upright", "upright"),
+  color = c("black", "blue"),
+  fill = c("cornsilk", "white"))
 
+my_text <- 
+  description %>% 
+  ggplot() +
+  aes(x, y, label = label, colour = color, fill = fill,
+      hjust = hjust, vjust = vjust, 
+      orientation = orientation) +
+  geom_textbox(
+    width = unit(7, "cm") 
+  ) +
+  scale_discrete_identity(aesthetics = c("color", "fill", "orientation")) +
+  xlim(0, 1) + ylim(0, 1) +
+  theme_void() +
+  remove_axes_titles
 
 
 
