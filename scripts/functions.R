@@ -229,6 +229,38 @@ make_stop_VOTf0_ideal_adaptor <- function(m, kappa = 3, nu = 3) {
 }
 
 
+get_bivariate_normal_ellipse <- function(
+    mu = c(0, 0),
+    Sigma = diag(2),
+    level = .95,
+    segments = 51,
+    varnames = c("VOT", "F0")
+) {
+  # Ths function is based on calculate_ellipse from ggplot2, with modification to
+  # remove uncertainty about Sigma (since we're plotting the theoretical distribution,
+  # for which Sigma is known)
+  require(tidyverse)
+
+  chol_decomp <- chol(Sigma)
+  # Adapted from https://stats.stackexchange.com/questions/64680/how-to-determine-quantiles-isolines-of-a-multivariate-normal-distribution
+  # (tested)
+  radius <- sqrt(-2 * log(1 - level))
+
+  # Make n + 1 point over unit circle
+  angles <- (0:segments) * 2 * pi/segments
+  unit.circle <- cbind(cos(angles), sin(angles))
+
+  # Shape unit circle by covariance, scale by radius, and move it to mu
+  # (the t() calls are necessary since we allow mu to be a vector, so we
+  # need to transform the 2-col x segements-rows matrix into a segments-col
+  # x 2-row matrix, and then---after adding mu---transforming the whole
+  # thing back into a 2-col x segements-rows matrix)
+  ellipse <- as.data.frame(t(mu + radius * t(unit.circle %*% chol_decomp)))
+  names(ellipse) <- varnames
+
+  return(ellipse)
+}
+
 # defining experiment cue means and SDs. This is necessary for the following functions to work
 chodroff.mean_VOT <- 38.6103
 chodroff.mean_f0_Mel <- 237.997
