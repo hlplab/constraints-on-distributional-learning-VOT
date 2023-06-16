@@ -38,6 +38,8 @@ myGplot.defaults = function(
   }
 }
 
+percent <- function(x) paste0(round(x * 100, 1), "%")
+
 # function to get PSE from a model already in tibble format
 get_PSE <- function(model, y) {
   y <- model %>% pull(y)
