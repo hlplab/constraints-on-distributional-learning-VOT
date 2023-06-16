@@ -576,124 +576,6 @@ get_PSE_quantiles <- function(data, group) {
 }
 
 ############################################################################
-# function to plot talker productions in experiment 1 (section 2.3)
-############################################################################
-
-plot_talker_UVGs <- function (data_production, data_perception, noise = FALSE) {
-  plot <- data_production %>%
-    mutate(x = list(VOT = seq(-100, 130, .5)),
-           x = map(x, ~ as_tibble(.x) %>% rename("VOT (ms)" = value))) %>%
-    unnest(io) %>%
-    mutate(
-      gaussian = pmap(
-        list(x, gender, category, mu, Sigma, Sigma_noise),
-        ~ geom_function(
-          data = ..1,
-          aes(x = `VOT (ms)`,
-              linetype = ..3, colour = ..2),
-          fun = function(x) dnorm(x, mean = ..4[[1]][[1]], sd = if (noise == T) sqrt(..5[[1]][[1]]) + sqrt(..6[[1]][[1]]) else sqrt(..5[[1]][[1]])), alpha = .2)))
-
-  plot %>%
-    ggplot() +
-    plot$gaussian +
-    scale_colour_manual("Talker sex", values = colours.sex, labels = c("Female", "Male")) +
-    scale_linetype_discrete("Category") +
-    scale_y_continuous("Density") +
-    geom_rug(
-      data = data_perception %>%
-        ungroup() %>%
-        distinct(Item.VOT),
-      mapping = aes(x = Item.VOT),
-      colour = "black",
-      alpha = .6,
-      inherit.aes = F) +
-    guides(colour = "none")
-}
-
-
-get_bivariate_normal_ellipse <- function(
-    mu = c(0, 0),
-    Sigma = diag(2),
-    level = .95,
-    segments = 51,
-    varnames = c("VOT", "F0")
-) {
-  # Ths function is based on calculate_ellipse from ggplot2, with modification to
-  # remove uncertainty about Sigma (since we're plotting the theoretical distribution,
-  # for which Sigma is known)
-  require(tidyverse)
-
-  chol_decomp <- chol(Sigma)
-  # Adapted from https://stats.stackexchange.com/questions/64680/how-to-determine-quantiles-isolines-of-a-multivariate-normal-distribution
-  # (tested)
-  radius <- sqrt(-2 * log(1 - level))
-
-  # Make n + 1 point over unit circle
-  angles <- (0:segments) * 2 * pi/segments
-  unit.circle <- cbind(cos(angles), sin(angles))
-
-  # Shape unit circle by covariance, scale by radius, and move it to mu
-  # (the t() calls are necessary since we allow mu to be a vector, so we
-  # need to transform the 2-col x segements-rows matrix into a segments-col
-  # x 2-row matrix, and then---after adding mu---transforming the whole
-  # thing back into a 2-col x segements-rows matrix)
-  ellipse <- as.data.frame(t(mu + radius * t(unit.circle %*% chol_decomp)))
-  names(ellipse) <- varnames
-
-  return(ellipse)
-}
-
-
-plot_talker_MVGs <- function(
-  data_production,
-  prod_means = c(chodroff.mean_VOT, chodroff.mean_f0_Mel),
-  cues,
-  data_perception = d.test.excluded,
-  percept_means = c(VOT.mean_exp1, f0.mean_exp1),
-  centered = F
-) {
-  plot <- data_production %>%
-    unnest(io) %>%
-    select(-c(x, PSE, categorization, line)) %>%
-    mutate(ellipse_points = pmap(
-      list(mu, Sigma, Sigma_noise),
-      ~ get_bivariate_normal_ellipse(..1, Sigma = ..2 + ..3))) %>%
-    group_by(Talker) %>%
-    mutate(ellipse = pmap(
-      list(gender, category, ellipse_points),
-      ~ geom_path(data = ..3, mapping = aes(x = ..3[[1]], y = ..3[[2]], colour = ..1, linetype = ..2), alpha = .1)))
-
-  plot %>%
-    ggplot() +
-    plot$ellipse +
-    scale_x_continuous("VOT (ms)", breaks = seq(-100, 150, 50)) +
-    scale_y_continuous("F0 (Mel)") +
-    scale_colour_manual("Talker sex", values = colours.sex, labels = c("Female", "Male")) +
-    scale_linetype_discrete("Category") +
-    geom_point(
-      data = if (centered == T) data_perception %>%
-        ungroup() %>%
-        distinct(Item.VOT, Item.Mel_f0_5ms) %>%
-        mutate(Item.VOT = Item.VOT + (prod_means[1] - percept_means[1]),
-               Item.Mel_f0_5ms = Item.Mel_f0_5ms + (prod_means[2] - percept_means[2])) else
-                 data_perception %>%
-        ungroup() %>%
-        distinct(Item.VOT, Item.Mel_f0_5ms),
-      aes(x = Item.VOT, y = Item.Mel_f0_5ms),
-      shape = 4,
-      size = .8,
-      alpha = .2,
-      inherit.aes = F) +
-    geom_abline(intercept = if (centered == T) normMel(245.46968) + (prod_means[2] - percept_means[2]) else normMel(245.46968),
-               slope = 0.03827,
-               linetype = 2,
-               alpha = .3) +
-    guides(colour = "none", category = "none")
-}
-
-
-
-############################################################################
 # function to prepare variables for modelling
 ############################################################################
 prepVars <- function(d, levels.Condition = NULL, contrast_type) {
@@ -790,12 +672,12 @@ get_speech_rate_model <- function(data) {
   mean.VOT <- mean(data$VOT)
   sd.VOT <- sd(data$VOT)
   # scale variables
-  data %>% 
+  data %>%
     mutate(
       VOT.scaled = (VOT - mean.VOT)/sd.VOT,
       vowel_duration.scaled = (vowel_duration - mean.vowel_duration)/sd.vowel_duration
-    ) 
-  
+    )
+
   m <- lmer(VOT.scaled ~ 1 + vowel_duration.scaled + (1 + vowel_duration.scaled | Talker), data = data)
   tidy(m, effects = "fixed")
 }
@@ -807,16 +689,16 @@ get_speech.corrected.VOT <- function(data){
   mean.VOT <- mean(data$VOT)
   sd.VOT <- sd(data$VOT)
   # scale variables
-  data %<>% 
+  data %<>%
     mutate(
       VOT.scaled = (VOT - mean.VOT)/sd.VOT,
       vowel_duration.scaled = (vowel_duration - mean.vowel_duration)/sd.vowel_duration
-    ) 
-  
+    )
+
   m <- lmer(VOT.scaled ~ 1 + vowel_duration.scaled + (1 + vowel_duration.scaled | Talker), data = data)
   intercept <- fixef(m)[[1]]
   slope <- fixef(m)[[2]]
-  
+
   data %>% mutate(
     VOT.predict_scaled = predict(m),
     VOT.resid_scaled = VOT.scaled - VOT.predict_scaled,

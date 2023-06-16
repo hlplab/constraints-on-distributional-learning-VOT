@@ -125,8 +125,6 @@ options(
   mc.cores = min(chains, parallel::detectCores()))
 
 # plot formatting
-colours.voicing <- c("#7EC8E3", "#990033")
-colours.sex <- c("#c1502e", "#2F9FC2")
 colours.condition <- c("Shift0" = "#cc0000", "Shift10" = "#12D432", "Shift40" = "#0481F3")
 remove_all_axes <- 
   theme(axis.title.y = element_blank(),
