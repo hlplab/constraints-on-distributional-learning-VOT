@@ -281,9 +281,10 @@ f0.sd_exp2 <- 1.6484
 # Get approximate f0 of synthesised stimuli from VOT values
 ############################################################################
 # set the linear prediction parameters for exposure stimuli
-predict_f0 <- function(VOT, intercept = 245.46968, slope = 0.03827) {
-  predict_f0 = intercept + slope * (VOT)
-  return(predict_f0)
+predict_f0 <- function(VOT, intercept = 245.46968, slope = 0.03827, Mel = FALSE) {
+  f0 <- intercept + slope * (VOT)
+  if (Mel) f0 <- phonR::normMel(f0)
+  return(f0)
 }
 
 ############################################################################

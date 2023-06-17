@@ -35,7 +35,7 @@ d <-
         Response.ClickPosition, Response.Voicing),
       factor),
     Participant.Sex = str_to_lower(Participant.Sex),
-    Item.Mel_F0_5ms = normMel(Item.F0_5ms)) 
+    Item.F0_5ms_Mel = normMel(Item.F0_5ms)) 
 ```
 
 ## Methods 
