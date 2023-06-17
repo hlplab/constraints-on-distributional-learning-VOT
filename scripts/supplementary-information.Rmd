@@ -141,7 +141,7 @@ get_IBBU_updates_for_experiment <- function(
       category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")) %>%
     rename(
       VOT = Item.VOT,
-      f0_Mel = Item.F0_5ms_Mel)
+      f0_Mel = Item.F0_Mel)
   
   get_IBBU_updates(
     exposure = exposure, 
@@ -154,9 +154,9 @@ x <-
   d_for_analysis %>%
   ungroup() %>%
   filter(Phase == "test") %>%
-  distinct(Item.VOT, Item.F0_5ms_Mel) %>%
+  distinct(Item.VOT, Item.F0_Mel) %>%
   arrange(Item.VOT) %>%
-  mutate(x = map2(Item.VOT, Item.F0_5ms_Mel, ~ c(.x, .y))) %>%
+  mutate(x = map2(Item.VOT, Item.F0_Mel, ~ c(.x, .y))) %>%
   pull(x)
 
 # Plot updates for our three exposure condition
@@ -522,14 +522,14 @@ d.f0.5ms <-
   read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv", show_col_types = F) %>% 
   select(filename, VOT, f0_5ms_into_vowel) %>% 
   rename(Item.VOT = VOT,
-         Item.f0_5ms = f0_5ms_into_vowel,
+         Item.F0 = f0_5ms_into_vowel,
          Item.Filename = filename) %>% 
   mutate(Item.Filename = paste0(Item.Filename, ".wav"))
 
 d.test %<>% 
 ungroup() %>%
   left_join(d.f0.5ms, by = c("Item.Filename", "Item.VOT")) %>% 
-              mutate(Item.F0_5ms_Mel = normMel(Item.f0_5ms))
+              mutate(Item.F0_Mel = normMel(Item.F0))
 
 # mark catch trials rows and check correct
 d.test %<>% 
@@ -607,8 +607,8 @@ VOT.mean_exp1 <- mean(d.test.excluded$Item.VOT)
 VOT.sd_exp1 <- sd(d.test.excluded$Item.VOT)
 Trial.mean <- mean(d.test.excluded$Trial) 
 Trial.sd <- sd(d.test.excluded$Trial)
-f0.mean_exp1 <- mean(d.test.excluded$Item.F0_5ms_Mel)
-f0.sd_exp1 <- sd(d.test.excluded$Item.F0_5ms_Mel)
+f0.mean_exp1 <- mean(d.test.excluded$Item.F0_Mel)
+f0.sd_exp1 <- sd(d.test.excluded$Item.F0_Mel)
 
 d.test.excluded %<>%
   mutate(
@@ -881,8 +881,8 @@ p.ellipse <- d.category_ellipse %>%
       mutate(
         category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))) %>%
       group_by(Condition.Exposure, category) %>%
-      summarise(across(c(Item.VOT, Item.F0_5ms_Mel), mean)),
-    mapping = aes(x = Item.VOT, y = Item.F0_5ms_Mel, colour = Condition.Exposure, shape = category),
+      summarise(across(c(Item.VOT, Item.F0_Mel), mean)),
+    mapping = aes(x = Item.VOT, y = Item.F0_Mel, colour = Condition.Exposure, shape = category),
     size = 2,
     shape = c(1, 2, 1, 2, 1, 2),
     alpha = 0.8,
@@ -902,13 +902,13 @@ p.ellipse <- d.category_ellipse %>%
           Condition.Exposure == "Shift0" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_test_exposure[1]),
           Condition.Exposure == "Shift10" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_test_exposure[2]),
           Condition.Exposure == "Shift40" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_test_exposure[3])),
-        Item.F0_5ms_Mel_centered = case_when(
-          Condition.Exposure == "Shift0" ~ Item.F0_5ms_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_5ms_Mel_mean_test_exposure[1]),
-          Condition.Exposure == "Shift10" ~ Item.F0_5ms_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_5ms_Mel_mean_test_exposure[2]),
-          Condition.Exposure == "Shift40" ~ Item.F0_5ms_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_5ms_Mel_mean_test_exposure[3]))) %>%
+        Item.F0_Mel_centered = case_when(
+          Condition.Exposure == "Shift0" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_mean_test_exposure[1]),
+          Condition.Exposure == "Shift10" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_mean_test_exposure[2]),
+          Condition.Exposure == "Shift40" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_mean_test_exposure[3]))) %>%
       group_by(Condition.Exposure, category) %>%
-      summarise(across(c(Item.VOT_centered, Item.F0_5ms_Mel_centered), mean)),
-    mapping = aes(x = Item.VOT_centered, y = Item.F0_5ms_Mel_centered, colour = Condition.Exposure, shape = category),
+      summarise(across(c(Item.VOT_centered, Item.F0_Mel_centered), mean)),
+    mapping = aes(x = Item.VOT_centered, y = Item.F0_Mel_centered, colour = Condition.Exposure, shape = category),
     size = 2,
     alpha = 0.8,
   inherit.aes = F,

@@ -90,13 +90,13 @@ plot_talker_MVGs <- function(
     geom_point(
       data = if (centered == T) data_perception %>%
         ungroup() %>%
-        distinct(Item.VOT, Item.F0_5ms_Mel) %>%
+        distinct(Item.VOT, Item.F0_Mel) %>%
         mutate(Item.VOT = Item.VOT + (prod_means[1] - percept_means[1]),
-               Item.F0_5ms_Mel = Item.F0_5ms_Mel + (prod_means[2] - percept_means[2])) else
+               Item.F0_Mel = Item.F0_Mel + (prod_means[2] - percept_means[2])) else
                  data_perception %>%
         ungroup() %>%
-        distinct(Item.VOT, Item.F0_5ms_Mel),
-      aes(x = Item.VOT, y = Item.F0_5ms_Mel),
+        distinct(Item.VOT, Item.F0_Mel),
+      aes(x = Item.VOT, y = Item.F0_Mel),
       shape = 4,
       size = .8,
       alpha = .2,

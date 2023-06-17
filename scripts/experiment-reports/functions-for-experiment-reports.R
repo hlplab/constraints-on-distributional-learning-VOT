@@ -118,8 +118,8 @@ formatData <- function(.data, experiment) {
         levels = levels.response.voicing),
       REMOVE.Item = gsub("^(.*)\\.(wav)$", "\\1", Item.Filename),
     ) %>%
-    separate(REMOVE.Item, into = c("REMOVE.Word", "Item.VOT", "Item.Prevoicing", "Item.F0"), sep = "_") %>%
-    mutate_at(vars(Item.VOT, Item.Prevoicing, Item.F0), ~ as.numeric(gsub("[A-Za-z]+", "", .x))) %>%
+    separate(REMOVE.Item, into = c("REMOVE.Word", "Item.VOT", "Item.Prevoicing", "Item.F0_target_for_generation_script"), sep = "_") %>%
+    mutate_at(vars(Item.VOT, Item.Prevoicing, Item.F0_target_for_generation_script), ~ as.numeric(gsub("[A-Za-z]+", "", .x))) %>%
     # For repeated items, is this the first, second, ... instance of that item?
     group_by(Experiment, ParticipantID, ItemID) %>%
     mutate(Item.InstanceInList = as.numeric(as.factor(Trial))) %>%
