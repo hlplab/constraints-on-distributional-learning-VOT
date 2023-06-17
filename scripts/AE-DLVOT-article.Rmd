@@ -195,19 +195,19 @@ knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 \setcounter{page}{1}
 \setcounter{section}{0}
 
-```{r, child="section-1-introduction.Rmd"}
+```{r sec-intro, child="section-1-introduction.Rmd"}
 ```
 
-```{r, child="section-2-methods.Rmd"}
+```{r sec-methods, child="section-2-methods.Rmd"}
 ```
 
-```{r, child="section-3-results-analysis.Rmd"}
+```{r sec-results, child="section-3-results-analysis.Rmd"}
 ```
 
-```{r, child="section-4-general-discussion.Rmd"}
+```{r sec-discussion, child="section-4-general-discussion.Rmd"}
 ```
 
-```{r child="section-5-references.Rmd"}
+```{r sec-references, child="section-5-references.Rmd"}
 ```
 
 \newpage
