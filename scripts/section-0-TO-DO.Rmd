@@ -4,6 +4,7 @@
 
 ## Highest priority
  * MARYANN
+  * Figure out why slopes aren't identical across conditions under our current way of averaging exposure across all participants.
   * KJ16 plot: fix legends, fix y-axis to conform to current convention, add 0 reference line *typical talker + IO references lines (predicted PSEs)
   * main plot:
     * remove vertical gridlines

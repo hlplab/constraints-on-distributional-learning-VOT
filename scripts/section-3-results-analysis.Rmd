@@ -64,7 +64,7 @@ fit_mix_exposure <-
 
 ```
 
-We analyzed participants' categorisation responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric models, using brms [@R-brms_a] in R [@R; @RStudio, for details, see SI, \@ref(sec:analysis-approach)]. Psychometric models account for attentional lapses while estimating participants' categorisation functions. Failing to account for attentional lapses---while commonplace in research on speech perception [but see @clayards2008; @kleinschmidt-jaeger2016]---can lead to biased estimates of categorization boundaries [@prins2011; @wichmann-hill2001]. For the present experiment, however, lapse rates were negligible (`r make_CI(fit_mix_test, "theta1_Intercept")`), and all results replicate in simple mixed-effects logistic regressions [@jaeger2008]. 
+We analyzed participants' categorisation responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric models, using brms [@R-brms_a] in R [@R; @RStudio, for details, see SI, \@ref(sec:analysis-approach)]. Psychometric models account for attentional lapses while estimating participants' categorisation functions. Failing to account for attentional lapses---while commonplace in research on speech perception [but see @clayards2008; @kleinschmidt-jaeger2016]---can lead to biased estimates of categorization boundaries [@prins2012; @wichmann2001]. For the present experiment, however, lapse rates were negligible (`r make_CI(fit_mix_test, "theta1_Intercept")`), and all results replicate in simple mixed-effects logistic regressions [@jaeger2008]. 
 
 Each psychometric model regressed participants' categorisation responses against the full factorial interaction of VOT, exposure condition, and block, while including the maximal random effect structure (see SI, \@ref(sec:analysis-approach). Figure \@ref(fig:plot-fit-slope-PSE) summarizes the results that we describe in more detail next. Panels A and B show participants’ categorisation responses during exposure and test blocks, along with the categorisation function estimated from those responses via the mixed-effects psychometric models. These panels facilitate comparison between exposure conditions within each block. Panels C and D show the slope and point of subject equality (PSE)---i.e., the point at which participants are equally likely to respond "d" and "t"---of the categorisation function across blocks and conditions. These panels facilitate comparison across blocks within each exposure condition. Here we focus on the test blocks, which were identical within and across exposure conditions. Analyses of the exposure blocks are reported in the SI (\@ref(sec:exposure-analyses)), and replicate all effects found in the test blocks. 
 
@@ -130,7 +130,6 @@ d.estimates <-
       list(lower = ~ quantile(.x, probs = .025), mean = mean, upper = ~ quantile(.x, probs = .975))))
 ```
 
-
 ```{r predictions-exposure-conditions-by-IOs, warning=FALSE}
 # Database for prior
 d.chodroff_wilson <-
@@ -162,19 +161,9 @@ d.chodroff_wilson <-
     list("centered" = function(x) apply_ccure(x, data = .))) %>%
   mutate(category = factor(category))
 
-# Test points at which reponses were measured
-x <-
-  d_for_analysis %>%
-  filter(Phase == "test") %>%
-  distinct(Item.VOT) %>%
-  pull()
-
 # Make ideal observer based on exposure conditions
-io <- 
-  d_for_analysis %>%
-  filter(Phase == "exposure") %>%
-  mutate(category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")) %>%
-  rename(VOT = Item.VOT, f0 = Item.F0) %>%
+make_VOT_IOs_from_exposure <- function(data)  
+  data %>%
   # This takes all of the actual data to make ideal observers. Alternatively, one could 
   # first distinct the data to one full lists of each condition.
   make_MVG_ideal_observer_from_data(
@@ -191,39 +180,78 @@ io <-
       mutate(Condition.Exposure = "prior")) %>%
   nest(io = -c(Condition.Exposure)) 
 
+io <- 
+  make_VOT_IOs_from_exposure(
+    d_for_analysis %>% 
+      filter(Phase == "exposure") %>%
+      mutate(
+        category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")) %>%
+      rename(VOT = Item.VOT, f0 = Item.F0_Mel))
+
+# Test points at which responses were measured
+x <-
+  d_for_analysis %>%
+  filter(Phase == "test") %>%
+  distinct(Item.VOT) %>%
+  pull()
+
 # Estimate the intercept, slope, and PSE that these ideal observers would have 
 # were they analyzed the same way the human data is analyzed.
-d.io.categorisation <-
-  io %>%
-  # Cross in test tokens
-  crossing(x) %>%
-  mutate(x = map(x, ~ c(.x))) %>%
-  nest(x = x) %>%
-  # Get categorisation proportions (turned into counts below)
-  mutate(
-    categorisation =
-      map2(x, io,
-           ~ get_categorization_from_MVG_ideal_observer(
-             x = .x$x, model = .y, decision_rule = "proportional") %>%
-             mutate(VOT = map(x, ~ .x[1]) %>% unlist()))) %>%
-  unnest(cols = categorisation, names_repair = "unique") %>%
-  # Prepare data frame for logistic regression 
-  select(Condition.Exposure, io, category, response, VOT) %>%
-  pivot_wider(names_from = category, values_from = response, names_prefix = "response_") %>%
-  mutate(n_d = round(`response_/d/` * 10^9), n_t = 10^9 - n_d) %>%
-  group_by(Condition.Exposure) %>%
-  nest() %>%
-  # Fit logistic regression and extract relevant information
-  mutate(
-    model_unscaled = map(data, ~ glm(cbind(n_t, n_d) ~ 1 + VOT, family = binomial, data = .x)),
-    intercept_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[1, 2] %>% pull()),
-    slope_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[2, 2] %>% pull()),
-    model_scaled = map(data, ~ glm(cbind(n_t, n_d) ~ 1 + I((VOT - VOT.mean_test)/ (2 * VOT.sd_test)), family = binomial, data = .x)),
-    intercept_scaled = map_dbl(model_scaled, ~ tidy(.x)[1, 2] %>% pull()),
-    slope_scaled = map_dbl(model_scaled, ~ tidy(.x)[2, 2] %>% pull()),
-    PSE = -intercept_unscaled/slope_unscaled)
-```
+get_logistic_parameters_from_model <- function(
+    model, 
+    x, 
+    model_col = "model", 
+    groups = NULL, 
+    resolution = 10^12
+) {
+  f <- if (any(map(model[[model_col]], is.MVG_ideal_observer) %>% unlist())) 
+    get_categorization_from_MVG_ideal_observer else
+      if (any(map(model[[model_col]], is.NIW_ideal_adaptor) %>% unlist())) 
+        get_categorization_from_NIW_ideal_adaptor else stop("Model type not recognized.")
+  
+  model %>%
+    # Cross in test tokens
+    crossing(x) %>%
+    mutate(x = map(x, ~ c(.x))) %>%
+    nest(x = x) %>%
+    # Get categorisation proportions (turned into counts below)
+    mutate(
+      categorisation =
+        map2(x, !! sym(model_col),
+             ~ f(
+               x = .x$x, model = .y, decision_rule = "proportional") %>%
+               mutate(VOT = map(x, ~ .x[1]) %>% unlist()))) %>%
+    unnest(cols = categorisation, names_repair = "unique") %>%
+    # Prepare data frame for logistic regression 
+    pivot_wider(names_from = category, values_from = response, names_prefix = "response_") %>%
+    mutate(n_d = round(`response_/d/` * .env$resolution), n_t = .env$resolution - n_d) %>%
+    group_by(!!! syms(groups)) %>%
+    nest() %>%
+    # Fit logistic regression and extract relevant information
+    # (the regression only uses VOT regardless of what cues are used for the categorization
+    # so that this matches the analysis of the human responses)
+    mutate(
+      model_unscaled = map(data, ~ glm(
+        cbind(n_t, n_d) ~ 1 + VOT, 
+        family = binomial, 
+        data = .x)),
+      intercept_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[1, 2] %>% pull()),
+      slope_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[2, 2] %>% pull()),
+      model_scaled = map(data, ~ glm(
+        cbind(n_t, n_d) ~ 1 + I((VOT - VOT.mean_test) / (2 * VOT.sd_test)), 
+        family = binomial, 
+        data = .x)),
+      intercept_scaled = map_dbl(model_scaled, ~ tidy(.x)[1, 2] %>% pull()),
+      slope_scaled = map_dbl(model_scaled, ~ tidy(.x)[2, 2] %>% pull()),
+      PSE = -intercept_unscaled/slope_unscaled)
+}
 
+d.io.categorisation <- 
+  get_logistic_parameters_from_model(
+    io, x, 
+    model_col = "io", 
+    groups = "Condition.Exposure")
+```
 
 ```{r prepare-plot-intercepts-slopes}
 p.across_blocks <-
@@ -465,11 +493,35 @@ p.fit_7to9 <-
         strip.background = element_rect(fill = "grey"),
         strip.text.x = element_text(colour = "black"))
 
+description <- tibble(
+  label = c("Lorem ipsum dolor **sit amet,** consectetur adipiscing elit,
+    sed do *eiusmod tempor incididunt* ut labore et dolore magna
+    aliqua.", "More description about the PSEs and predicted slopes. A naive Bayesian learner is expected to converged on the dashed lines... etc..."),
+  x = c(0.05, .65),
+  y = c(.5, .5),
+  hjust = c(0, 0),
+  vjust = c(1, 1),
+  orientation = c("upright", "upright"),
+  color = c("black", "blue"),
+  fill = c("cornsilk", "white"))
+
+my_text <- 
+  description %>% 
+  ggplot() +
+  aes(x, y, label = label, colour = color, fill = fill,
+      hjust = hjust, vjust = vjust, 
+      orientation = orientation) +
+  geom_textbox(width = unit(7, "cm")) +
+  scale_discrete_identity(aesthetics = c("color", "fill", "orientation")) +
+  xlim(0, 1) + ylim(0, 1) +
+  theme_void() +
+  remove_axes_titles
 ```
 
 (ref:plot-fit-slope-PSE) Summary of results. **Panel A:** Changes in listeners psychometric categorisation functions as a function of exposure, from Test 1 to Test 4 with all intervening exposure blocks (only unlabelled trials were included in the analysis of exposure blocks since labelled trials provide no information about listeners' categorization function). Point ranges indicate the mean proportion of "t"-responses and their 95% bootstrapped CI. Lines and shaded intervals show the MAP predictions and 95% posterior CIs of a Bayesian mixed-effects psychometric model fit to participants' responses. **Panel B:** Same as Panel A but for the final three test blocks without intervening exposure. Test 4 is shown as part of both Panels A and B. **Panels C \& D:** Changes across blocks in the slope and boundary (point-of-subjective-equality, PSE) of the categorisation functions shown in Panels A-B. Point ranges represent the posterior means and their 95% CI. Dashed reference lines show the intercepts and PSEs that naive (non-rational) learner would be expected to converge against after sufficient exposure (an ideal observer model that knows the exposure distributions).
 
 \begin{landscape}
+
 ```{r plot-fit-slope-PSE, fig.width=12.5, fig.height=8, fig.cap="(ref:plot-fit-slope-PSE)"}
 p.fit_1to7 + p.fit_7to9 + p.params_1to7 +
   plot_layout(
@@ -485,6 +537,7 @@ p.row1 <- p.fit_1to7
 p.row2 <- p.fit_7to9 + my_text
 p.row3 <- p.params_1to7
 ```
+
 \end{landscape}
 
 ### Does exposure affect participants' categorisations (averaging across all blocks)?
@@ -495,7 +548,7 @@ This replicates previous findings that exposure to changed VOT distributions cha
 ### Comparing across exposure conditions: How quickly does exposure begin to affect participants' responses? 
 Figure \@ref(fig:plot-fit-slope-PSE)A suggests that differences between exposure conditions emerged early in the experiment: already in Test 2, listener's categorisation functions seem to be shifted rightwards (larger PSEs) in the +40 condition compared to the +10 condition, and in the +10 condition compared to the baseline condition. This is confirmed by the Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-effects). Prior to any exposure, during Test 1, participants' responses did not differ across exposure condition (all BFs > XXX). <!-- TO DO: fit model with save_priors =T and change hypothesis tests for block one to = 0, not < 0: fitting--> After exposure to only 24 /d/ and 24 /t/ stimuli, during Test 2, participants' responses differed between exposure conditions (BFs > 17.35). The difference between the +40 condition and the +10 or baseline condition kept increasing with exposure up to Test 4. Additional hypothesis tests in Table \@ref(tab:hypothesis-table-interactions) show that the change from Test 1 to 2 was largest (BF = 27.8), followed by the change from Test 2 to 3 (BF = 19.2), with only minimal changes from Test 3 to 4 (BF = 1.7). Qualitatively paralleling the changes across blocks for the +40 condition, the change in the difference between the +10 and baseline conditions was largest from Test 1 to 2 (BF = 13.5), and then somewhat decreased from Test 2 to Test 4 (BFs < 4). The comparison across exposure conditions thus suggests that changes in listeners' categorisation responses emerged quickly---indeed, they were present already *during* the first exposure block (see SI, \@ref(sec:exposure-analyses))---but then leveled off. The comparison across exposure conditions also yields one result that is, at first blush, surprising: while the difference between the +10 and the baseline condition emerged already after the first exposure block, this difference *de*creased, rather than increased, with additional exposure from Test 2 to 3 (see second row of Table \@ref(tab:hypothesis-table-interactions)). We return to this effect below.
 
-Tables \@ref(tab:hypothesis-table-simple-effects) and \@ref(tab:hypothesis-table-interactions) also reveal the consequences of repeated testing. The difference between exposure conditions decreased from Test 4 to 6 (BFs > 4.3; see also Figure \@ref(fig:plot-fit-slope-PSE)B & D). On the final test block, the +10 condition did not differ any longer from the baseline condition. Only the differences between the +40 condition relative to the +10 and baseline conditions persisted, albeit substantially reduced compared to Test 4. This pattern of results replicates previous findings that repeated testing over uniform test continua can undo the effects of exposure [@cummings-theodore2023; @liu-jaeger2018; @liu-jaeger2019], and extends them from perceptual recalibration paradigms to distributional learning paradigms [see also @kleinschmidt2020]. One important methodological consequence of these findings is that longer test phases do not necessarily increase the statistical power to detect effects of adaptation [unless analyses take the effects of repeated testing into account, as in the approach developed in @liu-jaeger2018]. Analyses that average across all test tokens---as remains the norm---are bound to systematically underestimate the adaptivity of human speech perception.
+Tables \@ref(tab:hypothesis-table-simple-effects) and \@ref(tab:hypothesis-table-interactions) also reveal the consequences of repeated testing. The difference between exposure conditions decreased from Test 4 to 6 (BFs > 4.3; see also Figure \@ref(fig:plot-fit-slope-PSE)B & D). On the final test block, the +10 condition did not differ any longer from the baseline condition. Only the differences between the +40 condition relative to the +10 and baseline conditions persisted, albeit substantially reduced compared to Test 4. This pattern of results replicates previous findings that repeated testing over uniform test continua can undo the effects of exposure [@cummings2023; @liu-jaeger2018; @liu-jaeger2019], and extends them from perceptual recalibration paradigms to distributional learning paradigms [see also @kleinschmidt2020]. One important methodological consequence of these findings is that longer test phases do not necessarily increase the statistical power to detect effects of adaptation [unless analyses take the effects of repeated testing into account, as in the approach developed in @liu-jaeger2018]. Analyses that average across all test tokens---as remains the norm---are bound to systematically underestimate the adaptivity of human speech perception.
 
 ```{r fit-nested-blocks-simple-effects, results='hide'}
 # nested model to get simple effects of Condition embedded in block
@@ -650,18 +703,18 @@ table.interactions
 ### Comparing within exposure conditions: How quickly does exposure begin to affect participants' responses? 
 Next, we compared how exposure affects listeners' categorisation reponses within each condition relative to listeners' responses prior to any exposure. These changes are summarised for the slope and PSE in Figure \@ref(fig:plot-fit-slope-PSE)C & D, respectively. This visualization makes apparent two aspects of participants' behavior that were not readily apparent in the statistical comparisons we have summarized so far. First, while the PSEs for the +40 and +10 conditions were shifted rightwards compared to the baseline condition, both the +10 and the baseline condition actually shift leftwards relative to their pre-exposure starting point in Test 1. This is confirmed by Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-block-effects). 
 
-(ref:exposure-means-database-density) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for XXX word-initial /d/ and /t/ productions in L1-US English [based on 92 talkers in @chodroff-wilson2018]. The outermost contour of each category shows the 95% density quantile. Points show the category means of the exposure condition.
+(ref:exposure-means-database-density) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for XXX word-initial /d/ and /t/ productions in L1-US English [based on 92 talkers in @chodroff-wilson2017]. The outermost contour of each category shows the 95% density quantile. Points show the category means of the exposure condition.
 
 ```{r getting-means-at-exposure-by-condition}
 # calculate the various mean VOTs exposed to for each condition, including the labelled trials, with and without accounting for the test trials
 cond_means_test_exposure <- d_for_analysis %>%
   group_by(Condition.Exposure) %>%
-  summarise(across(c(Item.VOT, Item.Mel_F0_5ms), mean, .names = "{.col}_mean_test_exposure"))
+  summarise(across(c(Item.VOT, Item.F0_Mel), mean, .names = "{.col}_mean_test_exposure"))
 
 cond_means_exposure <- d_for_analysis %>%
   filter(Phase == "exposure") %>%
   group_by(Condition.Exposure) %>%
-  summarise(across(c(Item.VOT, Item.Mel_F0_5ms), mean, .names = "{.col}_mean_exposure"))
+  summarise(across(c(Item.VOT, Item.F0_Mel), mean, .names = "{.col}_mean_exposure"))
 
 cond_means <- left_join(cond_means_test_exposure, cond_means_exposure)
 
@@ -692,10 +745,10 @@ d_for_analysis %<>%
       Condition.Exposure == "Shift0" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_test_exposure[1]),
       Condition.Exposure == "Shift10" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_test_exposure[2]),
       Condition.Exposure == "Shift40" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_test_exposure[3])),
-    Item.Mel_F0_5ms_centered = case_when(
-      Condition.Exposure == "Shift0" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.Mel_F0_5ms_mean_exposure[1]),
-      Condition.Exposure == "Shift10" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.Mel_F0_5ms_mean_exposure[2]),
-      Condition.Exposure == "Shift40" ~ Item.Mel_F0_5ms + (chodroff.mean_f0_Mel - cond_means$Item.Mel_F0_5ms_mean_exposure[3]))) 
+    Item.F0_Mel_centered = case_when(
+      Condition.Exposure == "Shift0" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_mean_exposure[1]),
+      Condition.Exposure == "Shift10" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_mean_exposure[2]),
+      Condition.Exposure == "Shift40" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_mean_exposure[3]))) 
 
 # specify quantiles for density plots
 quantile_levels <- c(.05, .25, .5, .75, .95)
@@ -742,8 +795,8 @@ p.density <-
     data = d_for_analysis %>%
       filter(Phase == "exposure") %>%
       group_by(Condition.Exposure, category) %>%
-      summarise(across(c(Item.VOT_centered, Item.Mel_F0_5ms_centered), mean)),
-    mapping = aes(x = Item.VOT_centered, y = Item.Mel_F0_5ms_centered, colour = Condition.Exposure, shape = category),
+      summarise(across(c(Item.VOT_centered, Item.F0_Mel_centered), mean)),
+    mapping = aes(x = Item.VOT_centered, y = Item.F0_Mel_centered, colour = Condition.Exposure, shape = category),
     size = 2,
     alpha = 0.8,
   inherit.aes = F,
@@ -762,7 +815,7 @@ shift10_cov_d <-
   filter(Condition.Exposure == "Shift10") %>% 
   group_by(category) %>%
   nest(data = -c(category)) %>%
-  mutate(covariance = map_dbl(data, ~ cov(.x$Item.VOT_centered, .x$Item.Mel_F0_5ms_centered))) %>%
+  mutate(covariance = map_dbl(data, ~ cov(.x$Item.VOT_centered, .x$Item.F0_Mel_centered))) %>%
   pull(covariance))[1]
   
 shift10_cov_t <- 
@@ -770,7 +823,7 @@ shift10_cov_t <-
   filter(Condition.Exposure == "Shift10") %>% 
   group_by(category) %>%
   nest(data = -c(category)) %>%
-  mutate(covariance = map_dbl(data, ~ cov(.x$Item.VOT_centered, .x$Item.Mel_F0_5ms_centered))) %>%
+  mutate(covariance = map_dbl(data, ~ cov(.x$Item.VOT_centered, .x$Item.F0_Mel_centered))) %>%
   pull(covariance))[2]
   
 cues <- c("VOT", "f0_Mel")
@@ -779,12 +832,12 @@ shift10_ellipse <-
   d_for_analysis %>% 
   filter(Phase == "exposure", Condition.Exposure == "Shift10") %>% 
   group_by(category) %>% 
-  summarise(across(c(Item.VOT_centered, Item.Mel_F0_5ms_centered), list(mean = mean, var = var), .names = "{.col}.{.fn}")) %>% 
+  summarise(across(c(Item.VOT_centered, Item.F0_Mel_centered), list(mean = mean, var = var), .names = "{.col}.{.fn}")) %>% 
   mutate(
     cov = ifelse(category == "/d/", shift10_cov_d, shift10_cov_t), 
-    mu = map2(Item.VOT_centered.mean, Item.Mel_F0_5ms_centered.mean, ~ c("VOT" = .x, "f0_Mel" = .y)), 
+    mu = map2(Item.VOT_centered.mean, Item.F0_Mel_centered.mean, ~ c("VOT" = .x, "f0_Mel" = .y)), 
     Sigma = pmap(list(
-      Item.VOT_centered.var, Item.Mel_F0_5ms_centered.var, cov), ~ matrix(c(..1, ..3, ..3, ..2), 2, 2, dimnames = list(cues, cues)))) %>%
+      Item.VOT_centered.var, Item.F0_Mel_centered.var, cov), ~ matrix(c(..1, ..3, ..3, ..2), 2, 2, dimnames = list(cues, cues)))) %>%
   select(c(category, mu, Sigma)) %>% 
   crossing(level = .95) %>%
   group_by(category) %>%

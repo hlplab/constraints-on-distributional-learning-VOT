@@ -20,9 +20,12 @@ d <-
   left_join(
     read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv", show_col_types = F) %>% 
       select(filename, VOT, f0_5ms_into_vowel, vowel_duration) %>% 
-      rename(Item.VOT = VOT,
-             Item.F0_5ms = f0_5ms_into_vowel,
-             Item.Filename = filename) %>% 
+      rename(
+        Item.VOT = VOT,
+        # This is the F0 measured in the same way as Chodroff & Wilson (2018)
+        # (i.e., 5ms into the vowel)
+        Item.F0 = f0_5ms_into_vowel,
+        Item.Filename = filename) %>% 
       mutate(Item.Filename = paste0(Item.Filename, ".wav")),
     by = c("Item.Filename", "Item.VOT")) %>% 
   mutate(
@@ -35,7 +38,7 @@ d <-
         Response.ClickPosition, Response.Voicing),
       factor),
     Participant.Sex = str_to_lower(Participant.Sex),
-    Item.Mel_F0_5ms = normMel(Item.F0_5ms)) 
+    Item.F0_Mel = normMel(Item.F0)) 
 ```
 
 ## Methods 
