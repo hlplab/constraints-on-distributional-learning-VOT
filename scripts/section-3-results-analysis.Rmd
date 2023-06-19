@@ -68,7 +68,7 @@ We analyzed participants' categorisation responses during exposure and test bloc
 
 Each psychometric model regressed participants' categorisation responses against the full factorial interaction of VOT, exposure condition, and block, while including the maximal random effect structure (see SI, \@ref(sec:analysis-approach). Figure \@ref(fig:plot-fit-slope-PSE) summarizes the results that we describe in more detail next. Panels A and B show participants’ categorisation responses during exposure and test blocks, along with the categorisation function estimated from those responses via the mixed-effects psychometric models. These panels facilitate comparison between exposure conditions within each block. Panels C and D show the slope and point of subject equality (PSE)---i.e., the point at which participants are equally likely to respond "d" and "t"---of the categorisation function across blocks and conditions. These panels facilitate comparison across blocks within each exposure condition. Here we focus on the test blocks, which were identical within and across exposure conditions. Analyses of the exposure blocks are reported in the SI (\@ref(sec:exposure-analyses)), and replicate all effects found in the test blocks. 
 
-We begin by presenting the overall effects, averaging across all test blocks. This part of our analysis matches previous work, which has focused on the overall effect of exposure across the entire experiment ['batch tests', e.g., @clayards2008; @kleinschmidt2016; @nixon2016; @theodore-monto2019] and/or during a single post-exposure test block [e.g., @kleinschmidt2020]. Then we turn to the goals of this study---to characterize the incremental changes in participants' categorisation responses as a function of exposure and, in particular, to test 1) whether we replicate the sublinear effects of exposure observed in previous work under the ecologically more valid stimuli and distributions employed in the present work, and 2) whether we can begin to distinguish between the predictions of the model learning and selection hypotheses. 
+We begin by presenting the overall effects, averaging across all test blocks. This part of our analysis matches previous work, which has focused on the overall effect of exposure across the entire experiment ['batch tests', e.g., @clayards2008; @kleinschmidt-jaeger2016; @nixon2016; @theodore-monto2019] and/or during a single post-exposure test block [e.g., @kleinschmidt2020]. Then we turn to the goals of this study---to characterize the incremental changes in participants' categorisation responses as a function of exposure and, in particular, to test 1) whether we replicate the sublinear effects of exposure observed in previous work under the ecologically more valid stimuli and distributions employed in the present work, and 2) whether we can begin to distinguish between the predictions of the model learning and selection hypotheses. 
 
 ```{r fit-nested-models-for-intercepts-slopes-plot, message=FALSE}
 # Refit the same model, formulated as nesting intercepts and slopes within each unique combination of
@@ -130,7 +130,9 @@ d.estimates <-
       list(lower = ~ quantile(.x, probs = .025), mean = mean, upper = ~ quantile(.x, probs = .975))))
 ```
 
-```{r predictions-exposure-conditions-by-IOs, warning=FALSE}
+
+
+```{r predictions-exposure-conditions-by-IOs}
 # Database for prior
 d.chodroff_wilson <-
   get_ChodroffWilson_data(
@@ -162,8 +164,9 @@ d.chodroff_wilson <-
   mutate(category = factor(category))
 
 # Make ideal observer based on exposure conditions
-make_VOT_IOs_from_exposure <- function(data)  
+make_VOT_IOs_from_exposure <- function(data){ 
   data %>%
+    
   # This takes all of the actual data to make ideal observers. Alternatively, one could 
   # first distinct the data to one full lists of each condition.
   make_MVG_ideal_observer_from_data(
@@ -178,15 +181,21 @@ make_VOT_IOs_from_exposure <- function(data)
         cues = c("VOT"), 
         Sigma_noise = matrix(80, dimnames = list("VOT", "VOT"))) %>% 
       mutate(Condition.Exposure = "prior")) %>%
-  nest(io = -c(Condition.Exposure)) 
+  nest(io = -c(Condition.Exposure))
+}  
 
-io <- 
+io <-    
   make_VOT_IOs_from_exposure(
-    d_for_analysis %>% 
-      filter(Phase == "exposure") %>%
+   d_for_analysis %>% 
+      filter(Phase == "exposure") %>% 
+      group_by(ParticipantID, Condition.Exposure) %>% 
+      nest(data = -c(ParticipantID, Condition.Exposure)) %>% 
+      group_by(Condition.Exposure) %>% 
+      slice_sample(n = 1) %>% 
+      unnest(data) %>% 
       mutate(
-        category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")) %>%
-      rename(VOT = Item.VOT, f0 = Item.F0_Mel))
+        category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")) %>% 
+      dplyr::rename(VOT = Item.VOT)) 
 
 # Test points at which responses were measured
 x <-
@@ -252,6 +261,8 @@ d.io.categorisation <-
     model_col = "io", 
     groups = "Condition.Exposure")
 ```
+
+
 
 ```{r prepare-plot-intercepts-slopes}
 p.across_blocks <-
@@ -428,6 +439,8 @@ p.fit_1to7 <- cond_fit_test_exposure %>%
   facet_grid(~ Block, scales = "free_x", space = "free_x") +
   theme(legend.position = "top",
         legend.justification = "right",
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
         strip.background = element_rect(fill = NA),
         strip.text.x.top = element_text(colour = "black"))
 
@@ -489,6 +502,8 @@ p.fit_7to9 <-
   facet_wrap(. ~ Block, nrow = 1) +
   theme(legend.position = "none",
         legend.justification = "right",
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
         axis.title.y = element_blank(),
         strip.background = element_rect(fill = "grey"),
         strip.text.x = element_text(colour = "black"))
@@ -707,16 +722,16 @@ Next, we compared how exposure affects listeners' categorisation reponses within
 
 ```{r getting-means-at-exposure-by-condition}
 # calculate the various mean VOTs exposed to for each condition, including the labelled trials, with and without accounting for the test trials
-cond_means_test_exposure <- d_for_analysis %>%
+cond_means_all <- d_for_analysis %>%
   group_by(Condition.Exposure) %>%
-  summarise(across(c(Item.VOT, Item.F0_Mel), mean, .names = "{.col}_mean_test_exposure"))
+  summarise(across(c(Item.VOT, Item.F0_Mel), mean, .names = "{.col}_mean_all"))
 
 cond_means_exposure <- d_for_analysis %>%
   filter(Phase == "exposure") %>%
   group_by(Condition.Exposure) %>%
   summarise(across(c(Item.VOT, Item.F0_Mel), mean, .names = "{.col}_mean_exposure"))
 
-cond_means <- left_join(cond_means_test_exposure, cond_means_exposure)
+cond_means <- left_join(cond_means_all, cond_means_exposure)
 
 # corpus mean and sd values for VOT and speech
 chodroff.mean_VOT <- mean(d.chodroff_wilson$VOT)
@@ -725,30 +740,30 @@ chodroff.mean_vowel_duration <- mean(d.chodroff_wilson$vowel_duration)
 chodroff.sd_vowel_duration <- sd(d.chodroff_wilson$vowel_duration)
 
 # get estimates from speech rate model to predict VOT
-intercept.speech_rate <- 
-  get_speech_rate_model(d.chodroff_wilson)$estimate[1] 
-slope.speech_rate <- 
+intercept.speech_rate <-
+  get_speech_rate_model(d.chodroff_wilson)$estimate[1]
+slope.speech_rate <-
   get_speech_rate_model(d.chodroff_wilson)$estimate[2]
 
 # center exposure cues to speech corpus means
-d_for_analysis %<>% 
+d_for_analysis %<>%
   mutate(
     VOT.scaled = (Item.VOT - chodroff.mean_VOT) / chodroff.sd_VOT,
     vowel_duration.scaled = (vowel_duration - chodroff.mean_vowel_duration) / chodroff.sd_vowel_duration,
-    VOT.scaled_predict = intercept.speech_rate + (slope.speech_rate * vowel_duration.scaled),
-    VOT.scaled_corrected = (VOT.scaled - VOT.scaled_predict) + intercept.speech_rate,
-    VOT.speech_corrected = VOT.scaled_corrected * chodroff.sd_vowel_duration + chodroff.mean_vowel_duration) %>% 
+    VOT.scaled_predicted = intercept.speech_rate + (slope.speech_rate * vowel_duration.scaled),
+    VOT.scaled_corrected = (VOT.scaled - VOT.scaled_predicted) + intercept.speech_rate,
+    VOT.speech_corrected = VOT.scaled_corrected * chodroff.sd_vowel_duration + chodroff.mean_vowel_duration) %>%
   group_by(Condition.Exposure) %>%
   mutate(
     category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")),
     Item.VOT_centered = case_when(
-      Condition.Exposure == "Shift0" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_test_exposure[1]),
-      Condition.Exposure == "Shift10" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_test_exposure[2]),
-      Condition.Exposure == "Shift40" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_test_exposure[3])),
+      Condition.Exposure == "Shift0" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_all[1]),
+      Condition.Exposure == "Shift10" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_all[2]),
+      Condition.Exposure == "Shift40" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_all[3])),
     Item.F0_Mel_centered = case_when(
-      Condition.Exposure == "Shift0" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_mean_exposure[1]),
-      Condition.Exposure == "Shift10" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_mean_exposure[2]),
-      Condition.Exposure == "Shift40" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_mean_exposure[3]))) 
+      Condition.Exposure == "Shift0" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_all[1]),
+      Condition.Exposure == "Shift10" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_all[2]),
+      Condition.Exposure == "Shift40" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_all[3])))
 
 # specify quantiles for density plots
 quantile_levels <- c(.05, .25, .5, .75, .95)
@@ -766,26 +781,26 @@ names(d_quantile) <- d_breaks
 names(t_quantile) <- t_breaks
 quantile_breaks <- tibble(quantile_levels, d_breaks, t_breaks)
 
-p.density <- 
+p.density <-
   d.chodroff_wilson %>%
   ggplot(aes(x = VOT_centered, y = f0_Mel_centered, linetype = category, group = category)) +
   geom_density2d(
     data = . %>% filter(category == "/d/"),
     aes(colour = d_quantile[as.character(after_stat(level))]),
-    contour_var = "density", 
+    contour_var = "density",
     breaks = d_breaks) +
   geom_density2d(
     data = . %>% filter(category == "/t/"),
     aes(colour = t_quantile[as.character(after_stat(level))]),
-    contour_var = "density", 
+    contour_var = "density",
     breaks = t_breaks) +
   scale_y_continuous("F0 (Mel)", limits = c(118, 360)) +
   scale_x_continuous("VOT (ms)", limits = c(-12, 125), breaks = scales::breaks_width(25)) +
-  scale_colour_gradient("Quantiles", 
-                        high = "#e6e6e6", 
-                        low = "#000000", 
-                        guide = "colourbar", 
-                        breaks = quantile_levels, 
+  scale_colour_gradient("Quantiles",
+                        high = "#e6e6e6",
+                        low = "#000000",
+                        guide = "colourbar",
+                        breaks = quantile_levels,
                         labels = scales::percent(quantile_levels)) +
   theme(legend.position = "top",
         legend.text = element_text(size = 7)) +

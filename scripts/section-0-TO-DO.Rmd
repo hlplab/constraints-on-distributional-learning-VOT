@@ -5,9 +5,8 @@
 ## Highest priority
  * MARYANN
   * Figure out why slopes aren't identical across conditions under our current way of averaging exposure across all participants.
-  * KJ16 plot: fix legends, fix y-axis to conform to current convention, add 0 reference line *typical talker + IO references lines (predicted PSEs)
+  * KJ16 plot:  add 0 reference line *typical talker + IO references lines (predicted PSEs)
   * main plot:
-    * remove vertical gridlines
     * reference dashed lines: put labels for e.g. "+21.x ms (100%)" on the right edge.
     * change point estimate to a label with "+/-XX.X%" (rounded to 1 digit). data frame must have all info necessary to calculate data for that label geom.
   * fit nested model: Condition / (block*VOT). Sample prior = "yes". This is to make the argument of block-to-block change within each condition. 

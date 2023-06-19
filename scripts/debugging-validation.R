@@ -392,8 +392,6 @@ get_speech_rate_model <- function(data) {
     }
 
 
-
-
 d.temp <- tibble(VOT = d.chodroff_wilson.selected$VOT,
                  VOT.speech_corrected = d.chodroff_wilson.selected$VOT.speech_corrected,
                    Talker = factor(d.chodroff_wilson.selected$Talker))
@@ -437,7 +435,6 @@ my_text <-
   xlim(0, 1) + ylim(0, 1) +
   theme_void() +
   remove_axes_titles
-
 
 
 

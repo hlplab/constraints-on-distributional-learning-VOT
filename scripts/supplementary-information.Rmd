@@ -276,7 +276,7 @@ Durational, measurements of voicing lead, VOT, and vowel were taken in addition 
 
 - Vowel 
   -**start:** the beginning of clearly defined periodicity in the waveform and at the appearance of low frequency energy in the spectrogram. 
-  -**End:** if before a stop, when periodicity becomes irregular or at closure onset; if before a lateral, when formant transition approaches steady state; if before a nasal, when formants show a step-wise shift and when intensity shows a steep decline. 
+  -**End:** if before a stop, when periodicity becomes irregular or at closure onset; if before a lateral, when formant transition approaches steady state; if before a nasal, at point where formants show a step-wise shift and when intensity shows a steep decline. 
 
 - F0 at vowel onset 
   -the average pitch measurement estimated over the first 25% of the total vowel duration.
@@ -598,7 +598,7 @@ To address these questions, we fit a single Bayesian mixed-effects psychometric 
 We fit the model using the package \texttt{brms} [@R-brms_a] in R [@R; @RStudio]. Following previous work from our lab [@horberg2021rational; @xie2021cross], we used weakly regularizing priors to facilitate model convergence. For fixed effect parameters, we standardized continuous predictors (VOT) by dividing through twice their standard deviation [@gelman2008scaling], and used Student priors centered around zero with a scale of 2.5 units [following @gelman2008weakly] and 3 degrees of freedom. For random effect standard deviations, we used a Cauchy prior with location 0 and scale 2, and for random effect correlations, we used an uninformative LKJ-Correlation prior with its only parameter set to 1, describing a uniform prior over correlation matrices [@Lewandowski2009]. Four chains with 2000 warm-up samples and 2000 posterior samples each were fit. No divergent transitions after warm-up were observed, and all $\hat{R}$ were close to 1.
 
 ### Expectations 
-Based on previous experiments, we expected a strong positive effect of VOT, with increasing proportions of "t"-responses for increasing VOTs. We did not have clear expectations for the effect of trial other than that responses should become more uniformed (i.e move towards 50-50 "d"/"t"-bias or 0-log-odds) as the experiment progressed [@liu2018inferring] due to the un-informativeness of the stimuli. 
+Based on previous experiments, we expected a strong positive effect of VOT, with increasing proportions of "t"-responses for increasing VOTs. We did not have clear expectations for the effect of trial other than that responses should become more uniformed (i.e move towards 50-50 "d"/"t"-bias or 0-log-odds) as the experiment progressed [@liu-jaeger2018] due to the un-informativeness of the stimuli. 
 Previous studies with similar paradigms have typically found lapse rates of 0-10% [< -2.2 log-odds, e.g., @clayards2008; @kleinschmidt-jaeger2016]. 
 
 ```{r, warning=FALSE}
@@ -830,94 +830,6 @@ Overall, there was little evidence that participants substantially changed their
 
 
 
-```{r plot-parametric-density-plot, warning=FALSE}
-cov_d <- (d.chodroff_wilson.selected %>%
-  group_by(category) %>%
-  nest(data = -c(category)) %>%
-  mutate(covariance = map_dbl(data, ~ cov(.x$VOT_centered, .x$f0_Mel_centered))) %>%
-  pull(covariance))[1]
-
-cov_t <- (d.chodroff_wilson.selected %>%
-  group_by(category) %>%
-  nest(data = -c(category)) %>%
-  mutate(covariance = map_dbl(data, ~ cov(.x$VOT_centered, .x$f0_Mel_centered))) %>%
-  pull(covariance))[2]
-
-cat_d <- d.chodroff_wilson.selected %>%
-  filter(category == "/d/")
-
-cues <- c("VOT", "f0_Mel")
-
-d.category_ellipse <- d.chodroff_wilson.selected %>%
-  group_by(category) %>%
-  summarise(across(c(VOT_centered, f0_Mel_centered), list(mean = mean, var = var), .names = "{.col}.{.fn}")) %>%
-  mutate(cov = ifelse(category == "/d/", cov_d, cov_t),
-         mu = map2(VOT_centered.mean, f0_Mel_centered.mean, ~ c("VOT" = .x, "f0_Mel" = .y)),
-         Sigma = pmap(list(VOT_centered.var, f0_Mel_centered.var, cov), ~ matrix(c(..1, ..3, ..3, ..2), 2, 2, dimnames = list(cues, cues)))) %>%
-  select(c(category, mu, Sigma)) %>%
-  crossing(level = quantile_levels) %>%
-  group_by(category) %>%
-  mutate(ellipse = c(1:length(quantile_levels)),
-         ellipse_points = pmap(list(mu, Sigma, level), ~ get_bivariate_normal_ellipse(mu = ..1, Sigma = ..2, level = ..3))) %>%
-  group_by(ellipse) %>%
-  mutate(path = pmap(list(category, level, ellipse_points),
-                     ~ geom_path(data = ..3, mapping = aes(x = ..3[[1]], y = ..3[[2]], linetype = ..1, colour = ..2))))
-
-p.ellipse <- d.category_ellipse %>%
-  ggplot() +
-  d.category_ellipse$path +
-  scale_y_continuous("F0 (Mel)", limits = c(118, 360)) +
-  scale_x_continuous("VOT (ms)", limits = c(-12, 125), breaks = scales::breaks_width(25)) +
-  scale_color_gradient("Interval", low = "#000000",
-  high = "#D0D0D0") +
-  # scale_linetype_manual("Category", values = c(1, 2)) +
-  # theme(legend.position = "right") +
-  new_scale_color() +
-  #plot the uncentred means
-  geom_point(
-    data = d_for_analysis %>%
-      filter(Phase == "exposure") %>%
-      group_by(Condition.Exposure) %>%
-      mutate(
-        category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))) %>%
-      group_by(Condition.Exposure, category) %>%
-      summarise(across(c(Item.VOT, Item.F0_Mel), mean)),
-    mapping = aes(x = Item.VOT, y = Item.F0_Mel, colour = Condition.Exposure, shape = category),
-    size = 2,
-    shape = c(1, 2, 1, 2, 1, 2),
-    alpha = 0.8,
-  inherit.aes = F,
-  show.legend = F) +
-  scale_colour_manual("Condition",
-             labels = c("+0ms", "+10ms", "+40ms"),
-             values = c("#cc0000", "#12D432","#0481F3")) +
-  #plot the centered means
-  geom_point(
-    data = d_for_analysis %>%
-      filter(Phase == "exposure") %>%
-      group_by(Condition.Exposure) %>%
-      mutate(
-        category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")),
-        Item.VOT_centered = case_when(
-          Condition.Exposure == "Shift0" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_test_exposure[1]),
-          Condition.Exposure == "Shift10" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_test_exposure[2]),
-          Condition.Exposure == "Shift40" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_test_exposure[3])),
-        Item.F0_Mel_centered = case_when(
-          Condition.Exposure == "Shift0" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_mean_test_exposure[1]),
-          Condition.Exposure == "Shift10" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_mean_test_exposure[2]),
-          Condition.Exposure == "Shift40" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_mean_test_exposure[3]))) %>%
-      group_by(Condition.Exposure, category) %>%
-      summarise(across(c(Item.VOT_centered, Item.F0_Mel_centered), mean)),
-    mapping = aes(x = Item.VOT_centered, y = Item.F0_Mel_centered, colour = Condition.Exposure, shape = category),
-    size = 2,
-    alpha = 0.8,
-  inherit.aes = F,
-  show.legend = F) +
-  guides(linetype = "none")
-  # scale_colour_manual("Condition",
-  #            labels = c("+0ms", "+10ms", "+40ms"),
-  #            values = c("#cc0000", "#12D432","#0481F3")) +
-```
 
 # Session Info
 
