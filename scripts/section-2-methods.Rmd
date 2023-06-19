@@ -286,10 +286,9 @@ excl.RT <-
     Response.log_RT.mean = mean(Response.log_RT, na.rm = T)) %>% 
   ungroup() %>% 
   mutate(Exclude_participant.due_to_RT = ifelse(abs(scale(Response.log_RT.mean)) > 3, TRUE, FALSE)) %>% 
-  group_by(ParticipantID) %>% 
   filter(Exclude_participant.due_to_RT == TRUE) %>% 
-  tally() %>% 
-  pull(n)
+  distinct(ParticipantID) %>% 
+  nrow()
 
 # headphone types
 excl.headphone <- 
