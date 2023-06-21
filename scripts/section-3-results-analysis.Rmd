@@ -195,7 +195,7 @@ io <-
       unnest(data) %>% 
       mutate(
         category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")) %>% 
-      dplyr::rename(VOT = Item.VOT)) 
+      rename(VOT = Item.VOT, f0 = Item.F0_Mel)) 
 
 # Test points at which responses were measured
 x <-
