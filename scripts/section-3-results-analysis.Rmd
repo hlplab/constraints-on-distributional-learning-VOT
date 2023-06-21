@@ -199,7 +199,7 @@ io <-
 
 # Test points at which responses were measured
 x <-
-  d_for_analysis %>%
+  d_for_analysis %>%  
   filter(Phase == "test") %>%
   distinct(Item.VOT) %>%
   pull()
@@ -563,7 +563,7 @@ This replicates previous findings that exposure to changed VOT distributions cha
 ### Comparing across exposure conditions: How quickly does exposure begin to affect participants' responses? 
 Figure \@ref(fig:plot-fit-slope-PSE)A suggests that differences between exposure conditions emerged early in the experiment: already in Test 2, listener's categorisation functions seem to be shifted rightwards (larger PSEs) in the +40 condition compared to the +10 condition, and in the +10 condition compared to the baseline condition. This is confirmed by the Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-effects). Prior to any exposure, during Test 1, participants' responses did not differ across exposure condition (all BFs > XXX). <!-- TO DO: fit model with save_priors =T and change hypothesis tests for block one to = 0, not < 0: fitting--> After exposure to only 24 /d/ and 24 /t/ stimuli, during Test 2, participants' responses differed between exposure conditions (BFs > 17.35). The difference between the +40 condition and the +10 or baseline condition kept increasing with exposure up to Test 4. Additional hypothesis tests in Table \@ref(tab:hypothesis-table-interactions) show that the change from Test 1 to 2 was largest (BF = 27.8), followed by the change from Test 2 to 3 (BF = 19.2), with only minimal changes from Test 3 to 4 (BF = 1.7). Qualitatively paralleling the changes across blocks for the +40 condition, the change in the difference between the +10 and baseline conditions was largest from Test 1 to 2 (BF = 13.5), and then somewhat decreased from Test 2 to Test 4 (BFs < 4). The comparison across exposure conditions thus suggests that changes in listeners' categorisation responses emerged quickly---indeed, they were present already *during* the first exposure block (see SI, \@ref(sec:exposure-analyses))---but then leveled off. The comparison across exposure conditions also yields one result that is, at first blush, surprising: while the difference between the +10 and the baseline condition emerged already after the first exposure block, this difference *de*creased, rather than increased, with additional exposure from Test 2 to 3 (see second row of Table \@ref(tab:hypothesis-table-interactions)). We return to this effect below.
 
-Tables \@ref(tab:hypothesis-table-simple-effects) and \@ref(tab:hypothesis-table-interactions) also reveal the consequences of repeated testing. The difference between exposure conditions decreased from Test 4 to 6 (BFs > 4.3; see also Figure \@ref(fig:plot-fit-slope-PSE)B & D). On the final test block, the +10 condition did not differ any longer from the baseline condition. Only the differences between the +40 condition relative to the +10 and baseline conditions persisted, albeit substantially reduced compared to Test 4. This pattern of results replicates previous findings that repeated testing over uniform test continua can undo the effects of exposure [@cummings2023; @liu-jaeger2018; @liu-jaeger2019], and extends them from perceptual recalibration paradigms to distributional learning paradigms [see also @kleinschmidt2020]. One important methodological consequence of these findings is that longer test phases do not necessarily increase the statistical power to detect effects of adaptation [unless analyses take the effects of repeated testing into account, as in the approach developed in @liu-jaeger2018]. Analyses that average across all test tokens---as remains the norm---are bound to systematically underestimate the adaptivity of human speech perception.
+Tables \@ref(tab:hypothesis-table-simple-effects) and \@ref(tab:hypothesis-table-interactions) also reveal the consequences of repeated testing. The difference between exposure conditions decreased from Test 4 to 6 (BFs > 4.3; see also Figure \@ref(fig:plot-fit-slope-PSE)B & D). On the final test block, the +10 condition did not differ any longer from the baseline condition. Only the differences between the +40 condition relative to the +10 and baseline conditions persisted, albeit substantially reduced compared to Test 4. This pattern of results replicates previous findings that repeated testing over uniform test continua can undo the effects of exposure [@cummings-theodore2023; @liu-jaeger2018; @liu-jaeger2019], and extends them from perceptual recalibration paradigms to distributional learning paradigms [see also @kleinschmidt2020]. One important methodological consequence of these findings is that longer test phases do not necessarily increase the statistical power to detect effects of adaptation [unless analyses take the effects of repeated testing into account, as in the approach developed in @liu-jaeger2018]. Analyses that average across all test tokens---as remains the norm---are bound to systematically underestimate the adaptivity of human speech perception.
 
 ```{r fit-nested-blocks-simple-effects, results='hide'}
 # nested model to get simple effects of Condition embedded in block
@@ -581,8 +581,8 @@ fit_mix_test_nested_block <- brm(
    cores = 4,
    chains = chains,
    init = 0,
-   iter = 4000, # if 1000 warmup then iter can be lowered to 2000
-   warmup = 2000, # 1000 warmup will exceed max tree depth
+   iter = 4000, 
+   warmup = 2000, 
    family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
    control = list(adapt_delta = .99),
    file ="../models/Exp-AE-DLVOT-nested-block-condVOT.rds")
@@ -608,10 +608,12 @@ fit_mix_test_nested_condition <- brm(
    file ="../models/Exp-AE-DLVOT-nested-condition.rds")
 
 # get tidy df of nested test simple effects within block --no divergence in model found
-simple_effects_condition <- tidy(fit_mix_test_nested_block, effects = "fixed") %>%
+simple_effects_condition <- 
+  tidy(fit_mix_test_nested_block, effects = "fixed") %>%
   filter(term != "theta1_(Intercept)")
 
-simple_effects_block <- tidy(fit_mix_test_nested_condition, effects = "fixed") %>%
+simple_effects_block <- 
+  tidy(fit_mix_test_nested_condition, effects = "fixed") %>%
   filter(term != "theta1_(Intercept)")
 ```
 
@@ -718,7 +720,7 @@ table.interactions
 ### Comparing within exposure conditions: How quickly does exposure begin to affect participants' responses? 
 Next, we compared how exposure affects listeners' categorisation reponses within each condition relative to listeners' responses prior to any exposure. These changes are summarised for the slope and PSE in Figure \@ref(fig:plot-fit-slope-PSE)C & D, respectively. This visualization makes apparent two aspects of participants' behavior that were not readily apparent in the statistical comparisons we have summarized so far. First, while the PSEs for the +40 and +10 conditions were shifted rightwards compared to the baseline condition, both the +10 and the baseline condition actually shift leftwards relative to their pre-exposure starting point in Test 1. This is confirmed by Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-block-effects). 
 
-(ref:exposure-means-database-density) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for XXX word-initial /d/ and /t/ productions in L1-US English [based on 92 talkers in @chodroff-wilson2017]. The outermost contour of each category shows the 95% density quantile. Points show the category means of the exposure condition.
+(ref:exposure-means-database-density) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for XXX word-initial /d/ and /t/ productions in L1-US English [based on 92 talkers in @chodroff-wilson2018]. The outermost contour of each category shows the 95% density quantile. Points show the category means of the exposure condition.
 
 ```{r getting-means-at-exposure-by-condition}
 # calculate the various mean VOTs exposed to for each condition, including the labelled trials, with and without accounting for the test trials
