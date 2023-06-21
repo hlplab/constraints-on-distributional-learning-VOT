@@ -79,7 +79,7 @@ cond_fit_KJ16 <- fit_KJ16 %>%
   mutate(Item.VOT = descale(VOT_gs, VOT.mean_d.KJ16_unlabeled, VOT.sd_d.KJ16_unlabeled))
 ```
 
-```{r kleinschmidt-jaeger-2016-replotted, fig.height=base.height*2+1/2, fig.width=base.width*4, fig.cap="(ref:kleinschmidt-jaeger-2016-replotted)"}
+```{r kleinschmidt-jaeger-2016-replotted, fig.height=(base.height+1/4)*2+1/2, fig.width=base.width*4, fig.cap="(ref:kleinschmidt-jaeger-2016-replotted)"}
 # make histograms of exposure distributions
 p.KJ16.histogram <-
   d.KJ16 %>% 
@@ -147,7 +147,7 @@ The present study employs a novel incremental exposure-test paradigm to address 
 
 (ref:prediction) Contrasting predictions of model learning and model selection hypotheses about the incremental effects of exposure on listeners' categorisation function. Both hypothesis predict incremental adaptation towards the statistics of the input, as well as constraints on this adaptation. The two hypotheses differ, however, in that model selection predicts a hard limit on how far listeners' can adapt during initial encounters with an unfamiliar talker.
 
-```{r prediction, fig.height=3, fig.width=5, fig.cap="(ref:prediction)"}
+```{r prediction, fig.height=base.height+1/4, fig.width=base.width*2, fig.cap="(ref:prediction)"}
 k <- 10^-1
 
 crossing(
