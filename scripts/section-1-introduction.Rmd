@@ -169,16 +169,4 @@ crossing(
   theme(panel.grid = element_blank())
 ```
 
-<<<<<<< HEAD
-To test these predictions, we revise the standard paradigm used to investigate distributional learning in speech perception. Previous work has employed 'batch testing' designs, in which changes in categorisation responses are assessed only after extended exposure to hundreds of trials or by averaging over extended exposure [e.g., @clayards2008; @harmon2018; @idemaru-holt2011; @idemaru-holt2020; @kleinschmidt-jaeger2016; @munson2011; @nixon2016; @theodore-monto2019]. These designs are well-suited to investigate cumulative effects of exposure but are less so to identify constraints on rapidly unfolding incremental adaptation. To be able to detect both incremental and cumulative effects of exposure, within and across exposure conditions, we employed the repeated exposure-test design shown in Figure \@ref(fig:exp2-design-figure). <!-- TO DO: could you show the actual *sampled* distribution of VOTs in the design figure? it's ok to show the marginal "(all)" distribution in all panels. I think this will align the figure with the text, which talks about ecological validity. -->
-
-```{r exp2-design-figure, fig.height=3, fig.width=5, fig.cap="Exposure-test design of the experiment. Test blocks presented identical stimuli within and across conditions"}
-knitr::include_graphics("../figures/experiment2_design_image.png")
-```
-
-A secondary aim of the present study was to ameliorate possible concerns about the ecological validity of research on distributional learning. The pioneering works that inspired the present study employed highly unnatural sounding stimuli that were clearly identifiable as robotic speech [@clayards2008; @kleinschmidt-jaeger2016]. These studies also followed the majority of research on distributional learning in language [e.g., @maye2002; @pajak-levy2012] and *designed* rather than *sampled* the exposure distributions. As a consequence, exposure distributions in these experiments tend to be symmetrically balanced around the category means---unlike in everyday speech input. Indeed, all of the works we follow here further used categories with *identical* variances [e.g., identical variance along VOT for /b/ and /p/, @clayards2008; @kleinschmidt-jaeger2016; or /g/ and /k/, @theodore-monto2019]. This, too, is highly atypical for everyday speech input [@chodroff-wilson2018; @lisker-abrahamson1964]. The present study takes several modest steps to address these issues, to assess whether the observations made by @kleinschmidt-jaeger2016 replicate for ecologically more valid stimuli and exposure distributions.
-
-All data and code for this article can be downloaded from [https://osf.io/hxcy4/](OSF). The article is written in R markdown, allowing readers to replicate our analyses with the press of a button using freely available software [R, @R; @RStudio], while changing any of the parameters of our models (see SI, \@ref(sec:software)).
-=======
 All data and code for this article can be downloaded from [XXX](OSF). <!-- TO DO: fill in URL --> The article is written in R markdown, allowing readers to replicate our analyses with the press of a button using freely available software [R, @R; @RStudio], while changing any of the parameters of our models (see SI, \@ref(sec:software)).
->>>>>>> b4fb8b690e7ea047d8472121be1eb94925f0da7f
