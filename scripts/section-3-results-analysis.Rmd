@@ -744,7 +744,9 @@ intercept.speech_rate <-
   get_speech_rate_model(d.chodroff_wilson)$estimate[1]
 slope.speech_rate <-
   get_speech_rate_model(d.chodroff_wilson)$estimate[2]
+```
 
+```{r centering}
 # center exposure cues to speech corpus means
 d_for_analysis %<>%
   mutate(
@@ -753,18 +755,22 @@ d_for_analysis %<>%
     VOT.scaled_predicted = intercept.speech_rate + (slope.speech_rate * vowel_duration.scaled),
     VOT.scaled_corrected = (VOT.scaled - VOT.scaled_predicted) + intercept.speech_rate,
     VOT.speech_corrected = VOT.scaled_corrected * chodroff.sd_vowel_duration + chodroff.mean_vowel_duration) %>%
-  group_by(Condition.Exposure) %>%
+  group_by(Condition.Exposure) 
+
+d_for_analysis %<>%
   mutate(
     category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")),
     Item.VOT_centered = case_when(
-      Condition.Exposure == "Shift0" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_all[1]),
-      Condition.Exposure == "Shift10" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_all[2]),
-      Condition.Exposure == "Shift40" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_all[3])),
+      Condition.Exposure == "Shift0" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_all[1]),
+      Condition.Exposure == "Shift10" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_all[2]),
+      Condition.Exposure == "Shift40" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_all[3])),
     Item.F0_Mel_centered = case_when(
-      Condition.Exposure == "Shift0" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_all[1]),
-      Condition.Exposure == "Shift10" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_all[2]),
-      Condition.Exposure == "Shift40" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_all[3])))
+      Condition.Exposure == "Shift0" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_mean_all[1]),
+      Condition.Exposure == "Shift10" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_mean_all[2]),
+      Condition.Exposure == "Shift40" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_mean_all[3])))
+```
 
+```{r prepare-quantile-plot}
 # specify quantiles for density plots
 quantile_levels <- c(.05, .25, .5, .75, .95)
 d_breaks <- density_quantiles(x = d.chodroff_wilson %>% filter(category == "/d/") %>% pull(VOT_centered),

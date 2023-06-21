@@ -151,14 +151,13 @@ myGplot.defaults("paper")
 r_refs(file = "latex-stuff/r-references.bib")
 ```
 
-
 ```{r knitr-setup, include=FALSE}
 # To keep figure sizes comparable across the paper, you can define a basic width and height (e.g., for each panel)
 # and then refer to those variables in the knitr chunk options that describe the figure width and height for a 
 # specific R chunk.
 options(width = 200, digits = 2, OutDec = ".", tinytex.verbose = TRUE)
-base.width = 1.25
-base.height = 1.25
+base.width = 1.33
+base.height = 1.33
 
 knitr::opts_chunk$set(
   echo = FALSE, message = FALSE, warning = FALSE, 

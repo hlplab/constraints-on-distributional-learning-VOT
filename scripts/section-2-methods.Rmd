@@ -68,7 +68,7 @@ The VOTs generated for each continuum ranged from -100 to +130 msec in 5 msec st
 ### Procedure
 At the start of the experiment, participants acknowledged that they met all requirements and provided consent, as per the Research Subjects Review Board of the University of Rochester. Participants also had to pass a headphone test [@woods2017], and were instructed to not change the volume throughout the experiment. Following instructions, participants completed 234 two-alternative forced-choice categorisation trials (Figure \@ref(fig:example-trial)). Participants were instructed that they would hear a female talker say a single word on each trial, and were asked to select which word they heard. Participants were asked to listen carefully and answer as quickly and as accurately as possible. They were also alerted to the fact that the recordings were subtly different and therefore may sound repetitive. 
 
-```{r example-trial, fig.cap="Example trial display. When the green button turned bright green, participants had to click on it to play the recording."}
+```{r example-trial, fig.cap="Example trial display. When the green button turned bright green, participants had to click on it to play the recording.", out.width="33%"}
 knitr::include_graphics("../figures/exp1_trial_example.png")
 ```
 
