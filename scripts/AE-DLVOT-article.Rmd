@@ -25,7 +25,7 @@ authornote: |
 
 
 abstract: |
-  YOUR ABSTRACT GOES HERE. All data and code for this study are shared via OSF, including the R markdown document that this article is generated from, and an R library that implements the models we present.
+  We investigate constraints on adaptive speech perception during the initial encounters with unfamiliar speech patterns. Such adaptive changes are now considered important to spoken language understanding, overcoming substantial cross-talker variability in the realization of speech categories. We present evidence from a novel incremental exposure-test paradigm to assess how previously experienced cross-talker variability guides (and thus constrains) listeners' adaptation. Specifically, we ask adaptation is constrained weakly---slower and sublinear, but continued adaptation with increasing exposure---or strongly---adaptation only up to a point, after which additional exposure has no benefits (at least not prior to, e.g., sleep). The results contribute to a proposed theoretical distinction between two hypotheses about the mechanisms underlying the intial moments of adaptation, model learning vs. model selection.
   
 keywords          : "speech perception; adaptation; incremental changes; distributional learning"
 wordcount         : "X"
@@ -116,7 +116,6 @@ library(supunsup)           # Kleinschmidt & Jaeger 2016 data
 library(MVBeliefUpdatr)     # generating Ideal Observers
 ```
 
-
 ```{r constants-general, include=FALSE}
 # IF you're using brms or rstan, uncomment the following:
 chains <- 4
@@ -180,12 +179,10 @@ TODO = T            # switch on/off to get to do list.
 RESET_FIGURES = F   # switch on/off whether figures that exist as files are regenerated
 ```
 
-
 ```{r analysis-preferences}
 set.seed(42007)
 knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 ```
-
 
 ```{r, child="section-0-TO-DO.Rmd", eval= if (TODO) TRUE else FALSE}
 ```
