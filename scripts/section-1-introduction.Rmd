@@ -71,6 +71,26 @@ fit_KJ16 <-
     control = list(adapt_delta = .99),
     file = "../models/KJ16-semisupervised-GLMM.rds")
 
+# fit nested model to extract slopes and intercepts
+fit_nested_KJ16 <- 
+  brm(
+    bf(
+      Response.Voiceless ~ 1,
+      mu1 ~ 0 + offset(0),
+      mu2 ~  0 + (Condition.Exposure) / VOT_gs +
+        (0 + VOT_gs | ParticipantID) +
+        (0 + (Condition.Exposure) / VOT_gs | Item.MinimalPair),
+      theta1 ~ 1),
+    data = d.KJ16_unlabeled,
+    cores = chains,
+    chains = chains,
+    init = 0,
+    iter = 4000, 
+    warmup = 2000, 
+    family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
+    control = list(adapt_delta = .995),
+    file = "../models/KJ16-semisupervised-nested-GLMM.rds")
+
 cond_fit_KJ16 <- fit_KJ16 %>% 
   conditional_effects(
   effects = "VOT_gs:Condition.Exposure",
@@ -79,6 +99,24 @@ cond_fit_KJ16 <- fit_KJ16 %>%
   re_formula = NA) %>% 
   .[[1]] %>% 
   mutate(Item.VOT = descale(VOT_gs, VOT.mean_d.KJ16_unlabeled, VOT.sd_d.KJ16_unlabeled))
+
+d.KJ16_PSE <- 
+  fit_nested_KJ16 %>% 
+  gather_draws(`b_mu2_Condition.Exposure.*`, regex = TRUE, ndraws = 8000) %>%
+  mutate(
+    term = ifelse(str_detect(.variable, "VOT_gs"), "slope", "Intercept"),
+    .variable = gsub("b_mu2_Condition.ExposureP(\\d{1,2}ms).*$", "\\1", .variable)) %>% 
+  pivot_wider(names_from = term, values_from = ".value") %>%
+  rename(Condition.Exposure = .variable) %>% 
+  relocate(c(Condition.Exposure, Intercept, slope, .chain, .iteration, .draw)) %>% 
+  mutate(
+    PSE = descale(-Intercept/slope, VOT.mean_d.KJ16_unlabeled, VOT.sd_d.KJ16_unlabeled),
+    Condition.Exposure = paste0("+", Condition.Exposure)) %>%
+  group_by(Condition.Exposure) %>%
+  summarise(
+    across(
+      c(Intercept, slope, PSE),
+      list(lower = ~ quantile(.x, probs = .025), mean = mean, upper = ~ quantile(.x, probs = .975))))
 ```
 
 
@@ -135,7 +173,7 @@ io.d.KJ16 <-
 
 
 
-```{r kleinschmidt-jaeger-2016-replotted, fig.height=base.height*3, fig.width=base.width*4.5, fig.cap="(ref:kleinschmidt-jaeger-2016-replotted)"}
+```{r kleinschmidt-jaeger-2016-replotted, fig.height=base.height*4.5, fig.width=base.width*4.5, fig.cap="(ref:kleinschmidt-jaeger-2016-replotted)"}
 # make histograms of exposure distributions
 p.KJ16.histogram <-
   d.KJ16 %>% 
@@ -166,7 +204,14 @@ p.KJ16.histogram <-
         fill = c("#383838", "#C0C0C0", 0, 0, 0, 0, 0, 0),
         values = c("b", "p", 0, 0, 0, 0, 0, 0)), nrow = 1)) +
   facet_wrap(~ Condition.Exposure, nrow = 1) +
-  theme(legend.position = "top") +
+  theme(legend.position = "top",
+        legend.title.align = 0,
+        legend.text.align = 0,
+        legend.justification = c(0, .5),
+        legend.box.just = "center",
+        legend.key.width = unit(12, "pt"),
+        legend.key.height = unit(12, "pt"),
+        legend.box.spacing = unit(1, "pt")) +
   remove_x_guides
   
 p.KJ16.result <- 
@@ -177,7 +222,9 @@ p.KJ16.result <-
     x = Item.VOT,
     y = estimate__,
     group = Condition,
-    ymin = lower__, ymax = upper__, fill = Condition), alpha = .1) +
+    ymin = lower__, ymax = upper__, fill = Condition), 
+    alpha = .1,
+    show.legend = F) +
   geom_line(aes(
     x = Item.VOT,
     y = estimate__,
@@ -188,9 +235,31 @@ p.KJ16.result <-
   scale_x_continuous("VOT (msec)", breaks = seq(-50, 150, 50)) +
   scale_y_continuous("Proportion \"p\"-responses", breaks = c(0, .5, 1)) +
   facet_wrap(~ Condition, nrow = 1) +
-  theme(legend.position = "top")
+  theme(legend.position = "top",
+        legend.title.align = 0,
+        legend.text.align = 0,
+        legend.justification = c(0.5, 0),
+        legend.box.just = "right")
 
-(p.KJ16.histogram / p.KJ16.result) +
+p.KJ16.PSE <- 
+  d.KJ16_PSE %>% 
+  left_join(io.d.KJ16) %>% 
+  rename(PSE.io = PSE) %>% 
+  ggplot(aes(y = PSE_mean, x = Condition.Exposure, colour = Condition.Exposure)) +
+  geom_point(size = 2, show.legend = F) +
+  geom_linerange(
+    aes(ymin = PSE_lower, ymax = PSE_upper), size = 1, alpha = .8, show.legend = F) +
+  geom_hline(
+    yintercept = c(20, 30, 40, 50), 
+    linewidth = 1.5,
+    alpha = .4,
+    linetype = 2, 
+    colour = scales::hue_pal()(4)) +
+  scale_x_discrete("Condition") +
+  scale_y_continuous("PSE") +
+  labs(colour = "Condition")
+
+(p.KJ16.histogram / p.KJ16.result / p.KJ16.PSE) +
   plot_layout(guides = "collect") &
   theme(legend.position = "top")
 ```
@@ -234,4 +303,9 @@ knitr::include_graphics("../figures/block_design.png")
 A secondary aim of the present study was to ameliorate possible concerns about the ecological validity of research on distributional learning. The pioneering works that inspired the present study employed highly unnatural sounding stimuli that were clearly identifiable as robotic speech [@clayards2008; @kleinschmidt-jaeger2016]. These studies also followed the majority of research on distributional learning in language [e.g., @maye2002; @pajak-levy2012] and *designed* rather than *sampled* the exposure distributions. As a consequence, exposure distributions in these experiments tend to be symmetrically balanced around the category means---unlike in everyday speech input. Indeed, all of the works we follow here further used categories with *identical* variances [e.g., identical variance along VOT for /b/ and /p/, @clayards2008; @kleinschmidt-jaeger2016; or /g/ and /k/, @theodore-monto2019]. This, too, is highly atypical for everyday speech input [@chodroff-wilson2018; @lisker-abrahamson1964]. The present study takes several modest steps to address these issues, to assess whether the observations made by @kleinschmidt-jaeger2016 replicate for ecologically more valid stimuli and exposure distributions.
 
 All data and code for this article can be downloaded from [https://osf.io/hxcy4/](OSF). The article is written in R markdown, allowing readers to replicate our analyses with the press of a button using freely available software [R, @R; @RStudio], while changing any of the parameters of our models (see SI, \@ref(sec:software)).
+
+
+
+
+
 
