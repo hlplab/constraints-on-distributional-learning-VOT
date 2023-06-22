@@ -155,19 +155,21 @@ io.d.KJ16 <-
   group_by(Condition.Exposure) %>% 
   nest(data = -c(Condition.Exposure)) %>% 
   mutate(
-      model_unscaled = map(data, ~ glm(
-        cbind(n_p, n_b) ~ 1 + VOT, 
-        family = binomial, 
-        data = .x)),
-      intercept_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[1, 2] %>% pull()),
-      slope_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[2, 2] %>% pull()),
-      model_scaled = map(data, ~ glm(
-        cbind(n_p, n_b) ~ 1 + I((VOT - VOT.mean_d.KJ16_unlabeled) / (2 * VOT.sd_d.KJ16_unlabeled)), 
-        family = binomial, 
-        data = .x)),
-      intercept_scaled = map_dbl(model_scaled, ~ tidy(.x)[1, 2] %>% pull()),
-      slope_scaled = map_dbl(model_scaled, ~ tidy(.x)[2, 2] %>% pull()),
-      PSE = -intercept_unscaled/slope_unscaled)
+    model_unscaled = map(
+      data, ~ glm(
+      cbind(n_p, n_b) ~ 1 + VOT, 
+      family = binomial, 
+      data = .x)),
+    intercept_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[1, 2] %>% pull()),
+    slope_unscaled = map_dbl(
+      model_unscaled, ~ tidy(.x)[2, 2] %>% pull()),
+    model_scaled = map(data, ~ glm(
+      cbind(n_p, n_b) ~ 1 + I((VOT - VOT.mean_d.KJ16_unlabeled) / (2 * VOT.sd_d.KJ16_unlabeled)), 
+      family = binomial, 
+      data = .x)),
+    intercept_scaled = map_dbl(model_scaled, ~ tidy(.x)[1, 2] %>% pull()),
+    slope_scaled = map_dbl(model_scaled, ~ tidy(.x)[2, 2] %>% pull()),
+    PSE = -intercept_unscaled/slope_unscaled)
 
 # get io of typical talker and its categorisation (+0 condition)
 d.typical_talker <- 
@@ -184,14 +186,15 @@ d.typical_talker <-
              x = .x$x, model = .y, decision_rule = "proportional") %>% 
            filter(category == "p") %>% 
            mutate(VOT = map(x, ~.x[1]) %>% unlist())),
-    line = map(categorization, ~ 
-                  geom_line(
-                    data = .x,
-                    mapping = aes(x = VOT, y = response),
-                    linetype = 2,
-                    linewidth = 0.6,
-                    alpha = .8,
-                    colour = "black")))
+    line = map(
+      categorization, 
+      ~ geom_line(
+          data = .x,
+          mapping = aes(x = VOT, y = response),
+          linetype = 2,
+          linewidth = 0.6,
+          alpha = .8,
+          colour = "black")))
 ```
 
 
@@ -223,10 +226,10 @@ p.KJ16.histogram <-
    guides(
     fill = guide_legend(
       override.aes = list(
-        fill = c("#383838", "#C0C0C0", 0, 0, 0, 0, 0, 0),
-        values = c("b", "p", 0, 0, 0, 0, 0, 0)), nrow = 1)) +
+        fill = c("#383838", "#C0C0C0", NA, NA, NA, NA, NA, NA),
+        values = c("b", "p", NA, NA, NA, NA, NA, NA)), nrow = 1)) +
   facet_wrap(~ Condition.Exposure, nrow = 1) +
-  theme(legend.box.just = "right") +
+  theme(legend.justification = "left") +
   remove_x_guides
   
 p.KJ16.result <- 
@@ -264,13 +267,11 @@ p.KJ16.PSE <-
     alpha = .4,
     linetype = 2, 
     colour = scales::hue_pal()(4)) +
-  geom_point(size = 2) +
+  geom_point(size = 2, show.legend = F) +
   geom_linerange(
-    aes(ymin = PSE_lower, ymax = PSE_upper), size = 1, alpha = .8) +
+    aes(ymin = PSE_lower, ymax = PSE_upper), size = 1, alpha = .8, show.legend = F) +
   scale_x_discrete("Condition") +
-  scale_y_continuous("PSE") +
-  theme(legend.box.just = "left") +
-  labs(colour = "Condition") 
+  scale_y_continuous("PSE") 
 
 (p.KJ16.histogram / p.KJ16.result / p.KJ16.PSE) +
   plot_layout(guides = "collect") &
