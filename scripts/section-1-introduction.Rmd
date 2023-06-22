@@ -168,6 +168,30 @@ io.d.KJ16 <-
       intercept_scaled = map_dbl(model_scaled, ~ tidy(.x)[1, 2] %>% pull()),
       slope_scaled = map_dbl(model_scaled, ~ tidy(.x)[2, 2] %>% pull()),
       PSE = -intercept_unscaled/slope_unscaled)
+
+# get io of typical talker and its categorisation (+0 condition)
+d.typical_talker <- 
+  io.d.KJ16[[2]][[1]][1, 1] %>% 
+  unnest(io) %>% 
+  mutate(lapse_rate = plogis(fixef(fit_KJ16)[[2]])) %>% 
+  nest(io = everything()) %>% 
+  crossing(x = seq(-10, 70, .5)) %>% 
+  nest(x = x) %>% 
+  mutate(
+    categorization =
+    map2(x, io, ~
+           get_categorization_from_MVG_ideal_observer(
+             x = .x$x, model = .y, decision_rule = "proportional") %>% 
+           filter(category == "p") %>% 
+           mutate(VOT = map(x, ~.x[1]) %>% unlist())),
+    line = map(categorization, ~ 
+                  geom_line(
+                    data = .x,
+                    mapping = aes(x = VOT, y = response),
+                    linetype = 2,
+                    linewidth = 0.6,
+                    alpha = .8,
+                    colour = "black")))
 ```
 
 
@@ -180,12 +204,11 @@ p.KJ16.histogram <-
   group_by(Condition.Exposure) %>%
   slice_head(n = 222) %>% 
   ggplot(aes(x = Item.VOT,
-             fill = paste(Condition.Exposure, trueCat),
-             colour = paste(Condition.Exposure, trueCat))) +
+             fill = paste(Condition.Exposure, trueCat))) +
   geom_histogram(binwidth = 5) +
-  scale_x_continuous("VOT (msec)", breaks = seq(-50, 150, 50)) +
+  scale_x_continuous("VOT (ms)", breaks = seq(-50, 150, 50)) +
   scale_y_continuous(breaks = c(0, 25, 50)) +
-  scale_colour_manual(
+  scale_fill_manual(
     "Category", 
     values = c("+0ms b" = "#f8766d",
                "+0ms p" = "#fdd1ce",
@@ -195,23 +218,15 @@ p.KJ16.histogram <-
                "+20ms p" = "#99fcff",
                "+30ms b" = "#c77cff",
                "+30ms p" = "#e9ccff"),
-    aesthetics = c("color", "fill"),
+    aesthetics = "fill",
     labels = c("/b/", "/p/", "", "", "", "", "", "")) +
    guides(
-    colour = guide_legend(
+    fill = guide_legend(
       override.aes = list(
-        colour = c("#383838", "#C0C0C0", 0, 0, 0, 0, 0, 0),
         fill = c("#383838", "#C0C0C0", 0, 0, 0, 0, 0, 0),
         values = c("b", "p", 0, 0, 0, 0, 0, 0)), nrow = 1)) +
   facet_wrap(~ Condition.Exposure, nrow = 1) +
-  theme(legend.position = "top",
-        legend.title.align = 0,
-        legend.text.align = 0,
-        legend.justification = c(0, .5),
-        legend.box.just = "center",
-        legend.key.width = unit(12, "pt"),
-        legend.key.height = unit(12, "pt"),
-        legend.box.spacing = unit(1, "pt")) +
+  theme(legend.box.just = "right") +
   remove_x_guides
   
 p.KJ16.result <- 
@@ -231,33 +246,31 @@ p.KJ16.result <-
     group = Condition,
     color = Condition),
     linewidth = .7,
-    alpha = 0.6) +
+    alpha = 0.6,
+    show.legend = F) +
+  d.typical_talker$line +
   scale_x_continuous("VOT (msec)", breaks = seq(-50, 150, 50)) +
   scale_y_continuous("Proportion \"p\"-responses", breaks = c(0, .5, 1)) +
-  facet_wrap(~ Condition, nrow = 1) +
-  theme(legend.position = "top",
-        legend.title.align = 0,
-        legend.text.align = 0,
-        legend.justification = c(0.5, 0),
-        legend.box.just = "right")
+  facet_wrap(~ Condition, nrow = 1)
 
 p.KJ16.PSE <- 
   d.KJ16_PSE %>% 
   left_join(io.d.KJ16) %>% 
   rename(PSE.io = PSE) %>% 
   ggplot(aes(y = PSE_mean, x = Condition.Exposure, colour = Condition.Exposure)) +
-  geom_point(size = 2, show.legend = F) +
-  geom_linerange(
-    aes(ymin = PSE_lower, ymax = PSE_upper), size = 1, alpha = .8, show.legend = F) +
   geom_hline(
     yintercept = c(20, 30, 40, 50), 
     linewidth = 1.5,
     alpha = .4,
     linetype = 2, 
     colour = scales::hue_pal()(4)) +
+  geom_point(size = 2) +
+  geom_linerange(
+    aes(ymin = PSE_lower, ymax = PSE_upper), size = 1, alpha = .8) +
   scale_x_discrete("Condition") +
   scale_y_continuous("PSE") +
-  labs(colour = "Condition")
+  theme(legend.box.just = "left") +
+  labs(colour = "Condition") 
 
 (p.KJ16.histogram / p.KJ16.result / p.KJ16.PSE) +
   plot_layout(guides = "collect") &
