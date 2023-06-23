@@ -136,7 +136,7 @@ io.d.KJ16 <-
       group_by(ParticipantID, Condition.Exposure) %>% 
       nest(data = -c(ParticipantID, Condition.Exposure)) %>% 
       group_by(Condition.Exposure) %>% 
-      slice_sample(n = 1) %>% 
+      slice_sample(n = 1) %>%  
       unnest(data),
     group = "Condition.Exposure", 
     cues = c("VOT"), 
@@ -171,6 +171,31 @@ io.d.KJ16 <-
     slope_scaled = map_dbl(model_scaled, ~ tidy(.x)[2, 2] %>% pull()),
     PSE = -intercept_unscaled/slope_unscaled)
 
+io.d.KJ16.lapse_rate <- 
+  make_MVG_ideal_observer_from_data(
+    data = d.KJ16 %>% 
+      rename(VOT = Item.VOT) %>% 
+      group_by(ParticipantID, Condition.Exposure) %>% 
+      nest(data = -c(ParticipantID, Condition.Exposure)) %>% 
+      group_by(Condition.Exposure) %>% 
+      slice_sample(n = 1) %>%  
+      unnest(data),
+    group = "Condition.Exposure", 
+    cues = c("VOT"),
+    Sigma_noise = matrix(80, dimnames = list("VOT", "VOT")),
+    lapse_rate = plogis(fixef(fit_KJ16)[[2]])) %>% 
+  nest(io = -c(Condition.Exposure)) %>% 
+  crossing(x = seq(-10, 70, .5)) %>% 
+  nest(x = x) %>% 
+  mutate(
+    categorization =
+    map2(x, io, ~
+           get_categorization_from_MVG_ideal_observer(
+             x = .x$x, model = .y, decision_rule = "proportional") %>% 
+           filter(category == "p") %>% 
+           mutate(VOT = map(x, ~.x[1]) %>% unlist()))) %>% 
+  unnest(categorization, names_repair = "unique")
+
 # get io of typical talker and its categorisation (+0 condition)
 d.typical_talker <- 
   io.d.KJ16[[2]][[1]][1, 1] %>% 
@@ -200,7 +225,7 @@ d.typical_talker <-
 
 
 
-```{r kleinschmidt-jaeger-2016-replotted, fig.height=base.height*4.5, fig.width=base.width*4.5, fig.cap="(ref:kleinschmidt-jaeger-2016-replotted)"}
+```{r kleinschmidt-jaeger-2016-replotted, fig.height=base.height*3.5, fig.width=base.width*5.5, fig.cap="(ref:kleinschmidt-jaeger-2016-replotted)"}
 # make histograms of exposure distributions
 p.KJ16.histogram <-
   d.KJ16 %>% 
@@ -251,6 +276,16 @@ p.KJ16.result <-
     linewidth = .7,
     alpha = 0.6,
     show.legend = F) +
+  geom_line(
+    data = io.d.KJ16.lapse_rate %>% 
+      rename(Condition = Condition.Exposure) %>% 
+      group_by(Condition),
+    mapping = aes(x = VOT, y = response, group = Condition, colour = Condition),
+    linetype = 2,
+    linewidth = 1,
+    alpha = .6,
+    inherit.aes = F,
+    show.legend = F) +
   d.typical_talker$line +
   scale_x_continuous("VOT (msec)", breaks = seq(-50, 150, 50)) +
   scale_y_continuous("Proportion \"p\"-responses", breaks = c(0, .5, 1)) +
@@ -271,10 +306,16 @@ p.KJ16.PSE <-
   geom_linerange(
     aes(ymin = PSE_lower, ymax = PSE_upper), size = 1, alpha = .8, show.legend = F) +
   scale_x_discrete("Condition") +
-  scale_y_continuous("PSE") 
+  scale_y_continuous("PSE") +
+  theme(axis.text.x = element_text(angle = 22.5, hjust = .8))
 
-(p.KJ16.histogram / p.KJ16.result / p.KJ16.PSE) +
-  plot_layout(guides = "collect") &
+layout <- "
+AAAA#
+BBBBC"
+
+p.KJ16.histogram + p.KJ16.result + p.KJ16.PSE +
+  plot_layout(design = layout,
+              guides = "collect") &
   theme(legend.position = "top")
 ```
 

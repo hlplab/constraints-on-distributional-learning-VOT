@@ -388,24 +388,25 @@ p.fit_1to7 <- cond_fit_test_exposure %>%
     color = Condition.Exposure),
     linewidth = .7,
     alpha = 0.6) +
-  geom_rug(data = d_for_analysis %>%
-             group_by(Phase, Block) %>%
-             filter(Block %in% c(1:7)) %>%
-             mutate(
-               Block = factor(case_when(
-                 Block == 1 ~ "Test 1",
-                 Block == 3 ~ "Test 2",
-                 Block == 5 ~ "Test 3",
-                 Block == 7 ~ "Test 4",
-                 Block == 2 ~ "Exposure 1",
-                 Block == 4 ~ "Exposure 2",
-                 Block == 6 ~ "Exposure 3")),
-               Block = fct_relevel(Block, c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3",  "Test 4"))) %>%
-             distinct(Item.VOT),
-           aes(x = Item.VOT),
-           alpha = 0.5,
-           colour = "grey",
-           inherit.aes = F) +
+  geom_rug(
+    data = d_for_analysis %>%
+      group_by(Phase, Block) %>%
+      filter(Block %in% c(1:7)) %>%
+      mutate(
+        Block = factor(case_when(
+          Block == 1 ~ "Test 1",
+          Block == 3 ~ "Test 2",
+          Block == 5 ~ "Test 3",
+          Block == 7 ~ "Test 4",
+          Block == 2 ~ "Exposure 1",
+          Block == 4 ~ "Exposure 2",
+          Block == 6 ~ "Exposure 3")),
+        Block = fct_relevel(Block, c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3",  "Test 4"))) %>%
+      distinct(Item.VOT),
+    aes(x = Item.VOT),
+    alpha = 0.5,
+    colour = "grey",
+    inherit.aes = F) +
   stat_summary(
     data = d_for_analysis %>%
       filter(Block %in% c(1:7), Item.Labeled == FALSE) %>%
@@ -460,33 +461,36 @@ p.fit_7to9 <-
     color = Condition.Exposure),
     linewidth = .7,
     alpha = 0.6) +
-  geom_rug(data = d_for_analysis %>%
-             group_by(Phase, Block) %>%
-             filter(Block %in% c(7:9)) %>%
-             mutate(
-               Block = factor(case_when(
-                 Block == 7 ~ "Test 4",
-                 Block == 8 ~ "Test 5",
-                 Block == 9 ~ "Test 6")),
-               Block = fct_relevel(Block, c("Test 4", "Test 5", "Test 6"))) %>%
-             distinct(Item.VOT),
-           aes(x = Item.VOT),
-           alpha = 0.5,
-           colour = "grey",
-           inherit.aes = F) +
-  stat_summary(
+  geom_rug(
     data = d_for_analysis %>%
-      filter(Block %in% c(7:9), Item.Labeled == FALSE) %>%
+      group_by(Phase, Block) %>%
+      filter(Block %in% c(7:9)) %>%
       mutate(
         Block = factor(case_when(
           Block == 7 ~ "Test 4",
           Block == 8 ~ "Test 5",
-          Block == 9 ~ "Test 6"))) %>%
+          Block == 9 ~ "Test 6")),
+        Block = fct_relevel(Block, c("Test 4", "Test 5", "Test 6"))) %>%
+      distinct(Item.VOT),
+    aes(x = Item.VOT),
+    alpha = 0.5,
+    colour = "grey",
+    inherit.aes = F) +
+  stat_summary(
+    data = d_for_analysis %>%
+      filter(Block %in% c(7:9), Item.Labeled == FALSE) %>%
+      mutate(
+        Block = factor(
+          case_when(
+            Block == 7 ~ "Test 4",
+            Block == 8 ~ "Test 5",
+            Block == 9 ~ "Test 6"))) %>%
       group_by(Condition.Exposure, Block),
     fun.data = mean_cl_boot,
-    mapping = aes(x = Item.VOT,
-                  y = Response.Voiceless,
-                  colour = Condition.Exposure),
+    mapping = aes(
+      x = Item.VOT,
+      y = Response.Voiceless,
+      colour = Condition.Exposure),
     geom = "pointrange",
     size = 0.1,
     alpha = 0.7,
@@ -500,13 +504,14 @@ p.fit_7to9 <-
     values = colours.condition,
     aesthetics = c("color", "fill")) +
   facet_wrap(. ~ Block, nrow = 1) +
-  theme(legend.position = "none",
-        legend.justification = "right",
-        panel.grid.major.x = element_blank(),
-        panel.grid.minor.x = element_blank(),
-        axis.title.y = element_blank(),
-        strip.background = element_rect(fill = "grey"),
-        strip.text.x = element_text(colour = "black"))
+  theme(
+    legend.position = "none",
+    legend.justification = "right",
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    axis.title.y = element_blank(),
+    strip.background = element_rect(fill = "grey"),
+    strip.text.x = element_text(colour = "black"))
 ```
 
 (ref:plot-fit-slope-PSE) Summary of results. **Panel A:** Changes in listeners psychometric categorisation functions as a function of exposure, from Test 1 to Test 4 with all intervening exposure blocks (only unlabelled trials were included in the analysis of exposure blocks since labelled trials provide no information about listeners' categorization function). Point ranges indicate the mean proportion of "t"-responses and their 95% bootstrapped CI. Lines and shaded intervals show the MAP predictions and 95% posterior CIs of a Bayesian mixed-effects psychometric model fit to participants' responses. **Panel B:** Same as Panel A but for the final three test blocks without intervening exposure. Test 4 is shown as part of both Panels A and B. **Panels C \& D:** Changes across blocks in the slope and boundary (point-of-subjective-equality, PSE) of the categorisation functions shown in Panels A-B. Point ranges represent the posterior means and their 95% CI. Dashed reference lines show the intercepts and PSEs that naive (non-rational) learner would be expected to converge against after sufficient exposure (an ideal observer model that knows the exposure distributions).
