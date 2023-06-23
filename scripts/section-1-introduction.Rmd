@@ -315,7 +315,8 @@ BBBBC"
 
 p.KJ16.histogram + p.KJ16.result + p.KJ16.PSE +
   plot_layout(design = layout,
-              guides = "collect") &
+              guides = "collect") +
+  plot_annotation(tag_levels = 'A', tag_suffix = ")")&
   theme(legend.position = "top")
 ```
 
