@@ -127,7 +127,7 @@ d.estimates <-
   summarise(
     across(
       c(Intercept, slope, PSE),
-      list(lower = ~ quantile(.x, probs = .025), mean = mean, upper = ~ quantile(.x, probs = .975))))
+      list(lower = ~ quantile(.x, probs = .025), mean = mean, upper = ~ quantile(.x, probs = .975)))) 
 ```
 
 
@@ -265,8 +265,9 @@ d.io.categorisation <-
 
 
 ```{r prepare-plot-intercepts-slopes}
+
 p.across_blocks <-
-  d.estimates %>%
+  d.estimates %>% 
   ggplot(aes(
     x = Block, y = Intercept_mean, 
     ymin = Intercept_lower, ymax = Intercept_upper,
@@ -305,19 +306,56 @@ p.slope_1to7 <-
     aes(yintercept = slope_scaled, color = Condition.Exposure),
     linetype = 2, linewidth = .8, alpha = 0.5) 
 
-p.PSE_1to7 <- 
+d.true_shift <- 
+  d.estimates %>% 
+  # join the ideal PSEs from io predictions
+  left_join(d.io.categorisation %>% 
+  filter(Condition.Exposure != "prior") %>% 
+  select(PSE) %>% 
+    rename(PSE.io_predicted = PSE)) %>%
+  mutate(
+    PSE_block1 = case_when(
+      Condition.Exposure == "Shift0" ~ d.estimates[10][[1]][1],
+      Condition.Exposure == "Shift10" ~ d.estimates[10][[1]][10],
+      Condition.Exposure == "Shift40" ~ d.estimates[10][[1]][19]),
+    true_shift = PSE.io_predicted - PSE_block1,
+    proportion_shift = abs(PSE_mean - PSE_block1)/true_shift)
+
+p.PSE_1to7 <-     
   p.across_blocks +  
   scale_y_continuous("PSE") +
   aes(y = PSE_mean, ymin = PSE_lower, ymax = PSE_upper) +
+  geom_label(
+    data = d.true_shift, 
+  mapping = aes(label = paste(scales::percent(proportion_shift, accuracy = .1))),
+  position = position_dodge(.3),
+  label.size = .15,
+  label.padding = unit(.18, "lines"),
+  size = 2.2,
+  show.legend = F) +
   geom_hline(
     data = d.io.categorisation,
     aes(yintercept = PSE, color = Condition.Exposure),
     linetype = 2, linewidth = .8, alpha = 0.5) +
-  annotate("label", x = 5.2, y = 64, label = "true shift = +21ms \n (max prop. of shift = 38%)", size = 2, colour = "blue") +
-  annotate("label", x = 7.3, y = 32, label = "true shift = -10ms \n (max prop. of shift = 40%)", size = 2, colour = "dark green") +
-  annotate("label", x = 3.3, y = 30, label = "true shift = -18ms \n (max prop. of shift = 22%)", size = 2, colour = "red") 
+  geom_text(
+   data = d.true_shift %>% group_by(Condition.Exposure, true_shift) %>% summarise(),
+   mapping = aes(
+    x = 10.1,
+    y = c(24, 35, 65),
+    label = paste(round(true_shift), "(100%)"),
+    colour = Condition.Exposure),
+   colour = colours.condition,
+   fontface = "bold",
+   size = 3,
+   position = position_dodge2v(1), 
+   inherit.aes = F) +
+    coord_cartesian(
+      xlim = c(0.75, 9),
+      clip = "off") +
+    theme(plot.margin = unit(c(1,3,1,1), "lines"))
 
-p.params_1to7 <- (p.slope_1to7 | p.PSE_1to7) +
+p.params_1to7 <- 
+  (p.slope_1to7 | p.PSE_1to7) +
   plot_layout(guides = "collect") &
   theme(legend.position = "none", axis.text = element_text(size = 8))
 ```
