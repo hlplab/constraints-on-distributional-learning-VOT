@@ -5,7 +5,7 @@ One of the hallmarks of human speech perception is its adaptivity. Listeners' in
 We investigate an important constraint on this type of adaptivity that is suggested by recent findings. @kleinschmidt-jaeger2016 exposed L1-US English listeners to recordings of /b/-/p/ minimal pair words like *beach* and *peach* that were acoustically manipulated. Separate groups of listeners were exposed to distributions of voice onset times (VOTs)---the primary cue distinguishing  words like *beach* and *peach*---that were shifted by up to +30 msecs, relative to what one might expect from a 'typical' talker (Figure \@ref(fig:kleinschmidt-jaeger-2016-replotted)A). In line with the distributional learning hypothesis, listeners' category boundary or point of subjective equality (PSE)---i.e., the VOT for which listeners are equally likely to respond "b" or "p"---shifted in the same direction as the exposure distribution (Figure \@ref(fig:kleinschmidt-jaeger-2016-replotted)B). Also in line with the distributional learning hypothesis, these shifts were larger the further the exposure distributions were shifted. However, Kleinschmidt and Jaeger also observed a previously undocumented property of these adaptive changes: shifts in the exposure distribution had less than proportional (sublinear) effect on shifts in PSE (Figure \@ref(fig:kleinschmidt-jaeger-2016-replotted)C). While this finding is broadly compatible with the hypothesis of distributional learning, it points to important not well-understood constraints on adaptive speech perception.
 
 
-(ref:kleinschmidt-jaeger-2016-replotted) Design and results of @kleinschmidt-jaeger2016 replotted. **Panel A:** Different groups of participants were exposed to different shifts in the mean VOT of /b/ and /p/. **Panel B:** Categorisation functions of individual participants depending on the exposure condition (shift in VOT means of /b/ and /p/). For reference, the black dashed line shows the categorisation function of the 0-shift condition. The colored dashed lines shows the categorisation function expected for an ideal observer that has fully learned the exposure distributions. **Panel C:** Mean and 95% CI of participants' points of subjective equality (PSEs), relative to the PSE of the ideal observers. <!-- TO DO: plot panel C, the same way we're plotting our results (i.e., a single 'block' of point ranges with references lines like the PSE panel of your main plot. -->
+(ref:kleinschmidt-jaeger-2016-replotted) Design and results of @kleinschmidt-jaeger2016 replotted. **Panel A:** Different groups of participants were exposed to different shifts in the mean VOT of /b/ and /p/. **Panel B:** Categorisation functions of individual participants depending on the exposure condition (shift in VOT means of /b/ and /p/). For reference, the black dashed line shows the categorisation function of the 0-shift condition. The colored dashed lines shows the categorisation function expected for an ideal observer that has fully learned the exposure distributions. **Panel C:** Mean and 95% CI of participants' points of subjective equality (PSEs), relative to the PSE of the ideal observers.
 
 ```{r kleinschmidt-jaeger-2016-refitted}
 # load K&J2016 data and filter to semi-supervised rows
@@ -48,8 +48,7 @@ contrasts(d.KJ16_unlabeled$Condition.Exposure) <-
 
 my_priors <- c(
   prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),
-  prior(student_t(3, 0, 2.5), class = "b", dpar = "theta1"),
-  prior(cauchy(0, 2.5), class = "sd"),
+  prior(cauchy(0, 2.5), class = "sd", dpar = "mu2"),
   prior(lkj(1), class = "cor"))
 
 fit_KJ16 <-
@@ -68,6 +67,7 @@ fit_KJ16 <-
     iter = 4000,
     warmup = 2000,
     family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
+    priors = my_priors,
     control = list(adapt_delta = .99),
     file = "../models/KJ16-semisupervised-GLMM.rds")
 
@@ -88,6 +88,7 @@ fit_nested_KJ16 <-
     iter = 4000, 
     warmup = 2000, 
     family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
+    priors = my_priors,
     control = list(adapt_delta = .995),
     file = "../models/KJ16-semisupervised-nested-GLMM.rds")
 
@@ -171,6 +172,7 @@ io.d.KJ16 <-
     slope_scaled = map_dbl(model_scaled, ~ tidy(.x)[2, 2] %>% pull()),
     PSE = -intercept_unscaled/slope_unscaled)
 
+# get io with lapse-accounted categorisation 
 io.d.KJ16.lapse_rate <- 
   make_MVG_ideal_observer_from_data(
     data = d.KJ16 %>% 
@@ -316,8 +318,9 @@ BBBBC"
 p.KJ16.histogram + p.KJ16.result + p.KJ16.PSE +
   plot_layout(design = layout,
               guides = "collect") +
-  plot_annotation(tag_levels = 'A', tag_suffix = ")")&
-  theme(legend.position = "top")
+  plot_annotation(tag_levels = 'A', tag_suffix = ")") &
+  theme(legend.position = "top",
+        plot.tag = element_text(face = "bold"))
 ```
 
 For example, influential models of adaptive speech perception predict proportional, rather than sublinear, shifts (for proof, see SI \@ref(sec:ibbu-proof)). This is the case both for incremental Bayesian belief-updating model [@kleinschmidt-jaeger2011] and general purpose normalization accounts [@mcmurray-jongman2011]---models that have been found to explain listeners' behavior well in experiments with less substantial changes in exposure. There are, however, proposals that can accommodate this finding. Some proposals distinguish between two types of mechanisms that might underlie representational changes, <!--- link representational change and distributional learning --> *model learning* and *model selection* [@xie2018, p. 229]. The former refers to the learning of a new category representations---for example, learning a new generative model for the talker [@kleinschmidt-jaeger2015, Part II] or storage of new talker-specific exemplars [@johnson1997; @sumner2011]. Xie and colleagues hypothesized that this process might be much slower than is often assumed in the literature, potentially requiring multiple days of exposure and memory consolidation during sleep [see also @fenn2013; @tamminen2012; @xie2018sleep]. Rapid adaptation that occurs within minutes of exposure might instead be achieved by selecting between *existing* talker-specific representations that were learned from previous speech input---e.g., previously learned talker-specific generative models [see mixture model in @kleinschmidt-jaeger2015, p. 180-181] or previously stored exemplars from other talkers [@johnson1997]. Model learning and model selection both offer explanations for the sublinear effects observed in @kleinschmidt-jaeger2016. But they suggest different predictions for the evolution of this effect over the course of exposure.
@@ -351,7 +354,6 @@ crossing(
 The present study employs a novel incremental exposure-test paradigm to address two questions. We test whether the sublinear effects of exposure observed in recent work replicate for exposure that (somewhat) more closely resembles the type of speech input listeners receive on a daily basis. And, we evaluate the predictions of the model learning and selection hypotheses against human perception. We take this question to be of interest beyond the specific hypotheses we contrast: whether there are hard limits to the benefits of exposure to unfamiliar speech patterns ultimately has consequences for education and medical treatment. 
 
 All data and code for this article can be downloaded from [https://osf.io/hxcy4/](OSF). The article is written in R markdown, allowing readers to replicate our analyses with the press of a button using freely available software [R, @R; @RStudio], while changing any of the parameters of our models (see SI, \@ref(sec:software)).
-
 
 
 

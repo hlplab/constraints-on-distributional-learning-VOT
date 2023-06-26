@@ -404,26 +404,19 @@ lmer(VOT ~ 1 + (1 | Talker), data = d.temp)
 mean(d.temp$VOT.speech_corrected)
 mean(d.temp$VOT)
 
-d.temp %>% 
-  ggplot(aes(y = VOT.speech_corrected, x = vowel_duration)) +
-  geom_point(alpha = .1) 
+fit_exposure <- read_rds("../models/Exp-AE-DLVOT-exposure.rds")
+fit_exposure_nested <- read_rds("../models/Exp-AE-DLVOT-nested-exposure.rds")
+summary(fit_exposure)
+summary(fit_exposure_nested)
+#diagnostics
+library(bayesplot)
+variables(fit_exposure)
 
+mcmc_trace(fit_exposure, pars = vars(starts_with("b")))
 
+mcmc_trace(fit_exposure_nested, pars = vars(starts_with("b")))
 
-io.cat <- io.d.KJ16 %>% 
-  group_by(Condition.Exposure) %>% 
-  left_join(x) %>% 
-  rename(x = Item.VOT) %>% 
-  mutate(x = map(x, ~ c(.x))) %>% 
-  nest(x = x) %>% 
-  mutate(categorisation = map2(x, io, ~ 
-                                 get_categorization_from_MVG_ideal_observer(
-                                   x = .x$x, model = .y, decision_rule = "proportional") %>% 
-                                 mutate(VOT = map(x, ~ .x[1]) %>% unlist())))%>%
-  unnest(cols = categorisation, names_repair = "unique")
-
-
-
-
+fit_KJ16_priors <- read_rds("~/Desktop/AEDLVOT-article/models/KJ16-semisupervised-sd-prior.rds")
+summary(fit_KJ16_priors)
 
 

@@ -5,9 +5,6 @@
 ## Highest priority
  * MARYANN
   * Figure out why slopes aren't identical across conditions under our current way of averaging exposure across all participants.
-  * main plot:
-    * reference dashed lines: put labels for e.g. "+21.x ms (100%)" on the right edge.
-    * change point estimate to a label with "+/-XX.X%" (rounded to 1 digit). data frame must have all info necessary to calculate data for that label geom.
   * fit nested model: Condition / (block*VOT). Sample prior = "yes". This is to make the argument of block-to-block change within each condition. 
     * make a hypothesis table that summarises the main effect of block for each exposure condition
   * Non-parametric density plot. 
@@ -17,7 +14,6 @@
 ## Medium priority
 
  * MARYANN
-  * add a dashed gray reference line to Figure 6C/D, showing the slope and PSE based on io fitted to Chodroff & Wilson?
   * KJ16 plot: include point ranges in PSE comparison plot
   * Fix a lot of the outstanding XXXes. Fill in the references -- in library.bib
   * Heterogenous normal distribution

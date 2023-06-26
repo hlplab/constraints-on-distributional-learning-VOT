@@ -48,8 +48,9 @@ fit_mix_test <-
     iter = 4000,
     warmup = 2000,
     family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
+    prior = my_priors,
     control = list(adapt_delta = .99),
-    file = "../models/Exp-AE-DLVOT-labelled-lapsing-GLMM-difference-no-RTexcl.rds")
+    file = "../models/Exp-AE-DLVOT-labelled-lapsing-GLMM.rds")
 
 # fit difference coded model on exposure block
 fit_mix_exposure <-
@@ -59,9 +60,6 @@ fit_mix_exposure <-
       filter(Phase == "exposure" & Item.Labeled == FALSE) %>%
       prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
     file = "../models/Exp-AE-DLVOT-lapsing-differencecoded-exposureblocks.rds")
-
-# fit test block with sampled priors
-
 ```
 
 We analyzed participants' categorisation responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric models, using brms [@R-brms_a] in R [@R; @RStudio, for details, see SI, \@ref(sec:analysis-approach)]. Psychometric models account for attentional lapses while estimating participants' categorisation functions. Failing to account for attentional lapses---while commonplace in research on speech perception [but see @clayards2008; @kleinschmidt-jaeger2016]---can lead to biased estimates of categorization boundaries [@prins2011; @wichmann-hill2001]. For the present experiment, however, lapse rates were negligible (`r make_CI(fit_mix_test, "theta1_Intercept")`), and all results replicate in simple mixed-effects logistic regressions [@jaeger2008]. 
@@ -265,7 +263,6 @@ d.io.categorisation <-
 
 
 ```{r prepare-plot-intercepts-slopes}
-
 p.across_blocks <-
   d.estimates %>% 
   ggplot(aes(
@@ -340,7 +337,7 @@ p.PSE_1to7 <-
   geom_text(
    data = d.true_shift %>% group_by(Condition.Exposure, true_shift) %>% summarise(),
    mapping = aes(
-    x = 10.1,
+    x = 10.25,
     y = c(24, 35, 65),
     label = paste(round(true_shift), "(100%)"),
     colour = Condition.Exposure),
@@ -349,10 +346,18 @@ p.PSE_1to7 <-
    size = 3,
    position = position_dodge2v(1), 
    inherit.aes = F) +
+  annotate(
+    geom = "text",
+    x = 10.05,
+    y = 33.5,
+    label = round(d.io.categorisation$PSE[1], 2),
+    size = 3,
+    colour = "grey",
+    fontface = "bold") +
     coord_cartesian(
       xlim = c(0.75, 9),
       clip = "off") +
-    theme(plot.margin = unit(c(1,3,1,1), "lines"))
+    theme(plot.margin = unit(c(1, 3.2, 1, 1), "lines"))
 
 p.params_1to7 <- 
   (p.slope_1to7 | p.PSE_1to7) +
@@ -586,52 +591,56 @@ Tables \@ref(tab:hypothesis-table-simple-effects) and \@ref(tab:hypothesis-table
 
 ```{r fit-nested-blocks-simple-effects, results='hide'}
 # nested model to get simple effects of Condition embedded in block
-fit_mix_test_nested_block <- brm(
-   bf(
-     Response.Voiceless ~ 1,
-     mu1 ~ 0 + offset(0),
-     mu2 ~ 0 + Block / (Condition.Exposure * VOT_gs) +
-       (0 + Block / VOT_gs | ParticipantID) +
-       (0 + Block / (Condition.Exposure * VOT_gs) | Item.MinimalPair),
-     theta1 ~ 1),
-   data = d_for_analysis %>%
-     filter(Phase == "test") %>%
-     prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = "difference"),
-   cores = 4,
-   chains = chains,
-   init = 0,
-   iter = 4000, 
-   warmup = 2000, 
-   family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
-   control = list(adapt_delta = .99),
-   file ="../models/Exp-AE-DLVOT-nested-block-condVOT.rds")
+fit_mix_test_nested_block <- 
+  brm(
+    bf(
+      Response.Voiceless ~ 1,
+      mu1 ~ 0 + offset(0),
+      mu2 ~ 0 + Block / (Condition.Exposure * VOT_gs) +
+        (0 + Block / VOT_gs | ParticipantID) +
+        (0 + Block / (Condition.Exposure * VOT_gs) | Item.MinimalPair),
+      theta1 ~ 1),
+    data = d.test_exposure_for_analysis %>%
+      filter(Phase == "test") %>%
+      prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
+    cores = 4,
+    chains = chains,
+    init = 0,
+    iter = 4000,
+    warmup = 2000,
+    family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
+    sample_prior = "yes",
+    control = list(adapt_delta = .995),
+    file ="../models/Exp-AE-DLVOT-nested-block-condVOT.rds")
 
-fit_mix_test_nested_condition <- brm(
-   bf(
-     Response.Voiceless ~ 1,
-     mu1 ~ 0 + offset(0),
-     mu2 ~ 0 + Condition.Exposure / (Block * VOT_gs) +
-       (0 + Block * VOT_gs | ParticipantID) +
-       (0 + Condition.Exposure / (Block * VOT_gs) | Item.MinimalPair),
-     theta1 ~ 1),
-   data = d_for_analysis %>%
-     filter(Phase == "test") %>%
-     prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = "difference"),
-   cores = 4,
-   chains = chains,
-   init = 0,
-   iter = 4000, 
-   warmup = 2000, 
-   family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
-   control = list(adapt_delta = .995),
-   file ="../models/Exp-AE-DLVOT-nested-condition.rds")
+fit_mix_test_nested_condition <- 
+  brm(
+    bf(
+      Response.Voiceless ~ 1,
+      mu1 ~ 0 + offset(0),
+      mu2 ~ 0 + Condition.Exposure / (Block * VOT_gs) +
+        (0 + Block * VOT_gs | ParticipantID) +
+        (0 + Condition.Exposure / (Block * VOT_gs) | Item.MinimalPair),
+      theta1 ~ 1),
+    data = d.test_exposure_for_analysis %>%
+      filter(Phase == "test") %>%
+      prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
+    cores = 4,
+    chains = chains,
+    init = 0,
+    iter = 4000,
+    warmup = 2000,
+    family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
+    sample_prior = "yes",
+    control = list(adapt_delta = .995),
+    file ="../models/Exp-AE-DLVOT-nested-condition-sample-prior.rds")
 
 # get tidy df of nested test simple effects within block --no divergence in model found
-simple_effects_condition <- 
+simple_effects_condition <-
   tidy(fit_mix_test_nested_block, effects = "fixed") %>%
   filter(term != "theta1_(Intercept)")
-
-simple_effects_block <- 
+# 
+simple_effects_block <-
   tidy(fit_mix_test_nested_condition, effects = "fixed") %>%
   filter(term != "theta1_(Intercept)")
 ```
@@ -640,9 +649,9 @@ simple_effects_block <-
 # hypotheses to answer questions "when did change first emerge?" 
 hyp_contrasts_nested_block <-
   c(
-    "mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 0",
-    "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 < 0",
-    "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 0",
+    "mu2_Block1:Condition.Exposure_Shift10vs.Shift0 = 0",
+    "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 = 0",
+    "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 = mu2_Block1:Condition.Exposure_Shift10vs.Shift0",
     "mu2_Block3:Condition.Exposure_Shift10vs.Shift0 < 0",
     "mu2_Block3:Condition.Exposure_Shift40vs.Shift10 < 0",
     "mu2_Block3:Condition.Exposure_Shift40vs.Shift10 + mu2_Block3:Condition.Exposure_Shift10vs.Shift0 < 0",
