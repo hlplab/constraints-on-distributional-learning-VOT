@@ -50,7 +50,7 @@ fit_mix_test <-
     family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
     prior = my_priors,
     control = list(adapt_delta = .99),
-    file = "../models/Exp-AE-DLVOT-labelled-lapsing-GLMM.rds")
+    file = "../models/Exp-AE-DLVOT-labelled-lapsing-GLMM-difference-no-RTexcl.rds")
 
 # fit difference coded model on exposure block
 fit_mix_exposure <-
@@ -571,10 +571,6 @@ DDDDDDDDD
 ",
 heights = c(1, 1, 2)) +
    plot_annotation(tag_levels = 'A', tag_suffix = ")") & theme(plot.tag = element_text(face = "bold")) 
-
-p.row1 <- p.fit_1to7
-p.row2 <- p.fit_7to9 
-p.row3 <- p.params_1to7
 ```
 
 \end{landscape}
