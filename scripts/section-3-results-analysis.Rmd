@@ -649,9 +649,9 @@ simple_effects_block <-
 # hypotheses to answer questions "when did change first emerge?" 
 hyp_contrasts_nested_block <-
   c(
-    "mu2_Block1:Condition.Exposure_Shift10vs.Shift0 = 0",
-    "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 = 0",
-    "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 = mu2_Block1:Condition.Exposure_Shift10vs.Shift0",
+    "mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 0",
+    "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 < 0",
+    "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 0",
     "mu2_Block3:Condition.Exposure_Shift10vs.Shift0 < 0",
     "mu2_Block3:Condition.Exposure_Shift40vs.Shift10 < 0",
     "mu2_Block3:Condition.Exposure_Shift40vs.Shift10 + mu2_Block3:Condition.Exposure_Shift10vs.Shift0 < 0",
