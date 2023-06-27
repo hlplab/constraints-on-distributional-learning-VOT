@@ -335,7 +335,9 @@ p.PSE_1to7 <-
     aes(yintercept = PSE, color = Condition.Exposure),
     linetype = 2, linewidth = .8, alpha = 0.5) +
   geom_text(
-   data = d.true_shift %>% group_by(Condition.Exposure, true_shift) %>% summarise(),
+   data = d.true_shift %>% 
+     group_by(Condition.Exposure, true_shift) %>% 
+     summarise(),
    mapping = aes(
     x = 10.25,
     y = c(24, 35, 65),
@@ -349,7 +351,7 @@ p.PSE_1to7 <-
   annotate(
     geom = "text",
     x = 10.05,
-    y = 33.5,
+    y = 33.3,
     label = round(d.io.categorisation$PSE[1], 2),
     size = 3,
     colour = "grey",
@@ -472,7 +474,7 @@ p.fit_1to7 <- cond_fit_test_exposure %>%
     alpha = 0.7,
     position = position_dodge2(width = 2),
     inherit.aes = F) +
-  scale_x_continuous("VOT (msec)") +
+  scale_x_continuous("VOT (ms)") +
   scale_y_continuous("Proportion \"t\"-responses") +
   scale_color_manual(
     "Condition",
@@ -539,7 +541,7 @@ p.fit_7to9 <-
     alpha = 0.7,
     position = position_dodge2(width = 2),
     inherit.aes = F) +
-  scale_x_continuous("VOT (msec)") +
+  scale_x_continuous("VOT (ms)") +
   scale_y_continuous("Proportion \"t\"-responses") +
   scale_color_manual(
     "Condition",
