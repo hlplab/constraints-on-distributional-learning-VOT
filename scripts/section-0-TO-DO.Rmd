@@ -14,7 +14,6 @@
 ## Medium priority
 
  * MARYANN
-  * KJ16 plot: include point ranges in PSE comparison plot
   * Fix a lot of the outstanding XXXes. Fill in the references -- in library.bib
   * Heterogenous normal distribution
   * fix appearance of annotations in histogram plot

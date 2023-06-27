@@ -259,7 +259,7 @@ p.KJ16.histogram <-
   theme(legend.justification = "left") +
   remove_x_guides
   
-p.KJ16.result <- 
+p.KJ16.fit <- 
   cond_fit_KJ16 %>% 
   rename(Condition = Condition.Exposure) %>% 
   ggplot() +
@@ -277,6 +277,19 @@ p.KJ16.result <-
     color = Condition),
     linewidth = .7,
     alpha = 0.6,
+    show.legend = F) +
+  stat_summary(
+    data = d.KJ16_unlabeled %>% 
+      rename(Condition = Condition.Exposure) %>% 
+      group_by(Condition),
+    fun.data = mean_cl_boot,
+    mapping = aes(
+      x = Item.VOT,
+      y = Response.Voiceless,
+      group = Condition,
+      colour = Condition),
+    geom = "pointrange",
+    size = 0.5,
     show.legend = F) +
   geom_line(
     data = io.d.KJ16.lapse_rate %>% 
@@ -315,7 +328,7 @@ layout <- "
 AAAA#
 BBBBC"
 
-p.KJ16.histogram + p.KJ16.result + p.KJ16.PSE +
+p.KJ16.histogram + p.KJ16.fit + p.KJ16.PSE +
   plot_layout(design = layout,
               guides = "collect") +
   plot_annotation(tag_levels = 'A', tag_suffix = ")") &
