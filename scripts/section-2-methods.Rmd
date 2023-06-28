@@ -129,7 +129,9 @@ p.histogram_conditions <-
     mutate(block = case_when(
     block == 2 ~ "Block A",
     block == 4 ~ "Block B",
-    block == 6 ~ "Block C")) %>% 
+    block == 6 ~ "Block C")) %>% bind_rows(
+      d.exposure_trials %>% na.omit() %>% filter(image_selection == "forward" & list_LSQ_variant == "A") %>% mutate(block = "Block D")) %>%
+  mutate(block = fct_relevel(block, c("Block A", "Block B", "Block C", "Block D"))) %>% 
   ggplot() +
   geom_histogram(
     aes(x = VOT, 
@@ -170,7 +172,10 @@ p.histogram_conditions <-
     parse = T,
     size = 2, hjust = 0, position = position_dodge2v(height = -8),
     inherit.aes = F) +
-  facet_grid(condition ~ block, scales = "free_y", margins = "block") +
+  facet_grid(
+    condition ~ block, 
+    labeller = labeller(block = c("Block A" = "Block A", "Block B" = "Block B", "Block C" = "Block C", "Block D" = "all")), # facet not respecting factor order
+    scales = "free_y") +
   guides(linetype = "none") +
   theme(legend.position = "top",
         legend.title.align = 0,
