@@ -27,7 +27,6 @@
 ### Lower Priority
 
  * MARYANN
-  * standardize "ms" vs. "msec"
   * Decide on PSE vs. category boundary 
   * standardize BE vs. AE spelling (categoriz/sation, label(l)ed, synthesiz/sed etc.)
    * Figure 2: A small figure to anticipate the type of format in the main figure. Exposure is x-axis (less to more exposure). Under one prediciton you keep growing 00 prediction o BBU model. The other one is plataeuing and converging against something. 

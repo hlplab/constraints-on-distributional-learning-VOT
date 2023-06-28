@@ -414,7 +414,7 @@ d %>%
   ggplot(aes(x = mean, y = sd, label = ParticipantID)) +
   geom_text(aes(colour = Condition.Exposure), alpha = .5) +
   geom_rug(aes(colour = Condition.Exposure), alpha = .5) +
-  scale_x_continuous("mean log-RT (log10 of msec)") +
+  scale_x_continuous("mean log-RT (log10 of ms)") +
   scale_y_continuous("SD of log-RT") +
   scale_color_manual("Exposure condition", 
                       aesthetics = c("colour", "fill"), 
@@ -444,7 +444,7 @@ d %>%
   ggplot(aes(x = Trial, y = Response.log_RT, colour = ParticipantID, group = Condition.Exposure)) +
   geom_path(aes(group = ParticipantID), alpha = .3) +
   scale_x_continuous("Trial", breaks = c(12, 24, 36, 48)) +
-  scale_y_continuous("mean log-RT (log10 of msec)") +
+  scale_y_continuous("mean log-RT (log10 of ms)") +
   facet_grid(Condition.Exposure ~ Block, scales = "free_x", space = "free_x") +
   theme(legend.position = "none")
 ```
@@ -458,7 +458,7 @@ d %>%
   geom_ribbon(aes(ymin = mean - 2*sd, ymax = mean + 2*sd), colour = "lightgrey", alpha = .1) +
   geom_line(aes(group = Condition.Exposure, color = Condition.Exposure), size = 1) +
   scale_x_continuous("Trial", breaks = c(12, 24, 36, 48)) +
-  scale_y_continuous("mean log-RT (log10 of msec)") +
+  scale_y_continuous("mean log-RT (log10 of ms)") +
   coord_trans(y = "log10") +
       scale_color_manual("Exposure condition", 
                       aesthetics = c("colour", "fill"), 

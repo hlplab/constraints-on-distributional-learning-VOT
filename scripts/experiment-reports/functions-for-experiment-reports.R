@@ -205,7 +205,7 @@ addExclusionSummary <- function(
     ggplot(aes(x = mean, y = sd)) +
     geom_point(aes(color = Exclude_Participant.Reason, shape = Exclude_Participant.Reason, alpha = Assignment.Submit.DuringDayTime)) +
     geom_rug() +
-    scale_x_continuous("mean log-RT (in msec)") +
+    scale_x_continuous("mean log-RT (in ms)") +
     scale_y_continuous("SD of log-RT") +
     scale_color_manual(
       "Reason for exclusion",

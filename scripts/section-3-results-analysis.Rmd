@@ -572,7 +572,8 @@ BBB######
 DDDDDDDDD
 ",
 heights = c(1, 1, 2)) +
-   plot_annotation(tag_levels = 'A', tag_suffix = ")") & theme(plot.tag = element_text(face = "bold")) 
+   plot_annotation(tag_levels = 'A', tag_suffix = ")") & 
+  theme(plot.tag = element_text(face = "bold")) 
 ```
 
 \end{landscape}
