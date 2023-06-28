@@ -90,7 +90,7 @@ fit_nested_KJ16 <-
     family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
     priors = my_priors,
     control = list(adapt_delta = .995),
-    file = "../models/KJ16-nested-GLMM.rds")
+    file = "../models/KJ16-semisupervised-nested-GLMM.rds")
 
 cond_fit_KJ16 <- fit_KJ16 %>% 
   conditional_effects(
