@@ -595,7 +595,7 @@ fit_mix_test_nested_block <-
         (0 + Block / VOT_gs | ParticipantID) +
         (0 + Block / (Condition.Exposure * VOT_gs) | Item.MinimalPair),
       theta1 ~ 1),
-    data = d.test_exposure_for_analysis %>%
+    data = d_for_analysis %>%
       filter(Phase == "test") %>%
       prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
     cores = 4,
@@ -617,7 +617,7 @@ fit_mix_test_nested_condition <-
         (0 + Block * VOT_gs | ParticipantID) +
         (0 + Condition.Exposure / (Block * VOT_gs) | Item.MinimalPair),
       theta1 ~ 1),
-    data = d.test_exposure_for_analysis %>%
+    data = d_for_analysis %>%
       filter(Phase == "test") %>%
       prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
     cores = 4,
@@ -664,7 +664,7 @@ hyp_contrasts_nested_block <-
     "mu2_Block9:Condition.Exposure_Shift40vs.Shift10 + mu2_Block7:Condition.Exposure_Shift10vs.Shift0 < 0")
 
 hyp_contrasts_nested_block <- hypothesis(fit_mix_test_nested_block, hyp_contrasts_nested_block, robust = T)
-hyp_contrasts_nested_block <- hyp_contrasts_nested_block$hypothesis %>% select(-Star)
+hyp_contrasts_nested_block <- hyp_contrasts_nested_block$hypothesis %>% dplyr::select(-Star)
 
 # translate hypotheses into intelligible statements
 hyp_contrasts_nested_block_readable <- tibble(Hypothesis = rep(c("+10 vs. baseline", "+40 vs. +10", "+40 vs. baseline"), 6))
@@ -714,7 +714,7 @@ hyp_interactions <- c(
    mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0")
 
 hyp_interactions <- hypothesis(fit_mix_test, hyp_interactions, robust = T)
-hyp_interactions <- hyp_interactions$hypothesis %>% select(-Star)
+hyp_interactions <- hyp_interactions$hypothesis %>% dplyr::select(-Star)
 
 # translate the hypotheses above into intelligible statements
 hyp_interactions_readable <- 
@@ -771,7 +771,7 @@ cond_means <- left_join(cond_means_all, cond_means_exposure)
 
 ```{r centering}
 # center exposure cues to speech corpus means
-d_for_analysis %<>%
+d_for_analysis %>%
   ungroup() %>% 
   mutate(VOT.CCuRE = get_CCuRE_VOT(data = d.chodroff_wilson, 
                                    newdata = d_for_analysis %>% ungroup() %>% mutate(VOT = Item.VOT, Talker = "new"))) 

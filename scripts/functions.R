@@ -684,11 +684,11 @@ align_tab <- function(hyp) {
 
 make_hyp_table <- function(hyp_readable, hyp, caption, col1_width = "15em") {
   cbind(hyp_readable, hyp) %>%
-    select(-2) %>%
+    dplyr::select(-2) %>%
     mutate(
       across(where(is.numeric), ~ round(., digits = 3)),
       CI = paste0("[", CI.Lower, ", ", CI.Upper, "]")) %>%
-    select(-c(CI.Upper, CI.Lower)) %>%
+    dplyr::select(-c(CI.Upper, CI.Lower)) %>%
     relocate(CI, .before = "Evid.Ratio") %>%
     kbl(caption = caption, align = align_tab(hyp),
         format = "latex",
@@ -702,7 +702,7 @@ make_hyp_table <- function(hyp_readable, hyp, caption, col1_width = "15em") {
 prep_for_CCuRE <- function(data){
   data %>%
     ungroup() %>% 
-    mutate(across(c(VOT, vowel_duration), ~ (.x - mean(.x) / sd(.x))))
+    mutate(across(c(VOT, vowel_duration), ~ (.x - mean(.x)) / sd(.x)))
 }
 
 
@@ -718,7 +718,9 @@ get_CCuRE_VOT <- function(data, newdata = NULL){
   if (!is.null(newdata))  data <- newdata
 
   mean.VOT <- mean(data$VOT)
+  message("the mean VOT is ", mean.VOT)
   sd.VOT <- sd(data$VOT)
+  message("the sd of VOT is ", sd.VOT)
   
   data %>% 
     prep_for_CCuRE() %>% 
