@@ -152,13 +152,9 @@ d.chodroff_wilson <-
   group_by(Talker, category) %>%
   sample_n(size = first(n_min)) %>%
   ungroup() %>% 
-  nest(data = everything()) %>% 
-  mutate(speech_corrected = map(data, ~ get_speech.corrected.VOT(.x))) %>% 
-  select(-data) %>% 
-  unnest(speech_corrected) %>% 
-  mutate_at(
-    c("VOT", "f0", "f0_Mel", "f0_semitones", "VOT.speech_corrected"),
-    list("centered" = function(x) apply_ccure(x, data = .))) %>%
+  mutate(across(
+    c("VOT", "f0", "f0_Mel", "f0_semitones"),
+    list("centered" = function(x) apply_ccure(x, data = .)))) %>%
   mutate(category = factor(category))
 
 # Make ideal observer based on exposure conditions
@@ -308,7 +304,7 @@ d.true_shift <-
   # join the ideal PSEs from io predictions
   left_join(d.io.categorisation %>% 
   filter(Condition.Exposure != "prior") %>% 
-  select(PSE) %>% 
+  dplyr::select(PSE) %>% 
     rename(PSE.io_predicted = PSE)) %>%
   mutate(
     PSE_block1 = case_when(
@@ -763,28 +759,23 @@ cond_means_exposure <- d_for_analysis %>%
 cond_means <- left_join(cond_means_all, cond_means_exposure)
 
 # corpus mean and sd values for VOT and speech
-chodroff.mean_VOT <- mean(d.chodroff_wilson$VOT)
-chodroff.sd_VOT <- sd(d.chodroff_wilson$VOT)
-chodroff.mean_vowel_duration <- mean(d.chodroff_wilson$vowel_duration)
-chodroff.sd_vowel_duration <- sd(d.chodroff_wilson$vowel_duration)
+# chodroff.mean_VOT <- mean(d.chodroff_wilson$VOT)
+# chodroff.sd_VOT <- sd(d.chodroff_wilson$VOT)
+# chodroff.mean_vowel_duration <- mean(d.chodroff_wilson$vowel_duration)
+# chodroff.sd_vowel_duration <- sd(d.chodroff_wilson$vowel_duration)
+# 
+# # get estimates from speech rate model to predict VOT
+# m.CCuRE <- get_CCuRE_model(d.chodroff_wilson)
 
-# get estimates from speech rate model to predict VOT
-intercept.speech_rate <-
-  get_speech_rate_model(d.chodroff_wilson)$estimate[1]
-slope.speech_rate <-
-  get_speech_rate_model(d.chodroff_wilson)$estimate[2]
 ```
 
 ```{r centering}
 # center exposure cues to speech corpus means
 d_for_analysis %<>%
-  mutate(
-    VOT.scaled = (Item.VOT - chodroff.mean_VOT) / chodroff.sd_VOT,
-    vowel_duration.scaled = (vowel_duration - chodroff.mean_vowel_duration) / chodroff.sd_vowel_duration,
-    VOT.scaled_predicted = intercept.speech_rate + (slope.speech_rate * vowel_duration.scaled),
-    VOT.scaled_corrected = (VOT.scaled - VOT.scaled_predicted) + intercept.speech_rate,
-    VOT.speech_corrected = VOT.scaled_corrected * chodroff.sd_vowel_duration + chodroff.mean_vowel_duration) %>%
-  group_by(Condition.Exposure) 
+  ungroup() %>% 
+  mutate(VOT.CCuRE = get_CCuRE_VOT(data = d.chodroff_wilson, 
+                                   newdata = d_for_analysis %>% ungroup() %>% mutate(VOT = Item.VOT, Talker = "new"))) 
+
 
 d_for_analysis %<>%
   mutate(

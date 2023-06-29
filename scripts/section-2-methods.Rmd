@@ -29,7 +29,7 @@ d <-
   # load f0 measurements of stimuli
   left_join(
     read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv", show_col_types = F) %>% 
-      select(filename, VOT, f0_5ms_into_vowel, vowel_duration) %>% 
+      dplyr::select(filename, VOT, f0_5ms_into_vowel, vowel_duration) %>% 
       rename(
         Item.VOT = VOT,
         # This is the F0 measured in the same way as Chodroff & Wilson (2018)
@@ -81,7 +81,7 @@ Each trial started with a dark-shaded green fixation dot being displayed. At 500
 
 *Exposure blocks. * Each exposure block consisted of 24 /d/ and 24 /t/ trials, as well as 6 catch trials that served as a check on participant attention throughout the experiment (2 instances for each of three combinations of the three catch recordings). With a total of 144 trials, exposure was substantially shorter than in similar previous experiments [cf. 228 trials in @clayards2008; 222 trials in @kleinschmidt2020; 2 x 236 trials, @theodore-monto2019; 456 trials, @nixon2016]. 
 
-The distribution of VOTs across the 48 /d/-/t/ trials depended on the exposure condition. Specifically, we first created a *baseline* condition. Although not critical to the purpose of the experiment, we aimed for the VOT distribution in this condition to closely resemble participants' prior expectations for a 'typical' female talker of L1-US English (for details, see SI, \@ref(XXX)). The mean and standard deviations for /d/ along VOT were set at 5 ms and `r (80)^.5` ms, respectively. The mean and standard deviations for /t/ were set at 50 ms and `r(270)^.5` ms, respectively. To create more realistic VOT distributions, we *sampled* from the intended VOT distribution (top row of Figure \@ref(fig:exp2-design-distribution)). This creates distributions that more closely resemble the type of distributional input listeners experience in everyday speech perception, deviating from previous work, which exposed listeners to highly unnatural fully symmetric samples [@clayards2008; @kleinschmidt-jaeger2016; @kleinschmidt2020]. 
+The distribution of VOTs across the 48 /d/-/t/ trials depended on the exposure condition. Specifically, we first created a *baseline* condition. Although not critical to the purpose of the experiment, we aimed for the VOT distribution in this condition to closely resemble participants' prior expectations for a 'typical' female talker of L1-US English (for details, see SI, \@ref(XXX)). The mean and standard deviations for /d/ along VOT were set at 5 ms and `r (80)^.5` ms, respectively. The mean and standard deviations for /t/ were set at 50 ms and `r (270)^.5` ms, respectively. To create more realistic VOT distributions, we *sampled* from the intended VOT distribution (top row of Figure \@ref(fig:exp2-design-distribution)). This creates distributions that more closely resemble the type of distributional input listeners experience in everyday speech perception, deviating from previous work, which exposed listeners to highly unnatural fully symmetric samples [@clayards2008; @kleinschmidt-jaeger2016; @kleinschmidt2020]. 
 
 Half of the /d/ and half of the /t/ trials were labeled, the other half was unlabeled [paralleling one of the conditions in @kleinschmidt2015]. Unlabeled trials were identical to test trials except that the distribution of VOTs across those trials was bimodal (rather than uniform), and determined by the exposure condition.^[Previous studies have estimated changes in participants' categorisation responses by analyzing responses on unlabeled exposure trials [e.g., @clayards2008; @kleinschmidt-jaeger2016; @theodore-monto2019]. This approach compares responses across different values of acoustic-phonetic cues (since the exposure inputs differed by exposure condition), so that assumptions baked into the analysis approach (e.g., linearity along the acoustic-phonetic continuum) can potentially bias the results. Here we avoid this issue by holding test stimuli constant [see also @kleinschmidt2020, Experiment 4].] Labeled trials instead presented two response options with identical stop onsets (e.g., *din* and *dill*). This effectively labeled the input as belonging to the intended category (e.g., /d/). 
 
@@ -174,7 +174,7 @@ p.histogram_conditions <-
     inherit.aes = F) +
   facet_grid(
     condition ~ block, 
-    labeller = labeller(block = c("Block A" = "Block A", "Block B" = "Block B", "Block C" = "Block C", "Block D" = "all")), # facet not respecting factor order
+    labeller = labeller(block = c("Block A" = "Block A", "Block B" = "Block B", "Block C" = "Block C", "Block D" = "all")), # facet_grid not respecting factor order when block values include "all" 
     scales = "free_y") +
   guides(linetype = "none") +
   theme(legend.position = "top",
@@ -224,7 +224,7 @@ d.VOT_exclusion <-
   filter(Block == 1 | (Block == 2 & Trial %in% c(13:36))) %>% 
   drop_na(c(ParticipantID, Response.Voicing, Item.VOT)) %>% 
   mutate(Response.ProportionVoiceless = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
-  select(c(Experiment, ParticipantID, Condition.Exposure, Response.Voicing, Response.ProportionVoiceless, Item.VOT)) %>%
+  dplyr::select(c(Experiment, ParticipantID, Condition.Exposure, Response.Voicing, Response.ProportionVoiceless, Item.VOT)) %>%
   # Fit logistic regression by participant to get model predictions 
   group_by(ParticipantID, Experiment, Condition.Exposure) %>%
   nest() %>%
@@ -247,7 +247,7 @@ d.VOT_exclusion <-
            map(Model.predicted.Reponse, ~ ifelse(.x[1] > required_proportion_t[1] || .x[2] < required_proportion_t[2], TRUE, FALSE)),
          Exclude_participant.due_to_lower_VOT = map(Model.predicted.Reponse, ~ ifelse(.x[1] > required_proportion_t[1], TRUE, FALSE)),
          Exclude_participant.due_to_higher_VOT = map(Model.predicted.Reponse, ~ ifelse(.x[2] < required_proportion_t[2], TRUE, FALSE))) %>% 
-  select(ParticipantID, Experiment, Condition.Exposure, Exclude_participant.due_to_VOT_slope, Exclude_participant.due_to_lower_VOT, Exclude_participant.due_to_higher_VOT) %>% 
+  dplyr::select(ParticipantID, Experiment, Condition.Exposure, Exclude_participant.due_to_VOT_slope, Exclude_participant.due_to_lower_VOT, Exclude_participant.due_to_higher_VOT) %>% 
   mutate(
     across(c(Exclude_participant.due_to_VOT_slope, Exclude_participant.due_to_lower_VOT, Exclude_participant.due_to_higher_VOT), 
            unlist)) %>% 

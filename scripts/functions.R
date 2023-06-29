@@ -106,8 +106,6 @@ descale <- function(x, mean, sd) {
   return(x_0)
 }
 
-
-
 get_ChodroffWilson_data <- function(
     database_filename,
     min.n_per_talker_and_stop = 0,
@@ -144,7 +142,7 @@ get_ChodroffWilson_data <- function(
         ifelse(category %in% c("/b/", "/d/", "/g/"), "yes", "no"),
         levels = c("yes", "no"))) %>%
     mutate(across(c(Talker, Word, gender, category), factor)) %>%
-    select(Talker, Word, Trial, Vowel, gender, category, poa, voicing, VOT, f0, vowel_duration)
+    dplyr::select(Talker, Word, Trial, Vowel, gender, category, poa, voicing, VOT, f0, vowel_duration)
 
   # Filter VOT and f0 for absolute values to deal with outliers
   d.chodroff_wilson %<>%
@@ -701,43 +699,33 @@ make_hyp_table <- function(hyp_readable, hyp, caption, col1_width = "15em") {
     column_spec(1, width = col1_width)
 }
 
-get_speech_rate_model <- function(data) {
-  mean.vowel_duration <- mean(data$vowel_duration)
-  sd.vowel_duration <- sd(data$vowel_duration)
-  mean.VOT <- mean(data$VOT)
-  sd.VOT <- sd(data$VOT)
-  # scale variables
+prep_for_CCuRE <- function(data){
   data %>%
-    mutate(
-      VOT.scaled = (VOT - mean.VOT)/sd.VOT,
-      vowel_duration.scaled = (vowel_duration - mean.vowel_duration)/sd.vowel_duration
-    )
+    ungroup() %>% 
+    mutate(across(c(VOT, vowel_duration), ~ (.x - mean(.x) / sd(.x))))
+}
 
-  m <- lmer(VOT.scaled ~ 1 + vowel_duration.scaled + (1 + vowel_duration.scaled | Talker), data = data)
-  tidy(m, effects = "fixed")
+
+get_CCuRE_model <- function(data, tidy_result = TRUE) {
+  m <- lmer(VOT ~ 1 + vowel_duration + (1 | Talker), data = prep_for_CCuRE(data))
+  return(if (tidy_result) tidy(m, effects = "fixed") else m)
 }
 
 # speech rate correction
-get_speech.corrected.VOT <- function(data){
-  mean.vowel_duration <- mean(data$vowel_duration)
-  sd.vowel_duration <- sd(data$vowel_duration)
+get_CCuRE_VOT <- function(data, newdata = NULL){
+ 
+  m <- get_CCuRE_model(data, tidy_result = F)
+  if (!is.null(newdata))  data <- newdata
+
   mean.VOT <- mean(data$VOT)
   sd.VOT <- sd(data$VOT)
-  # scale variables
-  data %<>%
+  
+  data %>% 
+    prep_for_CCuRE() %>% 
     mutate(
-      VOT.scaled = (VOT - mean.VOT)/sd.VOT,
-      vowel_duration.scaled = (vowel_duration - mean.vowel_duration)/sd.vowel_duration
-    )
-
-  m <- lmer(VOT.scaled ~ 1 + vowel_duration.scaled + (1 + vowel_duration.scaled | Talker), data = data)
-  intercept <- fixef(m)[[1]]
-  slope <- fixef(m)[[2]]
-
-  data %>% mutate(
-    VOT.predict_scaled = predict(m),
-    VOT.resid_scaled = VOT.scaled - VOT.predict_scaled,
-    VOT.speech_corrected.scaled = VOT.resid_scaled + intercept,
-    VOT.speech_corrected = (VOT.speech_corrected.scaled * sd.VOT) + mean.VOT
-  )
+      VOT.predict_scaled = predict(m, newdata = ., allow.new.levels = TRUE),
+      VOT.resid_scaled = VOT - VOT.predict_scaled,
+      VOT.speech_corrected.scaled = VOT.resid_scaled + fixef(m)[1],
+      VOT.CCuRE = (VOT.speech_corrected.scaled * sd.VOT) + mean.VOT) %>% 
+    pull(VOT.CCuRE)
 }
