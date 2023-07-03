@@ -190,10 +190,56 @@ get_ChodroffWilson_data <- function(
 
 # NORMALIZATION -----------------------------------------------------------
 apply_ccure <- function(x, data) {
-  require(lme4)
-  x - predict(lmer(x ~ 1 + (1 | Talker), data = data), random.only = T)
+  m <- get_CCuRE_model(data = data %>% mutate(current_outcome = .env$x), tidy_result = F, cue = "current_outcome")
+  x - predict(m) + fixef(m)[1]
   # deducts only talker specific intercepts (more precisely, the offset value of each talker's mean from the grand mean) from each cue value
 }
+
+# if there is newdata return the newdata scaled by the old data
+# if there is no newdata return data scaled by itself
+prep_for_CCuRE <- function(data, newdata = NULL){
+  if(!is.null(newdata)) {
+    mean.VOT = mean(data$VOT)
+    sd.VOT = sd(data$VOT)
+    mean.f0_Mel = mean(data$f0_Mel)
+    sd.f0_Mel = sd(data$f0_Mel)
+    mean.vowel_duration = mean(data$vowel_duration)
+    sd.vowel_duration = sd(data$vowel_duration)
+    
+    newdata %>% 
+      mutate(
+        VOT = (VOT - mean.VOT) / sd.VOT,
+        f0_Mel = (f0_Mel - mean.f0_Mel) / sd.f0_Mel,
+        vowel_duration = (vowel_duration - mean.vowel_duration) / sd.vowel_duration)
+  } else { 
+    data %>%
+      ungroup() %>% 
+      mutate(across(c(VOT, f0_Mel, vowel_duration), ~ (.x - mean(.x)) / sd(.x)))
+  }
+}
+
+get_CCuRE_model <- function(data, tidy_result = TRUE, cue = "VOT") {
+  f <- formula(paste(cue, "~ 1 + vowel_duration + (1 | Talker)"))
+  m <- lmer(f, data = prep_for_CCuRE(data))
+  return(if (tidy_result) tidy(m, effects = "fixed") else m)
+}
+
+# if there is newdata CCuRE the newdata by the old data and return newdata
+# if there is no newdata CCuRE data based on its own statistics and return data
+get_CCuRE_VOT <- function(data, newdata){
+  m <- get_CCuRE_model(data, tidy_result = F)
+  mean.VOT = mean(data$VOT)
+  sd.VOT = sd(data$VOT)
+  
+  prep_for_CCuRE(data = data, newdata = newdata) %>% 
+    mutate(
+      VOT.predict_scaled = predict(m, newdata = ., allow.new.levels = TRUE),
+      VOT.resid_scaled = VOT - VOT.predict_scaled,
+      VOT.CCuRE.scaled = VOT.resid_scaled + fixef(m)[1],
+      VOT.CCuRE = (VOT.CCuRE.scaled * sd.VOT) + mean.VOT) %>% 
+    pull(VOT.CCuRE)
+}
+
 
 # MAKE IDEAL OBSERVERS ----------------------------------------------------
 
@@ -699,43 +745,6 @@ make_hyp_table <- function(hyp_readable, hyp, caption, col1_width = "15em") {
     column_spec(1, width = col1_width)
 }
 
-prep_for_CCuRE <- function(data, newdata = NULL){
-  
-  if(!is.null(newdata)) {
-    mean.VOT = mean(data$VOT)
-    sd.VOT = sd(data$VOT)
-    mean.vowel_duration = mean(data$vowel_duration)
-    sd.vowel_duration = sd(data$vowel_duration)
-    
-    newdata %>% 
-      mutate(VOT = (VOT - mean.VOT) / sd.VOT,
-             vowel_duration = (vowel_duration - mean.vowel_duration) / sd.vowel_duration)
-  } else { 
-    data %>%
-      ungroup() %>% 
-      mutate(across(c(VOT, vowel_duration), ~ (.x - mean(.x)) / sd(.x)))
-  }
-}
-
-get_CCuRE_model <- function(data, tidy_result = TRUE) {
-  m <- lmer(VOT ~ 1 + vowel_duration + (1 | Talker), data = prep_for_CCuRE(data))
-  return(if (tidy_result) tidy(m, effects = "fixed") else m)
-}
-
-# speech rate correction
-get_CCuRE_VOT <- function(data, newdata){
-  m <- get_CCuRE_model(data, tidy_result = F)
-  mean.VOT = mean(data$VOT)
-  sd.VOT = sd(data$VOT)
-  
-  prep_for_CCuRE(data = data, newdata = newdata) %>% 
-    mutate(
-      VOT.predict_scaled = predict(m, newdata = ., allow.new.levels = TRUE),
-      VOT.resid_scaled = VOT - VOT.predict_scaled,
-      VOT.speech_corrected.scaled = VOT.resid_scaled + fixef(m)[1],
-      VOT.CCuRE = (VOT.speech_corrected.scaled * sd.VOT) + mean.VOT) %>% 
-    pull(VOT.CCuRE)
-}
 
 
 

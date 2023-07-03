@@ -766,7 +766,8 @@ d_for_analysis %<>%
     data = d.chodroff_wilson, 
     newdata = d_for_analysis %>% 
       ungroup() %>% 
-      mutate(VOT = Item.VOT, Talker = "new"))) 
+      mutate(VOT = Item.VOT, Talker = "new"))) %>% 
+  dplyr::select(-Talker)
 
 d_for_analysis %<>%
   mutate(
