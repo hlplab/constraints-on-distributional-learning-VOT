@@ -520,7 +520,7 @@ d.test <- read_csv("../data/d.test.Exp1.csv", show_col_types = F)
 # load f0-5ms-into-vowel measurements of stimuli
 d.f0.5ms <- 
   read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv", show_col_types = F) %>% 
-  select(filename, VOT, f0_5ms_into_vowel) %>% 
+  dplyr::select(filename, VOT, f0_5ms_into_vowel) %>% 
   rename(Item.VOT = VOT,
          Item.F0 = f0_5ms_into_vowel,
          Item.Filename = filename) %>% 
@@ -623,6 +623,7 @@ fit_mix <- brm(
     mu2 ~ 1 + sVOT * sTrial + (1 + sVOT | g | ParticipantID) + (1 + sVOT | h | Item.MinimalPair),
     theta1 ~ 1 + (1 | g | ParticipantID)),
   data = d.test.excluded,
+  prior = my_priors,
   cores = 4,
   iter = 4000,
   warmup = 2000,

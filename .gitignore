@@ -15,3 +15,4 @@ scripts/*_files/
 *.rds
 r-references.bib
 scripts/debugging-validation.R
+scripts/debugging-validation.Rmd

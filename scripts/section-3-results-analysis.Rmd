@@ -626,11 +626,10 @@ fit_mix_test_nested_condition <-
     iter = 4000,
     warmup = 2000,
     family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
-    sample_prior = "yes",
     control = list(adapt_delta = .995),
     file ="../models/Exp-AE-DLVOT-nested-condition-sample-prior.rds")
 
-# get tidy df of nested test simple effects within block --no divergence in model found
+# get tidy df of nested test simple effects within block 
 simple_effects_condition <-
   tidy(fit_mix_test_nested_block, effects = "fixed") %>%
   filter(term != "theta1_(Intercept)")
@@ -757,25 +756,17 @@ cond_means_exposure <- d_for_analysis %>%
   summarise(across(c(Item.VOT, Item.F0_Mel), mean, .names = "{.col}_mean_exposure"))
 
 cond_means <- left_join(cond_means_all, cond_means_exposure)
-
-# corpus mean and sd values for VOT and speech
-# chodroff.mean_VOT <- mean(d.chodroff_wilson$VOT)
-# chodroff.sd_VOT <- sd(d.chodroff_wilson$VOT)
-# chodroff.mean_vowel_duration <- mean(d.chodroff_wilson$vowel_duration)
-# chodroff.sd_vowel_duration <- sd(d.chodroff_wilson$vowel_duration)
-# 
-# # get estimates from speech rate model to predict VOT
-# m.CCuRE <- get_CCuRE_model(d.chodroff_wilson)
-
 ```
 
 ```{r centering}
 # center exposure cues to speech corpus means
-d_for_analysis %>%
+d_for_analysis %<>%
   ungroup() %>% 
-  mutate(VOT.CCuRE = get_CCuRE_VOT(data = d.chodroff_wilson, 
-                                   newdata = d_for_analysis %>% ungroup() %>% mutate(VOT = Item.VOT, Talker = "new"))) 
-
+  mutate(VOT.CCuRE = get_CCuRE_VOT(
+    data = d.chodroff_wilson, 
+    newdata = d_for_analysis %>% 
+      ungroup() %>% 
+      mutate(VOT = Item.VOT, Talker = "new"))) 
 
 d_for_analysis %<>%
   mutate(
@@ -789,6 +780,7 @@ d_for_analysis %<>%
       Condition.Exposure == "Shift10" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_mean_all[2]),
       Condition.Exposure == "Shift40" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_mean_all[3])))
 ```
+
 
 ```{r prepare-quantile-plot}
 # specify quantiles for density plots

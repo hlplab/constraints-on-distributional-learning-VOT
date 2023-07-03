@@ -699,12 +699,23 @@ make_hyp_table <- function(hyp_readable, hyp, caption, col1_width = "15em") {
     column_spec(1, width = col1_width)
 }
 
-prep_for_CCuRE <- function(data){
-  data %>%
-    ungroup() %>% 
-    mutate(across(c(VOT, vowel_duration), ~ (.x - mean(.x)) / sd(.x)))
+prep_for_CCuRE <- function(data, newdata = NULL){
+  
+  if(!is.null(newdata)) {
+    mean.VOT = mean(data$VOT)
+    sd.VOT = sd(data$VOT)
+    mean.vowel_duration = mean(data$vowel_duration)
+    sd.vowel_duration = sd(data$vowel_duration)
+    
+    newdata %>% 
+      mutate(VOT = (VOT - mean.VOT) / sd.VOT,
+             vowel_duration = (vowel_duration - mean.vowel_duration) / sd.vowel_duration)
+  } else { 
+    data %>%
+      ungroup() %>% 
+      mutate(across(c(VOT, vowel_duration), ~ (.x - mean(.x)) / sd(.x)))
+  }
 }
-
 
 get_CCuRE_model <- function(data, tidy_result = TRUE) {
   m <- lmer(VOT ~ 1 + vowel_duration + (1 | Talker), data = prep_for_CCuRE(data))
@@ -712,18 +723,12 @@ get_CCuRE_model <- function(data, tidy_result = TRUE) {
 }
 
 # speech rate correction
-get_CCuRE_VOT <- function(data, newdata = NULL){
- 
+get_CCuRE_VOT <- function(data, newdata){
   m <- get_CCuRE_model(data, tidy_result = F)
-  if (!is.null(newdata))  data <- newdata
-
-  mean.VOT <- mean(data$VOT)
-  message("the mean VOT is ", mean.VOT)
-  sd.VOT <- sd(data$VOT)
-  message("the sd of VOT is ", sd.VOT)
+  mean.VOT = mean(data$VOT)
+  sd.VOT = sd(data$VOT)
   
-  data %>% 
-    prep_for_CCuRE() %>% 
+  prep_for_CCuRE(data = data, newdata = newdata) %>% 
     mutate(
       VOT.predict_scaled = predict(m, newdata = ., allow.new.levels = TRUE),
       VOT.resid_scaled = VOT - VOT.predict_scaled,
@@ -731,3 +736,25 @@ get_CCuRE_VOT <- function(data, newdata = NULL){
       VOT.CCuRE = (VOT.speech_corrected.scaled * sd.VOT) + mean.VOT) %>% 
     pull(VOT.CCuRE)
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
