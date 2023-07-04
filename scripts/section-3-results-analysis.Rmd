@@ -616,6 +616,8 @@ simple_effects_condition <-
   filter(term != "theta1_(Intercept)")
 ```
 
+
+
 ```{r hypothesis-table-simple-effects, results='asis'}
 # hypotheses to answer questions "when did change first emerge?" 
 hyp_contrasts_nested_block <-
