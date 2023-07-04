@@ -84,6 +84,7 @@ fit_mix_test_nested <-
     data = d_for_analysis %>%
       filter(Phase == "test") %>%
       prepVars(levels.Condition = levels_Condition.Exposure, constrast_type = "difference"),
+    priors = my_priors,
     cores = chains,
     chains = chains,
     init = 0,
@@ -598,6 +599,7 @@ fit_mix_test_nested_block <-
     data = d_for_analysis %>%
       filter(Phase == "test") %>%
       prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
+    priors = my_priors,
     cores = 4,
     chains = chains,
     init = 0,
@@ -606,36 +608,11 @@ fit_mix_test_nested_block <-
     family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
     sample_prior = "yes",
     control = list(adapt_delta = .995),
-    file ="../models/Exp-AE-DLVOT-nested-block-condVOT.rds")
-
-fit_mix_test_nested_condition <- 
-  brm(
-    bf(
-      Response.Voiceless ~ 1,
-      mu1 ~ 0 + offset(0),
-      mu2 ~ 0 + Condition.Exposure / (Block * VOT_gs) +
-        (0 + Block * VOT_gs | ParticipantID) +
-        (0 + Condition.Exposure / (Block * VOT_gs) | Item.MinimalPair),
-      theta1 ~ 1),
-    data = d_for_analysis %>%
-      filter(Phase == "test") %>%
-      prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
-    cores = 4,
-    chains = chains,
-    init = 0,
-    iter = 4000,
-    warmup = 2000,
-    family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
-    control = list(adapt_delta = .995),
-    file ="../models/Exp-AE-DLVOT-nested-condition-sample-prior.rds")
+    file ="../models/Exp-AE-DLVOT-nested-block-sample-prior.rds")
 
 # get tidy df of nested test simple effects within block 
 simple_effects_condition <-
   tidy(fit_mix_test_nested_block, effects = "fixed") %>%
-  filter(term != "theta1_(Intercept)")
-# 
-simple_effects_block <-
-  tidy(fit_mix_test_nested_condition, effects = "fixed") %>%
   filter(term != "theta1_(Intercept)")
 ```
 
@@ -766,8 +743,7 @@ d_for_analysis %<>%
     data = d.chodroff_wilson, 
     newdata = d_for_analysis %>% 
       ungroup() %>% 
-      mutate(VOT = Item.VOT, Talker = "new"))) %>% 
-  dplyr::select(-Talker)
+      mutate(VOT = Item.VOT, f0_Mel = Item.F0_Mel, Talker = "new"))) 
 
 d_for_analysis %<>%
   mutate(
