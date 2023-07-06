@@ -47,25 +47,6 @@ get_PSE <- function(model, y) {
 }
 
 
-# function to get posterior probability
-get_posterior <- function(
-    x,
-    mu_1 = mu_d, sigma_1 = var_d^.5, prior_1 = .5,
-    mu_2 = mu_t, sigma_2 = var_t^.5, prior_2 = .5,
-    # perceptual noise
-    sigma_noise = sqrt(var_noise),
-    # lapse rate: proportion of trials on which participants do not respond based on stimulus. Take the lapse rate that was fitted in the data
-    lapse = plogis(as.numeric(summary(fit_mix)$fixed["theta1_Intercept", 1]))
-) {
-  density_1 <- dnorm(x, mu_1, sqrt(sigma_1^2 + sigma_noise^2))
-  density_2 <- dnorm(x, mu_2, sqrt(sigma_2^2 + sigma_noise^2))
-
-  p_2_based_on_stimulus <- (density_2  * prior_2) / (density_1 * prior_1 + density_2 * prior_2) # Bayes theorem
-  p_2_during_lapse <- prior_2 / (prior_1 + prior_2)
-  p_2 <- lapse * p_2_during_lapse + (1 - lapse) * p_2_based_on_stimulus
-
-  return(p_2)
-}
 
 # Function for calculating CI from logits of a model summary
 get_coefficient_fr_model <- function(model, term) {
@@ -226,7 +207,7 @@ get_CCuRE_model <- function(data, tidy_result = TRUE, cue = "VOT") {
 
 # if there is newdata CCuRE the newdata by the old data and return newdata
 # if there is no newdata CCuRE data based on its own statistics and return data
-get_CCuRE_VOT <- function(data, newdata){
+get_CCuRE_VOT<- function(data, newdata){
   m <- get_CCuRE_model(data, tidy_result = F)
   mean.VOT = mean(data$VOT)
   sd.VOT = sd(data$VOT)
@@ -238,6 +219,20 @@ get_CCuRE_VOT <- function(data, newdata){
       VOT.CCuRE.scaled = VOT.resid_scaled + fixef(m)[1],
       VOT.CCuRE = (VOT.CCuRE.scaled * sd.VOT) + mean.VOT) %>% 
     pull(VOT.CCuRE)
+}
+
+get_CCuRE_f0_Mel <- function(data, newdata){
+  m <- get_CCuRE_model(data, tidy_result = F, cue = "f0_Mel")
+  mean.f0_Mel = mean(data$f0_Mel)
+  sd.f0_Mel = sd(data$f0_Mel)
+  
+  prep_for_CCuRE(data = data, newdata = newdata) %>% 
+    mutate(
+      f0_Mel.predict_scaled = predict(m, newdata = ., allow.new.levels = TRUE),
+      f0_Mel.resid_scaled = f0_Mel - f0_Mel.predict_scaled,
+      f0_Mel.CCuRE.scaled = f0_Mel.resid_scaled + fixef(m)[1],
+      f0_Mel.CCuRE = (f0_Mel.CCuRE.scaled * sd.f0_Mel) + mean.f0_Mel) %>% 
+    pull(f0_Mel.CCuRE)
 }
 
 

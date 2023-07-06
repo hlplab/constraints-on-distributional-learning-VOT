@@ -155,7 +155,8 @@ d.chodroff_wilson <-
   ungroup() %>% 
   mutate(across(
     c("VOT", "f0", "f0_Mel", "f0_semitones"),
-    list("centered" = function(x) apply_ccure(x, data = .)))) %>%
+    list(CCuRE = function(x) apply_ccure(x, data = .)),
+    .names = "{.col}.CCuRE")) %>%
   mutate(category = factor(category))
 
 # Make ideal observer based on exposure conditions
@@ -343,7 +344,7 @@ p.PSE_1to7 <-
    colour = colours.condition,
    fontface = "bold",
    size = 3,
-   position = position_dodge2v(1), 
+   position = position_dodge2(1), 
    inherit.aes = F) +
   annotate(
     geom = "text",
@@ -721,7 +722,7 @@ table.interactions
 ### Comparing within exposure conditions: How quickly does exposure begin to affect participants' responses? 
 Next, we compared how exposure affects listeners' categorisation reponses within each condition relative to listeners' responses prior to any exposure. These changes are summarised for the slope and PSE in Figure \@ref(fig:plot-fit-slope-PSE)C & D, respectively. This visualization makes apparent two aspects of participants' behavior that were not readily apparent in the statistical comparisons we have summarized so far. First, while the PSEs for the +40 and +10 conditions were shifted rightwards compared to the baseline condition, both the +10 and the baseline condition actually shift leftwards relative to their pre-exposure starting point in Test 1. This is confirmed by Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-block-effects). 
 
-(ref:exposure-means-database-density) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for XXX word-initial /d/ and /t/ productions in L1-US English [based on 92 talkers in @chodroff-wilson2018]. The outermost contour of each category shows the 95% density quantile. Points show the category means of the exposure condition.
+(ref:exposure-means-database-density) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for 6914 word-initial /d/ and /t/ productions in L1-US English [based on 92 talkers in @chodroff-wilson2018]. The outermost contour of each category shows the 95% density quantile. Points show the category means of the exposure condition.
 
 ```{r getting-means-at-exposure-by-condition}
 # calculate the various mean VOTs exposed to for each condition, including the labelled trials, with and without accounting for the test trials
@@ -741,34 +742,40 @@ cond_means <- left_join(cond_means_all, cond_means_exposure)
 # center exposure cues to speech corpus means
 d_for_analysis %<>%
   ungroup() %>% 
-  mutate(VOT.CCuRE = get_CCuRE_VOT(
+  mutate(
+    VOT.CCuRE = get_CCuRE_VOT(
     data = d.chodroff_wilson, 
     newdata = d_for_analysis %>% 
       ungroup() %>% 
-      mutate(VOT = Item.VOT, f0_Mel = Item.F0_Mel, Talker = "new"))) 
+      mutate(VOT = Item.VOT, f0_Mel = Item.F0_Mel, Talker = "new")),
+    F0_Mel.CCuRE = get_CCuRE_f0_Mel(
+      data = d.chodroff_wilson, 
+    newdata = d_for_analysis %>% 
+      ungroup() %>% 
+      mutate(VOT = Item.VOT, f0_Mel = Item.F0_Mel, Talker = "new")),
+    category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))) 
 
-d_for_analysis %<>%
-  mutate(
-    category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")),
-    Item.VOT_centered = case_when(
-      Condition.Exposure == "Shift0" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_all[1]),
-      Condition.Exposure == "Shift10" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_all[2]),
-      Condition.Exposure == "Shift40" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_all[3])),
-    Item.F0_Mel_centered = case_when(
-      Condition.Exposure == "Shift0" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_mean_all[1]),
-      Condition.Exposure == "Shift10" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_mean_all[2]),
-      Condition.Exposure == "Shift40" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_mean_all[3])))
+# d_for_analysis %<>%
+#   mutate(
+#     Item.VOT_centered = case_when(
+#       Condition.Exposure == "Shift0" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_all[1]),
+#       Condition.Exposure == "Shift10" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_all[2]),
+#       Condition.Exposure == "Shift40" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_all[3])),
+#     Item.F0_Mel_centered = case_when(
+#       Condition.Exposure == "Shift0" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_mean_all[1]),
+#       Condition.Exposure == "Shift10" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_mean_all[2]),
+#       Condition.Exposure == "Shift40" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_mean_all[3])))
 ```
 
 
 ```{r prepare-quantile-plot}
 # specify quantiles for density plots
 quantile_levels <- c(.05, .25, .5, .75, .95)
-d_breaks <- density_quantiles(x = d.chodroff_wilson %>% filter(category == "/d/") %>% pull(VOT_centered),
-                               y = d.chodroff_wilson %>% filter(category == "/d/") %>% pull(f0_Mel_centered),
+d_breaks <- density_quantiles(x = d.chodroff_wilson %>% filter(category == "/d/") %>% pull(VOT.CCuRE),
+                               y = d.chodroff_wilson %>% filter(category == "/d/") %>% pull(f0_Mel.CCuRE),
                                quantiles = quantile_levels)
-t_breaks <- density_quantiles(x = d.chodroff_wilson %>% filter(category == "/t/") %>% pull(VOT_centered),
-                               y = d.chodroff_wilson %>% filter(category == "/t/") %>% pull(f0_Mel_centered),
+t_breaks <- density_quantiles(x = d.chodroff_wilson %>% filter(category == "/t/") %>% pull(VOT.CCuRE),
+                               y = d.chodroff_wilson %>% filter(category == "/t/") %>% pull(f0_Mel.CCuRE),
                                quantiles = quantile_levels)
 
 # matching breaks in each category to corresponding quantile
@@ -780,7 +787,7 @@ quantile_breaks <- tibble(quantile_levels, d_breaks, t_breaks)
 
 p.density <-
   d.chodroff_wilson %>%
-  ggplot(aes(x = VOT_centered, y = f0_Mel_centered, linetype = category, group = category)) +
+  ggplot(aes(x = VOT.CCuRE, y = f0_Mel.CCuRE, linetype = category, group = category)) +
   geom_density2d(
     data = . %>% filter(category == "/d/"),
     aes(colour = d_quantile[as.character(after_stat(level))]),
@@ -807,8 +814,8 @@ p.density <-
     data = d_for_analysis %>%
       filter(Phase == "exposure") %>%
       group_by(Condition.Exposure, category) %>%
-      summarise(across(c(Item.VOT_centered, Item.F0_Mel_centered), mean)),
-    mapping = aes(x = Item.VOT_centered, y = Item.F0_Mel_centered, colour = Condition.Exposure, shape = category),
+      summarise(across(c(VOT.CCuRE, F0_Mel.CCuRE), mean)),
+    mapping = aes(x = VOT.CCuRE, y = F0_Mel.CCuRE, colour = Condition.Exposure, shape = category),
     size = 2,
     alpha = 0.8,
   inherit.aes = F,
@@ -827,7 +834,7 @@ shift10_cov_d <-
   filter(Condition.Exposure == "Shift10") %>% 
   group_by(category) %>%
   nest(data = -c(category)) %>%
-  mutate(covariance = map_dbl(data, ~ cov(.x$Item.VOT_centered, .x$Item.F0_Mel_centered))) %>%
+  mutate(covariance = map_dbl(data, ~ cov(.x$VOT.CCuRE, .x$F0_Mel.CCuRE))) %>%
   pull(covariance))[1]
   
 shift10_cov_t <- 
@@ -835,7 +842,7 @@ shift10_cov_t <-
   filter(Condition.Exposure == "Shift10") %>% 
   group_by(category) %>%
   nest(data = -c(category)) %>%
-  mutate(covariance = map_dbl(data, ~ cov(.x$Item.VOT_centered, .x$Item.F0_Mel_centered))) %>%
+  mutate(covariance = map_dbl(data, ~ cov(.x$VOT.CCuRE, .x$F0_Mel.CCuRE))) %>%
   pull(covariance))[2]
   
 cues <- c("VOT", "f0_Mel")
@@ -844,13 +851,13 @@ shift10_ellipse <-
   d_for_analysis %>% 
   filter(Phase == "exposure", Condition.Exposure == "Shift10") %>% 
   group_by(category) %>% 
-  summarise(across(c(Item.VOT_centered, Item.F0_Mel_centered), list(mean = mean, var = var), .names = "{.col}.{.fn}")) %>% 
+  summarise(across(c(VOT.CCuRE, F0_Mel.CCuRE), list(mean = mean, var = var), .names = "{.col}.{.fn}")) %>% 
   mutate(
     cov = ifelse(category == "/d/", shift10_cov_d, shift10_cov_t), 
-    mu = map2(Item.VOT_centered.mean, Item.F0_Mel_centered.mean, ~ c("VOT" = .x, "f0_Mel" = .y)), 
+    mu = map2(VOT.CCuRE.mean, F0_Mel.CCuRE.mean, ~ c("VOT" = .x, "f0_Mel" = .y)), 
     Sigma = pmap(list(
-      Item.VOT_centered.var, Item.F0_Mel_centered.var, cov), ~ matrix(c(..1, ..3, ..3, ..2), 2, 2, dimnames = list(cues, cues)))) %>%
-  select(c(category, mu, Sigma)) %>% 
+      VOT.CCuRE.var, F0_Mel.CCuRE.var, cov), ~ matrix(c(..1, ..3, ..3, ..2), 2, 2, dimnames = list(cues, cues)))) %>%
+  dplyr::select(c(category, mu, Sigma)) %>% 
   crossing(level = .95) %>%
   group_by(category) %>%
   mutate(ellipse = c(1:1),
@@ -871,11 +878,11 @@ p.shift10_ellipse <- p.density +
     colour = "#85e085",
     show.legend = F,
     inherit.aes = F) +
-  scale_y_continuous("F0 (Mel)", limits = c(220, 250))
+  scale_y_continuous("F0 (Mel)")
 
 p.density +
   plot_layout(ncol = 1, guides = "collect") &
-  theme(legend.position = "right")
+  theme(legend.position = "top")
 ```
 
 To understand this pattern, it is helpful to relate our exposure conditions to the distribution of VOT in listeners' prior experience. Figure \@ref(fig:exposure-means-database-density) shows the mean and covariance of our exposure conditions relative to the distribution of VOT by talkers of L1-US English [based on @chodroff-wilson2018]. This comparison offers an explanation as to why the baseline condition (and to some extent the +10 condition) shift leftwards with increasing exposure, whereas the +40 condition shifts rightwards: relative to listeners' prior experience our baseline condition actually presented lower-than-expected category means; of our three exposure conditions, only the +40 condition presented larger-than-expected category means. That is, once we take into account how our exposure conditions relate to listeners' prior experience, both the direction of changes from Test 1 to 4 *within* each exposure condition, and the direction of differences *between* exposure conditions receive an explanation.
