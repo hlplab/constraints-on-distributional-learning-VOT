@@ -718,7 +718,7 @@ density_quantiles <- function(x, y, quantiles) {
 }
 
 
-### function for formatting tables
+### function for formatting hypothesis tables
 align_tab <- function(hyp) {
   map_chr(hyp, ~ ifelse(class(.x) == "numeric", "r","l"))
 }
@@ -740,6 +740,85 @@ make_hyp_table <- function(hyp_readable, hyp, caption, col1_width = "15em") {
     column_spec(1, width = col1_width)
 }
 
+### function to fit Bayesian model
+fit_model <- function(data, phase, formulation = "standard", priorSD = 2.5, adapt_delta = .99) {
+  require(tidyverse)
+  require(magrittr)
+  require(brms)
+  
+  levels_Condition.Exposure <- c("Shift0", "Shift10", "Shift40")
+  contrast_type <- "difference"
+  chains = 4
+  
+  data %<>% 
+    filter(Phase == phase & Item.Labeled == F) %>% 
+    prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type)
+  
+  prior_overwrite <- if (phase == "exposure" & formulation == "nested_slope") {
+    c(set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x2:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x4:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x6:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x2:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x4:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x6:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x2:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x4:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x6:VOT_gs", dpar = "mu2"))
+  } else if (phase == "test" & formulation == "nested_slope") {
+    c(set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x3:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x5:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x8:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x9:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x3:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x5:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x8:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x9:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x3:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x5:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x8:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x9:VOT_gs", dpar = "mu2"))
+  } else {
+    c(set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "VOT_gs", dpar = "mu2"))
+  }
+  
+  my_priors <- 
+    c(
+      prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),
+      prior_overwrite,
+      prior(cauchy(0, 2.5), class = "sd", dpar = "mu2"), 
+      prior(lkj(1), class = "cor"))
+  
+  brm(
+    formula = if (formulation == "nested_slope") {
+      bf(Response.Voiceless ~ 1, 
+         mu1 ~ 0 + offset(0),
+         mu2 ~ 0 + I(paste(Condition.Exposure, Block, sep = "x")) / VOT_gs + 
+           (0 + Block / VOT_gs | ParticipantID) + 
+           (0 + I(paste(Condition.Exposure, Block, sep = "x")) / VOT_gs | Item.MinimalPair),
+         theta1 ~ 1)
+    } else {
+      bf(Response.Voiceless ~ 1,
+         mu1 ~ 0 + offset(0),
+         mu2 ~ 1 + VOT_gs * Condition.Exposure * Block + (1 + VOT_gs * Block | ParticipantID) + (1 + VOT_gs * Condition.Exposure * Block | Item.MinimalPair),
+         theta1 ~ 1)},
+    data = data,
+    prior = my_priors,
+    cores = 4,
+    chains = chains,
+    init = 0,
+    iter = 4000, 
+    warmup = 2000, 
+    family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
+    control = list(adapt_delta = adapt_delta),
+    file = paste0("../models/", phase, "-", formulation, "-priorSD", priorSD, "-", adapt_delta, ".rds")
+  )
+}
 
 
 

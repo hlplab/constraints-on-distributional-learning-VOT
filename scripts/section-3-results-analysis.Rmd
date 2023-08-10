@@ -37,35 +37,19 @@ my_priors <- c(
 
 # Simplifying model with uniform bias
 fit_mix_test <-
-  brm(
-    bf(
-      Response.Voiceless ~ 1,
-      mu1 ~ 0 + offset(0),
-      mu2 ~ 1 + VOT_gs * Condition.Exposure * Block +
-        (1 + VOT_gs * Block | ParticipantID) +
-        (1 + VOT_gs * Condition.Exposure * Block | Item.MinimalPair),
-      theta1 ~ 1),
-    data = d_for_analysis %>%
-      filter(Phase == "test") %>%
-      prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
-    cores = chains,
-    chains = chains,
-    init = 0,
-    iter = 4000,
-    warmup = 2000,
-    family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
-    prior = my_priors,
-    control = list(adapt_delta = .99),
-    file = "../models/test-standard-priorSD10-0.99.rds")
+  fit_model(data = d_for_analysis,
+          phase = "test",
+          formulation = "standard",
+          priorSD = 10, 
+          adapt_delta = .995)
 
 # fit difference coded model on exposure block
 fit_mix_exposure <-
-  update(
-    fit_mix_test,
-    newdata = d_for_analysis %>%
-      filter(Phase == "exposure" & Item.Labeled == FALSE) %>%
-      prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
-    file = "../models/exposure-standard-priorSD10-0.999.rds")
+  fit_model(data = d_for_analysis,
+          phase = "exposure",
+          formulation = "standard",
+          priorSD = 10, 
+          adapt_delta = .999)
 ```
 
 We analyzed participants' categorisation responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric models, using brms [@R-brms_a] in R [@R; @RStudio, for details, see SI, \@ref(sec:analysis-approach)]. Psychometric models account for attentional lapses while estimating participants' categorisation functions. Failing to account for attentional lapses---while commonplace in research on speech perception [but see @clayards2008; @kleinschmidt-jaeger2016]---can lead to biased estimates of categorization boundaries [@prins2011; @wichmann-hill2001]. For the present experiment, however, lapse rates were negligible (`r make_CI(fit_mix_test, "theta1_Intercept")`), and all results replicate in simple mixed-effects logistic regressions [@jaeger2008]. 
@@ -79,34 +63,18 @@ We begin by presenting the overall effects, averaging across all test blocks. Th
 # exposure condition and block. This makes it easier to extract the intercept, slope, and PSE for the
 # large result figure (Panels C and D).
 fit_mix_test_nested <-
-  brm(
-    bf(
-      Response.Voiceless ~ 1,
-      mu1 ~ 0 + offset(0),
-      mu2 ~  0 + I(paste(Condition.Exposure, Block, sep = "x")) / VOT_gs +
-        (0 + Block / VOT_gs | ParticipantID) +
-        (0 + I(paste(Condition.Exposure, Block, sep = "x")) / VOT_gs | Item.MinimalPair),
-      theta1 ~ 1),
-    data = d_for_analysis %>%
-      filter(Phase == "test") %>%
-      prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = "difference"),
-    prior = my_priors,
-    cores = chains,
-    chains = chains,
-    init = 0,
-    iter = 4000, # iterations to run
-    warmup = 2000, # samples used to fit
-    family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
-    control = list(adapt_delta = .99),
-    file = "../models/test-nested_slope-priorSD10-0.99.rds")
-
+  fit_model(data = d_for_analysis,
+          phase = "test",
+          formulation = "nested_slope",
+          priorSD = 10, 
+          adapt_delta = .995)
+  
 fit_mix_exposure_nested <-
-  update(
-    fit_mix_test_nested,
-    newdata = d_for_analysis %>%
-      filter(Phase == "exposure") %>%
-      prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = "difference"),
-    file = "../models/exposure-nested_slope-priorSD10-0.999.rds")
+  fit_model(data = d_for_analysis,
+          phase = "exposure",
+          formulation = "nested_slope",
+          priorSD = 10, 
+          adapt_delta = .999)
 
 # Extract intercepts and slopes from test and exposure model
 get_intercepts_and_slopes <-
@@ -588,21 +556,34 @@ We first used the psychometric mixed-effects model to assess whether the exposur
 This replicates previous findings that exposure to changed VOT distributions changes listeners' categorization responses [for /b/-/p/: @clayards2008; @kleinschmidt-jaeger2016; @kleinschmidt2020; for /g/-/k/, @theodore-monto2019]. Having established that exposure affected categorization, we turn to the questions of primary interest. Incremental changes in participants' categorisation responses can be assessed from three mutually complementing perspectives. First, we compare how exposure affects listeners' categorisation responses relative to other exposure conditions. This tests how early in the experiment differences between exposure conditions began to emerge. Second, we compare how exposure affects listeners' categorisation responses within each condition relative to listeners' responses prior to any exposure. This assesses how the exposure conditions relate to participants' prior expectations. Most importantly, however, it tests the subtly different predictions of the model learning and selection hypotheses---whether changes in listeners' categorisation responses are strongly constrained. Third and finally, we compare changes in listeners' responses to those expected from an ideal observer that has fully learned the exposure distributions. This tests whether the sublinear effects observed in @kleinschmidt-jaeger2016 replicate in our repeated exposure-test paradigm with the improvements the present study makes to ecological validity.
 
 ### Comparing across exposure conditions: How quickly does exposure begin to affect participants' responses? 
-Figure \@ref(fig:plot-fit-slope-PSE)A suggests that differences between exposure conditions emerged early in the experiment: already in Test 2, listener's categorisation functions seem to be shifted rightwards (larger PSEs) in the +40 condition compared to the +10 condition, and in the +10 condition compared to the baseline condition. This is confirmed by the Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-effects). Prior to any exposure, during Test 1, participants' responses did not differ across exposure condition (all BFs > XXX). <!-- TO DO: fit model with save_priors =T and change hypothesis tests for block one to = 0, not < 0: fitting--> After exposure to only 24 /d/ and 24 /t/ stimuli, during Test 2, participants' responses differed between exposure conditions (BFs > 17.35). The difference between the +40 condition and the +10 or baseline condition kept increasing with exposure up to Test 4. Additional hypothesis tests in Table \@ref(tab:hypothesis-table-interactions) show that the change from Test 1 to 2 was largest (BF = 27.8), followed by the change from Test 2 to 3 (BF = 19.2), with only minimal changes from Test 3 to 4 (BF = 1.7). Qualitatively paralleling the changes across blocks for the +40 condition, the change in the difference between the +10 and baseline conditions was largest from Test 1 to 2 (BF = 13.5), and then somewhat decreased from Test 2 to Test 4 (BFs < 4). The comparison across exposure conditions thus suggests that changes in listeners' categorisation responses emerged quickly---indeed, they were present already *during* the first exposure block (see SI, \@ref(sec:exposure-analyses))---but then leveled off. The comparison across exposure conditions also yields one result that is, at first blush, surprising: while the difference between the +10 and the baseline condition emerged already after the first exposure block, this difference *de*creased, rather than increased, with additional exposure from Test 2 to 3 (see second row of Table \@ref(tab:hypothesis-table-interactions)). We return to this effect below.
+Figure \@ref(fig:plot-fit-slope-PSE)A suggests that differences between exposure conditions emerged early in the experiment: already in Test 2, listener's categorisation functions seem to be shifted rightwards (larger PSEs) in the +40 condition compared to the +10 condition, and in the +10 condition compared to the baseline condition. This is confirmed by the Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-effects). Prior to any exposure, during Test 1, participants' responses did not differ across exposure condition (all BFs > XXX). After exposure to only 24 /d/ and 24 /t/ stimuli, during Test 2, participants' responses differed between exposure conditions (BFs > 17.35). The difference between the +40 condition and the +10 or baseline condition kept increasing with exposure up to Test 4. Additional hypothesis tests in Table \@ref(tab:hypothesis-table-interactions) show that the change from Test 1 to 2 was largest (BF = 27.8), followed by the change from Test 2 to 3 (BF = 19.2), with only minimal changes from Test 3 to 4 (BF = 1.7). Qualitatively paralleling the changes across blocks for the +40 condition, the change in the difference between the +10 and baseline conditions was largest from Test 1 to 2 (BF = 13.5), and then somewhat decreased from Test 2 to Test 4 (BFs < 4). The comparison across exposure conditions thus suggests that changes in listeners' categorisation responses emerged quickly---indeed, they were present already *during* the first exposure block (see SI, \@ref(sec:exposure-analyses))---but then leveled off. The comparison across exposure conditions also yields one result that is, at first blush, surprising: while the difference between the +10 and the baseline condition emerged already after the first exposure block, this difference *de*creased, rather than increased, with additional exposure from Test 2 to 3 (see second row of Table \@ref(tab:hypothesis-table-interactions)). We return to this effect below.
 
 Tables \@ref(tab:hypothesis-table-simple-effects) and \@ref(tab:hypothesis-table-interactions) also reveal the consequences of repeated testing. The difference between exposure conditions decreased from Test 4 to 6 (BFs > 4.3; see also Figure \@ref(fig:plot-fit-slope-PSE)B & D). On the final test block, the +10 condition did not differ any longer from the baseline condition. Only the differences between the +40 condition relative to the +10 and baseline conditions persisted, albeit substantially reduced compared to Test 4. This pattern of results replicates previous findings that repeated testing over uniform test continua can undo the effects of exposure [@cummings-theodore2023; @liu-jaeger2018; @liu-jaeger2019], and extends them from perceptual recalibration paradigms to distributional learning paradigms [see also @kleinschmidt2020]. One important methodological consequence of these findings is that longer test phases do not necessarily increase the statistical power to detect effects of adaptation [unless analyses take the effects of repeated testing into account, as in the approach developed in @liu-jaeger2018]. Analyses that average across all test tokens---as remains the norm---are bound to systematically underestimate the adaptivity of human speech perception.
 
 ```{r fit-nested-blocks-simple-effects, results='hide'}
 # nested model to get simple effects of Condition embedded in block
+
+my_priors <- c(
+  prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),  
+  set_prior("student_t(3, 0, 10)", dpar = "mu2", coef = "Block1:VOT_gs"),
+  set_prior("student_t(3, 0, 10)", dpar = "mu2", coef = "Block3:VOT_gs"),
+  set_prior("student_t(3, 0, 10)", dpar = "mu2", coef = "Block5:VOT_gs"),
+  set_prior("student_t(3, 0, 10)", dpar = "mu2", coef = "Block7:VOT_gs"),
+  set_prior("student_t(3, 0, 10)", dpar = "mu2", coef = "Block8:VOT_gs"),
+  set_prior("student_t(3, 0, 10)", dpar = "mu2", coef = "Block9:VOT_gs"),
+  prior(cauchy(0, 2.5), class = "sd", dpar = "mu2"),
+  prior(lkj(1), class = "cor")
+)
+
 fit_mix_test_nested_block <- 
   brm(
-    bf(
-      Response.Voiceless ~ 1,
-      mu1 ~ 0 + offset(0),
-      mu2 ~ 0 + Block / (Condition.Exposure * VOT_gs) +
-        (0 + Block / VOT_gs | ParticipantID) +
-        (0 + Block / (Condition.Exposure * VOT_gs) | Item.MinimalPair),
-      theta1 ~ 1),
+  bf(
+    Response.Voiceless ~ 1,
+    mu1 ~ 0 + offset(0),
+    mu2 ~ 0 + Block / (Condition.Exposure * VOT_gs) +
+      (0 + Block / VOT_gs | ParticipantID) +
+      (0 + Block / (Condition.Exposure * VOT_gs) | Item.MinimalPair),
+    theta1 ~ 1),
     data = d_for_analysis %>%
       filter(Phase == "test") %>%
       prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
