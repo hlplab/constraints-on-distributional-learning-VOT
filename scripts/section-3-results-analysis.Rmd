@@ -562,7 +562,6 @@ Tables \@ref(tab:hypothesis-table-simple-effects) and \@ref(tab:hypothesis-table
 
 ```{r fit-nested-blocks-simple-effects, results='hide'}
 # nested model to get simple effects of Condition embedded in block
-
 my_priors <- c(
   prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),  
   set_prior("student_t(3, 0, 10)", dpar = "mu2", coef = "Block1:VOT_gs"),
