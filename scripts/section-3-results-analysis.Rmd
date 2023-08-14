@@ -318,7 +318,7 @@ p.PSE_1to7 <-
    colour = colours.condition,
    fontface = "bold",
    size = 3,
-   position = position_dodge2(1), 
+   # position = position_dodge2(1), 
    inherit.aes = F) +
   annotate(
     geom = "text",
@@ -333,7 +333,7 @@ p.PSE_1to7 <-
       clip = "off") +
     theme(plot.margin = unit(c(1, 3.2, 1, 1), "lines"))
 
-p.params_1to7 <- 
+p.estimates_1to7 <- 
   (p.slope_1to7 | p.PSE_1to7) +
   plot_layout(guides = "collect") &
   theme(legend.position = "none", axis.text = element_text(size = 8))
@@ -536,7 +536,7 @@ p.fit_7to9 <-
 \begin{landscape}
 
 ```{r plot-fit-slope-PSE, fig.width=12.5, fig.height=8, fig.cap="(ref:plot-fit-slope-PSE)"}
-p.fit_1to7 + p.fit_7to9 + p.params_1to7 +
+p.fit_1to7 + p.fit_7to9 + p.estimates_1to7 +
   plot_layout(
     design = "
 AAAAAAAAA
