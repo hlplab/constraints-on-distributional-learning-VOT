@@ -40,7 +40,7 @@ fit_mix_test <-
   fit_model(data = d_for_analysis,
           phase = "test",
           formulation = "standard",
-          priorSD = 10, 
+          priorSD = 15, 
           adapt_delta = .995)
 
 # fit difference coded model on exposure block
@@ -48,7 +48,7 @@ fit_mix_exposure <-
   fit_model(data = d_for_analysis,
           phase = "exposure",
           formulation = "standard",
-          priorSD = 10, 
+          priorSD = 15, 
           adapt_delta = .999)
 ```
 
@@ -66,14 +66,14 @@ fit_mix_test_nested <-
   fit_model(data = d_for_analysis,
           phase = "test",
           formulation = "nested_slope",
-          priorSD = 10, 
+          priorSD = 15, 
           adapt_delta = .995)
   
 fit_mix_exposure_nested <-
   fit_model(data = d_for_analysis,
           phase = "exposure",
           formulation = "nested_slope",
-          priorSD = 10, 
+          priorSD = 15, 
           adapt_delta = .999)
 
 # Extract intercepts and slopes from test and exposure model
