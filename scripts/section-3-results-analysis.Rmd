@@ -100,7 +100,7 @@ d.estimates <-
   summarise(
     across(
       c(Intercept, slope, PSE),
-      list(lower = ~ quantile(.x, probs = .025), median = median, upper = ~ quantile(.x, probs = .975)))) 
+      list(lower = ~ quantile(.x, probs = .025), median = ~ quantile(.x, probs = .5), upper = ~ quantile(.x, probs = .975)))) 
 ```
 
 
@@ -564,12 +564,12 @@ Tables \@ref(tab:hypothesis-table-simple-effects) and \@ref(tab:hypothesis-table
 # nested model to get simple effects of Condition embedded in block
 my_priors <- c(
   prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),  
-  set_prior("student_t(3, 0, 10)", dpar = "mu2", coef = "Block1:VOT_gs"),
-  set_prior("student_t(3, 0, 10)", dpar = "mu2", coef = "Block3:VOT_gs"),
-  set_prior("student_t(3, 0, 10)", dpar = "mu2", coef = "Block5:VOT_gs"),
-  set_prior("student_t(3, 0, 10)", dpar = "mu2", coef = "Block7:VOT_gs"),
-  set_prior("student_t(3, 0, 10)", dpar = "mu2", coef = "Block8:VOT_gs"),
-  set_prior("student_t(3, 0, 10)", dpar = "mu2", coef = "Block9:VOT_gs"),
+  set_prior("student_t(3, 0, 15)", dpar = "mu2", coef = "Block1:VOT_gs"),
+  set_prior("student_t(3, 0, 15)", dpar = "mu2", coef = "Block3:VOT_gs"),
+  set_prior("student_t(3, 0, 15)", dpar = "mu2", coef = "Block5:VOT_gs"),
+  set_prior("student_t(3, 0, 15)", dpar = "mu2", coef = "Block7:VOT_gs"),
+  set_prior("student_t(3, 0, 15)", dpar = "mu2", coef = "Block8:VOT_gs"),
+  set_prior("student_t(3, 0, 15)", dpar = "mu2", coef = "Block9:VOT_gs"),
   prior(cauchy(0, 2.5), class = "sd", dpar = "mu2"),
   prior(lkj(1), class = "cor")
 )
@@ -595,7 +595,7 @@ fit_mix_test_nested_block <-
     family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
     sample_prior = "yes",
     control = list(adapt_delta = .995),
-    file ="../models/test-nested_block-sample-priorSD10-0.995.rds")
+    file ="../models/test-nested_block-sample-priorSD15-0.995.rds")
 
 # get tidy df of nested test simple effects within block 
 simple_effects_condition <-
@@ -609,8 +609,8 @@ simple_effects_condition <-
 # hypotheses to answer questions "when did change first emerge?" 
 hyp_contrasts_nested_block <-
   c(
-    "mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 0",
-    "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 < 0",
+    "mu2_Block1:Condition.Exposure_Shift10vs.Shift0 = 0",
+    "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 = 0",
     "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 0",
     "mu2_Block3:Condition.Exposure_Shift10vs.Shift0 < 0",
     "mu2_Block3:Condition.Exposure_Shift40vs.Shift10 < 0",
