@@ -632,7 +632,7 @@ hyp_contrasts_nested_block <- hypothesis(fit_mix_test_nested_block, hyp_contrast
 hyp_contrasts_nested_block <- hyp_contrasts_nested_block$hypothesis %>% dplyr::select(-Star)
 
 # translate hypotheses into intelligible statements
-hyp_contrasts_nested_block_readable <- tibble(Hypothesis = rep(c("+10 vs. baseline = 0", "+40 vs. +10 = 0", "+40 vs. baseline = 0"), 6))
+hyp_contrasts_nested_block_readable <- tibble(Hypothesis = c("+10 vs. baseline = 0", "+40 vs. +10 = 0", "+40 vs. baseline = 0", rep(c("+10 vs. baseline", "+40 vs. +10", "+40 vs. baseline"), 6)))
 
 table.simple_effects <- 
   make_hyp_table(hyp_contrasts_nested_block_readable, hyp_contrasts_nested_block, caption = "When did exposure begin to affect participants' categorization responses? When, if ever, were these changes undone with repeated testing? This table summarizes the simple effects of the exposure conditions for each test block.") %>% 
