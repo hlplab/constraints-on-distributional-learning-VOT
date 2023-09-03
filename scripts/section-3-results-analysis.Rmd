@@ -29,12 +29,6 @@ VOT.sd_test <- (d.mean_sd_scaling %>% pull(Item.VOT_sd))[2]
 levels_Condition.Exposure = c("Shift0", "Shift10", "Shift40")
 contrast_type <- "difference"
 
-my_priors <- c(
-  prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),
-  set_prior("student_t(3, 0, 10)", dpar = "mu2", coef = "VOT_gs"),
-  prior(cauchy(0, 2.5), class = "sd", dpar = "mu2"),
-  prior(lkj(1), class = "cor"))
-
 # Simplifying model with uniform bias
 fit_mix_test <-
   fit_model(data = d_for_analysis,
@@ -100,7 +94,7 @@ d.estimates <-
   summarise(
     across(
       c(Intercept, slope, PSE),
-      list(lower = ~ quantile(.x, probs = .025), median = ~ quantile(.x, probs = .5), upper = ~ quantile(.x, probs = .975)))) 
+      list(lower = ~ quantile(.x, probs = .025), median = ~ round(quantile(.x, probs = .5), 3), upper = ~ quantile(.x, probs = .975)))) 
 ```
 
 
@@ -283,19 +277,17 @@ d.true_shift <-
   dplyr::select(PSE) %>% 
     rename(PSE.io_predicted = PSE)) %>%
   mutate(
-    PSE_block1 = case_when(
-      Condition.Exposure == "Shift0" ~ d.estimates[10][[1]][1],
-      Condition.Exposure == "Shift10" ~ d.estimates[10][[1]][10],
-      Condition.Exposure == "Shift40" ~ d.estimates[10][[1]][19]),
-    true_shift = PSE.io_predicted - PSE_block1,
-    proportion_shift = abs(PSE_median - PSE_block1)/true_shift)
+    mean_PSE_block1 = mean(c(d.estimates[10][[1]][1], d.estimates[10][[1]][10], d.estimates[10][[1]][19])),
+    true_shift = PSE.io_predicted - mean_PSE_block1,
+    proportion_shift = abs((PSE_median - mean_PSE_block1)/true_shift),
+    proportion_shift = ifelse(PSE_median >= mean_PSE_block1 & Condition.Exposure != "Shift40", 0, proportion_shift))
 
 p.PSE_1to7 <-     
   p.across_blocks +  
   scale_y_continuous("PSE") +
   aes(y = PSE_median, ymin = PSE_lower, ymax = PSE_upper) +
   geom_label(
-    data = d.true_shift, 
+    data = d.true_shift %>% filter(Block != 1), 
   mapping = aes(label = paste(scales::percent(proportion_shift, accuracy = .1))),
   position = position_dodge(.3),
   label.size = .15,
@@ -303,7 +295,7 @@ p.PSE_1to7 <-
   size = 2.2,
   show.legend = F) +
   geom_hline(
-    data = d.io.categorization,
+    data = d.io.categorization %>% filter(Condition.Exposure != "prior"),
     aes(yintercept = PSE, color = Condition.Exposure),
     linetype = 2, linewidth = .8, alpha = 0.5) +
   geom_text(
@@ -311,7 +303,7 @@ p.PSE_1to7 <-
      group_by(Condition.Exposure, true_shift) %>% 
      summarise(),
    mapping = aes(
-    x = 10.25,
+    x = 10.1,
     y = c(24, 35, 65),
     label = paste(round(true_shift), "(100%)"),
     colour = Condition.Exposure),
@@ -320,14 +312,6 @@ p.PSE_1to7 <-
    size = 3,
    # position = position_dodge2(1), 
    inherit.aes = F) +
-  annotate(
-    geom = "text",
-    x = 10.05,
-    y = 33.3,
-    label = round(d.io.categorization$PSE[1], 2),
-    size = 3,
-    colour = "grey",
-    fontface = "bold") +
     coord_cartesian(
       xlim = c(0.75, 9),
       clip = "off") +
@@ -632,7 +616,7 @@ hyp_contrasts_nested_block <- hypothesis(fit_mix_test_nested_block, hyp_contrast
 hyp_contrasts_nested_block <- hyp_contrasts_nested_block$hypothesis %>% dplyr::select(-Star)
 
 # translate hypotheses into intelligible statements
-hyp_contrasts_nested_block_readable <- tibble(Hypothesis = c("+10 vs. baseline = 0", "+40 vs. +10 = 0", "+40 vs. baseline = 0", rep(c("+10 vs. baseline", "+40 vs. +10", "+40 vs. baseline"), 6)))
+hyp_contrasts_nested_block_readable <- tibble(Hypothesis = c("+10 vs. baseline = 0", "+40 vs. +10 = 0", "+40 vs. baseline = 0", rep(c("+10 vs. baseline", "+40 vs. +10", "+40 vs. baseline"), 5)))
 
 table.simple_effects <- 
   make_hyp_table(hyp_contrasts_nested_block_readable, hyp_contrasts_nested_block, caption = "When did exposure begin to affect participants' categorization responses? When, if ever, were these changes undone with repeated testing? This table summarizes the simple effects of the exposure conditions for each test block.") %>% 

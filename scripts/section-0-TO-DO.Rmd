@@ -7,15 +7,14 @@
   * Figure out why slopes aren't identical across conditions under our current way of averaging exposure across all participants.
   * fit nested model: Condition / (block*VOT). Sample prior = "yes". This is to make the argument of block-to-block change within each condition. 
     * make a hypothesis table that summarises the main effect of block for each exposure condition
-  * Non-parametric density plot. 
-    * Apply correction for vowel duration!
+
   * Try an add line to table 2 to separate the unlearning hypothesis from the others (low priority). Add +40 vs baseline sub-heading
 
 ## Medium priority
 
  * MARYANN
   * Fix a lot of the outstanding XXXes. Fill in the references -- in library.bib
-  * Heterogenous normal distribution
+
   
  * FLORIAN
   * think about table 1 and 2: how to change the wording on tables to actually refer to intercepts rather than PSEs or change the figures? Changing current representations of analyses to improve intuitive-ity. 
@@ -28,7 +27,7 @@
  * MARYANN
   * Decide on PSE vs. category boundary 
   * standardize BE vs. AE spelling (categoriz/sation, label(l)ed, synthesiz/sed etc.)
-   * Figure 2: A small figure to anticipate the type of format in the main figure. Exposure is x-axis (less to more exposure). Under one prediciton you keep growing 00 prediction o BBU model. The other one is plataeuing and converging against something. 
+
     
  * Florian
   * compare IBBU predictions over blocks with human behavioural data
