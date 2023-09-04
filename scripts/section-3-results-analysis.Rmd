@@ -593,9 +593,9 @@ simple_effects_condition <-
 # hypotheses to answer questions "when did change first emerge?" 
 hyp_contrasts_nested_block <-
   c(
-    "mu2_Block1:Condition.Exposure_Shift10vs.Shift0 = 0",
-    "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 = 0",
-    "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 = 0",
+    "mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 0",
+    "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 < 0",
+    "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 < 0",
     "mu2_Block3:Condition.Exposure_Shift10vs.Shift0 < 0",
     "mu2_Block3:Condition.Exposure_Shift40vs.Shift10 < 0",
     "mu2_Block3:Condition.Exposure_Shift40vs.Shift10 + mu2_Block3:Condition.Exposure_Shift10vs.Shift0 < 0",
@@ -616,7 +616,7 @@ hyp_contrasts_nested_block <- hypothesis(fit_mix_test_nested_block, hyp_contrast
 hyp_contrasts_nested_block <- hyp_contrasts_nested_block$hypothesis %>% dplyr::select(-Star)
 
 # translate hypotheses into intelligible statements
-hyp_contrasts_nested_block_readable <- tibble(Hypothesis = c("+10 vs. baseline = 0", "+40 vs. +10 = 0", "+40 vs. baseline = 0", rep(c("+10 vs. baseline", "+40 vs. +10", "+40 vs. baseline"), 5)))
+hyp_contrasts_nested_block_readable <- tibble(Hypothesis = rep(c("+10 vs. baseline", "+40 vs. +10", "+40 vs. baseline"), 6))
 
 table.simple_effects <- 
   make_hyp_table(hyp_contrasts_nested_block_readable, hyp_contrasts_nested_block, caption = "When did exposure begin to affect participants' categorization responses? When, if ever, were these changes undone with repeated testing? This table summarizes the simple effects of the exposure conditions for each test block.") %>% 
@@ -690,7 +690,7 @@ table.interactions
 ```
 
 ### Comparing within exposure conditions: How quickly does exposure begin to affect participants' responses? 
-Next, we compared how exposure affects listeners' categorization reponses within each condition relative to listeners' responses prior to any exposure. These changes are summarised for the slope and PSE in Figure \@ref(fig:plot-fit-slope-PSE)C & D, respectively. This visualization makes apparent two aspects of participants' behavior that were not readily apparent in the statistical comparisons we have summarized so far. First, while the PSEs for the +40 and +10 conditions were shifted rightwards compared to the baseline condition, both the +10 and the baseline condition actually shift leftwards relative to their pre-exposure starting point in Test 1. This is confirmed by Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-block-effects). 
+Next, we compared how exposure affects listeners' categorization responses within each condition relative to listeners' responses prior to any exposure. These changes are summarized for the slope and PSE in Figure \@ref(fig:plot-fit-slope-PSE)C & D, respectively. This visualization makes apparent two aspects of participants' behavior that were not readily apparent in the statistical comparisons we have summarized so far. First, while the PSEs for the +40 and +10 conditions were shifted rightwards compared to the baseline condition, both the +10 and the baseline condition actually shift leftwards relative to their pre-exposure starting point in Test 1. This is confirmed by Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-block-effects). 
 
 (ref:exposure-means-database-density) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for 6914 word-initial /d/ and /t/ productions in L1-US English [based on 92 talkers in @chodroff-wilson2018]. The outermost contour of each category shows the 95% density quantile. Points show the category means of the exposure condition.
 
@@ -835,20 +835,6 @@ shift10_ellipse <-
   group_by(ellipse) %>%
   mutate(path = pmap(list(category, level, ellipse_points),
                      ~ geom_path(data = ..3, mapping = aes(x = ..3[[1]], y = ..3[[2]], linetype = ..1, colour = ..2))))
-
-shift10_95ellipse <- 
-  shift10_ellipse %>% 
-  group_by(category) %>% 
-  unnest(ellipse_points)
-
-p.shift10_ellipse <- p.density +
-  geom_path(
-    data = shift10_95ellipse,
-    aes(x = VOT, y = F0, linetype = category),
-    colour = "#85e085",
-    show.legend = F,
-    inherit.aes = F) +
-  scale_y_continuous("F0 (Mel)")
 
 p.density +
   plot_layout(ncol = 1, guides = "collect") &
