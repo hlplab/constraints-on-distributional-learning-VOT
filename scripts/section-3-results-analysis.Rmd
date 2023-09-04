@@ -81,10 +81,18 @@ get_intercepts_and_slopes <-
   pivot_wider(names_from = term, values_from = ".value") %>%
   relocate(c(Condition.Exposure, Block, Intercept, slope, .chain, .iteration, .draw))
 
+
+# transpose the VOT test mean into exposure units for correction of exposure intercepts
+VOT.mean_in_exposure_scale <- (VOT.mean_test - VOT.mean_exposure)/(2 * VOT.sd_exposure)
+
 d.estimates <-
   full_join(
     fit_mix_test_nested %>% get_intercepts_and_slopes(),
-    fit_mix_exposure_nested %>% get_intercepts_and_slopes()) %>%
+    fit_mix_exposure_nested %>% get_intercepts_and_slopes() %>% 
+      # make corrections to intercepts in exposure blocks to account for prior effects
+       mutate(Intercept_corrected = Intercept + fixef(fit_mix_exposure)[[3]] * VOT.mean_in_exposure_scale,
+         Intercept = Intercept_corrected) %>% 
+  select(-c(Intercept_corrected))) %>%
   mutate(
     PSE = ifelse(
       Block %in% c(2, 4, 6),

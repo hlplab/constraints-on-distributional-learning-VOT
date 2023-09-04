@@ -386,7 +386,7 @@ get_PSE_from_io <- function(io, io.type) {
 # 4) do listeners center during experiment? one can plot this relative to the center of the cues in the experiment or not
 ############################################################################
 get_IO_categorization <- function(
-    data = d.chodroff_wilson.selected,
+    data = d.chodroff_wilson,
     cues,
     groups,
     lapse_rate = 0,
