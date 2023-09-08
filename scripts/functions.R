@@ -216,7 +216,7 @@ get_CCuRE_VOT<- function(data, newdata){
     mutate(
       VOT.predict_scaled = predict(m, newdata = ., allow.new.levels = TRUE),
       VOT.resid_scaled = VOT - VOT.predict_scaled,
-      VOT.CCuRE.scaled = VOT.resid_scaled + fixef(m)[1],
+      VOT.CCuRE.scaled = VOT.resid_scaled + fixef(m)[1], 
       VOT.CCuRE = (VOT.CCuRE.scaled * sd.VOT) + mean.VOT) %>% 
     pull(VOT.CCuRE)
 }

@@ -288,16 +288,17 @@ d.true_shift <-
 # compute PSEs from the 92 talkers in Chodroff-Wilson corpus
 d.talkerPSEs <- get_IO_categorization(
     data = d.chodroff_wilson,
-    cues = c("VOT.CCuRE"),
+    cues = c("VOT"),
     groups = c("Talker", "gender"),
     with_noise = TRUE,
-    VOTs = seq(0, 85, .5),
-    lapse_rate = plogis(fixef(fit_mix_test)[[2]])) %>% 
-  mutate(PSE_centered = PSE - d.true_shift$mean_PSE_block1[1]) %>% 
-  summarise(lower_PSE_centered = quantile(PSE_centered, probs = .025), 
-            median_PSE_centered = median(PSE_centered),
-            upper_PSE_centered = quantile(PSE_centered, probs = .975))
-
+    VOTs = seq(0, 85, .5)) %>% 
+  mutate(center_constant = d.true_shift$mean_PSE_block1[1] - mean(PSE),
+                        PSE_centered = PSE + center_constant) %>% 
+  summarise(lower_PSE = quantile(PSE_centered, probs = .025), 
+            mean_PSE = mean(PSE_centered),
+            upper_PSE = quantile(PSE_centered, probs = .975)) 
+# start with the unnormalised just VOT for overall range
+# then use the normalised VOT and F0 to get the PSE
 
 p.PSE_1to7 <-     
   p.across_blocks +  
@@ -331,9 +332,9 @@ p.PSE_1to7 <-
   annotate(
     "crossbar",
     x = 9.7,
-    y = d.true_shift$mean_PSE_block1[1] + d.talkerPSEs$median_PSE_centered,
-    ymin = d.true_shift$mean_PSE_block1[1] + d.talkerPSEs$lower_PSE_centered,
-    ymax = d.true_shift$mean_PSE_block1[1] + d.talkerPSEs$upper_PSE_centered,
+    y = d.talkerPSEs$mean_PSE,
+    ymin = d.talkerPSEs$lower_PSE,
+    ymax = d.talkerPSEs$upper_PSE,
     width = 0.1,
     colour = "black",
     alpha = .6) +
