@@ -9,6 +9,10 @@
     * make a hypothesis table that summarises the main effect of block for each exposure condition
 
   * Try an add line to table 2 to separate the unlearning hypothesis from the others (low priority). Add +40 vs baseline sub-heading
+  
+  There's a discussion of how priors affect our results-- could it be that we would have found convergence if we hadn't been so conservative? 
+  Due to a mistake early on we still found the general result pattern. There's of course the discussion that we did use uniform priors.
+  
 
 ## Medium priority
 
@@ -25,8 +29,7 @@
 ### Lower Priority
 
  * MARYANN
-  * Decide on PSE vs. category boundary 
-  * standardize BE vs. AE spelling (categoriz/sation, label(l)ed, synthesiz/sed etc.)
+  * Combine data from exposure and test, use all together instead of coding block, code trial and code it as a smooth. That means using GAMM -- that may require taking lapse (try it first without lapses because the GAMM takes care of the lapse. The RE will be expressed differently. It has to follow the GAMM syntax.) The primary thing we want to smooth over is "block", but could theoretically smooth over VOT and Block.
 
     
  * Florian
