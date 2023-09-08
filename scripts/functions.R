@@ -303,18 +303,18 @@ get_bivariate_normal_ellipse <- function(
 }
 
 # defining experiment cue means and SDs. This is necessary for the following functions to work
-chodroff.mean_VOT <- 38.6103
-chodroff.mean_f0_Mel <- 237.997
-VOT.mean_exp1 <- 47.6304
-VOT.sd_exp1 <- 51.7727
-f0.mean_exp1 <- 340.923
-f0.sd_exp1 <- 2.58267
-VOT.mean_test <- 36
-f0.mean_test <- 340
-VOT.mean_exp2 <- 40.587
-VOT.sd_exp2 <- 28.495
-f0.mean_exp2 <- 340.24
-f0.sd_exp2 <- 1.6484
+# chodroff.mean_VOT <- 38.6103
+# chodroff.mean_f0_Mel <- 237.997
+# VOT.mean_exp1 <- 47.6304
+# VOT.sd_exp1 <- 51.7727
+# f0.mean_exp1 <- 340.923
+# f0.sd_exp1 <- 2.58267
+# VOT.mean_test <- 36
+# f0.mean_test <- 340
+# VOT.mean_exp2 <- 40.587
+# VOT.sd_exp2 <- 28.495
+# f0.mean_exp2 <- 340.24
+# f0.sd_exp2 <- 1.6484
 
 ############################################################################
 # Get approximate f0 of synthesised stimuli from VOT values
@@ -329,12 +329,12 @@ predict_f0 <- function(VOT, intercept = 245.46968, slope = 0.03827, Mel = FALSE)
 ############################################################################
 #  function to optimise minimal difference in likelihoods of 2 categories  #
 ############################################################################
-get_diff_in_likelihood_from_io <- function(x, io, add_f0 = F, io.type) {
+get_diff_in_likelihood_from_io <- function(x, io, add_f0 = F, io.type = NULL) {
   # Since we want to only consider cases that have F0 values that are in a certain linear relation to VOT
   # (the way we created our stimuli), we set the F0 based on the VOT.
   if (add_f0) x <- c(x, normMel(predict_f0(x)))
-  else if (add_f0 & io.type == "VOT_F0.centered.input") x <- c(x, normMel(predict_f0(x)) + (chodroff.mean_f0_Mel - f0.mean_exp1))
-  else if (add_f0 & io.type == "VOT_F0.centered.input_block1") x <- c(x, normMel(predict_f0(x)) + (chodroff.mean_f0_Mel - f0.mean_test))
+  #else if (add_f0 & io.type == "VOT_F0.centered.input") x <- c(x, normMel(predict_f0(x)) + (chodroff.mean_f0_Mel - f0.mean_exp1))
+  #else if (add_f0 & io.type == "VOT_F0.centered.input_block1") x <- c(x, normMel(predict_f0(x)) + (chodroff.mean_f0_Mel - f0.mean_test))
 
   # abs(dmvnorm(x, io$mu[[1]], io$Sigma[[1]], log = T) - dmvnorm(x, io$mu[[2]], io$Sigma[[2]], log = T))
   y <- abs(dmvnorm(x, io$mu[[2]], io$Sigma[[2]] + io$Sigma_noise[[2]], log = F) / (dmvnorm(x, io$mu[[1]], io$Sigma[[1]] + io$Sigma_noise[[1]], log = F) + dmvnorm(x, io$mu[[2]], io$Sigma[[2]] + io$Sigma_noise[[2]], log = F)) - .5)
@@ -343,7 +343,7 @@ get_diff_in_likelihood_from_io <- function(x, io, add_f0 = F, io.type) {
   return(y)
 }
 
-get_PSE_from_io <- function(io, io.type) {
+get_PSE_from_io <- function(io, io.type = NULL) {
   # Set bounds for optimization to be the two category means
   # and initialize optimization half-way between the two means
   min.pars <-
@@ -394,8 +394,7 @@ get_IO_categorization <- function(
     VOTs = seq(0, 85, .5),
     F0s = normMel(predict_f0(VOTs)),
     alpha = .1,
-    linewidth = .3,
-    io.type
+    linewidth = .3
 ) {
   data %<>%
     make_MVG_from_data(cues = cues, group = groups) %>%
@@ -407,9 +406,9 @@ get_IO_categorization <- function(
         ~ lift_MVG_to_MVG_ideal_observer(
           .x,
           group = NULL,
-          prior = c(.5, .5),
+          prior = c("/d/" = .5, "/t/" = .5),
           lapse_rate = lapse_rate,
-          lapse_bias = c(.5, .5),
+          lapse_bias = c("/d/" = .5, "/t/" = .5),
           Sigma_noise =
             if(with_noise == FALSE & length(cues) == 1) {
               matrix(c(0), ncol = 1, dimnames = list(cues, cues))
@@ -438,25 +437,21 @@ get_IO_categorization <- function(
     select(- all_of(cues)) %>%
     nest(x = x) %>%
     mutate(
-      PSE = map2_dbl(
-        io, io.type, ~ get_PSE_from_io(io = .x, io.type = .y)),
+      PSE = map_dbl(
+        io, ~ get_PSE_from_io(io = .x)),
       categorization =
         map2(
           x, io,
           ~ get_categorization_from_MVG_ideal_observer(x = .x$x, model = .y, decision_rule = "proportional") %>%
             filter(category == "/t/") %>%
             mutate(VOT = map(x, ~ .x[1]) %>% unlist())),
-      line = pmap(
-        list(categorization, gender, io.type),
-        ~ geom_line(data = ..1,
-                    aes(x = if (str_detect(..3, ".*\\.centered\\.input$")) VOT - (chodroff.mean_VOT - VOT.mean_exp1)
-                        else if (str_detect(..3, ".*\\.centered\\.input_block1$")) VOT - (chodroff.mean_VOT - VOT.mean_testblock1)
-                        else VOT,
-                        y =  response,
-                        color = ..2),
-                    alpha = alpha, linewidth = linewidth)),
-      io.type = io.type
-    )
+      line = map2(categorization, gender,
+                  ~ geom_line(data = .x,
+                              aes(x = VOT,
+                                  y =  response,
+                                  color = .y),
+                              alpha = alpha, 
+                              linewidth = linewidth)))
 }
 
 
