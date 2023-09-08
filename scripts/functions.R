@@ -170,69 +170,66 @@ get_ChodroffWilson_data <- function(
 }
 
 # NORMALIZATION -----------------------------------------------------------
-apply_ccure <- function(x, data) {
-  m <- get_CCuRE_model(data = data %>% mutate(current_outcome = .env$x), tidy_result = F, cue = "current_outcome")
-  x - predict(m) + fixef(m)[1]
-  # deducts only talker specific intercepts (more precisely, the offset value of each talker's mean from the grand mean) from each cue value
-}
 
 # if there is newdata return the newdata scaled by the old data
 # if there is no newdata return data scaled by itself
-prep_for_CCuRE <- function(data, newdata = NULL){
+prep_predictors_for_CCuRE <- function(data, newdata = NULL){
   if(!is.null(newdata)) {
-    mean.VOT = mean(data$VOT)
-    sd.VOT = sd(data$VOT)
-    mean.f0_Mel = mean(data$f0_Mel)
-    sd.f0_Mel = sd(data$f0_Mel)
     mean.vowel_duration = mean(data$vowel_duration)
     sd.vowel_duration = sd(data$vowel_duration)
-    
-    newdata %>% 
-      mutate(
-        VOT = (VOT - mean.VOT) / sd.VOT,
-        f0_Mel = (f0_Mel - mean.f0_Mel) / sd.f0_Mel,
-        vowel_duration = (vowel_duration - mean.vowel_duration) / sd.vowel_duration)
-  } else { 
+
+    newdata %>%
+      mutate(vowel_duration = (vowel_duration - mean.vowel_duration) / sd.vowel_duration)
+  } else {
     data %>%
-      ungroup() %>% 
-      mutate(across(c(VOT, f0_Mel, vowel_duration), ~ (.x - mean(.x)) / sd(.x)))
+      ungroup() %>%
+      mutate(across(c(vowel_duration), ~ (.x - mean(.x)) / sd(.x)))
   }
 }
 
 get_CCuRE_model <- function(data, tidy_result = TRUE, cue = "VOT") {
   f <- formula(paste(cue, "~ 1 + vowel_duration + (1 | Talker)"))
-  m <- lmer(f, data = prep_for_CCuRE(data))
+  m <- lmer(f, data =  prep_predictors_for_CCuRE(data))
   return(if (tidy_result) tidy(m, effects = "fixed") else m)
+}
+
+apply_ccure <- function(x, data) {
+  m <- get_CCuRE_model(
+    data = data %>% mutate(current_outcome = .env$x),
+    cue = "current_outcome",
+    tidy_result = F)
+  # Get residuals (remove predicted/expected cue value--including expectations
+  # about the talker---from each token's actual cue value) and then add the
+  # overall cue mean back (this latter step is done for visualization purposes,
+  # so that the C-CuREd cues can still be expressed in the familiar cue space;
+  # the intercept is that predicted mean since get_CCuRE_model calls prep_for_CCuRE,
+  # which centers and scales all predictors.
+  x - predict(m) + fixef(m)[1]
 }
 
 # if there is newdata CCuRE the newdata by the old data and return newdata
 # if there is no newdata CCuRE data based on its own statistics and return data
-get_CCuRE_VOT<- function(data, newdata){
-  m <- get_CCuRE_model(data, tidy_result = F)
-  mean.VOT = mean(data$VOT)
-  sd.VOT = sd(data$VOT)
-  
-  prep_for_CCuRE(data = data, newdata = newdata) %>% 
-    mutate(
-      VOT.predict_scaled = predict(m, newdata = ., allow.new.levels = TRUE),
-      VOT.resid_scaled = VOT - VOT.predict_scaled,
-      VOT.CCuRE.scaled = VOT.resid_scaled + fixef(m)[1],
-      VOT.CCuRE = (VOT.CCuRE.scaled * sd.VOT) + mean.VOT) %>% 
-    pull(VOT.CCuRE)
-}
+remove_speechrate_effect_from_cue <- function(data, newdata = NULL, cue = "VOT"){
+  m <- get_CCuRE_model(
+    data = data %>% mutate(current_outcome = !! sym(cue)),
+    cue = "current_outcome",
+    tidy_result = F)
 
-get_CCuRE_f0_Mel <- function(data, newdata){
-  m <- get_CCuRE_model(data, tidy_result = F, cue = "f0_Mel")
-  mean.f0_Mel = mean(data$f0_Mel)
-  sd.f0_Mel = sd(data$f0_Mel)
-  
-  prep_for_CCuRE(data = data, newdata = newdata) %>% 
+  # If newdata isn't null, convert predictors of C-CuRE model into the space used
+  # in the C-CuRE model fitted above.
+  prep_predictors_for_CCuRE(data = data, newdata = newdata) %>%
     mutate(
-      f0_Mel.predict_scaled = predict(m, newdata = ., allow.new.levels = TRUE),
-      f0_Mel.resid_scaled = f0_Mel - f0_Mel.predict_scaled,
-      f0_Mel.CCuRE.scaled = f0_Mel.resid_scaled + fixef(m)[1],
-      f0_Mel.CCuRE = (f0_Mel.CCuRE.scaled * sd.f0_Mel) + mean.f0_Mel) %>% 
-    pull(f0_Mel.CCuRE)
+      # Get the residual value for the cue given the C-CuRE model (while, for now
+      # ignoring that the new data comes from different talker; that's what is made
+      # possible by allow.new.levels = T)
+      residual_current_cue = !! sym(cue) - predict(m, newdata = ., allow.new.levels = TRUE),
+      # Now add the predicted mean of the original data back to the cue. Note that
+      # this speech rate corrected cue has *not* yet been corrected for the mean of
+      # the new talker. (for that one would have to also subtract out the difference
+      # between the overall cue mean in the original data and the cue mean in the new
+      # data)
+      ccure_current_cue = residual_current_cue + fixef(m)[1]) %>%
+    pull(ccure_current_cue)
 }
 
 
@@ -745,15 +742,15 @@ fit_model <- function(data, phase, formulation = "standard", priorSD = 2.5, adap
   require(tidyverse)
   require(magrittr)
   require(brms)
-  
+
   levels_Condition.Exposure <- c("Shift0", "Shift10", "Shift40")
   contrast_type <- "difference"
   chains = 4
-  
-  data %<>% 
-    filter(Phase == phase & Item.Labeled == F) %>% 
+
+  data %<>%
+    filter(Phase == phase & Item.Labeled == F) %>%
     prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type)
-  
+
   prior_overwrite <- if (phase == "exposure" & formulation == "nested_slope") {
     c(set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x2:VOT_gs", dpar = "mu2"),
       set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x4:VOT_gs", dpar = "mu2"),
@@ -786,20 +783,20 @@ fit_model <- function(data, phase, formulation = "standard", priorSD = 2.5, adap
   } else {
     c(set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "VOT_gs", dpar = "mu2"))
   }
-  
-  my_priors <- 
+
+  my_priors <-
     c(
       prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),
       prior_overwrite,
-      prior(cauchy(0, 2.5), class = "sd", dpar = "mu2"), 
+      prior(cauchy(0, 2.5), class = "sd", dpar = "mu2"),
       prior(lkj(1), class = "cor"))
-  
+
   brm(
     formula = if (formulation == "nested_slope") {
-      bf(Response.Voiceless ~ 1, 
+      bf(Response.Voiceless ~ 1,
          mu1 ~ 0 + offset(0),
-         mu2 ~ 0 + I(paste(Condition.Exposure, Block, sep = "x")) / VOT_gs + 
-           (0 + Block / VOT_gs | ParticipantID) + 
+         mu2 ~ 0 + I(paste(Condition.Exposure, Block, sep = "x")) / VOT_gs +
+           (0 + Block / VOT_gs | ParticipantID) +
            (0 + I(paste(Condition.Exposure, Block, sep = "x")) / VOT_gs | Item.MinimalPair),
          theta1 ~ 1)
     } else {
@@ -812,8 +809,8 @@ fit_model <- function(data, phase, formulation = "standard", priorSD = 2.5, adap
     cores = 4,
     chains = chains,
     init = 0,
-    iter = 4000, 
-    warmup = 2000, 
+    iter = 4000,
+    warmup = 2000,
     family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
     control = list(adapt_delta = adapt_delta),
     file = paste0("../models/", phase, "-", formulation, "-priorSD", priorSD, "-", adapt_delta, ".rds")

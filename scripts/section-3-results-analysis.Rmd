@@ -125,8 +125,14 @@ d.chodroff_wilson <-
     c("VOT", "f0", "f0_Mel", "f0_semitones"),
     list(CCuRE = function(x) apply_ccure(x, data = .)),
     .names = "{.col}.CCuRE")) %>%
+  mutate(across(
+    c("VOT", "f0", "f0_Mel", "f0_semitones"),
+    list(CCuRE = function(x) apply_ccure_old(x, data = .)),
+    .names = "{.col}.CCuRE_old")) %>%
   mutate(category = factor(category))
+```
 
+```{r}
 # Make ideal observer based on exposure conditions
 make_VOT_IOs_from_exposure <- function(data){ 
   data %>%
@@ -713,28 +719,19 @@ cond_means <- left_join(cond_means_all, cond_means_exposure)
 d_for_analysis %<>%
   ungroup() %>% 
   mutate(
-    VOT.CCuRE = get_CCuRE_VOT(
-    data = d.chodroff_wilson, 
-    newdata = d_for_analysis %>% 
-      ungroup() %>% 
-      mutate(VOT = Item.VOT, f0_Mel = Item.F0_Mel, Talker = "new")),
-    F0_Mel.CCuRE = get_CCuRE_f0_Mel(
+    VOT.CCuRE = remove_speechrate_effect_from_cue(
       data = d.chodroff_wilson, 
-    newdata = d_for_analysis %>% 
-      ungroup() %>% 
-      mutate(VOT = Item.VOT, f0_Mel = Item.F0_Mel, Talker = "new")),
+      newdata = d_for_analysis %>% 
+        ungroup() %>% 
+        mutate(VOT = Item.VOT, Talker = "new"),
+      cue = "VOT"),
+    F0_Mel.CCuRE = remove_speechrate_effect_from_cue(
+      data = d.chodroff_wilson, 
+      newdata = d_for_analysis %>% 
+        ungroup() %>% 
+        mutate(f0_Mel = Item.F0_Mel, Talker = "new"),
+      cue = "f0_Mel"),
     category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))) 
-
-# d_for_analysis %<>%
-#   mutate(
-#     Item.VOT_centered = case_when(
-#       Condition.Exposure == "Shift0" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_all[1]),
-#       Condition.Exposure == "Shift10" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_all[2]),
-#       Condition.Exposure == "Shift40" ~ Item.VOT + (chodroff.mean_VOT - cond_means$Item.VOT_mean_all[3])),
-#     Item.F0_Mel_centered = case_when(
-#       Condition.Exposure == "Shift0" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_mean_all[1]),
-#       Condition.Exposure == "Shift10" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_mean_all[2]),
-#       Condition.Exposure == "Shift40" ~ Item.F0_Mel + (chodroff.mean_f0_Mel - cond_means$Item.F0_Mel_mean_all[3])))
 ```
 
 
