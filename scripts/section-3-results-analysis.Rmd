@@ -128,12 +128,7 @@ d.chodroff_wilson <-
   mutate(across(
     c("VOT", "f0", "f0_Mel", "f0_semitones"),
     list(CCuRE = function(x) apply_ccure(x, data = .)),
-    .names = "{.col}.CCuRE")) %>%
-  mutate(across(
-    c("VOT", "f0", "f0_Mel", "f0_semitones"),
-    list(CCuRE = function(x) apply_ccure_old(x, data = .)),
-    .names = "{.col}.CCuRE_old")) %>%
-  mutate(category = factor(category))
+    .names = "{.col}.CCuRE")) 
 ```
 
 ```{r}
