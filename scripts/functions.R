@@ -202,7 +202,7 @@ apply_ccure <- function(x, data) {
   # about the talker---from each token's actual cue value) and then add the
   # overall cue mean back (this latter step is done for visualization purposes,
   # so that the C-CuREd cues can still be expressed in the familiar cue space;
-  # the intercept is that predicted mean since get_CCuRE_model calls prep_for_CCuRE,
+  # the intercept is that predicted mean since get_CCuRE_model calls prep_predictors_for_CCuRE,
   # which centers and scales all predictors.
   x - predict(m) + fixef(m)[1]
 }
@@ -299,19 +299,6 @@ get_bivariate_normal_ellipse <- function(
   return(ellipse)
 }
 
-# defining experiment cue means and SDs. This is necessary for the following functions to work
-# chodroff.mean_VOT <- 38.6103
-# chodroff.mean_f0_Mel <- 237.997
-# VOT.mean_exp1 <- 47.6304
-# VOT.sd_exp1 <- 51.7727
-# f0.mean_exp1 <- 340.923
-# f0.sd_exp1 <- 2.58267
-# VOT.mean_test <- 36
-# f0.mean_test <- 340
-# VOT.mean_exp2 <- 40.587
-# VOT.sd_exp2 <- 28.495
-# f0.mean_exp2 <- 340.24
-# f0.sd_exp2 <- 1.6484
 
 ############################################################################
 # Get approximate f0 of synthesised stimuli from VOT values
