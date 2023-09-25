@@ -303,7 +303,8 @@ get_bivariate_normal_ellipse <- function(
 ############################################################################
 # Get approximate f0 of synthesised stimuli from VOT values
 ############################################################################
-# set the linear prediction parameters for exposure stimuli
+# Get the linear prediction parameters for exposure stimuli based on f0 measurements aligned with Chodroff-Wilson
+
 predict_f0 <- function(VOT, intercept = 245.46968, slope = 0.03827, Mel = FALSE) {
   f0 <- intercept + slope * (VOT)
   if (Mel) f0 <- phonR::normMel(f0)
@@ -650,8 +651,6 @@ prepVars <- function(d, levels.Condition = NULL, contrast_type) {
     mutate(VOT_gs = (Item.VOT - mean(Item.VOT, na.rm = TRUE)) / (2 * sd(Item.VOT, na.rm = TRUE))) %>%
     droplevels()
 
-  message("mean VOT is", mean(d$Item.VOT), "and SD is", sd(d$Item.VOT))
-
   contrasts(d$Condition.Exposure) <- cbind("_Shift10 vs. Shift0" = c(-2/3, 1/3, 1/3),
                                           "_Shift40 vs. Shift10" = c(-1/3,-1/3, 2/3))
   require(MASS)
@@ -681,7 +680,7 @@ prepVars <- function(d, levels.Condition = NULL, contrast_type) {
 }
 
 ### function for non-parametric density plot
-# ensuring that a particular proportion of points are included within each contour line
+# ensuring that the corresponding proportion of points are included within each contour region as defined by their quantile
 # adjusted from https://stackoverflow.com/questions/75598144/interpretation-of-2d-density-estimate-charts
 # we can get the 2d density with MASS::kde2d, then convert to a raster using terra. We can then order the points according to the density in the associated 2d density grid and find the density at which a quantile is passed with approx
 density_quantiles <- function(x, y, quantiles) {
