@@ -632,12 +632,13 @@ get_PSE_quantiles <- function(data, group) {
 ############################################################################
 # function to prepare variables for modelling
 ############################################################################
-prepVars <- function(d, levels.Condition = NULL, contrast_type) {
+prepVars <- function(d, test_mean = NULL, levels.Condition = NULL, contrast_type) {
   d %<>%
     drop_na(Condition.Exposure, Phase, Block, Item.MinimalPair, ParticipantID, Item.VOT, Response)
 
   message("VOT mean:", signif(mean(d$Item.VOT, na.rm = T)))
   message("VOT sd:", signif(sd(d$Item.VOT, na.rm = T)))
+  print(paste("VOT test mean:", test_mean))
 
   d %<>%
     ungroup() %>%
@@ -724,13 +725,18 @@ fit_model <- function(data, phase, formulation = "standard", priorSD = 2.5, adap
   require(magrittr)
   require(brms)
 
+  VOT.mean_test <- data %>% 
+    filter(Phase == "test") %>% 
+    ungroup() %>% 
+    summarise(mean = mean(Item.VOT, na.rm = T)) %>% 
+    pull(mean)
   levels_Condition.Exposure <- c("Shift0", "Shift10", "Shift40")
   contrast_type <- "difference"
   chains = 4
 
   data %<>%
     filter(Phase == phase & Item.Labeled == F) %>%
-    prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type)
+    prepVars(test_mean = VOT.mean_test, levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type)
 
   prior_overwrite <- if (phase == "exposure" & formulation == "nested_slope") {
     c(set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x2:VOT_gs", dpar = "mu2"),

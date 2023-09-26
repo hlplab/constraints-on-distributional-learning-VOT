@@ -65,10 +65,10 @@ fit_mix_test_nested <-
   
 fit_mix_exposure_nested <-
   fit_model(data = d_for_analysis,
-          phase = "exposure",
-          formulation = "nested_slope",
-          priorSD = 15, 
-          adapt_delta = .999)
+            phase = "exposure",
+            formulation = "nested_slope",
+            priorSD = 15, 
+            adapt_delta = .999)
 
 # Extract intercepts and slopes from test and exposure model
 get_intercepts_and_slopes <-
@@ -81,10 +81,6 @@ get_intercepts_and_slopes <-
   pivot_wider(names_from = term, values_from = ".value") %>%
   relocate(c(Condition.Exposure, Block, Intercept, slope, .chain, .iteration, .draw))
 
-
-# transpose the VOT test mean into exposure units for correction of exposure intercepts
-VOT.mean_in_exposure_scale <- (VOT.mean_test - VOT.mean_exposure)/(2 * VOT.sd_exposure)
-
 d.estimates <-
   full_join(
     fit_mix_test_nested %>% get_intercepts_and_slopes(),
@@ -93,7 +89,7 @@ d.estimates <-
     Block = factor(Block),
     PSE = ifelse(
       Block %in% c(2, 4, 6),
-      descale(-Intercept/slope, VOT.mean_exposure, VOT.sd_exposure),
+      descale(-Intercept/slope, VOT.mean_test, VOT.sd_exposure),
       descale(-Intercept/slope, VOT.mean_test, VOT.sd_test))) %>% 
   group_by(Condition.Exposure, Block) %>%
   summarise(
@@ -265,8 +261,8 @@ p.across_blocks <-
              colour = Condition.Exposure, group = Condition.Exposure)) +
   geom_rect(
     data = tibble(
-      xmin = c(seq(0.55, 6.55, 2), seq(7.55, 8.55, 1)), 
-      xmax = c(seq(1.45, 7.45, 2), seq(8.45, 9.45, 1))),
+      xmin = c(seq(0.5, 6.5, 2), seq(7.55, 8.55, 1)), 
+      xmax = c(seq(1.5, 7.5, 2), seq(8.5, 9.5, 1))),
     mapping = aes(xmin = xmin, xmax = xmax),
     ymin = -Inf, ymax = Inf, fill = "grey", alpha = .1, inherit.aes = F) +
   geom_point(position = position_dodge(.3), size = 1) +
@@ -285,8 +281,8 @@ p.intercept_1to7 <-
   geom_step(
     data = d.io.categorization,
     aes(x = Block, y = intercept_scaled, colour = Condition.Exposure, group = Condition.Exposure),
-    linetype = 1, 
-    linewidth = .9, 
+    linetype = 2, 
+    linewidth = .7, 
     alpha = 0.3,
     direction = "mid",
     inherit.aes = F) +
@@ -312,8 +308,8 @@ d.true_shift <-
   mutate(
     mean_PSE_block1 = mean(c(d.estimates$PSE_median[1], d.estimates$PSE_median[10], d.estimates$PSE_median[19])),
     true_shift = PSE.io_predicted - mean_PSE_block1,
-    proportion_shift = abs((PSE_median - mean_PSE_block1)/true_shift),
-    proportion_shift = ifelse(PSE_median >= mean_PSE_block1 & Condition.Exposure != "Shift40", -(proportion_shift), proportion_shift))
+    proportion_shift = (PSE_median - mean_PSE_block1)/true_shift,
+    proportion_shift = ifelse(Condition.Exposure != "Shift40", -(proportion_shift), proportion_shift))
 
 
 # compute PSEs from the 92 talkers in Chodroff-Wilson corpus
@@ -330,7 +326,6 @@ d.talkerPSEs <- get_IO_categorization(
             upper_PSE = quantile(PSE_centered, probs = .975)) 
 # start with the unnormalised just VOT for overall range
 # then use the normalised VOT and F0 to get the PSE
-
 
 p.PSE_1to7 <-     
   p.across_blocks +  
@@ -355,7 +350,7 @@ p.PSE_1to7 <-
     inherit.aes = F) +
   geom_text(
    data = d.true_shift %>% 
-     filter(Phase == "test") %>% 
+     filter(Phase == "exposure") %>% 
      group_by(Condition.Exposure, true_shift) %>% 
      summarise(),
    mapping = aes(
@@ -385,7 +380,6 @@ p.estimates_1to7 <-
   (p.slope_1to7 | p.PSE_1to7) +
   plot_layout(guides = "collect") &
   theme(legend.position = "none", axis.text = element_text(size = 8))
-
 ```
 
 
