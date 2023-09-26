@@ -1,0 +1,329 @@
+---
+title: "AE-DLVOT-Proliferate-sandbox_May17"
+author: "Maryann Tan and Florian Jaeger"
+date: \today
+geometry: margin=1cm
+header-includes:
+  - \usepackage{booktabs}
+  - \usepackage{siunitx}
+  - \usepackage{tabto}
+  - \usepackage{soul}
+  - \usepackage{xcolor}
+  - \usepackage{placeins}
+  - \usepackage{lscape}
+  - \usepackage{animate}
+  - \newcommand{\blandscape}{\begin{landscape}}
+  - \newcommand{\elandscape}{\end{landscape}}
+  - \makeatletter\renewcommand{\fps@table}{!ht}\makeatother
+  - \setstcolor{red}
+  - \usepackage{sectsty}
+  - \sectionfont{\color{blue}} 
+  - \subsectionfont{\color{blue}}
+  - \subsubsectionfont{\color{darkgray}}
+output:
+  pdf_document: 
+    fig_caption: yes
+    fig_width: 7
+    keep_tex: yes
+    latex_engine: xelatex
+    number_sections: yes
+    toc: yes
+    toc_depth: 4
+  fontsize: 10pt
+---
+
+```{r, include=F}
+library(knitr)
+
+opts_chunk$set(dev = 'pdf',
+               comment="", 
+               echo=FALSE, warning=TRUE, message=TRUE,
+               cache=FALSE, 
+               size="small",
+               tidy.opts = list(width.cutoff = 400),
+               fig.width = 8, fig.height = 4.5, fig.align = "center")
+
+
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+
+color_block = function(color) {
+  function(x, options) sprintf('\\color{%s}\\begin{verbatim}%s\\end{verbatim}\\color{black}',
+                               color, x)
+}
+knitr::knit_hooks$set(error = color_block('red'))
+knitr::knit_hooks$set(warning = color_block('orange'))
+```
+
+# Preamble 
+Loading libraries, functions, and setting constants.
+
+```{r, include=F}
+library(tidyverse)
+library(magrittr)
+
+library(broom)          # for extraction of coefficients
+
+library(gganimate)      # to animate plots
+library(RColorBrewer)   # to select brewer colors
+library(kableExtra) 
+library(lme4)
+library(lmerTest)
+library(ggpubr)
+library(pander)
+library(scales)
+library(ggforce)
+```
+
+
+
+```{r functions, include=FALSE}
+source("../functions-for-experiment-reports.R")
+```
+
+
+
+
+```{r}
+d_file_list <- list.files("../../../data/raw/AE-DLVOT-Sandbox-May17-Results/")
+
+d <- read.csv(paste("../../../data/raw/AE-DLVOT-Sandbox-May17-Results/", d_file_list[1], sep="")) %>%
+    { if("error" %in% names(.)) {
+      if(all(is.na(.$error))) select(., -error) else
+        rename(., !! sym(paste("error", d_file_list[i+1], sep = ".")) := error)} else .} 
+
+suppressMessages(
+  for (i in 1:length(d_file_list)-1){
+    nextvar <- read.csv(paste("../../../data/raw/AE-DLVOT-Sandbox-May17-results/", d_file_list[i+1], sep="")) %>%
+      { if("error" %in% names(.)) {
+        if(all(is.na(.$error))) select(., -error) else
+          rename(., !! sym(paste("error", d_file_list[i+1], sep = ".")) := error)} else .}
+    d %<>% left_join(nextvar)
+  })
+
+d %<>% 
+  formatData(experiment = "AE-DLVOT") %>%
+  sortVars()
+```
+
+
+```{r}
+names(d)
+```
+
+
+```{r}
+d %>%
+  select(ParticipantID, Experiment, comments) %>%
+  distinct() %>% 
+  pandoc.table(split.cells = c(10, 55))
+```
+
+## Have any participants taken the experiment more than once?
+
+If a worker shows up more than once below, it is a duplicate take. For sandboxing, this is not an issue. We include this debugging step here since we will use it during production.
+
+```{r}
+d %>%
+  group_by(Experiment, ParticipantID, Assignment.Submit.DateTime.UTC) %>%
+  summarise() %>%
+  group_by(Experiment, ParticipantID) %>%
+  tally() %>% filter(n != 1)
+```
+```{r}
+d %>% 
+  group_by(Block, Phase, Trial) %>% 
+  summarise() %>% tally()
+```
+
+### Are all VOTs occurring exactly once in each test block?
+Show all VOTs that occur more or less than once per test block. If everything worked, this should be an empty data frame:
+
+```{r}
+d %>%
+  filter(Phase == "test") %>%
+  group_by(ParticipantID, Block, Item.VOT) %>%
+  tally() %>%
+  filter(n != 1)
+```
+
+
+## Did participants show increasing voiceless responses for stimuli with increasing VOT?
+We fit separate logistic regressions to each participant's responses with the VOT continuum as the sole (linear) predictor.
+
+```{r individual logistic regression fits}
+d %<>%
+  group_by(ParticipantID) %>%
+  nest() %>%
+  mutate(
+    CategorizationModel =
+      map(
+        data,
+        ~ tryCatch(
+          expr = {
+            glm(Response.Voicing == "voiceless" ~ Item.VOT, data = .x, family = binomial) %>%
+            tidy() },
+          error = ~ NA)),
+    Categorization.Intercept =
+      map(
+        CategorizationModel,
+        ~ .x %>%
+          filter(term == "(Intercept)") %>%
+          pull(estimate)) %>%
+      unlist(),
+    Categorization.Slope =
+      map(
+        CategorizationModel,
+        ~ .x %>%
+          filter(term == "Item.VOT") %>%
+          pull(estimate)) %>%
+      unlist()) %>%
+  select(-CategorizationModel) %>%
+  unnest(data)
+```
+
+
+
+### Item minimal pair across trials
+
+```{r, fig.width=30, fig.height=4.5}
+d %>%
+  ggplot(aes(x = Trial)) +
+  geom_bar(mapping = aes(fill = Item.MinimalPair)) +
+  scale_x_continuous(breaks = 10 * 1:10) +
+  coord_cartesian(expand = F) +
+  facet_grid(Condition.Exposure + Experiment ~ Block, scales = "free_x", space = "free_x") +
+  theme(legend.position = "top")
+```
+
+
+### Category across trials
+
+```{r, fig.width=30, fig.height=4.5}
+d.all %>%
+  filter(Experiment == "AE-DLVOT-NoGreenDot") %>% 
+  ggplot(aes(x = Trial)) +
+  geom_bar(mapping = aes(fill = Item.ExpectedResponse.Voicing)) +
+  scale_x_continuous(breaks = 10 * 1:10) +
+  coord_cartesian(expand = F) +
+  facet_grid(Condition.Exposure ~ Block, scales = "free_x", space = "free_x") +
+  theme(legend.position = "top")
+```
+
+
+
+
+
+### VOT across trials
+
+```{r, fig.width=30, fig.height=4.5}
+d %>%
+  mutate(count = 1) %>%
+  ggplot(aes(x = Trial, y = count)) +
+  geom_col(mapping = aes(fill = Item.VOT)) +
+  scale_x_continuous(breaks = 10 * 1:10) +
+  scale_fill_viridis_b() +
+  coord_cartesian(expand = F) +
+  facet_grid(Condition.Exposure ~ Block, scales = "free_x", space = "free_x") +
+  theme(legend.position = "top")
+```
+
+
+## How long did it take participants to complete the experiment?
+We have two ways of assessing the overall duration participants took to complete the experiment. The time between accepting and submitting the assignment includes any time that might pass before the participant actually starts the experiment (workers often select a few HITs---reserving them---and only then start working on them), time spent reading the instructions, and time spent on the survey: 
+
+```{r}
+d.mean_duration <- 
+  d.all %>%
+  group_by(Experiment) %>% 
+  select(ParticipantID, Duration.Assignment) %>%
+  distinct() %>% mutate(Duration.Assignment = as.numeric(Duration.Assignment)) %>%  
+  summarise(mean = mean(Duration.Assignment))
+
+d.all %>%
+  group_by(Experiment) %>% 
+  select(ParticipantID, Duration.Assignment) %>%
+  distinct() %>% 
+  mutate(Duration.Assignment = as.numeric(Duration.Assignment)) %>% 
+  ggplot(aes(x = Duration.Assignment, colour = Experiment)) +
+  geom_density(aes(colour = Experiment)) +
+  geom_rug(aes(colour = Experiment), show.legend = TRUE) +
+  geom_vline(xintercept = d.mean_duration$mean, colour = hue_pal()(2)[1:2], linetype = "dashed", alpha = .4) +
+  annotate("text", x = c(70, 70), y = c(0.015,.0175), label = c("mean duration GreenDot: 47", "mean duration NoGreenDot: 39.6")) +
+  scale_x_continuous("Duration of assignment (in minutes)", breaks = seq(12, 85, 10)) 
+```
+
+A second, perhaps more informative measure, is the time between the start of the first trial and the end of the last trial, which measures how much time was spent on the actual experiment.
+
+Between the Green-dotted experiment and the no-Green-dot experiment, the former is less skewed in the distribution of total time spent on the trials. 
+
+```{r}
+d.mean_Duration.AllPhases <- 
+  d.all %>%
+  group_by(Experiment) %>% 
+  select(ParticipantID, Duration.Assignment, Duration.AllPhases) %>%
+  distinct() %>% 
+  mutate(Duration.Assignment = as.numeric(Duration.AllPhases),
+         Experiment = factor(Experiment)) %>%  
+         summarise(mean = mean(Duration.AllPhases))
+
+d.all %>%
+  select(Experiment, ParticipantID, Duration.Assignment, Duration.AllPhases) %>%
+  distinct() %>%
+  group_by(Experiment) %>% 
+  ggplot() +
+  geom_density(aes(x = Duration.AllPhases, colour = Experiment)) +
+  geom_rug(data = d.all %>% 
+             group_by(Experiment, ParticipantID, Duration.AllPhases) %>% 
+             summarise(mean = mean(Duration.AllPhases)),
+           aes(x = mean)) +
+  annotate("text", x = c(36, 36), y = c(0.065,.075), label = c("mean duration GreenDot: 22", "mean duration NoGreenDot: 14.6")) +
+  scale_x_continuous("Duration of exposure & test phase (in minutes)", breaks = seq(6, 55, 5)) 
+```
+
+# Performance checks
+
+## Catch trial performance by experiment
+The proportion of participants who scored well on catch trials was higher in the green-dot experiment.
+
+
+## How did participants perform on catch trials
+There should be 18 catch trials (3 items * 2 instances * 3 exposure blocks) per participant. We will exclude participants who correctly answered fewer than 16 of the 18 catch trials (< 90%).
+
+```{r}
+d.all %<>% 
+  mutate(
+    Is.CatchTrial = ifelse(Item.ExpectedResponse %in% c("flare", "rare", "share"), TRUE, FALSE),
+    CatchTrial.Correct = ifelse(Is.CatchTrial == TRUE, 
+                                ifelse(Item.ExpectedResponse == Response, TRUE, FALSE), 
+                                NA),
+    Answer.sex.Correct = ifelse(Answer.sex == "woman", TRUE, FALSE)) %>% 
+  group_by(ParticipantID) %>% 
+  mutate(Exclude_participant.due_to_catch_trials = ifelse(sum(CatchTrial.Correct, na.rm = TRUE) < 17, TRUE, FALSE)) %>%
+  ungroup()
+```
+
+
+```{r, fig.cap="Participant performance on catch trials in both experiments."}
+d.all %>% 
+  group_by(Experiment, ParticipantID) %>% 
+  summarise(No.CatchTrial.Correct = sum(CatchTrial.Correct, na.rm = T)) %>%
+  mutate(Total.Participants = ifelse(Experiment == "AE-DLVOT-GreenDot", 36, 90)) %>% 
+  group_by(Experiment, Total.Participants, No.CatchTrial.Correct) %>% 
+  summarise(CatchTrial.Correct_Frequency = n(),
+            Proportion = CatchTrial.Correct_Frequency/Total.Participants) %>% 
+  group_by(Experiment, No.CatchTrial.Correct, Proportion) %>% 
+  summarise() %>% 
+  ggplot(aes(x = No.CatchTrial.Correct, y = Proportion, colour = Experiment)) +
+  geom_line(size = 1.3, lineend = "round") +
+  scale_x_continuous("Number of correct catch trials", breaks = seq(0, 18, 1)) +
+  scale_y_continuous("Proportion of participants", breaks = seq(0, 1, .05)) 
+  # stat_function(fun = function(x) dbinom(round(x), 18, .5) * 7, color = "red", geom = "line") +
+  # stat_function(fun = function(x) dbinom(round(x), 18, .99) * 29, color = "green", geom = "line") +
+```
+
+
+

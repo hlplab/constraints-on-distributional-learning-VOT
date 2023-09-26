@@ -1,0 +1,315 @@
+---
+title: "Sandbox testing of Norming Experiment A (test only)"
+author: "Maryann Tan and Florian Jaeger"
+date: \today
+geometry: margin=2cm
+header-includes:
+  - \usepackage{booktabs}
+  - \usepackage{siunitx}
+  - \usepackage{tabto}
+  - \usepackage{soul}
+  - \usepackage{xcolor}
+  - \usepackage{placeins}
+  - \usepackage{lscape}
+  - \usepackage{animate}
+  - \newcommand{\blandscape}{\begin{landscape}}
+  - \newcommand{\elandscape}{\end{landscape}}
+  - \makeatletter\renewcommand{\fps@table}{!ht}\makeatother
+  - \setstcolor{red}
+  - \usepackage{sectsty}
+  - \sectionfont{\color{blue}} 
+  - \subsectionfont{\color{blue}}
+  - \subsubsectionfont{\color{darkgray}}
+output:
+  pdf_document: 
+    fig_caption: yes
+    fig_width: 7
+    keep_tex: yes
+    latex_engine: xelatex
+    number_sections: yes
+    toc: yes
+    toc_depth: 4
+  fontsize: 10pt
+---
+
+```{r, include=F}
+library(knitr)
+
+opts_chunk$set(dev = 'pdf',
+               comment="", 
+               echo=FALSE, warning=TRUE, message=TRUE,
+               cache=FALSE, 
+               size="small",
+               tidy.opts = list(width.cutoff = 200),
+               fig.width = 8, fig.height = 4.5, fig.align = "center")
+
+
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+
+color_block = function(color) {
+  function(x, options) sprintf('\\color{%s}\\begin{verbatim}%s\\end{verbatim}\\color{black}',
+                               color, x)
+}
+knitr::knit_hooks$set(error = color_block('red'))
+knitr::knit_hooks$set(warning = color_block('orange'))
+```
+
+# Preamble 
+Loading libraries, functions, and setting constants.
+
+```{r, include=F}
+library(tidyverse)
+library(magrittr)
+
+library(broom)          # for extraction of coefficients
+
+library(gganimate)      # to animate plots
+library(RColorBrewer)   # to select brewer colors
+```
+
+```{r, include=F}
+options(width = 110)
+
+theme_set(theme_bw())
+```
+
+```{r functions, include=FALSE}
+source("functions-for-experiment-reports.R")
+```
+
+# Data import
+Loading and formatting data.
+
+```{r, message=F}
+experiment = "NORM-A"
+
+d.test = read_tsv("../../data/raw/experiment-NORM-A/sandbox/experiment-NORM-URLPARAMS-sandbox-batch4-results_161121.tab") %>%
+  formatData(experiment = experiment) %>%
+  sortVars()
+
+```
+
+
+# Assessing the data
+
+## Carefully read comments provided by participants
+No comments provided in the sandbox HITs.
+
+```{r}
+d.test %>%
+  select(ParticipantID, Assignment.Comment) %>%
+  distinct()
+```
+
+## Matching beween YAML file and conditions in this data
+
+ 1. Get the HIT ID for each participant. 
+```{r}
+```
+ 
+ 2. Go to the YAML success file (.success.yaml). 
+ 3. Look up that HIT ID.
+ 4. Count what *k*th HIT corresponds to that HIT ID from the top of the success file (e.g., it might be the 6th HIT ID).
+ 
+```{r}
+
+```
+
+## Have any participants taken the experiment more than once?
+
+If a worker shows up more than once below, it is a duplicate take. For sandboxing, this is not an issue. We include this debugging step here since we will use it during production.
+
+```{r}
+d.test %>%
+  group_by(workerid, Assignment.Submit.DateTime.UTC) %>%
+  summarise() %>%
+  group_by(workerid) %>%
+  tally()
+```
+
+## Does each HIT contain exactly 2 instances of each recording?
+Show all combinations of participant, test block, and video condition for which this is *not* true:
+
+```{r}
+d.test %>% filter(Item.CorrectResponse %in% c("flare", "rare", "share")) %>% 
+  group_by(ParticipantID, ItemID) %>%
+  tally() %>%
+  filter(n != 4 ) %>%
+  nrow()
+
+d.test %>% filter(!(Item.CorrectResponse %in% c("flare", "rare", "share"))) %>% 
+  group_by(ParticipantID, ItemID) %>%
+  tally() %>%
+  filter(n != 2 ) %>%
+  nrow()
+
+```
+
+
+## Does the data only contain test results (as it should)?
+
+```{r}
+nrow(d.test) == nrow(
+  d.test %>% 
+  filter(Phase == "Test"))
+```
+
+
+## Did participants show increasing voiceless responses for stimuli with increasing VOT?
+We fit separate logistic regressions to each participant's responses with the VOT continuum as the sole (linear) predictor.
+
+```{r}
+d.test %<>%
+  group_by(ParticipantID) %>%
+  nest() %>%
+  mutate(
+    CategorizationModel = 
+      map(
+        data, 
+        ~ glm(Response == "voiceless" ~ Item.VOT, data = .x, family = binomial) %>% 
+          tidy()),
+    Categorization.Intercept = 
+      map(
+        CategorizationModel, 
+        ~ .x %>% 
+          filter(term == "(Intercept)") %>% 
+          pull(estimate)) %>% 
+      unlist(),
+    Categorization.Slope = 
+      map(
+        CategorizationModel, 
+        ~ .x %>% 
+          filter(term == "Item.VOT") %>% 
+          pull(estimate)) %>% 
+      unlist()) %>%
+  select(-CategorizationModel) %>%
+  unnest(data)
+```
+
+```{r}
+d.test %>%
+  group_by(ParticipantID, Item.VOT, Categorization.Slope) %>%
+  mutate(Response.ProportionVoiceless = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
+  ggplot(aes(
+    x = Item.VOT, 
+    y = Response.ProportionVoiceless, 
+    color = ParticipantID,
+    linetype = Categorization.Slope < 0)) +
+  geom_smooth(
+    formula = y ~ x, 
+    method = "glm", 
+    method.args = list(family = "binomial"),
+    se = FALSE) +
+  scale_x_continuous("VOT") +
+  scale_y_continuous("Proportion of voiceless responses", limits = c(0,1)) +
+  scale_linetype_manual(
+    "Unexpected\ncategorization\nslope",
+    breaks = c(T, F),
+    labels = c("yes", "no"),
+    values = c(2, 1))
+```
+
+
+## How long did it take participants to complete the experiment?
+We have two ways of assessing the overall duration participants took to complete the experiment. The time between accepting and submitting the assignment includes any time that might pass before the participant actually starts the experiment (workers often select a few HITs---reserving them---and only then start working on them), time spent reading the instructions, and time spent on the survey: 
+
+```{r}
+d.test %>%
+  select(ParticipantID, Duration.Assignment) %>%
+  distinct() %>%
+  ggplot(aes(x = Duration.Assignment)) +
+  geom_density() +
+  geom_rug() +
+  scale_x_continuous("Duration of assignment (in minutes)")
+```
+
+A second, perhaps more informative measure, is the time between the start of the first trial and the end of the last trial, which measures how much time was spent on the actual experiment.
+
+```{r}
+d.test %>%
+  select(ParticipantID, Duration.AllPhases) %>%
+  distinct() %>%
+  ggplot(aes(x = Duration.AllPhases)) +
+  geom_density() +
+  geom_rug() +
+  scale_x_continuous("Duration of test phase (in minutes)")
+```
+
+
+### Were some participants particularly slow/fast to respond?
+We can also examine the pacing and variability in pacing across trials. For this, we plot the mean and standard deviation of each participants logarithm-transformed response times for all non-catch trials. Catch trials were excluded from this consideration since catch responses (pressing "B") could be given at any point of the video, making catch responses substantially faster than all other responses. 
+
+Participant with high SDs are those who might have, for example, have just one or two slow trials. Participant with high mean RTs but comparatively low SDs of those RTs, on the other hand, were consistently slow in responding.
+
+```{r}
+d.test %>%
+  group_by(ParticipantID) %>%
+  mutate(Response.log_RT = log10(Response.RT)) %>%
+  summarise_at("Response.log_RT", .funs = list("mean" = mean, "sd" = sd)) %>%
+  ggplot(aes(x = mean, y = sd, label = ParticipantID)) +
+  geom_text(alpha = .8) +
+  geom_rug() +
+  scale_x_continuous("mean log-RT (log10 of msec)") +
+  scale_y_continuous("SD of log-RT") +
+  scale_color_manual(
+    "Unexpected\ncategorization\nslope",
+    breaks = c(T, F),
+    labels = c("yes", "no"),
+    values = c("red", "black"))
+```
+# Results
+
+## Do the four continua differ? 
+
+### Along VOT
+
+```{r}
+d.test %>%
+  group_by(ParticipantID, Item.MinimalPair, Item.VOT) %>%
+  mutate(Response.ProportionVoiceless = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
+  group_by(ParticipantID, Item.MinimalPair, Item.VOT) %>%
+  summarise(Response.ProportionVoiceless = mean(Response.ProportionVoiceless)) %>%
+  ggplot(aes(
+    x = Item.VOT, 
+    y = Response.ProportionVoiceless, 
+    color = Item.MinimalPair,
+    fill = Item.MinimalPair)) +
+  geom_smooth(
+    formula = y ~ x, ,
+    method = "glm", 
+    method.args = list(family = "binomial"),
+    size = 1.5) +
+  stat_summary(fun.data = mean_cl_boot, geom = "pointrange", position = position_dodge(.01), size = .5) +
+  scale_x_continuous("VOT (msec)") +
+  scale_y_continuous("Proportion of voiceless responses", limits = c(0,1)) 
+```
+### Along f0
+
+```{r}
+d.test %>%
+  group_by(ParticipantID, Item.MinimalPair, Item.F0) %>%
+  mutate(Response.ProportionVoiceless = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
+  group_by(ParticipantID, Item.MinimalPair, Item.F0) %>%
+  summarise(Response.ProportionVoiceless = mean(Response.ProportionVoiceless)) %>%
+  ggplot(aes(
+    x = Item.F0, 
+    y = Response.ProportionVoiceless, 
+    color = Item.MinimalPair,
+    fill = Item.MinimalPair)) +
+  geom_smooth(
+    formula = y ~ x, 
+    method = "glm", 
+    method.args = list(family = "binomial")) +
+  stat_summary(fun.data = mean_cl_boot, geom = "pointrange", position = position_dodge(.01), size = .5) +
+  scale_x_continuous("f0 (Hz)") +
+  scale_y_continuous("Proportion of voiceless responses", limits = c(0,1)) 
+```
+
+# Session info
+```{r session_info, include=TRUE, echo=TRUE, results='markup'}
+devtools::session_info()
+```
