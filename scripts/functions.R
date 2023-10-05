@@ -47,7 +47,6 @@ get_PSE <- function(model, y) {
 }
 
 
-
 # Function for calculating CI from logits of a model summary
 get_coefficient_fr_model <- function(model, term) {
   round(as.numeric(summary(model)$fixed[term, 1]), 1)
