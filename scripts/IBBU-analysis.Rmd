@@ -1,0 +1,433 @@
+---
+title: "Ideal adaptor analysis of AE-DLVOT"
+author: "Maryann Tan and Florian Jaeger"
+date: \today
+geometry: margin=1cm
+header-includes:
+  - \usepackage{booktabs}
+  - \usepackage{siunitx}
+  - \usepackage{tabto}
+  - \usepackage{soul}
+  - \usepackage{xcolor}
+  - \usepackage{placeins}
+  - \usepackage{lscape}
+  - \usepackage{animate}
+  - \newcommand{\blandscape}{\begin{landscape}}
+  - \newcommand{\elandscape}{\end{landscape}}
+  - \makeatletter\renewcommand{\fps@table}{!ht}\makeatother
+  - \setstcolor{red}
+  - \usepackage{sectsty}
+  - \sectionfont{\color{blue}} 
+  - \subsectionfont{\color{blue}}
+  - \subsubsectionfont{\color{darkgray}}
+output:
+  pdf_document: 
+    fig_caption: yes
+    fig_width: 7
+    keep_tex: yes
+    latex_engine: xelatex
+    number_sections: yes
+    toc: yes
+    toc_depth: 4
+  fontsize: 10pt
+---
+
+```{r, include=F}
+library(knitr)
+
+opts_chunk$set(dev = 'pdf',
+               comment="", 
+               echo=FALSE, warning=TRUE, message=TRUE,
+               cache=FALSE, 
+               size="small",
+               tidy.opts = list(width.cutoff = 400),
+               fig.width = 8, fig.height = 4.5, fig.align = "center")
+
+
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+
+color_block = function(color) {
+  function(x, options) sprintf('\\color{%s}\\begin{verbatim}%s\\end{verbatim}\\color{black}',
+                               color, x)
+}
+knitr::knit_hooks$set(error = color_block('red'))
+knitr::knit_hooks$set(warning = color_block('orange'))
+```
+
+# Preamble 
+Loading libraries, functions, and setting constants.
+
+```{r, include=F}
+library(tidyverse)
+library(magrittr)
+
+library(brms)
+library(broom)          # for extraction of coefficients
+library(tidybayes)
+
+library(gganimate)      # to animate plots
+library(RColorBrewer)   # to select brewer colors
+library(kableExtra) 
+library(ggpubr)
+library(ggdist)
+
+#devtools::install_github("hlplab/MVBeliefUpdatr")
+library(MVBeliefUpdatr)     # for ideal observers and adaptors 
+library(LaplacesDemon)      # for additional density distributions (e.g., inverse-Wishart, W^-1)
+```
+
+```{r constants, include=F}
+experiment = "AE-DLVOT"
+
+chains <- 4
+options(
+  width = 110,
+  mc.cores = min(chains, parallel::detectCores()))
+
+my_priors <- c(
+  prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),
+  prior(student_t(3, 0, 2.5), class = "b", dpar = "theta1"),
+  prior(cauchy(0, 2.5), class = "sd"),
+  prior(lkj(1), class = "cor")
+)
+
+theme_set(theme_classic())
+```
+
+
+```{r load data}
+d <- 
+  read_csv("../data/experiment2_raw_formatted.csv", show_col_types = F) %>%
+  # load f0 measurements of stimuli
+  left_join(
+    read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv", show_col_types = F) %>% 
+      dplyr::select(filename, VOT, f0_5ms_into_vowel, vowel_duration) %>% 
+      rename(
+        Item.VOT = VOT,
+        # This is the F0 measured in the same way as Chodroff & Wilson (2018)
+        # (i.e., 5ms into the vowel)
+        Item.F0 = f0_5ms_into_vowel,
+        Item.Filename = filename) %>% 
+      mutate(Item.Filename = paste0(Item.Filename, ".wav")),
+    by = c("Item.Filename", "Item.VOT")) %>% 
+  mutate(
+    Response.Voiceless = ifelse(Response.Voicing == "voiceless", 1, 0),
+    across(
+      c(Experiment, starts_with("List"), 
+        ParticipantID, Participant.Race, Participant.Ethnicity, Participant.Sex,
+        Condition.Exposure, Phase, 
+        Trial.ImageSelection, Item.ExpectedResponse, Item.ExpectedResponse.Voicing, Item.MinimalPair,
+        Response.ClickPosition, Response.Voicing),
+      factor),
+    Participant.Sex = str_to_lower(Participant.Sex),
+    Item.F0_Mel = normMel(Item.F0)) 
+```
+
+
+### Exclusions
+
+```{r get-exclusion-indicators, warning=FALSE}
+# mark catch trials rows and mark those to be excluded
+d %<>% 
+  mutate(
+    Is.CatchTrial = ifelse(Item.ExpectedResponse %in% c("flare", "rare", "share"), TRUE, FALSE),
+    CatchTrial.Correct = ifelse(
+      Is.CatchTrial == TRUE, 
+      ifelse(Item.ExpectedResponse == Response, TRUE, FALSE), NA),
+    Answer.sex.Correct = ifelse(sex == "woman", TRUE, FALSE)) %>% 
+  group_by(ParticipantID) %>% 
+  mutate(Exclude_participant.due_to_catch_trials = ifelse(sum(CatchTrial.Correct, na.rm = TRUE) < 17, TRUE, FALSE)) %>%
+  ungroup()
+
+# mark labelled trials
+d %<>% 
+  mutate(
+    Response.Correct = ifelse(Item.ExpectedResponse == Response, TRUE, FALSE),
+    LabeledTrial.Correct = ifelse(Item.Labeled == TRUE, ifelse(Response.Correct == TRUE, TRUE, FALSE), NA)) %>% 
+  group_by(ParticipantID) %>% 
+  mutate(Exclude_participant.due_to_labeled_trials = ifelse(sum(LabeledTrial.Correct, na.rm = T) < 68, TRUE, FALSE))
+
+# get data for exclusion due to categorization slope of first 36 trials. 
+# set the range of VOT values 
+empirical_means <- c(17, 62)
+VOT_for_required_proportion_t <- empirical_means + c(-20, 20)
+required_proportion_t <- c(.15, .80) 
+
+d.VOT_exclusion <- 
+  d %>% 
+  filter(Block == 1 | (Block == 2 & Trial %in% c(13:36))) %>% 
+  drop_na(c(ParticipantID, Response.Voicing, Item.VOT)) %>% 
+  mutate(Response.ProportionVoiceless = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
+  dplyr::select(c(Experiment, ParticipantID, Condition.Exposure, Response.Voicing, Response.ProportionVoiceless, Item.VOT)) %>%
+  # Fit logistic regression by participant to get model predictions 
+  group_by(ParticipantID, Experiment, Condition.Exposure) %>%
+  nest() %>%
+  mutate(
+    CategorizationModel =
+      map(
+        data, 
+        ~ glm(
+          Response.ProportionVoiceless ~ 1 + Item.VOT, 
+          data = .x, 
+          family = binomial))) %>% 
+  # type = "response" in predict() gives the probability
+  summarise(Model.predicted.Reponse = 
+              map(
+                CategorizationModel, 
+                ~ predict(object = .x, 
+                          newdata = tibble(Item.VOT = VOT_for_required_proportion_t), 
+                          type = "response"))) %>% 
+  mutate(Exclude_participant.due_to_VOT_slope = 
+           map(Model.predicted.Reponse, ~ ifelse(.x[1] > required_proportion_t[1] || .x[2] < required_proportion_t[2], TRUE, FALSE)),
+         Exclude_participant.due_to_lower_VOT = map(Model.predicted.Reponse, ~ ifelse(.x[1] > required_proportion_t[1], TRUE, FALSE)),
+         Exclude_participant.due_to_higher_VOT = map(Model.predicted.Reponse, ~ ifelse(.x[2] < required_proportion_t[2], TRUE, FALSE))) %>% 
+  dplyr::select(ParticipantID, Experiment, Condition.Exposure, Exclude_participant.due_to_VOT_slope, Exclude_participant.due_to_lower_VOT, Exclude_participant.due_to_higher_VOT) %>% 
+  mutate(
+    across(c(Exclude_participant.due_to_VOT_slope, Exclude_participant.due_to_lower_VOT, Exclude_participant.due_to_higher_VOT), 
+           unlist)) %>% 
+  ungroup()
+
+d %<>% left_join(d.VOT_exclusion)
+```
+
+
+
+```{r set-RT-exclusion-criteria}
+# get number of participants excluded due to catch trial
+excl.catch <- 
+  d %>% 
+  filter(Exclude_participant.due_to_catch_trials == TRUE) %>% 
+  group_by(ParticipantID) %>% 
+  summarise() %>% 
+  tally() %>%
+  pull(n)
+
+# get number of participants excluded due to labelled trials
+excl.labeled <- 
+  d %>% 
+  filter(Exclude_participant.due_to_labeled_trials == TRUE) %>% 
+  group_by(ParticipantID) %>% 
+  summarise() %>% 
+  tally() %>%
+  pull(n)
+
+# count number of exclusions due to VOT slope
+excl.VOT <- 
+  d %>% 
+  filter(Exclude_participant.due_to_VOT_slope == TRUE) %>% 
+  group_by(ParticipantID) %>% 
+  summarise() %>% 
+  tally() %>%
+  pull(n)
+
+# get exclusions due to RT
+excl.RT <- 
+  d %>%
+  filter(
+    Is.CatchTrial == FALSE,
+    Exclude_participant.due_to_catch_trials == FALSE,
+    Exclude_participant.due_to_labeled_trials == FALSE,
+    Exclude_participant.due_to_VOT_slope == FALSE) %>% 
+  group_by(ParticipantID) %>%
+  mutate(
+    Response.log_RT = log10(ifelse(Response.RT <= 0, NA_real_, Response.RT)),
+    Response.log_RT.scaled = scale(Response.log_RT), 
+    Response.log_RT.mean = mean(Response.log_RT, na.rm = T)) %>% 
+  ungroup() %>% 
+  mutate(Exclude_participant.due_to_RT = ifelse(abs(scale(Response.log_RT.mean)) > 3, TRUE, FALSE)) %>% 
+  filter(Exclude_participant.due_to_RT == TRUE) %>% 
+  distinct(ParticipantID) %>% 
+  nrow()
+
+# headphone types
+excl.headphone <- 
+  d %>% 
+  group_by(ParticipantID, audio_type) %>% 
+  summarise() %>% 
+  filter(!(audio_type %in% c("in-ear", "over-ear"))) %>% 
+  nrow()
+```
+
+
+```{r make-data-for-analysis}
+d_for_analysis <- 
+  d %>%
+  filter(
+    Is.CatchTrial == FALSE &
+    Exclude_participant.due_to_catch_trials == FALSE &
+    Exclude_participant.due_to_labeled_trials == FALSE &
+    Exclude_participant.due_to_VOT_slope == FALSE)
+```
+
+
+
+# Ideal adaptor fitting
+
+## Preparing for belief-updating
+
+```{r}
+slice_into_unique_exposure_test <- function(df, block_order, block_var = "Block", condition_var = "Condition") {
+  df %<>%
+    mutate(Block = map(!! sym(block_var), ~ which(block_order == .x)) %>% unlist())
+  
+  df.new <- tibble()
+  for (i in grep("test", block_order))
+    for (g in unique(df[[condition_var]])) #different exposure scenarios
+       df.new %<>%
+         rbind(
+         df %>% 
+           # Include only exposure blocks from the current exposure condition and the current test block from the current exposure condition (but not earlier test blocks) 
+           filter(!! sym(condition_var) == g, Block <= i, Block == i | !(Block %in% grep("test", block_order))) %>%
+           # could be further simplified by recognising that by test block7 everyone has seen the same thing
+           mutate(ExposureGroup = if (i == 1) "no exposure" else paste0("Cond ", g, "_Up to ", block_order[i])))
+  
+  df.new  %>%
+    select(ExposureGroup, Block, everything())
+}
+
+summarize.NIW_ideal_adaptor_stanfit <- function(
+    x, 
+    pars = c("kappa", "nu", "m", "S", "lapse_rate"), 
+    groups = c("prior")
+) {
+  add_ibbu_stanfit_draws(x, groups = groups, summarize = F) %>% 
+    unnest_cue_information_in_model() %>%
+    gather_variables(exclude = c(".chain", ".iteration", ".draw", ".row", "cue", "cue2", "group", "category")) %>%
+    ungroup() %>%
+    # + Remove double mentions of variables that are constant across groups, categories, and cues
+    #   (currently: lapse_rate)
+    # + Remove double mentions of variables that are constant across cues
+    #   (currently: kappa and nu)
+    # + Remove double mentions of variables that are constant across cue2
+    #   (currently: m)
+    mutate(
+      across(
+        c(group, category),
+        ~ ifelse(.variable == "lapse_rate", NA_character_, as.character(.x))),
+      across(
+        c(cue, cue2),
+        ~ ifelse(.variable %in% c("kappa", "nu", "lapse_rate"), NA_character_, as.character(.x))),
+      across(
+        c(cue2),
+        ~ ifelse(.variable == "m", NA, .x))) %>%
+    distinct() %>%
+    group_by(group, category, cue, cue2, .variable) %>%
+    median_hdci() %>%
+    mutate(
+      group = factor(group, levels = groups),
+      .variable = factor(.variable, levels = pars)) %>%
+    # Format and sort output
+    relocate(group, category, .variable, cue, cue2, .value, everything()) %>%
+    arrange(match(.$.variable, levels(.$.variable)), match(.$group, levels(.$group)), category, cue, cue2) %>%
+    rename(
+      parameter = .variable,
+      !! sym(unique(.$.point)) := .value,
+      !! sym(unique(paste0("lower ", unique(.$.width * 100), "% ", toupper(unique(.$.interval))))) := .lower,
+      !! sym(unique(paste0("upper ", unique(.$.width * 100), "% ", toupper(unique(.$.interval))))) := .upper) %>%
+    select(-c(.width, .point, .interval))
+  
+}
+
+make_all_plots <- function(
+  fit, 
+  groups = NULL, 
+  colors.group = NULL, 
+  colors.category = c("red", "blue"),
+  ncol = NULL
+) {
+  plot_ibbu_stanfit_parameter_correlations(fit, category.colors = colors.category) %>% plot()
+  if (!is.null(groups)) {
+    plot_ibbu_stanfit_parameters(fit, groups = groups, group.colors = colors.group) %>% plot()
+    (plot_expected_ibbu_stanfit_categories_contour2D(fit, groups = groups, category.colors = colors.category) + facet_wrap(~ group, ncol = ncol)) %>% plot()
+    (plot_ibbu_stanfit_test_categorization(fit, groups = groups, plot_in_cue_space = T, category.colors = colors.category) + facet_wrap(~ group, ncol = ncol)) %>% plot() 
+  } else {
+    plot_ibbu_stanfit_parameters(fit) %>% plot()
+    plot_expected_ibbu_stanfit_categories_contour2D(fit, category.colors = colors.category) + facet_wrap(~ group, ncol = ncol) %>% plot()
+    plot_ibbu_stanfit_test_categorization(fit, plot_in_cue_space = T, category.colors = colors.category) + facet_wrap(~ group, ncol = ncol) %>% plot() 
+  }
+}
+```
+
+
+
+```{r, fig.width=12, fig.height=12, warning=FALSE}
+df <- 
+  d_for_analysis %>%
+  ungroup() %>%
+  # Exclude catch trials and the final two test blocks since we expect unlearning during those blocks 
+  # (which is not modeled)
+  filter(
+    !(Phase == "exposure" & is.na(Item.ExpectedResponse.Voicing)),
+    as.numeric(Block) <= 7) %>%
+  # Create new condition variable that uniquely identifies what participants have seen at any of the tests 
+  # and a new block variable that identifies the type and order of blocks.
+  mutate(
+    Condition.for_ideal_adaptor = paste0(Condition.Exposure, List.ExposureBlockOrder, List.ExposureMaterials),
+    Block.for_ideal_adaptor = paste0(Phase, Block)) %>%
+  slice_into_unique_exposure_test(
+    condition_var = "Condition.for_ideal_adaptor",
+    block_var = "Block.for_ideal_adaptor",
+    block_order = c("test1", "exposure2", "test3", "exposure4", "test5", "exposure6", "test7"))
+```
+
+## Fit with uninformative (regularizing) priors
+Here some initial plots. While the plots are back-transformed into the original cue space, the table is not (yet).
+
+```{r, size='tiny', fig.width=12, fig.height=12, warning=FALSE, results='asis'}
+m.exp2 <- infer_prior_beliefs(
+  exposure = df %>% filter(Phase == "exposure"), 
+  test = df %>% filter(Phase == "test"), 
+  cues = c("Item.VOT", "Item.F0"), # could add 
+  category = "Item.ExpectedResponse.Voicing", 
+  response = "Response.Voicing", 
+  group = "ParticipantID",
+  group.unique = "ExposureGroup", 
+  center.observations = T,   
+  scale.observations = T,
+  pca.observations = F,
+  sample = T, 
+  file = "../models/IBBU-Tan-Jaeger2022-Experiment2-scaled.RDS",
+  warmup = 3000, iter = 4000,
+  control = list(adapt_delta = .995, max_treedepth = 15))
+```
+
+
+
+
+
+Table of median estimate and 95% highest posterior densities for all parameters (parameters are back-transformed into the original cue space). The group column could be separated into exposure group and test block, e.g., if it is desired to sort the table differently:
+
+```{r}
+ summarize.NIW_ideal_adaptor_stanfit(
+    m.exp2,
+    pars = c("kappa", "nu", "m", "S", "lapse_rate"), 
+    groups = c(
+      "prior",
+      "Cond Shift0AA_Up to test3", "Cond Shift0AA_Up to test5", "Cond Shift0AA_Up to test7",
+      "Cond Shift10AA_Up to test3", "Cond Shift10AA_Up to test5", "Cond Shift10AA_Up to test7",
+      "Cond Shift40AA_Up to test3", "Cond Shift40AA_Up to test5", "Cond Shift40AA_Up to test7")) %>% kable()
+```
+
+Plots:
+
+```{r}
+make_all_plots(
+  m.exp2, 
+  groups = c(
+    "Cond Shift0AA_Up to test3", "Cond Shift0AA_Up to test5", "Cond Shift0AA_Up to test7",
+    "Cond Shift10AA_Up to test3", "Cond Shift10AA_Up to test5", "Cond Shift10AA_Up to test7",
+    "Cond Shift40AA_Up to test3", "Cond Shift40AA_Up to test5", "Cond Shift40AA_Up to test7",
+    "prior"),
+  colors.group =  c(
+    "#550000", "#AA0000", "#FF0000", 
+    "#005500", "#00AA00", "#00FF00", 
+    "#000055", "#0000AA", "#0000FF", 
+    "gray"),
+  ncol = 3)
+
+print(m.exp2)
+```
