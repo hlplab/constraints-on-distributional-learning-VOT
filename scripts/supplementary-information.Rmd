@@ -175,7 +175,8 @@ d.updates <-
 #     aes(
 #       x = PSE,
 #       color = Condition.Exposure,
-#       label = percent(proportion_of_idealized_PSE)),
+#       label = percent(proportion_of_idealized_PSE)),x
+
 #     y = .5)
 ```
 
