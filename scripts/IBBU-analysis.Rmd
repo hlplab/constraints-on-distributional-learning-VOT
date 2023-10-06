@@ -432,3 +432,119 @@ make_all_plots(
 
 print(m.exp2)
 ```
+
+```{r}
+(plot_ibbu_stanfit_test_categorization(
+  m.exp2, 
+  groups = c(
+    # "Cond Shift0AA_Up to test3", "Cond Shift0AA_Up to test5", "Cond Shift0AA_Up to test7",
+    # "Cond Shift10AA_Up to test3", "Cond Shift10AA_Up to test5", "Cond Shift10AA_Up to test7",
+    # "Cond Shift40AA_Up to test3", "Cond Shift40AA_Up to test5", "Cond Shift40AA_Up to test7",
+    "prior"), 
+  plot_in_cue_space = F, category.colors = colors.category) + facet_wrap(~ group, ncol = 1)) %>% plot() 
+```
+# Calculate predicted log-odds of "t"-responses based on IBBU fit
+
+This can be correlated against the actual observed answers
+
+```{r}
+model <- m.exp2
+groups <- c(
+    "Cond Shift0AA_Up to test3", "Cond Shift0AA_Up to test5", "Cond Shift0AA_Up to test7",
+    "Cond Shift10AA_Up to test3", "Cond Shift10AA_Up to test5", "Cond Shift10AA_Up to test7",
+    "Cond Shift40AA_Up to test3", "Cond Shift40AA_Up to test5", "Cond Shift40AA_Up to test7",
+    "Cond Shift0BA_Up to test3", "Cond Shift0BA_Up to test5", "Cond Shift0BA_Up to test7",
+    "Cond Shift10BA_Up to test3", "Cond Shift10BA_Up to test5", "Cond Shift10BA_Up to test7",
+    "Cond Shift40BA_Up to test3", "Cond Shift40BA_Up to test5", "Cond Shift40BA_Up to test7",
+    "Cond Shift0CA_Up to test3", "Cond Shift0CA_Up to test5", "Cond Shift0CA_Up to test7",
+    "Cond Shift10CA_Up to test3", "Cond Shift10CA_Up to test5", "Cond Shift10CA_Up to test7",
+    "Cond Shift40CA_Up to test3", "Cond Shift40CA_Up to test5", "Cond Shift40CA_Up to test7",
+    "prior")
+all_test_locations <- T
+untransform_cues <- F
+target_category <- 1
+n.draws <- NULL
+
+ndraws <- get_number_of_draws(model)
+d.pars <-
+  add_ibbu_stanfit_draws(
+    model,
+    groups = groups,
+    summarize = T,
+    wide = F,
+    ndraws = ndraws,
+    untransform_cues = untransform_cues)
+
+d.pars %<>%
+  filter(group %in% .env$groups)
+
+# Prepare test_data
+cue.labels <- get_cue_levels_from_stanfit(model)
+data.test <- get_test_data_from_stanfit(model)
+if (all_test_locations) {
+  test_data <-
+    data.test %>%
+    distinct(!!! syms(cue.labels)) %>%
+    { if (untransform_cues) get_untransform_function_from_stanfit(model)(.) else . } %>%
+    make_vector_column(cols = cue.labels, vector_col = "x", .keep = "all") %>%
+    nest(cues_joint = x, cues_separate = .env$cue.labels) %>%
+    crossing(group = levels(d.pars$group))
+} else {
+  test_data <-
+    data.test %>%
+    distinct(!!! syms(cue.labels), group) %>%
+    { if (untransform_cues) get_untransform_function_from_stanfit(model)(.) else . } %>%
+    make_vector_column(cols = cue.labels, vector_col = "x", .keep = "all") %>%
+    group_by(group) %>%
+    nest(cues_joint = x, cues_separate = .env$cue.labels)
+}
+
+d.pars %<>%
+  group_by(group, .draw) %>%
+  do(f = get_categorization_function_from_grouped_ibbu_stanfit_draws(., logit = F)) %>%
+  right_join(test_data, by = "group") %>%
+  group_by(group, .draw) %>%
+  mutate(p_cat = invoke_map(.f = f, .x = cues_joint, target_category = target_category)) %>%
+  select(-f) %>%
+  unnest(c(cues_joint, cues_separate, p_cat))
+
+d.pars %>%
+  group_by(group, Item.VOT) %>%
+  summarise(across(p_cat, mean)) %>%
+  mutate(group = ifelse(group == "prior", "no exposure", group)) %>%
+  left_join(data.test) %>%
+  mutate(
+    proportion_voiced = voiced / (voiced + voiceless),
+    group = gsub("[ABC]A", "", group)) %>%
+  ggplot(aes(x = Item.VOT)) +
+  stat_summary(fun = mean, geom = "line", aes(y = proportion_voiced)) +
+  stat_summary(fun = mean, geom = "line", aes(y = p_cat), color = "gray") +
+  stat_summary(fun.data = mean_cl_boot, geom = "pointrange", aes(y = proportion_voiced), size = 1/4) +
+  stat_summary(fun.data = mean_cl_boot, geom = "pointrange", aes(y = p_cat), color = "gray", size = 1/4) +
+  facet_wrap(~ group, ncol = 3)
+
+d.pars %>%
+  group_by(group, Item.VOT) %>%
+  summarise(across(p_cat, mean)) %>%
+  mutate(group = ifelse(group == "prior", "no exposure", group)) %>%
+  left_join(data.test) %>%
+  mutate(proportion_voiced = voiced / (voiced + voiceless)) %>%
+  ggplot(aes(x = p_cat, y = proportion_voiced)) +
+  geom_point() +
+  geom_smooth() +
+  annotate(
+    geom = "text", 
+    label = paste0(
+      "R^2 = ",
+      round(d.pars %>%
+              group_by(group, Item.VOT) %>%
+              summarise(across(p_cat, mean)) %>%
+              mutate(group = ifelse(group == "prior", "no exposure", group)) %>%
+              left_join(data.test) %>%
+              mutate(proportion_voiced = voiced / (voiced + voiceless)) %>%
+              with(., cor(p_cat, proportion_voiced)) %>%
+              . ^ 2, 3) * 100, "%"),
+    x = .1, y = .9) +
+  xlab('Predicted proportion "d"-responses') +
+  ylab('Observed proportion "d"-responses')
+```
