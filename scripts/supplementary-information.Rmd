@@ -475,6 +475,77 @@ The lapsing model predicts participant responses that are made independent of th
 
 We fit the psychometric model using the package \texttt{brms} [@R-brms_a] in R [@R; @RStudio]. To faciltiate comparison of effect sizes across predictors, we standardized continuous predictors (VOT) by dividing through twice their standard deviation [@gelman2008]. Following previous work from our lab [@horberg2021; @xie2021], we used weakly regularizing priors to facilitate model convergence. For fixed effect parameters, we used Student priors centered around zero with a scale of 2.5 units [following @gelman-prior2008] and 3 degrees of freedom. For random effect standard deviations, we used a Cauchy prior with location 0 and scale 2, and for random effect correlations, we used an uninformative LKJ-Correlation prior with its only parameter set to 1, describing a uniform prior over correlation matrices [@Lewandowski2009]. Four chains with 2000 warm-up samples and 2000 posterior samples each were fit. No divergent transitions after warm-up were observed, and all $1 < \hat{R} < 1.01$.
 
+# Generalized additive mixed-effects analysis
+
+```{r}
+VOT.mean_test <-
+    d_for_analysis %>%
+    filter(Phase == "test") %>%
+    ungroup() %>%
+    summarise(mean = mean(Item.VOT, na.rm = T)) %>%
+    pull(mean)
+
+d.GAMM <-
+  d_for_analysis %>%
+  # Get Gelman-scaled trial ID across blocks 
+  # (do so before filtering, so that trial roughly corresponds to amount of evidence)
+  arrange(ParticipantID, Block, Trial) %>%
+  group_by(ParticipantID) %>%
+  mutate(Trial = 1:length(Trial)) %>%
+  filter(Item.Labeled == F) %>%
+  mutate(Trial_gs = (Trial - mean(Trial)) / (2 * sd(Trial))) %>%
+  prepVars(test_mean = VOT.mean_test, levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type)
+
+my_priors_no_RE <- c(prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2")) 
+my_priors <-
+    c(
+      prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),
+      prior(cauchy(0, 2.5), class = "sd", dpar = "mu2"),
+      prior(lkj(1), class = "cor")) 
+
+# recode condition as ordered
+# add random effects for by subject slopes in GAMM format?
+# recode trial?
+m <- brm(
+    formula = 
+      bf(
+        Response.Voiceless ~ 1,
+         mu1 ~ 0 + offset(0),
+         mu2 ~ 1 + t2(VOT_gs, Trial_gs, by = Condition.Exposure),
+        # + 
+        #   (1 | ParticipantID) + 
+        #   (1 + Condition.Exposure | Item.MinimalPair),
+         theta1 ~ 1),
+    data = d.GAMM,
+    prior = my_priors_no_RE,
+    cores = 4,
+    chains = 4,
+    init = 0,
+    iter = 2000,
+    warmup = 1000,
+    family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
+    control = list(adapt_delta = .95),
+    backend = "cmdstanr",
+    threads = threading(threads = 2),
+    file = paste0("../models/GAMM-test+exposure.rds"))
+
+# Plot smooth over rescaled data
+ms <- conditional_smooths(
+  m, 
+  too_far = .025)
+ms[[1]] %<>%
+  mutate(
+    VOT_gs = VOT_gs * 2 * sd(d.GAMM$Item.VOT) + VOT.mean_test,
+    Trial_gs = Trial_gs * 2 * sd(d.GAMM$Trial) + mean(d.GAMM$Trial))
+p <- brms:::plot.brms_conditional_effects(ms, stype = "raster", plot = F)
+p[[1]] + 
+  aes(x = Trial_gs, y = VOT_gs) +
+  geom_contour(aes(z = estimate__), color = "black") +
+  xlab("Trial") + ylab("VOT") + 
+  scale_fill_viridis_c('log-odds of "t"-response') +
+  coord_cartesian(expand = F)
+```
+
 # Obtaining estimates of listeners prior expectations
 
 The database contains 92 talkers (female = XXX, male = XXX; for details, see SI, \@ref(sec:VOT-production)).
