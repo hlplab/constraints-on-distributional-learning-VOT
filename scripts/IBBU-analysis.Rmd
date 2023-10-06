@@ -75,7 +75,8 @@ library(kableExtra)
 library(ggpubr)
 library(ggdist)
 
-#devtools::install_github("hlplab/MVBeliefUpdatr")
+# devtools::install_github("hlplab/MVBeliefUpdatr")
+library(phonR)
 library(MVBeliefUpdatr)     # for ideal observers and adaptors 
 library(LaplacesDemon)      # for additional density distributions (e.g., inverse-Wishart, W^-1)
 ```
@@ -402,7 +403,7 @@ m.exp2 <- infer_prior_beliefs(
 Table of median estimate and 95% highest posterior densities for all parameters (parameters are back-transformed into the original cue space). The group column could be separated into exposure group and test block, e.g., if it is desired to sort the table differently:
 
 ```{r}
- summarize.NIW_ideal_adaptor_stanfit(
+summarize.NIW_ideal_adaptor_stanfit(
     m.exp2,
     pars = c("kappa", "nu", "m", "S", "lapse_rate"), 
     groups = c(

@@ -504,18 +504,32 @@ my_priors <-
       prior(cauchy(0, 2.5), class = "sd", dpar = "mu2"),
       prior(lkj(1), class = "cor")) 
 
-# recode condition as ordered
-# add random effects for by subject slopes in GAMM format?
-# recode trial?
+# Recode condition as ordered factor if one wants difference smooths(comparing 
+# levels against each other), rather than separate smooths for each level of 
+# Condition.Exposure
 m <- brm(
     formula = 
       bf(
         Response.Voiceless ~ 1,
          mu1 ~ 0 + offset(0),
-         mu2 ~ 1 + t2(VOT_gs, Trial_gs, by = Condition.Exposure),
-        # + 
-        #   (1 | ParticipantID) + 
-        #   (1 + Condition.Exposure | Item.MinimalPair),
+        # Think further about the specific basis functions for this 2D tensor smooth
+        # e.g., bs = c("cc", "tp"), k=c(10, 10)
+         mu2 ~ 1 + t2(VOT_gs, Trial_gs, by = Condition.Exposure, bs = "tp") +
+          # Random effects (could use bs = "re" or "fs"; "fs" only works when the 
+          # non RE predictors are continuous)
+          # Could determine order of smooth via, e.g., m = 1
+          s(ParticipantID, bs = "re") + 
+          s(VOT_gs, ParticipantID, bs = "re") + 
+          s(Trial_gs, ParticipantID, bs = "re") + 
+          s(VOT_gs, Trial_gs, ParticipantID, bs = "re") + 
+          s(Item.MinimalPair, bs = "re") +
+          s(VOT_gs, Item.MinimalPair, bs = "re") +
+          s(Trial_gs, Item.MinimalPair, bs = "re") + 
+          s(Condition.Exposure, Item.MinimalPair, bs = "re") +
+          s(VOT_gs, Trial_gs, Item.MinimalPair, bs = "re") +
+          s(VOT_gs, Condition.Exposure, Item.MinimalPair, bs = "re") +
+          s(Trial_gs, Condition.Exposure, Item.MinimalPair, bs = "re") +
+          s(VOT_gs, Trial_gs, Condition.Exposure, Item.MinimalPair, bs = "re"),
          theta1 ~ 1),
     data = d.GAMM,
     prior = my_priors_no_RE,
@@ -528,7 +542,7 @@ m <- brm(
     control = list(adapt_delta = .95),
     backend = "cmdstanr",
     threads = threading(threads = 2),
-    file = paste0("../models/GAMM-test+exposure.rds"))
+    file = paste0("../models/GAMM-test+exposure-wRE.rds"))
 
 # Plot smooth over rescaled data
 ms <- conditional_smooths(
