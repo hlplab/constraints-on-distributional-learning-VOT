@@ -477,6 +477,14 @@ The lapsing model predicts participant responses that are made independent of th
 We fit the psychometric model using the package \texttt{brms} [@R-brms_a] in R [@R; @RStudio]. To faciltiate comparison of effect sizes across predictors, we standardized continuous predictors (VOT) by dividing through twice their standard deviation [@gelman2008]. Following previous work from our lab [@horberg2021; @xie2021], we used weakly regularizing priors to facilitate model convergence. For fixed effect parameters, we used Student priors centered around zero with a scale of 2.5 units [following @gelman-prior2008] and 3 degrees of freedom. For random effect standard deviations, we used a Cauchy prior with location 0 and scale 2, and for random effect correlations, we used an uninformative LKJ-Correlation prior with its only parameter set to 1, describing a uniform prior over correlation matrices [@Lewandowski2009]. Four chains with 2000 warm-up samples and 2000 posterior samples each were fit. No divergent transitions after warm-up were observed, and all $1 < \hat{R} < 1.01$.
 
 # Generalized additive mixed-effects analysis
+The analyses presented in the main text assume that VOT has a linear effect on the log-odds of "t"-responses. We made this assumptions for the sake of simplicity, and in order to avoid over-fitting. However, there are reasons to expect that the effects of VOT are non-linear. Specifically, ideal observers with Gaussian categories along a single cue dimension (here: VOT) predict that the posterior log-odds of each category change linearly along that cue dimension if and only if the variance of both Gaussian categories is equal [for details, see @bicknell2018; @kleinschmidt-jaeger2015; @kronrod2016]. For US English /d/ and /t/, this is well-known *not* to be the case, with /t/ having larger variance than /d/ (see also Figure XXX in the main text). Under the assumption of Gaussian categories, ideal observer thus predict a quadratic effect along VOT---specifically, the log-odds of "t"-responses are predicted to increase more than linearly with increasing VOT between the two category means (since the /t/ category has larger variance). While Gaussian categories are a simplifying assumption for the sake of modeling, rather than a critical assumption of the ideal adaptor framework [cf. @kleinschmidt-jaeger2015, Appendix]^[For example, the assumption of Gaussian categories leads to implausible predictions for extreme VOT values that lie outside the range of the two category means. Specifically, for VOTs smaller than the category mean of /d/, "t"-responses are predicted to eventually increase with decreasing VOT values (as a consequence of the same quadratic trend mentioned above). Additionally, distribution of VOTs for the /d/ category tends to be noticeably positively-skewed and thus non-normal.], the predicted quadratic trend is also likely to emerge in exemplar models. <!-- TO DO: Check -->
+
+While the linearity assumption made in our main analysis does not *necessarily* introduce statistical bias, it is possible that it does. We thus conducted additional analyses that relaxed the linearity assumption by modeling the effect of VOT as a non-parametric smooth. Since this analysis affords additional degrees of freedom, we reduced concerns about over-fitting by combining the (unlabeled) exposure and test data into a single analysis. Instead of modeling effects block by block, we decided to model the incremental and cumulative effects of exposure by including a non-linear effect of trial and its interaction with VOT in the analysis.
+
+In addition to replicating our analysis under relaxed assumptions about linearity, this auxliary analysis also sheds light on the causes for the 'zigzag' pattern in the intercept and slope estimates for exposure and test blocks that we reported in the main analysis.
+
+## Analysis approach
+Specifically, we use the same psychometric mixed-effects model as in the main analysis, except that we replaced the full factorial of VOT, block, and exposure condition in the perceptual model with a separate tensor smooth of VOT and trial for each of the three exposure conditions.^[`t2(VOT, Trial, by = Condition.Exposure, bs = "tp")`]. This makes this auxiliary analysis a mixed-effect mixture model, for which the mixture component that is the perceptual model is a generalized additive mixed-effect models (GAMM), rather than a generalized linear mixed-effects model. The analysis contained the same full random effect structure and priors as the psychometric model presented in the main text. Both VOT and trial were Gelman-scaled prior to the analysis.
 
 ```{r}
 VOT.mean_test <-
@@ -497,7 +505,6 @@ d.GAMM <-
   mutate(Trial_gs = (Trial - mean(Trial)) / (2 * sd(Trial))) %>%
   prepVars(test_mean = VOT.mean_test, levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type)
 
-my_priors_no_RE <- c(prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2")) 
 my_priors <-
     c(
       prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),
@@ -532,18 +539,33 @@ m <- brm(
           s(VOT_gs, Trial_gs, Condition.Exposure, Item.MinimalPair, bs = "re"),
          theta1 ~ 1),
     data = d.GAMM,
-    prior = my_priors_no_RE,
+    prior = my_priors,
     cores = 4,
     chains = 4,
     init = 0,
-    iter = 2000,
-    warmup = 1000,
+    iter = 2500,
+    warmup = 1500,
     family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
-    control = list(adapt_delta = .95),
+    control = list(adapt_delta = .99),
     backend = "cmdstanr",
     threads = threading(threads = 2),
     file = paste0("../models/GAMM-test+exposure-wRE.rds"))
+```
 
+## Results
+Figure \@ref(fig:GAMM-figure) shows the predicted log-odds of "t"-responses that result from the fitted GAMM. 
+
+The GAMM results replicate the directional effects of exposure. For the baseline condition, the contour lines largely shift downwards with exposure. This means that the same VOT is more likely to be categorized as "t" with increasing exposure. For the +40 condition, the opposite trend is observed (and much more clearly), indicating that the same VOT is *less* likely to be categorized as "t" with increasing exposure. The +10 condition falls between the baseline and +40 condition.
+
+The GAMM results also confirm that the changes introduced by exposure are undone with repeated testing. This shows in the contour lines over trials XXX-XXX, which trend towards reverting the changes introduced by the preceding exposure. The trend shows most clearly for the baseline and +40 condition (in opposite directions since the exposure effects are in opposite directions for these two conditions). 
+
+Noticeably absent from the GAMM results is any indication of the 'zigzag' pattern between exposure and test blocks. <!-- TO DO: more here. Three possible reasons: Perhaps the GAMM’s 2D smooth just not sensitive enough. I guess that’s quite possible.
+Or it’s the absence of random slopes that masks the wiggliness.
+Or the apparent wiggliness in your other analyses has, in fact, something to do with our simplifying assumption that VOT has a linear effect (which the GAMM does not make). -->
+
+(ref:GAMM-figure) Predicted log-odds of "t"-response by trial (across all exposure and test blocks) and VOT for each of the three exposure conditions. Combinations of trial and VOT that did not occur in any of the three exposure conditions are left white (the reduced VOT range of test blocks makes them easily identifiable).
+
+```{r GAMM-figure, fig.cap="(ref:GAMM-figure)"}
 # Plot smooth over rescaled data
 ms <- conditional_smooths(
   m, 
@@ -559,7 +581,8 @@ p[[1]] +
   geom_contour(aes(z = estimate__), color = "black") +
   xlab("Trial") + ylab("VOT") + 
   scale_fill_viridis_c('log-odds of "t"-response') +
-  coord_cartesian(expand = F)
+  coord_cartesian(expand = F) +
+  theme(legend.position = "top")
 ```
 
 # Obtaining estimates of listeners prior expectations

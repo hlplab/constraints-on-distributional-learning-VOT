@@ -470,7 +470,7 @@ d.pars <-
   add_ibbu_stanfit_draws(
     model,
     groups = groups,
-    summarize = T,
+    summarize = F,
     wide = F,
     ndraws = ndraws,
     untransform_cues = untransform_cues)
