@@ -31,19 +31,21 @@ contrast_type <- "difference"
 
 # Simplifying model with uniform bias
 fit_mix_test <-
-  fit_model(data = d_for_analysis,
-          phase = "test",
-          formulation = "standard",
-          priorSD = 15, 
-          adapt_delta = .995)
+  fit_model(
+    data = d_for_analysis,
+    phase = "test",
+    formulation = "standard",
+    priorSD = 15, 
+    adapt_delta = .995)
 
 # fit difference coded model on exposure block
 fit_mix_exposure <-
-  fit_model(data = d_for_analysis,
-          phase = "exposure",
-          formulation = "standard",
-          priorSD = 15, 
-          adapt_delta = .999)
+  fit_model(
+    data = d_for_analysis,
+    phase = "exposure",
+    formulation = "standard",
+    priorSD = 15, 
+    adapt_delta = .999)
 ```
 
 We analyzed participants' categorization responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric models, using brms [@R-brms_a] in R [@R; @RStudio, for details, see SI, \@ref(sec:analysis-approach)]. Psychometric models account for attentional lapses while estimating participants' categorization functions. Failing to account for attentional lapses---while commonplace in research on speech perception [but see @clayards2008; @kleinschmidt-jaeger2016]---can lead to biased estimates of categorization boundaries [@prins2011; @wichmann-hill2001]. For the present experiment, however, lapse rates were negligible (`r make_CI(fit_mix_test, "theta1_Intercept")`), and all results replicate in simple mixed-effects logistic regressions [@jaeger2008]. 
@@ -885,8 +887,5 @@ Second, the reason for the slight decrease in the difference between the +10 and
 
 ### Constraints on cumulative changes
 Finally, Figures \@ref(fig:plot-fit-slope-PSE)C & D also compare participants' responses against those of an ideal observer that has fully learned the exposure distributions.
-
-
-
 
 

@@ -724,10 +724,11 @@ fit_model <- function(data, phase, formulation = "standard", priorSD = 2.5, adap
   require(magrittr)
   require(brms)
 
-  VOT.mean_test <- data %>% 
-    filter(Phase == "test") %>% 
-    ungroup() %>% 
-    summarise(mean = mean(Item.VOT, na.rm = T)) %>% 
+  VOT.mean_test <-
+    data %>%
+    filter(Phase == "test") %>%
+    ungroup() %>%
+    summarise(mean = mean(Item.VOT, na.rm = T)) %>%
     pull(mean)
   levels_Condition.Exposure <- c("Shift0", "Shift10", "Shift40")
   contrast_type <- "difference"
