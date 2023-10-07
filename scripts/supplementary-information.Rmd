@@ -547,6 +547,7 @@ m <- brm(
 # Plot smooth over rescaled data
 ms <- conditional_smooths(
   m, 
+  smooths = 't2(VOT_gs, Trial_gs, by = Condition.Exposure, bs = "tp")',
   too_far = .025)
 ms[[1]] %<>%
   mutate(
