@@ -500,6 +500,9 @@ d.GAMM <-
   # (do so before filtering, so that trial roughly corresponds to amount of evidence)
   arrange(ParticipantID, Block, Trial) %>%
   group_by(ParticipantID) %>%
+  # This does not include catch trials anymore (that's ok since 
+  # those trials do not contain information about the distribution 
+  # of VOTs for the learner)
   mutate(Trial = 1:length(Trial)) %>%
   filter(Item.Labeled == F) %>%
   mutate(Trial_gs = (Trial - mean(Trial)) / (2 * sd(Trial))) %>%
