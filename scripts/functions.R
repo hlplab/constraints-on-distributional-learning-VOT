@@ -193,6 +193,8 @@ get_CCuRE_model <- function(data, tidy_result = TRUE, cue = "VOT") {
 }
 
 apply_ccure <- function(x, data) {
+  require(lme4)
+
   m <- get_CCuRE_model(
     data = data %>% mutate(current_outcome = .env$x),
     cue = "current_outcome",
