@@ -4,13 +4,12 @@
 
 ## Highest priority
  * MARYANN
-  * Figure out why slopes aren't identical across conditions under our current way of averaging exposure across all participants.
-  * Try an add line to table 2 to separate the unlearning hypothesis from the others (low priority). Add +40 vs baseline sub-heading
-  
+  * Fill in missing references
+
 ## Medium priority
 
  * MARYANN
-  * Fix a lot of the outstanding XXXes. Fill in the references -- in library.bib
+  
 
   
  * FLORIAN
