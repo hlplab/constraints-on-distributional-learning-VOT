@@ -307,10 +307,13 @@ d.true_shift <-
   left_join(d.io.categorization %>% 
               dplyr::select(Phase, Condition.Exposure, Block, PSE) %>% 
               rename(PSE.io_predicted = PSE), by = c("Condition.Exposure", "Block")) %>%
+  group_by(Condition.Exposure) %>% 
   mutate(
-    mean_PSE_block1 = mean(c(d.estimates$PSE_median[1], d.estimates$PSE_median[10], d.estimates$PSE_median[19])),
-    true_shift = PSE.io_predicted - mean_PSE_block1,
-    proportion_shift = (PSE_median - mean_PSE_block1)/true_shift,
+    PSE_block1 = case_when(Condition.Exposure == "Shift0" ~ d.estimates$PSE_median[1], 
+                                Condition.Exposure == "Shift10" ~ d.estimates$PSE_median[10],
+                                Condition.Exposure == "Shift40" ~ d.estimates$PSE_median[19]),
+    true_shift = PSE.io_predicted - PSE_block1,
+    proportion_shift = (PSE_median - PSE_block1)/true_shift,
     proportion_shift = ifelse(Condition.Exposure != "Shift40", -(proportion_shift), proportion_shift))
 
 
@@ -321,7 +324,7 @@ d.talkerPSEs <- get_IO_categorization(
     groups = c("Talker", "gender"),
     with_noise = TRUE,
     VOTs = seq(0, 85, .5)) %>% 
-  mutate(center_constant = d.true_shift$mean_PSE_block1[1] - mean(PSE),
+  mutate(center_constant = mean(d.true_shift$PSE_block1) - mean(PSE),
                         PSE_centered = PSE + center_constant) %>% 
   summarise(lower_PSE = quantile(PSE_centered, probs = .025), 
             mean_PSE = mean(PSE_centered),
@@ -357,7 +360,7 @@ p.PSE_1to7 <-
      summarise(),
    mapping = aes(
     x = 10.2,
-    y = c(24, 33.2, 65),
+    y = c(25, 35, 65),
     label = paste(round(true_shift), "(100%)"),
     colour = Condition.Exposure),
    colour = colours.condition,

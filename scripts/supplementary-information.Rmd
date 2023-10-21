@@ -663,7 +663,6 @@ d.test %<>%
   group_by(ParticipantID) %>%
   filter(Excluded.due.to.CatchTrial == FALSE) %>% 
   mutate(Response.log_RT = log10(ifelse(Response.RT <= 0, NA_real_, Response.RT)),
-         # scale the log RTs
          Response.log_RT.scaled = scale(Response.log_RT), 
          # this gives each subject's mean log_RT
          Response.log_RT.mean = mean(Response.log_RT, na.rm = T)) %>% 
