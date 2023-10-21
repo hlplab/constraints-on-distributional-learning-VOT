@@ -588,6 +588,689 @@ p[[1]] +
   theme(legend.position = "top")
 ```
 
+# Comparing predictions of different adaptive mechanisms
+Use database from @chodroff-wilson2018 as a starting point, and then expose the three different adaptive mechanisms introduced in @xie2023 to the distributions from the experiment.
+
+```{r functions-for-adaptive-changes}
+# Move into functions file later
+slice_into_unique_exposure_test <- function(df, block_order, block_var = "Block", condition_var = "Condition") {
+  df %<>%
+    mutate(Block = map(!! sym(block_var), ~ which(block_order == .x)) %>% unlist())
+  
+  df.new <- tibble()
+  for (i in grep("test", block_order))
+    for (g in unique(df[[condition_var]])) #different exposure scenarios
+       df.new %<>%
+         rbind(
+         df %>% 
+           # Include only exposure blocks from the current exposure condition and the current test block 
+           # from the current exposure condition (but not earlier test blocks) 
+           filter(!! sym(condition_var) == g, Block <= i, Block == i | !(Block %in% grep("test", block_order))) %>%
+           # could be further simplified by recognizing that by test block7 everyone has seen the same thing
+           mutate(ExposureGroup = if (i == 1) "no exposure" else paste0("Cond ", g, "_Up to ", block_order[i])))
+  
+  df.new  %>%
+    select(ExposureGroup, Block, everything())
+}
+
+
+get_likelihood_from_grouped_data <- function(
+    model,
+    data
+) {
+  data %>%
+    group_map(
+      .f = ~
+        evaluate_model(
+          model = model,
+          x = .x[["x"]],
+          response_category = .x[["Response.Category"]],
+          decision_rule = "proportional",
+          noise_treatment = "marginalize",
+          lapse_treatment = "marginalize",
+          method = "likelihood",
+          return_by_x = F)) %>%
+    reduce(`+`)
+}
+
+
+compare_predicted_and_actual <- function(data) {
+  p <- 
+    data %>%
+    ggplot(aes(x = VOT)) +
+    stat_summary(fun = mean, geom = "line", aes(y = Response)) +
+    stat_summary(fun = mean, geom = "line", aes(y = Predicted_posterior), 
+                 color = "gray") +
+    stat_summary(fun.data = mean_cl_boot, geom = "pointrange", aes(y = Response), 
+                 size = 1/4) +
+    stat_summary(fun.data = mean_cl_boot, geom = "pointrange", aes(y = Predicted_posterior), 
+                 color = "gray", size = 1/4) +
+    facet_wrap(~ ExposureGroup, ncol = 3) 
+  plot(p)
+  
+  p %+% 
+    (data %>% mutate(ExposureGroup = gsub("[ABC]A", "", ExposureGroup))) %>%
+    plot()
+  
+  data %>%
+    group_by(ExposureGroup, VOT) %>%
+    summarise(across(c(Response, Predicted_posterior), mean)) %>%
+    ggplot(aes(x = Predicted_posterior, y = Response)) +
+    geom_point() +
+    geom_smooth() +
+    annotate(
+      geom = "text", 
+      label = paste0(
+        "R^2 = ",
+        round(data %>%
+                with(., cor(Predicted_posterior, Response)) %>%
+                . ^ 2, 3) * 100, "%"),
+      x = .1, y = .9) +
+    xlab('Predicted proportion "d"-responses') +
+    ylab('Observed proportion "d"-responses') 
+}
+```
+
+## Setting prior beliefs about marginal cue means and category means and covariance matrices
+<!-- TO DO: consider subsetting to /i/ as following vowel context -->
+
+```{r predictions-exposure-conditions-by-IOs}
+cues <- c("VOT.CCuRE", "f0_Mel.CCuRE")
+
+# Database for prior
+d.chodroff_wilson <-
+  get_ChodroffWilson_data(
+    database_filename = "../data/all_observations_with_non-missing_vot_cog_f0.csv",
+    min.n_per_talker_and_stop = 25,
+    limits.VOT = c(-Inf, Inf),
+    limits.f0 = c(0, 350),
+    max.p_for_multimodality = .1) %>%
+  filter(poa == "/d/-/t/") %>%
+  group_by(Talker, category) %>%
+  mutate(n = n()) %>%
+  group_by(Talker) %>%
+  # subsample n tokens, as determined by category with fewer tokens
+  mutate(
+    n_min = min(n),
+    n_category = n_distinct(category)) %>%
+  # select talkers with both /d/ and /t/ observations
+  filter(n_category == 2) %>%
+  group_by(Talker, category) %>%
+  sample_n(size = first(n_min)) %>%
+  filter(gender == "female") %>% 
+  ungroup() %>% 
+  mutate(across(
+    c("VOT", "f0", "f0_Mel", "f0_semitones"),
+    list(CCuRE = function(x) apply_ccure(x, data = .)),
+    .names = "{.col}.CCuRE")) 
+
+prior_marginal_VOT_f0_stats <-
+  d.chodroff_wilson %>%
+  group_by(Talker) %>%
+  summarise(across(c(VOT, f0_Mel), mean)) %>%
+  ungroup() %>%
+  summarise(
+    x_mean = list(c(VOT = mean(VOT), f0 = mean(f0_Mel))),
+    x_var_VOT = var(VOT),
+    x_var_f0 = var(f0_Mel),
+    x_cov = list(cov(cbind(VOT, f0_Mel))))
+
+m_MVG.VOT_f0 <-
+  make_MVG_from_data(
+  data = d.chodroff_wilson,
+  category = "category",
+  cues = cues)
+
+m_IO.VOT_f0 <-
+  m_MVG.VOT_f0 %>%
+  lift_MVG_to_MVG_ideal_observer(
+      Sigma_noise = matrix(c(80, 0, 0, 878), ncol = 2, dimnames = list(names(first(.$mu)), names(first(.$mu)))),
+      prior = c("/d/" = .5, "/t/" = .5),
+      lapse_rate = 0,
+      lapse_bias = c("/d/" = .5, "/t/" = .5))
+
+m_IA.VOT_f0 <-
+  m_IO.VOT_f0 %>%
+  lift_MVG_ideal_observer_to_NIW_ideal_adaptor(kappa = 10, nu = 10)
+```
+
+```{r prepare-data-for-adaptive-changes}
+# Make a data frame that splits the entire data in unique exposure-test combinations.
+# This data frame will be used for adaptive changes in normalization and category 
+# representations.
+df_split_exposure_test <- 
+  d_for_analysis %>%
+  ungroup() %>%
+  # Exclude catch trials and the final two test blocks since we expect unlearning during those blocks 
+  # (which is not modeled)
+  filter(
+    !(Phase == "exposure" & is.na(Item.ExpectedResponse.Voicing)),
+    as.numeric(Block) <= 7) %>%
+  # Create new condition variable that uniquely identifies what participants have seen at any of the 
+  # tests and a new block variable that identifies the type and order of blocks. Also create two 
+  # convenience variables, x (stimulus) and Response.Category (to make matching with the category 
+  # column of ideal observers/adaptors more straightforward).
+  mutate(
+    Condition.for_ASP = paste0(Condition.Exposure, List.ExposureBlockOrder, List.ExposureMaterials),
+    Block.for_ASP = paste0(Phase, Block),
+    x = map2(Item.VOT, Item.F0_target_for_generation_script, ~ c(.x, .y)),
+    Response.Category = ifelse(Response.Voicing == "voiced", "/d/", "/t/")) %>%
+  slice_into_unique_exposure_test(
+    condition_var = "Condition.for_ASP",
+    block_var = "Block.for_ASP",
+    block_order = c("test1", "exposure2", "test3", "exposure4", "test5", "exposure6", "test7")) %>%
+  mutate(ExposureGroup = factor(ExposureGroup)) %>%
+  select(ExposureGroup, Phase, x, Response.Category, Item.ExpectedResponse)
+```
+
+## Changes in normalization
+
+```{r}
+filename <- "../models/best_performing_parameters.normalization.rds"
+
+# This function is intended for the optimization run right below it
+history.optimization_normalization <- tibble(.rows = 0)
+range.prior_kappa.normalization <- c(10^-5, 10^5)
+
+update_normalization_and_normalize_test_data <- function(
+  mu_0 = first(prior_marginal_VOT_f0_stats$x_mean),
+  kappa,
+  data 
+) {
+  # Get normalization parameters for each exposure data (exposure condition, list, block)
+  exposure.normalization <- 
+    data %>%
+    filter(Phase == "exposure") %>%
+    group_by(ExposureGroup) %>%
+    summarise(
+      x_N = length(x),
+      x_mean = list(colMeans(reduce(x, rbind))),
+      x_cov = list(cov(reduce(x, rbind)))) %>%
+    # Apply normalization based on exposure to test
+    mutate(
+      mu_n = map2(x_N, x_mean, ~ 1 / (.env$kappa + .x) * (.env$kappa * .env$mu_0 + .x * .y))) %>%
+    bind_rows(tibble(ExposureGroup = "no exposure", x_N = 0, x_mean = list(.env$mu_0), x_cov = NULL, mu_n = list(.env$mu_0)))
+
+  # Apply normalization to each test data, and return those test data
+  data %>%
+    filter(Phase == "test") %>%
+    left_join(
+      exposure.normalization %>%
+        select(ExposureGroup, mu_n),
+      by = "ExposureGroup") %>%
+    mutate(x = map2(x, mu_n, ~ .x - (.y - .env$mu_0)))
+}
+
+get_likelihood_from_updated_normalization <- function(
+    par, 
+    prior = m_IO.VOT_f0,
+    data = df.for_ASP
+) {
+  kappa <- exp(par[1])
+
+  ll <- 
+    update_normalization_and_normalize_test_data(
+      kappa = kappa,
+      data = data) %>%
+    # Since the model never changes (only the cues do), there is only
+    # one group of data for normalization
+    get_likelihood_from_grouped_data(model = prior)
+  
+  history.optimization_normalization <<- 
+    bind_rows(
+      history.optimization_normalization, 
+      tibble(kappa = kappa, log_likelihood = ll)) 
+  
+  return(ll)
+}
+
+if (RESET_MODELS || !file.exists(filename)) {
+  best_performing_parameters.normalization <-
+    optim(
+      par = log(mean(range.prior_kappa.normalization)),
+      fn = get_likelihood_from_updated_normalization,
+      method = "L-BFGS-B",
+      lower = log(min(range.prior_kappa.normalization)),
+      upper = log(max(range.prior_kappa.normalization)),
+      control = list(
+        fnscale = -1,
+        factr = 10^8))
+  
+  best_performing_parameters.normalization <- exp(best_performing_parameters.normalization$par[1])
+  saveRDS(best_performing_parameters.normalization, filename)
+} else {
+  best_performing_parameters.normalization <- readRDS(filename)
+}
+
+df.normalized <- 
+  update_normalization_and_normalize_test_data(
+  kappa = best_performing_parameters.normalization,
+  data = df.for_ASP) 
+
+df.normalized %<>%
+  mutate(observationID = 1:nrow(.)) %>%
+  left_join(
+    df.normalized %>%
+      group_map(
+        .f = 
+          ~ get_posterior_model(
+            model = m_IO.VOT_f0, 
+            x = .x$x,
+            noise_treatment = "marginalize",
+            lapse_treatment = "marginalize") %>%
+          filter(category == "/t/")) %>%
+      .[[1]],
+    by = "observationID") %>%
+  mutate(
+    VOT = unlist(map(x.x, ~ .x[1])),
+    Response = ifelse(Response.Category == "/t/", 1, 0)) %>%
+  rename(Predicted_posterior = response) 
+
+df.normalized %>% compare_predicted_and_actual()
+```
+
+## Changes in decision-making
+
+```{r}
+filename <- "../models/best_performing_parameters.decision_making.rds"
+
+# This function is intended for the optimization run right below it
+history.optimization_bias <- tibble(.rows = 0)
+range.beta <- c(10^-3, 10^3)
+
+update_decision_bias <- function(
+  prior,
+  beta,
+  data 
+) {
+  message("Currently, this function assumes a single order of exposure for each exposure group.", 
+          "Consider instead using the participant-specific actual order.")
+  
+  cues <- get_cue_labels_from_model(prior)
+  u <-
+    data %>% 
+    filter(Phase == "exposure") %>%
+    mutate(
+      (!!! syms(cues))[1] := map_dbl(x, ~ .x[1]),
+      (!!! syms(cues))[2] := map_dbl(x, ~ .x[2])) %>%
+    group_by(ExposureGroup) %>%
+    group_map(
+      .f = ~ update_model_decision_bias_incrementally(
+        model = prior,
+        beta = beta,
+        exposure = .x,
+        exposure.category = "Response.Category",
+        exposure.cues = cues,
+        noise_treatment = "marginalize",
+        lapse_treatment = "marginalize",
+        keep.update_history = FALSE,
+        keep.exposure_data = FALSE) %>%
+        nest(posterior = everything())) %>%
+    reduce(bind_rows)
+}
+
+get_likelihood_from_updated_bias <- function(
+    par, 
+    prior = m_IO.VOT_f0,
+    data = df.for_ASP
+) {
+  beta <- exp(par[1])
+
+  ll <- 
+    update_decision_bias( 
+      prior = prior,
+      beta = beta,
+      data = data) %>%
+    get_likelihood_from_grouped_data(model = prior)
+  
+   history.optimization_bias <<-
+    bind_rows(
+      history.optimization_bias,
+      tibble(
+        lapse_rate = lapse_rate, 
+        beta = beta, 
+        log_likelihood = ll))
+  
+  return(ll)
+}
+
+if (RESET_MODELS || !file.exists(filename)) {
+  best_performing_parameters.bias <-
+    optim(
+      par = log(mean(range.bias)),
+      fn = get_likelihood_from_updated_bias,
+      method = "L-BFGS-B",
+      lower = log(min(range.bias)),
+      upper = log(max(range.bias)),
+      control = list(
+        fnscale = -1,
+        factr = 10^8))
+  
+  best_performing_parameters.bias <- exp(best_performing_parameters.bias$par[1])
+  saveRDS(best_performing_parameters.bias, filename)
+} else {
+  best_performing_parameters.bias <- readRDS(filename)
+}
+
+df.bias <-
+  df.for_ASP %>%
+  mutate(observationID = 1:nrow(.)) %>%
+  left_join(
+    df.bias %>%
+      group_map(
+        .f = 
+          ~ get_categorization_from_MVG_ideal_observer(
+            model = prior, 
+            x = .x$x,
+            decision_rule = "proportional",
+            noise_treatment = "marginalize",
+            lapse_treatment = "marginalize") %>%
+          filter(category == "/t/")) %>%
+      .[[1]],
+    by = "observationID") %>%
+  mutate(
+    VOT = unlist(map(x.x, ~ .x[1])),
+    Response = ifelse(Response.Category == "/t/", 1, 0)) %>%
+  rename(Predicted_posterior = response) 
+
+df.bias %>% compare_predicted_and_actual()
+```
+
+## Changes in category representations
+
+```{r}
+filename <- "../models/best_performing_parameters.representation.rds"
+
+# This function is intended for the optimization run right below it
+history.optimization_representation <- tibble(.rows = 0)
+range.prior_kappa.representation <- c(3, 10^5)
+range.prior_nu.representation <- c(3, 10^5)
+
+update_representations <- function(
+  prior,
+  data
+) {
+  cues <- get_cue_labels_from_model(prior)
+  
+  data %>% 
+    filter(Phase == "exposure")
+    mutate(
+      (!!! syms(cues))[1] := map_dbl(x, ~ .x[1]),
+      (!!! syms(cues))[2] := map_dbl(x, ~ .x[2])) %>%
+      group_by(ExposureGroup) %>%
+      group_map(
+        .f = ~ update_NIW_ideal_adaptor_incrementally(
+          prior = prior,
+          exposure = .x,
+          exposure.category = "Item.ExpectedResponse",
+          exposure.cues = cues,
+          noise_treatment = "marginalize",
+          lapse_treatment = "marginalize",
+          method = "label-certain",
+          keep.update_history = FALSE,
+          keep.exposure_data = FALSE) %>%
+          nest(posterior = everything())) %>%
+      reduce(bind_rows)
+}
+
+get_likelihood_from_updated_representation <- function(
+    par, 
+    prior = m_IA.VOT_f0,
+    data = df.for_ASP
+) {
+  kappa <- exp(par[1])
+
+  ll <- 
+    update_representations(
+      kappa = kappa,
+      data = data) %>%
+    get_likelihood_from_grouped_data(model = prior)
+  
+  history.optimization_normalization <<- 
+    bind_rows(
+      history.optimization_normalization, 
+      tibble(kappa = kappa, log_likelihood = ll)) 
+  
+  return(ll)
+}
+
+if (RESET_MODELS || !file.exists(filename)) {
+  best_performing_parameters.normalization <-
+    optim(
+      par = log(mean(range.prior_kappa.normalization)),
+      fn = get_likelihood_from_updated_normalization,
+      method = "L-BFGS-B",
+      lower = log(min(range.prior_kappa.normalization)),
+      upper = log(max(range.prior_kappa.normalization)),
+      control = list(
+        fnscale = -1,
+        factr = 10^8))
+  
+  best_performing_parameters.normalization <- exp(best_performing_parameters.normalization$par[1])
+  saveRDS(best_performing_parameters.normalization, filename)
+} else {
+  best_performing_parameters.normalization <- readRDS(filename)
+}
+
+df.normalized <- 
+  update_normalization_and_normalize_test_data(
+  kappa = best_performing_parameters.normalization,
+  data = df.for_ASP) 
+
+df.normalized %<>%
+  mutate(observationID = 1:nrow(.)) %>%
+  left_join(
+    df.normalized %>%
+      group_map(
+        .f = 
+          ~ get_categorization_from_MVG_ideal_observer(
+            model = m_IO.VOT_f0, 
+            x = .x$x,
+            decision_rule = "proportional",
+            noise_treatment = "marginalize",
+            lapse_treatment = "marginalize") %>%
+          filter(category == "/t/")) %>%
+      .[[1]],
+    by = "observationID") %>%
+  mutate(
+    VOT = unlist(map(x.x, ~ .x[1])),
+    Response = ifelse(Response.Category == "/t/", 1, 0)) %>%
+  rename(Predicted_posterior = response) 
+
+df.normalized %>% compare_predicted_and_actual()
+```
+
+## Changes in category representations while inferring prior category means and covariance matrices
+
+```{r}
+summarize.NIW_ideal_adaptor_stanfit <- function(
+    x, 
+    pars = c("kappa", "nu", "m", "S", "lapse_rate"), 
+    groups = c("prior")
+) {
+  add_ibbu_stanfit_draws(x, groups = groups, summarize = F) %>% 
+    unnest_cue_information_in_model() %>%
+    gather_variables(exclude = c(".chain", ".iteration", ".draw", ".row", "cue", "cue2", "group", "category")) %>%
+    ungroup() %>%
+    # + Remove double mentions of variables that are constant across groups, categories, and cues
+    #   (currently: lapse_rate)
+    # + Remove double mentions of variables that are constant across cues
+    #   (currently: kappa and nu)
+    # + Remove double mentions of variables that are constant across cue2
+    #   (currently: m)
+    mutate(
+      across(
+        c(group, category),
+        ~ ifelse(.variable == "lapse_rate", NA_character_, as.character(.x))),
+      across(
+        c(cue, cue2),
+        ~ ifelse(.variable %in% c("kappa", "nu", "lapse_rate"), NA_character_, as.character(.x))),
+      across(
+        c(cue2),
+        ~ ifelse(.variable == "m", NA, .x))) %>%
+    distinct() %>%
+    group_by(group, category, cue, cue2, .variable) %>%
+    median_hdci() %>%
+    mutate(
+      group = factor(group, levels = groups),
+      .variable = factor(.variable, levels = pars)) %>%
+    # Format and sort output
+    relocate(group, category, .variable, cue, cue2, .value, everything()) %>%
+    arrange(match(.$.variable, levels(.$.variable)), match(.$group, levels(.$group)), category, cue, cue2) %>%
+    rename(
+      parameter = .variable,
+      !! sym(unique(.$.point)) := .value,
+      !! sym(unique(paste0("lower ", unique(.$.width * 100), "% ", toupper(unique(.$.interval))))) := .lower,
+      !! sym(unique(paste0("upper ", unique(.$.width * 100), "% ", toupper(unique(.$.interval))))) := .upper) %>%
+    select(-c(.width, .point, .interval))
+  
+}
+
+make_all_plots <- function(
+  fit, 
+  groups = NULL, 
+  colors.group = NULL, 
+  colors.category = c("red", "blue"),
+  ncol = NULL
+) {
+  plot_ibbu_stanfit_parameter_correlations(fit, category.colors = colors.category) %>% plot()
+  if (!is.null(groups)) {
+    plot_ibbu_stanfit_parameters(fit, groups = groups, group.colors = colors.group) %>% plot()
+    (plot_expected_ibbu_stanfit_categories_contour2D(fit, groups = groups, category.colors = colors.category) + facet_wrap(~ group, ncol = ncol)) %>% plot()
+    (plot_ibbu_stanfit_test_categorization(fit, groups = groups, plot_in_cue_space = T, category.colors = colors.category) + facet_wrap(~ group, ncol = ncol)) %>% plot() 
+  } else {
+    plot_ibbu_stanfit_parameters(fit) %>% plot()
+    plot_expected_ibbu_stanfit_categories_contour2D(fit, category.colors = colors.category) + facet_wrap(~ group, ncol = ncol) %>% plot()
+    plot_ibbu_stanfit_test_categorization(fit, plot_in_cue_space = T, category.colors = colors.category) + facet_wrap(~ group, ncol = ncol) %>% plot() 
+  }
+}
+```
+
+
+### Fit with uninformative (regularizing) priors
+Here some initial plots. While the plots are back-transformed into the original cue space, the table is not (yet).
+
+```{r, size='tiny', fig.width=12, fig.height=12, warning=FALSE, results='asis'}
+m_IA_inferred <- 
+  infer_prior_beliefs(
+    exposure = df.for_ASP %>% filter(Phase == "exposure"), 
+    test = df.for_ASP %>% filter(Phase == "test"), 
+    # Use F0 as intended by generation script. This makes fitting more computationally feasible 
+    # (336 instead of 1001 unique combinations of group & test locations), and also removes the
+    # potential that annotation / measurement error perturb the f0 values. It does, however, 
+    # make the assumption that f0 is the same across the three minimal pairs. While likely wrong,
+    # this assumption better aligns with the fact that the model doesn't have a way to keep track
+    # of any lexical, phonological, or phonetic context effects on VOT (and thus no way to predict
+    # any potential differences between minimal pairs).
+    cues = c("Item.VOT", "Item.F0_target_for_generation_script"),  
+    category = "Item.ExpectedResponse.Voicing", 
+    response = "Response.Voicing", 
+    group = "ParticipantID",
+    group.unique = "ExposureGroup", 
+    center.observations = T,   
+    scale.observations = T,
+    pca.observations = F,
+    sample = T, 
+    file = "../models/IBBU-Tan-Jaeger2022-Experiment2-scaled-f0-uncorrected.RDS",
+    warmup = 3000, iter = 4000,
+    control = list(adapt_delta = .995, max_treedepth = 15))
+```
+
+Table of median estimate and 95% highest posterior densities for all parameters (parameters are back-transformed into the original cue space). The group column could be separated into exposure group and test block, e.g., if it is desired to sort the table differently:
+
+```{r}
+summarize.NIW_ideal_adaptor_stanfit(
+    m_IA_inferred,
+    pars = c("kappa", "nu", "m", "S", "lapse_rate"), 
+    groups = c(
+      "prior",
+      "Cond Shift0AA_Up to test3", "Cond Shift0AA_Up to test5", "Cond Shift0AA_Up to test7",
+      "Cond Shift10AA_Up to test3", "Cond Shift10AA_Up to test5", "Cond Shift10AA_Up to test7",
+      "Cond Shift40AA_Up to test3", "Cond Shift40AA_Up to test5", "Cond Shift40AA_Up to test7")) %>% kable()
+```
+
+Plots:
+
+```{r}
+make_all_plots(
+  m_IA_inferred, 
+  groups = c(
+    "Cond Shift0AA_Up to test3", "Cond Shift0AA_Up to test5", "Cond Shift0AA_Up to test7",
+    "Cond Shift10AA_Up to test3", "Cond Shift10AA_Up to test5", "Cond Shift10AA_Up to test7",
+    "Cond Shift40AA_Up to test3", "Cond Shift40AA_Up to test5", "Cond Shift40AA_Up to test7",
+    "prior"),
+  colors.group =  c(
+    "#550000", "#AA0000", "#FF0000", 
+    "#005500", "#00AA00", "#00FF00", 
+    "#000055", "#0000AA", "#0000FF", 
+    "gray"),
+  ncol = 3)
+```
+
+### Calculate predicted log-odds of "t"-responses based on IBBU fit
+
+This can be correlated against the actual observed answers XXXXXXXX
+
+```{r}
+model <- m_IA_inferred
+groups <- c(
+    "Cond Shift0AA_Up to test3", "Cond Shift0AA_Up to test5", "Cond Shift0AA_Up to test7",
+    "Cond Shift10AA_Up to test3", "Cond Shift10AA_Up to test5", "Cond Shift10AA_Up to test7",
+    "Cond Shift40AA_Up to test3", "Cond Shift40AA_Up to test5", "Cond Shift40AA_Up to test7",
+    "Cond Shift0BA_Up to test3", "Cond Shift0BA_Up to test5", "Cond Shift0BA_Up to test7",
+    "Cond Shift10BA_Up to test3", "Cond Shift10BA_Up to test5", "Cond Shift10BA_Up to test7",
+    "Cond Shift40BA_Up to test3", "Cond Shift40BA_Up to test5", "Cond Shift40BA_Up to test7",
+    "Cond Shift0CA_Up to test3", "Cond Shift0CA_Up to test5", "Cond Shift0CA_Up to test7",
+    "Cond Shift10CA_Up to test3", "Cond Shift10CA_Up to test5", "Cond Shift10CA_Up to test7",
+    "Cond Shift40CA_Up to test3", "Cond Shift40CA_Up to test5", "Cond Shift40CA_Up to test7",
+    "no exposure")
+untransform_cues <- F
+target_category <- 2 # "t"
+
+# Get and summarize posterior draws from fitted model
+ndraws <- get_number_of_draws(model)
+d.pars <-
+  add_ibbu_stanfit_draws(
+    model,
+    groups = groups,
+    summarize = F,
+    wide = F,
+    ndraws = NULL,
+    untransform_cues = untransform_cues) %>%
+  filter(group %in% .env$groups)
+
+# Prepare test_data
+cue.labels <- get_cue_levels_from_stanfit(model)
+data.test <- get_test_data_from_stanfit(model) %>%
+  distinct(!!! syms(cue.labels)) %>%
+  { if (untransform_cues) get_untransform_function_from_stanfit(model)(.) else . } %>%
+  make_vector_column(cols = cue.labels, vector_col = "x", .keep = "all") %>%
+  nest(cues_joint = x, cues_separate = .env$cue.labels) %>%
+  crossing(group = levels(d.pars$group))
+
+# Categorize test data
+d.pars %<>%
+  group_by(group, .draw) %>%
+  do(f = get_categorization_function_from_grouped_ibbu_stanfit_draws(., logit = F)) %>%
+  right_join(test_data, by = "group") %>%
+  group_by(group, .draw) %>%
+  mutate(p_cat = invoke_map(.f = f, .x = cues_joint, target_category = target_category)) %>%
+  select(-f) %>%
+  unnest(c(cues_joint, cues_separate, p_cat))
+
+# Compare predicted and actual responses
+d.pars %>%
+  rename(Predicted_posterior = p_cat) %>%
+  group_by(group, Item.VOT) %>%
+  summarise(across(Predicted_posterior, mean)) %>%
+  mutate(group = ifelse(group == "prior", "no exposure", group)) %>%
+  left_join(data.test) %>%
+  mutate(
+    Response = voiced / (voiced + voiceless),
+    group = gsub("[ABC]A", "", group)) %>%
+  compare_predicted_and_actual()
+```
+
 # Obtaining estimates of listeners prior expectations
 
 The database contains 92 talkers (female = XXX, male = XXX; for details, see SI, \@ref(sec:VOT-production)).

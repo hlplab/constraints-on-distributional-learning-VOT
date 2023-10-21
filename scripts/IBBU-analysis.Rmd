@@ -281,9 +281,10 @@ slice_into_unique_exposure_test <- function(df, block_order, block_var = "Block"
        df.new %<>%
          rbind(
          df %>% 
-           # Include only exposure blocks from the current exposure condition and the current test block from the current exposure condition (but not earlier test blocks) 
+           # Include only exposure blocks from the current exposure condition and the current test block 
+           # from the current exposure condition (but not earlier test blocks) 
            filter(!! sym(condition_var) == g, Block <= i, Block == i | !(Block %in% grep("test", block_order))) %>%
-           # could be further simplified by recognising that by test block7 everyone has seen the same thing
+           # could be further simplified by recognizing that by test block7 everyone has seen the same thing
            mutate(ExposureGroup = if (i == 1) "no exposure" else paste0("Cond ", g, "_Up to ", block_order[i])))
   
   df.new  %>%
