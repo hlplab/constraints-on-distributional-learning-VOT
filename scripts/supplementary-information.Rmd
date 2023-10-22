@@ -314,7 +314,7 @@ d.stimuli %<>% bind_rows() %>%
 #write_csv(d, "../../materials/stimuli_AE/annotation_files/AE_stimuli_synthesised_actualf0.csv")
 
 # using lm() to obtain general linear function
-talker_m <- lm(f0_5ms_into_vowel ~ 1 + VOT, data = d.stimuli)
+talker_m <- lm(f0_5ms_into_vowel ~ 1 + VOT, data = d)
 
 d.stimuli %>% 
   ggplot(aes(x = VOT, y = f0_5ms_into_vowel, colour = word)) +
@@ -477,7 +477,7 @@ The lapsing model predicts participant responses that are made independent of th
 We fit the psychometric model using the package \texttt{brms} [@R-brms_a] in R [@R; @RStudio]. To faciltiate comparison of effect sizes across predictors, we standardized continuous predictors (VOT) by dividing through twice their standard deviation [@gelman2008]. Following previous work from our lab [@horberg2021; @xie2021], we used weakly regularizing priors to facilitate model convergence. For fixed effect parameters, we used Student priors centered around zero with a scale of 2.5 units [following @gelman-prior2008] and 3 degrees of freedom. For random effect standard deviations, we used a Cauchy prior with location 0 and scale 2, and for random effect correlations, we used an uninformative LKJ-Correlation prior with its only parameter set to 1, describing a uniform prior over correlation matrices [@Lewandowski2009]. Four chains with 2000 warm-up samples and 2000 posterior samples each were fit. No divergent transitions after warm-up were observed, and all $1 < \hat{R} < 1.01$.
 
 # Generalized additive mixed-effects analysis
-The analyses presented in the main text assume that VOT has a linear effect on the log-odds of "t"-responses. We made this assumptions for the sake of simplicity, and in order to avoid over-fitting. However, there are reasons to expect that the effects of VOT are non-linear. Specifically, ideal observers with Gaussian categories along a single cue dimension (here: VOT) predict that the posterior log-odds of each category change linearly along that cue dimension if and only if the variance of both Gaussian categories is equal [for details, see @bicknell2018; @kleinschmidt-jaeger2015; @kronrod2016]. For US English /d/ and /t/, this is well-known *not* to be the case, with /t/ having larger variance than /d/ (see also Figure XXX in the main text). Under the assumption of Gaussian categories, ideal observers thus predict a quadratic effect along VOT---specifically, the log-odds of "t"-responses are predicted to increase more than linearly with increasing VOT between the two category means (since the /t/ category has larger variance). While Gaussian categories are a simplifying assumption for the sake of modeling, rather than a critical assumption of the ideal adaptor framework [cf. @kleinschmidt-jaeger2015, Appendix]^[For example, the assumption of Gaussian categories leads to implausible predictions for extreme VOT values that lie outside the range of the two category means. Specifically, for VOTs smaller than the category mean of /d/, "t"-responses are predicted to eventually increase with decreasing VOT values (as a consequence of the same quadratic trend mentioned above). Additionally, distribution of VOTs for the /d/ category tends to be noticeably positively-skewed and thus non-normal.], the predicted quadratic trend is also likely to emerge in exemplar models. <!-- TO DO: Check -->
+The analyses presented in the main text assume that VOT has a linear effect on the log-odds of "t"-responses. We made this assumptions for the sake of simplicity, and in order to avoid over-fitting. However, there are reasons to expect that the effects of VOT are non-linear. Specifically, ideal observers with Gaussian categories along a single cue dimension (here: VOT) predict that the posterior log-odds of each category change linearly along that cue dimension if and only if the variance of both Gaussian categories is equal [for details, see @bicknell2018; @kleinschmidt-jaeger2015; @kronrod2016]. For US English /d/ and /t/, this is well-known *not* to be the case, with /t/ having larger variance than /d/ (see also Figure XXX in the main text). Under the assumption of Gaussian categories, ideal observer thus predict a quadratic effect along VOT---specifically, the log-odds of "t"-responses are predicted to increase more than linearly with increasing VOT between the two category means (since the /t/ category has larger variance). While Gaussian categories are a simplifying assumption for the sake of modeling, rather than a critical assumption of the ideal adaptor framework [cf. @kleinschmidt-jaeger2015, Appendix]^[For example, the assumption of Gaussian categories leads to implausible predictions for extreme VOT values that lie outside the range of the two category means. Specifically, for VOTs smaller than the category mean of /d/, "t"-responses are predicted to eventually increase with decreasing VOT values (as a consequence of the same quadratic trend mentioned above). Additionally, distribution of VOTs for the /d/ category tends to be noticeably positively-skewed and thus non-normal.], the predicted quadratic trend is also likely to emerge in exemplar models. <!-- TO DO: Check -->
 
 While the linearity assumption made in our main analysis does not *necessarily* introduce statistical bias, it is possible that it does. We thus conducted additional analyses that relaxed the linearity assumption by modeling the effect of VOT as a non-parametric smooth. Since this analysis affords additional degrees of freedom, we reduced concerns about over-fitting by combining the (unlabeled) exposure and test data into a single analysis. Instead of modeling effects block by block, we decided to model the incremental and cumulative effects of exposure by including a non-linear effect of trial and its interaction with VOT in the analysis.
 
@@ -738,7 +738,7 @@ m_IA.VOT_f0 <-
 # Make a data frame that splits the entire data in unique exposure-test combinations.
 # This data frame will be used for adaptive changes in normalization and category 
 # representations.
-df_split_exposure_test <- 
+d_for_ASP <- 
   d_for_analysis %>%
   ungroup() %>%
   # Exclude catch trials and the final two test blocks since we expect unlearning during those blocks 
@@ -804,7 +804,7 @@ update_normalization_and_normalize_test_data <- function(
 get_likelihood_from_updated_normalization <- function(
     par, 
     prior = m_IO.VOT_f0,
-    data = df.for_ASP
+    data = d_for_ASP
 ) {
   kappa <- exp(par[1])
 
@@ -845,7 +845,7 @@ if (RESET_MODELS || !file.exists(filename)) {
 df.normalized <- 
   update_normalization_and_normalize_test_data(
   kappa = best_performing_parameters.normalization,
-  data = df.for_ASP) 
+  data = d_for_ASP) 
 
 df.normalized %<>%
   mutate(observationID = 1:nrow(.)) %>%
@@ -912,7 +912,7 @@ update_decision_bias <- function(
 get_likelihood_from_updated_bias <- function(
     par, 
     prior = m_IO.VOT_f0,
-    data = df.for_ASP
+    data = d_for_ASP
 ) {
   beta <- exp(par[1])
 
@@ -953,7 +953,7 @@ if (RESET_MODELS || !file.exists(filename)) {
 }
 
 df.bias <-
-  df.for_ASP %>%
+  d_for_ASP %>%
   mutate(observationID = 1:nrow(.)) %>%
   left_join(
     df.bias %>%
@@ -1016,7 +1016,7 @@ update_representations <- function(
 get_likelihood_from_updated_representation <- function(
     par, 
     prior = m_IA.VOT_f0,
-    data = df.for_ASP
+    data = d_for_ASP
 ) {
   kappa <- exp(par[1])
 
@@ -1055,7 +1055,7 @@ if (RESET_MODELS || !file.exists(filename)) {
 df.normalized <- 
   update_normalization_and_normalize_test_data(
   kappa = best_performing_parameters.normalization,
-  data = df.for_ASP) 
+  data = d_for_ASP) 
 
 df.normalized %<>%
   mutate(observationID = 1:nrow(.)) %>%
@@ -1153,8 +1153,8 @@ Here some initial plots. While the plots are back-transformed into the original 
 ```{r, size='tiny', fig.width=12, fig.height=12, warning=FALSE, results='asis'}
 m_IA_inferred <- 
   infer_prior_beliefs(
-    exposure = df.for_ASP %>% filter(Phase == "exposure"), 
-    test = df.for_ASP %>% filter(Phase == "test"), 
+    exposure = d_for_ASP %>% filter(Phase == "exposure"), 
+    test = d_for_ASP %>% filter(Phase == "test"), 
     # Use F0 as intended by generation script. This makes fitting more computationally feasible 
     # (336 instead of 1001 unique combinations of group & test locations), and also removes the
     # potential that annotation / measurement error perturb the f0 values. It does, however, 
@@ -1241,7 +1241,8 @@ d.pars <-
 
 # Prepare test_data
 cue.labels <- get_cue_levels_from_stanfit(model)
-data.test <- get_test_data_from_stanfit(model) %>%
+data.test <- 
+  get_test_data_from_stanfit(model) %>%
   distinct(!!! syms(cue.labels)) %>%
   { if (untransform_cues) get_untransform_function_from_stanfit(model)(.) else . } %>%
   make_vector_column(cols = cue.labels, vector_col = "x", .keep = "all") %>%
@@ -1252,15 +1253,25 @@ data.test <- get_test_data_from_stanfit(model) %>%
 d.pars %<>%
   group_by(group, .draw) %>%
   do(f = get_categorization_function_from_grouped_ibbu_stanfit_draws(., logit = F)) %>%
-  right_join(test_data, by = "group") %>%
-  group_by(group, .draw) %>%
-  mutate(p_cat = invoke_map(.f = f, .x = cues_joint, target_category = target_category)) %>%
+  right_join(data.test, by = "group") %>%
+  group_by(group, .draw) 
+
+# d.pars %<>%
+#   mutate(Predicted_posterior = 
+#            pmap(
+#              .l = list(f, cues_joint, target_category), 
+#              .f = ~ exec(..1, x = ..2, target_category = ..3))) %>%
+#   select(-f) %>%
+#   unnest(c(cues_joint, cues_separate, Predicted_posterior))
+
+d.pars %<>%
+  mutate(Predicted_posterior = 
+           invoke_map(.f = f, .x = cues_joint, target_category = target_category)) %>%
   select(-f) %>%
-  unnest(c(cues_joint, cues_separate, p_cat))
+  unnest(c(cues_joint, cues_separate, Predicted_posterior))
 
 # Compare predicted and actual responses
 d.pars %>%
-  rename(Predicted_posterior = p_cat) %>%
   group_by(group, Item.VOT) %>%
   summarise(across(Predicted_posterior, mean)) %>%
   mutate(group = ifelse(group == "prior", "no exposure", group)) %>%
