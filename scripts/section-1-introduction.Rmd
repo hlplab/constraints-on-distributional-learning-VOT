@@ -26,13 +26,13 @@ In experimental work researchers often have to consider the generalizability of 
 However, Kleinschmidt and Jaeger also observed a previously undocumented property of these adaptive changes: shifts in the exposure distribution had less than proportional (sublinear) effect on shifts in PSE (Figure \@ref(fig:kleinschmidt-jaeger-2016-replotted)C). While this finding is broadly compatible with the hypothesis of distributional learning, it points to important not well-understood constraints on adaptive speech perception.-->
 
 
-(ref:kleinschmidt-jaeger-2016-replotted) Design and results of @kleinschmidt-jaeger2016 replotted. **Panel A:** Different groups of participants were exposed to different shifts in the mean VOT of /b/ and /p/. **Panel B:** categorization functions of individual participants depending on the exposure condition (shift in VOT means of /b/ and /p/). For reference, the black dashed line shows the categorization function of the 0-shift condition. The colored dashed lines shows the categorization function expected for an ideal observer that has fully learned the exposure distributions. **Panel C:** Mean and 95% CI of participants' points of subjective equality (PSEs), relative to the PSE of the ideal observers.
+(ref:kleinschmidt-jaeger-2016-replotted) Design and results of @kleinschmidt-jaeger2016 replotted. **Panel A:** Different groups of participants were exposed to different shifts in the mean VOT of /b/ and /p/. **Panel B:** categorization functions fitted to the last 1/6th of all trials depending on the exposure condition (shift in VOT means of /b/ and /p/). For reference, the black dashed line shows the categorization function of the 0-shift condition. The colored dashed lines shows the categorization function expected for an ideal observer that has fully learned the exposure distributions. **Panel C:** Mean and 95% CI of participants' points of subjective equality (PSEs), relative to the PSE of the ideal observers.
 
 ```{r kleinschmidt-jaeger-2016-refitted}
-# load K&J2016 data and filter to semi-supervised rows
+# load K&J2016 data and filter to all semi-supervised rows
 d.KJ16 <- 
   supunsup_clean %>%
-  filter(supCond == "mixed" | supCond == "supervised") %>%
+  filter(supCond == "mixed" | supCond == "supervised") %>% 
   # rename variables so that they match the naming conventions employed in the remainder
   # of this paper.
   rename(
@@ -53,8 +53,9 @@ d.KJ16 <-
 
 d.KJ16_unlabeled <- 
   d.KJ16 %>% 
+  arrange(trial) %>% 
   filter(labeled == "unlabeled") %>%
-  group_by(ParticipantID) %>%
+  group_by(ParticipantID) %>% 
   # filter to final 6th of total trials
   slice_tail(n = 37)
 
@@ -63,9 +64,9 @@ VOT.sd_d.KJ16_unlabeled <- sd(d.KJ16_unlabeled$Item.VOT)
 d.KJ16_unlabeled %<>% mutate(VOT_gs = (Item.VOT - VOT.mean_d.KJ16_unlabeled) / (2 * VOT.sd_d.KJ16_unlabeled))
 
 contrasts(d.KJ16_unlabeled$Condition.Exposure) <-
-  cbind(" 10vs0" = c(-3/4, 1/4, 1/4, 1/4),
-        " 20vs10" = c(-1/2, -1/2, 1/2, 1/2),
-        " 30vs20" = c(-1/4, -1/4, -1/4, 3/4))
+  cbind("10vs0" = c(-3/4, 1/4, 1/4, 1/4),
+        "20vs10" = c(-1/2, -1/2, 1/2, 1/2),
+        "30vs20" = c(-1/4, -1/4, -1/4, 3/4))
 
 my_priors <- c(
   prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),
