@@ -114,6 +114,7 @@ library(posterior)
 library(phonR)              # normalization of f0
 library(supunsup)           # Kleinschmidt & Jaeger 2016 data
 library(MVBeliefUpdatr)     # generating Ideal Observers
+library(furrr)              # future_map for parallelization
 ```
 
 ```{r constants-general, include=FALSE}

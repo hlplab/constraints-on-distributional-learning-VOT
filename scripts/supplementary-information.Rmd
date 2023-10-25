@@ -613,38 +613,37 @@ slice_into_unique_exposure_test <- function(df, block_order, block_var = "Block"
     select(ExposureGroup, Block, everything())
 }
 
-
-get_likelihood_from_grouped_data <- function(
-    model,
-    data
-) {
+# Assumes that the model is in a column called "model", the input data and response is 
+# in a column data (data$x and data$Response.Category, respectively):
+get_likelihood_from_grouped_data <- function(data) {
   data %>%
-    group_map(
-      .f = ~
-        evaluate_model(
-          model = model,
-          x = .x[["x"]],
-          response_category = .x[["Response.Category"]],
+    mutate(
+      ll = map2(
+      model, 
+      data, 
+      ~ evaluate_model(
+          model = .x,
+          x = .y$x,
+          response_category = .y$Response.Category,
           decision_rule = "proportional",
           noise_treatment = "marginalize",
           lapse_treatment = "marginalize",
-          method = "likelihood",
-          return_by_x = F)) %>%
+          method = "likelihood-up-to-constant",
+          return_by_x = F))) %>%
+    pull(ll) %>%
+    # Sum up all the lls of the different exposure conditions
     reduce(`+`)
 }
 
-
+# TO DO: consider making plots a bit pretty, e.g., by grouping participant responses together 
+# into 5msec VOT bins and by making model prediction a line plot, rather than a point plot.
 compare_predicted_and_actual <- function(data) {
   p <- 
     data %>%
     ggplot(aes(x = VOT)) +
     stat_summary(fun = mean, geom = "line", aes(y = Response)) +
-    stat_summary(fun = mean, geom = "line", aes(y = Predicted_posterior), 
-                 color = "gray") +
-    stat_summary(fun.data = mean_cl_boot, geom = "pointrange", aes(y = Response), 
-                 size = 1/4) +
-    stat_summary(fun.data = mean_cl_boot, geom = "pointrange", aes(y = Predicted_posterior), 
-                 color = "gray", size = 1/4) +
+    stat_summary(fun = mean, geom = "line", aes(y = Predicted_posterior), color = "gray") +
+    stat_summary(fun.data = mean_cl_boot, geom = "pointrange", aes(y = Response), size = 1/4) +
     facet_wrap(~ ExposureGroup, ncol = 3) 
   plot(p)
   
@@ -760,7 +759,7 @@ d_for_ASP <-
     block_var = "Block.for_ASP",
     block_order = c("test1", "exposure2", "test3", "exposure4", "test5", "exposure6", "test7")) %>%
   mutate(ExposureGroup = factor(ExposureGroup)) %>%
-  select(ExposureGroup, Phase, x, Response.Category, Item.ExpectedResponse)
+  select(ExposureGroup, Phase, ParticipantID, Block, Trial, x, Response.Category, Item.ExpectedResponse)
 ```
 
 ## Changes in normalization
@@ -798,13 +797,13 @@ update_normalization_and_normalize_test_data <- function(
       exposure.normalization %>%
         select(ExposureGroup, mu_n),
       by = "ExposureGroup") %>%
-    mutate(x = map2(x, mu_n, ~ .x - (.y - .env$mu_0)))
+    mutate(x = map2(x, mu_n, ~ .x - (.y - .env$mu_0))) 
 }
 
 get_likelihood_from_updated_normalization <- function(
     par, 
     prior = m_IO.VOT_f0,
-    data = d_for_ASP
+    data = d_for_ASP.for_normalization
 ) {
   kappa <- exp(par[1])
 
@@ -812,9 +811,13 @@ get_likelihood_from_updated_normalization <- function(
     update_normalization_and_normalize_test_data(
       kappa = kappa,
       data = data) %>%
+    group_by(ExposureGroup) %>%
+    select(ExposureGroup, x, Response.Category) %>%
+    nest(data = c(x, Response.Category)) %>%
     # Since the model never changes (only the cues do), there is only
     # one group of data for normalization
-    get_likelihood_from_grouped_data(model = prior)
+    mutate(model = list(prior)) %>%
+    get_likelihood_from_grouped_data()
   
   history.optimization_normalization <<- 
     bind_rows(
@@ -823,6 +826,26 @@ get_likelihood_from_updated_normalization <- function(
   
   return(ll)
 }
+```
+
+
+```{r}
+# Only one participant per exposure group is needed for exposure data
+# (since they all have the same exposure up to that point, and our 
+# approach to normalization is order-insensitive; so doing this separately 
+# for each participant shouldn't make a difference).
+# 
+# -------------------------------------------------------------------------
+# TO DO: results changes after limiting data to first participant in each 
+# exposure group. this is unexpected. One possibility is that this is simply
+# an optimization problem. another possibility is that participants differ 
+# in their cue means even within ExposureGroup (e.g., due to missing data)
+# even though that shouldn't be the case.
+# -------------------------------------------------------------------------
+d_for_ASP.for_normalization <-
+  d_for_ASP %>%
+  group_by(ExposureGroup, Phase) %>%
+  filter(Phase == "test" | ParticipantID == first(ParticipantID))
 
 if (RESET_MODELS || !file.exists(filename)) {
   best_performing_parameters.normalization <-
@@ -853,7 +876,7 @@ df.normalized %<>%
     df.normalized %>%
       group_map(
         .f = 
-          ~ get_posterior_model(
+          ~ get_posterior_from_model(
             model = m_IO.VOT_f0, 
             x = .x$x,
             noise_treatment = "marginalize",
@@ -862,11 +885,12 @@ df.normalized %<>%
       .[[1]],
     by = "observationID") %>%
   mutate(
-    VOT = unlist(map(x.x, ~ .x[1])),
+    VOT = map_dbl(x.x, ~ .x[1]),
     Response = ifelse(Response.Category == "/t/", 1, 0)) %>%
-  rename(Predicted_posterior = response) 
+  rename(Predicted_posterior = posterior_probability) 
 
 df.normalized %>% compare_predicted_and_actual()
+d_for_ASP.for_normalization <- NULL
 ```
 
 ## Changes in decision-making
@@ -883,17 +907,14 @@ update_decision_bias <- function(
   beta,
   data 
 ) {
-  message("Currently, this function assumes a single order of exposure for each exposure group.", 
-          "Consider instead using the participant-specific actual order.")
-  
   cues <- get_cue_labels_from_model(prior)
   u <-
     data %>% 
     filter(Phase == "exposure") %>%
     mutate(
-      (!!! syms(cues))[1] := map_dbl(x, ~ .x[1]),
-      (!!! syms(cues))[2] := map_dbl(x, ~ .x[2])) %>%
-    group_by(ExposureGroup) %>%
+      (!! sym(cues[1])) := map_dbl(x, ~ .x[1]),
+      (!! sym(cues[2])) := map_dbl(x, ~ .x[2])) %>%
+    group_by(ExposureGroup, ParticipantID) %>%
     group_map(
       .f = ~ update_model_decision_bias_incrementally(
         model = prior,
@@ -903,77 +924,160 @@ update_decision_bias <- function(
         exposure.cues = cues,
         noise_treatment = "marginalize",
         lapse_treatment = "marginalize",
-        keep.update_history = FALSE,
+        keep.update_history = TRUE,
         keep.exposure_data = FALSE) %>%
-        nest(posterior = everything())) %>%
+        nest(posterior = everything()) %>%
+        bind_cols(.y)) %>%
     reduce(bind_rows)
 }
 
 get_likelihood_from_updated_bias <- function(
     par, 
     prior = m_IO.VOT_f0,
-    data = d_for_ASP
+    data = d_for_ASP.for_decision_changes
 ) {
   beta <- exp(par[1])
 
   ll <- 
-    update_decision_bias( 
+    suppressWarnings(
+      update_decision_bias( 
       prior = prior,
       beta = beta,
-      data = data) %>%
-    get_likelihood_from_grouped_data(model = prior)
+      data = data))
+  ll %<>%
+    mutate(posterior = 
+             map(
+               posterior, 
+               ~ filter(.x, observation.n %in% c(48, 96, 144)) %>%
+                 mutate(observation.n = case_when(
+                   observation.n == 48 ~ "_Up to test3",
+                   observation.n == 96 ~ "_Up to test5",
+                   observation.n == 144 ~ "_Up to test7")))) %>%
+    unnest(posterior) %>%
+    # Remap the different update steps onto the ExposureGroup
+    mutate(ExposureGroup = paste0(gsub("^(.*)_.*$", "\\1", ExposureGroup), observation.n)) %>%
+    select(-observation.n) %>%
+    # Bind prior model back in and call it "no exposure"
+    bind_rows(
+      bind_cols(
+        prior, 
+        tibble(ExposureGroup = "no exposure")) %>%
+        crossing(ParticipantID = NA)) %>%
+    nest(model = -c(ExposureGroup, ParticipantID)) %>%  
+    left_join(
+      data %>% 
+        filter(Phase == "test") %>% 
+        group_by(ExposureGroup) %>%
+        select(x, Response.Category) %>%
+        nest(data = c(x, Response.Category)),
+      by = join_by(ExposureGroup)) %>%
+    get_likelihood_from_grouped_data()
   
    history.optimization_bias <<-
     bind_rows(
       history.optimization_bias,
       tibble(
-        lapse_rate = lapse_rate, 
         beta = beta, 
         log_likelihood = ll))
   
   return(ll)
 }
 
+# Reduce to one participant or keep all of them (the latter is much slower)
+d_for_ASP.for_decision_changes <-
+  d_for_ASP %>%
+#  filter(ExposureGroup == "Cond Shift0CA_Up to test7") %>%
+  # Include all test observations but only the exposure groups that contain all 3 exposure
+  # blocks (which then are reformatted as part of the updating function in order to derive
+  # the predicted updated decision biases after each of the three exposure blocks).
+  filter(Phase == "test" | grepl(x = ExposureGroup, pattern = ".*Up to test7")) %>%
+  group_by(ExposureGroup, Phase) %>%
+  # Since it is not computationally feasible to run the optimization over all participants 
+  # (unlike for the other two adaptive models, the change model for decision biases is order
+  # sensitive), we're sampling 5 participants in each exposure condition
+  filter(Phase == "test" | ParticipantID %in% sample(x = unique(ParticipantID), size = 5)) %>%
+  arrange(Phase, Block) %>%
+  droplevels()
+
 if (RESET_MODELS || !file.exists(filename)) {
+  message("Currently, this function assumes a single order of exposure for each exposure group.", 
+          "Consider instead using the participant-specific actual order.")
+
   best_performing_parameters.bias <-
     optim(
-      par = log(mean(range.bias)),
+      par = log(mean(range.beta)),
       fn = get_likelihood_from_updated_bias,
       method = "L-BFGS-B",
-      lower = log(min(range.bias)),
-      upper = log(max(range.bias)),
+      lower = log(min(range.beta)),
+      upper = log(max(range.beta)),
       control = list(
         fnscale = -1,
         factr = 10^8))
-  
+
   best_performing_parameters.bias <- exp(best_performing_parameters.bias$par[1])
   saveRDS(best_performing_parameters.bias, filename)
 } else {
   best_performing_parameters.bias <- readRDS(filename)
 }
 
-df.bias <-
-  d_for_ASP %>%
-  mutate(observationID = 1:nrow(.)) %>%
+df.bias <- 
+  update_decision_bias( 
+    prior = m_IO.VOT_f0,
+    beta = best_performing_parameters.bias,
+    data =  d_for_ASP %>%
+      group_by(ExposureGroup, ParticipantID, Phase) %>%
+      filter(Phase == "test" | grepl(x = ExposureGroup, pattern = ".*Up to test7")) %>%
+      arrange(ParticipantID, Phase, Block) %>%
+      droplevels()) %>%
+  mutate(posterior = 
+           future_map(
+             posterior, 
+             ~ filter(.x, observation.n %in% c(48, 96, 144)) %>%
+               mutate(observation.n = case_when(
+                 observation.n == 48 ~ "_Up to test3",
+                 observation.n == 96 ~ "_Up to test5",
+                 observation.n == 144 ~ "_Up to test7")))) %>%
+  unnest(posterior) %>%
+  # Remap the different update steps onto the ExposureGroup
+  mutate(ExposureGroup = paste0(gsub("^(.*)_.*$", "\\1", ExposureGroup), observation.n)) %>%
+  select(-observation.n) %>%
+  # Bind prior model back in and call it "no exposure"
+  bind_rows(
+    bind_cols(
+      prior, 
+      tibble(ExposureGroup = "no exposure")) %>%
+      crossing(ParticipantID = NA)) %>%
+  nest(model = -c(ExposureGroup, ParticipantID)) %>%  
+  # Join in test data
   left_join(
-    df.bias %>%
-      group_map(
-        .f = 
-          ~ get_categorization_from_MVG_ideal_observer(
-            model = prior, 
-            x = .x$x,
-            decision_rule = "proportional",
-            noise_treatment = "marginalize",
-            lapse_treatment = "marginalize") %>%
-          filter(category == "/t/")) %>%
-      .[[1]],
-    by = "observationID") %>%
+    data %>% 
+      filter(Phase == "test") %>% 
+      # Remove ParticipantID for no exposure test data
+      mutate(ParticipantID = as.factor(ifelse(ExposureGroup == "no exposure", NA_character_, as.character(ParticipantID)))) %>%
+      group_by(ExposureGroup, ParticipantID) %>%
+      select(x, Response.Category) %>%
+      nest(data = c(x, Response.Category)),
+    by = join_by(ExposureGroup, ParticipantID)) %>%
+  # Categorize test tokens
   mutate(
-    VOT = unlist(map(x.x, ~ .x[1])),
-    Response = ifelse(Response.Category == "/t/", 1, 0)) %>%
+    categorization = future_map2(
+      model, 
+      data, 
+      ~ get_categorization_from_MVG_ideal_observer(
+        model = .x, 
+        x = .y$x,
+        decision_rule = "proportional",
+        noise_treatment = "marginalize",
+        lapse_treatment = "marginalize") %>%
+        filter(category == "/t/"))) %>%
+  mutate(Response = map(data, ~ ifelse(.x$Response.Category == "/t/", 1, 0))) %>%
+  select(-c(model, data)) %>%
+  unnest(c(categorization, Response)) %>% 
+  mutate(VOT = map_dbl(x, ~ .x[1])) %>%
   rename(Predicted_posterior = response) 
 
 df.bias %>% compare_predicted_and_actual()
+d_for_ASP.for_decision_changes <- NULL
 ```
 
 ## Changes in category representations
@@ -1225,10 +1329,9 @@ groups <- c(
     "Cond Shift40CA_Up to test3", "Cond Shift40CA_Up to test5", "Cond Shift40CA_Up to test7",
     "no exposure")
 untransform_cues <- F
-target_category <- 2 # "t"
+target_category <- 1 # "t"
 
 # Get and summarize posterior draws from fitted model
-ndraws <- get_number_of_draws(model)
 d.pars <-
   add_ibbu_stanfit_draws(
     model,
@@ -1240,13 +1343,14 @@ d.pars <-
   filter(group %in% .env$groups)
 
 # Prepare test_data
+# --------- THIS MIGHT NEED WORK --------
 cue.labels <- get_cue_levels_from_stanfit(model)
 data.test <- 
   get_test_data_from_stanfit(model) %>%
   distinct(!!! syms(cue.labels)) %>%
   { if (untransform_cues) get_untransform_function_from_stanfit(model)(.) else . } %>%
   make_vector_column(cols = cue.labels, vector_col = "x", .keep = "all") %>%
-  nest(cues_joint = x, cues_separate = .env$cue.labels) %>%
+  nest(cues_joint = x, cues_separate = .env$cue.labels)  %>%
   crossing(group = levels(d.pars$group))
 
 # Categorize test data
@@ -1254,28 +1358,22 @@ d.pars %<>%
   group_by(group, .draw) %>%
   do(f = get_categorization_function_from_grouped_ibbu_stanfit_draws(., logit = F)) %>%
   right_join(data.test, by = "group") %>%
-  group_by(group, .draw) 
-
-# d.pars %<>%
-#   mutate(Predicted_posterior = 
-#            pmap(
-#              .l = list(f, cues_joint, target_category), 
-#              .f = ~ exec(..1, x = ..2, target_category = ..3))) %>%
-#   select(-f) %>%
-#   unnest(c(cues_joint, cues_separate, Predicted_posterior))
-
-d.pars %<>%
-  mutate(Predicted_posterior = 
-           invoke_map(.f = f, .x = cues_joint, target_category = target_category)) %>%
+  group_by(group, .draw) %>%
+  mutate(Predicted_posterior =
+           pmap(
+             .l = list(f, cues_joint, target_category),
+             .f = ~ exec(..1, x = ..2$x, target_category = target_category))) %>%
   select(-f) %>%
   unnest(c(cues_joint, cues_separate, Predicted_posterior))
+
+d.pars %<>% mutate(Predicted_posterior = ifelse(is.infinite(Predicted_posterior), 1, Predicted_posterior))
 
 # Compare predicted and actual responses
 d.pars %>%
   group_by(group, Item.VOT) %>%
   summarise(across(Predicted_posterior, mean)) %>%
-  mutate(group = ifelse(group == "prior", "no exposure", group)) %>%
-  left_join(data.test) %>%
+  mutate(VOT = Item.VOT, ExposureGroup = ifelse(group == "prior", "no exposure", group)) %>%
+  left_join(get_test_data_from_stanfit(model)) %>%
   mutate(
     Response = voiced / (voiced + voiceless),
     group = gsub("[ABC]A", "", group)) %>%

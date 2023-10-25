@@ -25,7 +25,6 @@ In experimental work researchers often have to consider the generalizability of 
 <!-- 
 However, Kleinschmidt and Jaeger also observed a previously undocumented property of these adaptive changes: shifts in the exposure distribution had less than proportional (sublinear) effect on shifts in PSE (Figure \@ref(fig:kleinschmidt-jaeger-2016-replotted)C). While this finding is broadly compatible with the hypothesis of distributional learning, it points to important not well-understood constraints on adaptive speech perception.-->
 
-
 (ref:kleinschmidt-jaeger-2016-replotted) Design and results of @kleinschmidt-jaeger2016 replotted. **Panel A:** Different groups of participants were exposed to different shifts in the mean VOT of /b/ and /p/. **Panel B:** categorization functions of individual participants depending on the exposure condition (shift in VOT means of /b/ and /p/). For reference, the black dashed line shows the categorization function of the 0-shift condition. The colored dashed lines shows the categorization function expected for an ideal observer that has fully learned the exposure distributions. **Panel C:** Mean and 95% CI of participants' points of subjective equality (PSEs), relative to the PSE of the ideal observers.
 
 ```{r kleinschmidt-jaeger-2016-refitted}
@@ -338,9 +337,9 @@ p.KJ16.PSE <-
     alpha = .4,
     linetype = 2, 
     colour = scales::hue_pal()(4)) +
-  geom_point(size = 2, show.legend = F) +
   geom_linerange(
     aes(ymin = PSE_lower, ymax = PSE_upper), size = 1, alpha = .8, show.legend = F) +
+  geom_label(size = 4, show.legend = F, aes(label = paste(round((PSE_mean - 20) / (c(20, 30, 40, 50) - 20) * 100, 1), "%"))) +
   scale_x_discrete("Condition") +
   scale_y_continuous("PSE") +
   theme(axis.text.x = element_text(angle = 22.5, hjust = .8))
