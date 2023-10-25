@@ -1,17 +1,17 @@
 # Introduction
-One of the hallmarks of human speech perception is its adaptivity. Listeners' interpretation of acoustic input can change within minutes of exposure to an unfamiliar talker, supporting robust speech recognition across talkers [@bradlow2008; @clarke2004; @xie2018; @xie2021]. Recent reviews have identified distributional learning of marginal cue statistics ['normalization', @apfelbaum-mcmurray2015; @mcmurray-jongman2011; @magnuson-nusbaum2007] or the statistics of cue-to-category mappings as an important mechanism affording this adaptivity ['representational learning', @clayards2008; @idemaru-holt2011; @kleinschmidt-jaeger2015; @davis-sohoglu2020; for review, @schertz-clare2020; @xie2023]. This hypothesis has gained considerable influence over the past decade, with findings that changes in listener perception are qualitatively predicted by the statistics of exposure stimuli [@bejjanki2011; @clayards2008; @idemaru-holt2020; @kleinschmidt2012; @munson2011; @nixon2016; @theodore-monto2019; @tan2021; for important caveats, see @harmon2019]. 
+One of the hallmarks of human speech perception is its adaptivity. Listeners' interpretation of acoustic input can change within minutes of exposure to an unfamiliar talker, supporting robust speech recognition across talkers [@bradlow2008; @clarke2004; @xie2018; @xie2021]. Recent reviews have identified distributional learning of marginal cue statistics ['normalization', @apfelbaum-mcmurray2015; @mcmurray-jongman2011; @magnuson-nusbaum2007] or the statistics of cue-to-category mappings as an important mechanism affording this adaptivity ['representational learning', @clayards2008; @idemaru-holt2011; @kleinschmidt-jaeger2015; @davis-sohoglu2020; for review, @schertz-clare2020; @xie2023]. This hypothesis has gained considerable influence over the past decade, with findings that changes in listener perception are qualitatively predicted by the statistics of exposure stimuli [@bejjanki2011; @clayards2008; @idemaru-holt2020; @kleinschmidt2012; @munson2011; @nixon2016; @theodore-monto2019; @tan2021; for important caveats, see @harmon2019].
 
-Viewing speech perception as an adaptive process has been pivotal in our understanding of how human listeners overcome the lack of invariance problem; a problem fully appreciated when one begins to map out the variability of acoustic-phonetic cues that point to a single linguistic category [e.g. @delattre1955; @peterson-barney1952; @newman2001]; compounded when talker sex, age, social class, dialect and a host of other contexts are factored into consideration. Listeners' aptitude at speech comprehension however, belie this challenge. Given the uncertainty involved it is not surprising models of spoken word recognition that allow for probabilistic outcomes have left a lasting impression [@mcllelland-elman1986; @vitevitch-luce; @norris-mcqueen2008]. 
+Viewing speech perception as an adaptive process has been pivotal in our understanding of how human listeners overcome the lack of invariance problem; a problem fully appreciated when one begins to map out the variability of acoustic-phonetic cues that point to a single linguistic category [e.g. @delattre1955; @peterson-barney1952; @newman2001]; compounded when talker sex, age, social class, dialect and a host of other contexts are factored into consideration. Listeners' aptitude at speech comprehension however, belie this challenge. Given the uncertainty involved it is not surprising models of spoken word recognition that allow for probabilistic outcomes have left a lasting impression [@mcllelland-elman1986; @vitevitch-luce; @norris-mcqueen2008].
 
-Over the past 20 years there have been prolific investigations into how and when listeners adjust their phonological categories after hearing acoustically manipulated speech sounds. These manipulations take place at the margins of linguistic categories where perception can be heavily influenced by the contexts in which they are presented [@norris2003; @mcqueen2006]. A sound that is ambiguous between /s/ and /sh/ presented in the utterance *contradiction* would bias its interpretation as /sh/ since *contradicson* is not a word. Repeated exposure to the sound in such biasing word contexts reliably elicits a shift in perception along the /s/-/sh/ continuum in subsequent testing -- those having heard the sound in /sh/-biasing words tend to give more /sh/ responses; vice-versa for those who were exposed to it in /s/-contexts. This perceptual recalibration of less prototypical category members has also been induced under audio-visual manipulations [@bertelson2003; @vroomen2007]. The paradigm has been exploited to its fullest to investigate, among other things, the sustainability of perceptual changes [@eisner-mcqueen2006; @kraljic-samuel2005], its generalizability to members of the same phonological class [@kraljic-samuel2006], and its generalizability to other talkers [@kraljic-samuel2007; @reinisch-holt2014]. 
+Over the past 20 years there have been prolific investigations into how and when listeners adjust their phonological categories after hearing acoustically manipulated speech sounds. These manipulations take place at the margins of linguistic categories where perception can be heavily influenced by the contexts in which they are presented [@norris2003; @mcqueen2006]. A sound that is ambiguous between /s/ and /sh/ presented in the utterance *contradiction* would bias its interpretation as /sh/ since *contradicson* is not a word. Repeated exposure to the sound in such biasing word contexts reliably elicits a shift in perception along the /s/-/sh/ continuum in subsequent testing -- those having heard the sound in /sh/-biasing words tend to give more /sh/ responses; vice-versa for those who were exposed to it in /s/-contexts. This perceptual recalibration of less prototypical category members has also been induced under audio-visual manipulations [@bertelson2003; @vroomen2007]. The paradigm has been exploited to its fullest to investigate, among other things, the sustainability of perceptual changes [@eisner-mcqueen2006; @kraljic-samuel2005], its generalizability to members of the same phonological class [@kraljic-samuel2006], and its generalizability to other talkers [@kraljic-samuel2007; @reinisch-holt2014].
 
-In general, these findings are compatible with exemplar and other probabilistic updating frameworks that link the distributions of cues to changes in category mappings hence perceptual recalibration findings can to an extent inform general understanding of talker adaptation. But the mechanisms that underlie the perceptual changes observed are still not well understood and therefore remain a point of debate. Some positions remain less specified than others. For instance the proposal that listeners expand their categories when confronted with unfamiliar accents or that they "relax their criteria" for category membership (@zheng-samuel2020; @schmale2012; @floccia2006; @bent2016). While it is possible that apparent perceptual shifts post-exposure can be explained by processes independent of distributional learning [@clarke-davidson2008; see @xie2023 for simulations] what is needed are better specified hypotheses coupled with stronger predictions and tests to weigh the evidence [@schertz-clare2020; @xie2023; @bent-baese-berk2021]. 
+In general, these findings are compatible with exemplar and other probabilistic updating frameworks that link the distributions of cues to changes in category mappings hence perceptual recalibration findings can to an extent inform general understanding of talker adaptation. But the mechanisms that underlie the perceptual changes observed are still not well understood and therefore remain a point of debate. Some positions remain less specified than others. For instance the proposal that listeners expand their categories when confronted with unfamiliar accents or that they "relax their criteria" for category membership (@zheng-samuel2020; @schmale2012; @floccia2006; @bent2016). While it is possible that apparent perceptual shifts post-exposure can be explained by processes independent of distributional learning [@clarke-davidson2008; see @xie2023 for simulations] what is needed are better specified hypotheses coupled with stronger predictions and tests to weigh the evidence [@schertz-clare2020; @xie2023; @bent-baese-berk2021].
 
 Analytic frameworks that facilitate modelling of perceptual processes conditioned on different assumptions offer a way forward. If robust speech recognition involves learning from the input under varying contexts in a rational manner, it has to account for the implicit assumptions that listeners seem to bring to any speech perception task  with regard to cue-category mappings, and be able to explain how they reconcile these assumptions with recent input. Theories that explicitly bring this to bear include the influential exemplar models [@johnson1996; @pierrehumbert2001; @apfelbaum-mcmurray2015], Bayesian inference models [@feldman2009; @kronrod2016; @kleinschmidt-jaeger2015; @hitczenko-feldman2016], and error-driven learning [@harmon2019].
 
 In a recent example @cummings-theodore2023 working within the ideal adaptor framework, predicted that perceptual recalibration could have graded effects. This logic follows from the general premise that adaptation is the outcome of weighted updates of listener prior expectations of cue-category mappings with the statistics of talker input. By manipulating the number of times an ambiguous sound between /s/ and /sh/ was heard between participants and within each biasing context (1, 4, 10 or 20 occurences) they showed that the size of the putative perceptual recalibration effect correlated with the frequency of the ambiguous tokens. Model simulations qualitatively predicted behavioral results and provided strong evidence of a mechanism that is sensitive to cue statistics. This result corroborates earlier modelling efforts of @kleinschmidt-jaeger2011 which demonstrated that incremental bayesian belief-updating is a possible mechanism behind what has been believed to be dichotomous perceptual phenomena -- selective adaptation and perceptual recalibration.
 
-The present study was devised in similar spirit to past studies guided by an understanding of language as inference and learning under uncertain conditions [@fine2010; @kleinschmidt-jaeger2016; @kleinschmidt-jaeger2011; @clayards2008]. In particular we aim to subject the hypothesis that talker adaptation results from distributional learning with incremental belief updating to a stronger test. While studies of perceptual recalibration that demonstrate graded learning effects based on the quantity of evidence support this hypothesis, there are limitations to the paradigm that preclude deeper investigation. Talker-specific learning involves inferring the means and variances of her cue-category mappings. This task is made more difficult for talkers with extreme cue shifts that fall beyond the prior expectations of listeners because an entire remapping of the cue space is required [@sumner2011]. In perceptual recalibration listeners are presented with maximally informative instances of the same ambiguous acoustic-phonetic token essentially providing ideal but very unnatural circumstances for learning to occur. However even this has a limit -- exposure to a certain number of critical trials (about 20 trials in lexical context studies [@cummings-theodore2022; @tzeng2021]; 64 trials in audio-visual context studies[@vroomen2007]) -- do not bring additive learning effects. 
+The present study was devised in similar spirit to past studies guided by an understanding of language as inference and learning under uncertain conditions [@fine2010; @kleinschmidt-jaeger2016; @kleinschmidt-jaeger2011; @clayards2008]. In particular we aim to subject the hypothesis that talker adaptation results from distributional learning with incremental belief updating to a stronger test. While studies of perceptual recalibration that demonstrate graded learning effects based on the quantity of evidence support this hypothesis, there are limitations to the paradigm that preclude deeper investigation. Talker-specific learning involves inferring the means and variances of her cue-category mappings. This task is made more difficult for talkers with extreme cue shifts that fall beyond the prior expectations of listeners because an entire remapping of the cue space is required [@sumner2011]. In perceptual recalibration listeners are presented with maximally informative instances of the same ambiguous acoustic-phonetic token essentially providing ideal but very unnatural circumstances for learning to occur. However even this has a limit -- exposure to a certain number of critical trials (about 20 trials in lexical context studies [@cummings-theodore2022; @tzeng2021]; 64 trials in audio-visual context studies[@vroomen2007]) -- do not bring additive learning effects.
 
 Here we build on the pioneering work of @clayards2008; @kleinschmidt-jaeger2016; @theodore-monto2019; @kleinschmidt2020 with some design innovations that we believe affords a productive test of the core claims of an ideal adaptor account of speech perception. In @kleinschmidt-jaeger2016 L1-US English listeners heard recordings of /b/-/p/ minimal pair words like *beach* and *peach* that were acoustically manipulated. Separate groups of listeners were exposed to different distributions of voice onset times (VOTs)---the primary cue distinguishing word-initial voicing ---that were shifted by up to +30 ms, relative to what one might expect from a 'typical' talker (Figure \@ref(fig:kleinschmidt-jaeger-2016-replotted)A). In line with the distributional learning hypothesis, listeners' category boundary or point of subjective equality (PSE)---i.e., the VOT for which listeners are equally likely to respond "b" or "p"---shifted in the same direction as the exposure distribution (Figure \@ref(fig:kleinschmidt-jaeger-2016-replotted)B). @kleinschmidt-jaeger2016 and closely related work have been able to show perceptual shifts move qualitatively in the direction of the manipulated distributions but so far none of them were designed to test incremental adaptation. We propose to fill that gap with a novel test-exposure-test design. In doing so we aim to estimate listeners prior expectations about the category mappings for our test talker before they receive further informative exposure and to document how quickly, from the onset of exposure, does the distributional learning effect emerge. The latter point is something that remains opaque in previous work because of the lack of test blocks. Given the substantial evidence that adaptation is rapid (e.g. under 5 mins in L2 accent adaptation; 4-10 trials in perceptual recalibration) listeners may show learning effects very early on in distributional learning as well. On the other hand, given the comparatively more naturalistic task of inferring talker distributions over a range of cues, learning effects may take longer to show.   
 
@@ -22,14 +22,15 @@ In experimental work researchers often have to consider the generalizability of 
 
 
 
-<!-- 
+<!--
 However, Kleinschmidt and Jaeger also observed a previously undocumented property of these adaptive changes: shifts in the exposure distribution had less than proportional (sublinear) effect on shifts in PSE (Figure \@ref(fig:kleinschmidt-jaeger-2016-replotted)C). While this finding is broadly compatible with the hypothesis of distributional learning, it points to important not well-understood constraints on adaptive speech perception.-->
 
-(ref:kleinschmidt-jaeger-2016-replotted) Design and results of @kleinschmidt-jaeger2016 replotted. **Panel A:** Different groups of participants were exposed to different shifts in the mean VOT of /b/ and /p/. **Panel B:** categorization functions of individual participants depending on the exposure condition (shift in VOT means of /b/ and /p/). For reference, the black dashed line shows the categorization function of the 0-shift condition. The colored dashed lines shows the categorization function expected for an ideal observer that has fully learned the exposure distributions. **Panel C:** Mean and 95% CI of participants' points of subjective equality (PSEs), relative to the PSE of the ideal observers.
+
+(ref:kleinschmidt-jaeger-2016-replotted) Design and results of @kleinschmidt-jaeger2016 replotted. **Panel A:** Different groups of participants were exposed to different shifts in the mean VOT of /b/ and /p/. **Panel B:** categorization functions fitted to the last 1/6th of all trials depending on the exposure condition (shift in VOT means of /b/ and /p/). For reference, the black dashed line shows the categorization function of the 0-shift condition. The colored dashed lines shows the categorization function expected for an ideal observer that has fully learned the exposure distributions. **Panel C:** Mean and 95% CI of participants' points of subjective equality (PSEs), relative to the PSE of the ideal observers.
 
 ```{r kleinschmidt-jaeger-2016-refitted}
-# load K&J2016 data and filter to semi-supervised rows
-d.KJ16 <- 
+# load K&J2016 data and filter to all semi-supervised rows
+d.KJ16 <-
   supunsup_clean %>%
   filter(supCond == "mixed" | supCond == "supervised") %>%
   # rename variables so that they match the naming conventions employed in the remainder
@@ -48,10 +49,11 @@ d.KJ16 <-
       Condition.Exposure == 20 ~ "+20ms",
       Condition.Exposure == 30 ~ "+30ms")),  
     Condition.Exposure = fct_relevel(
-      Condition.Exposure, c("+0ms", "+10ms", "+20ms", "+30ms"))) 
+      Condition.Exposure, c("+0ms", "+10ms", "+20ms", "+30ms")))
 
-d.KJ16_unlabeled <- 
-  d.KJ16 %>% 
+d.KJ16_unlabeled <-
+  d.KJ16 %>%
+  arrange(trial) %>%
   filter(labeled == "unlabeled") %>%
   group_by(ParticipantID) %>%
   # filter to final 6th of total trials
@@ -62,9 +64,9 @@ VOT.sd_d.KJ16_unlabeled <- sd(d.KJ16_unlabeled$Item.VOT)
 d.KJ16_unlabeled %<>% mutate(VOT_gs = (Item.VOT - VOT.mean_d.KJ16_unlabeled) / (2 * VOT.sd_d.KJ16_unlabeled))
 
 contrasts(d.KJ16_unlabeled$Condition.Exposure) <-
-  cbind(" 10vs0" = c(-3/4, 1/4, 1/4, 1/4),
-        " 20vs10" = c(-1/2, -1/2, 1/2, 1/2),
-        " 30vs20" = c(-1/4, -1/4, -1/4, 3/4))
+  cbind("10vs0" = c(-3/4, 1/4, 1/4, 1/4),
+        "20vs10" = c(-1/2, -1/2, 1/2, 1/2),
+        "30vs20" = c(-1/4, -1/4, -1/4, 3/4))
 
 my_priors <- c(
   prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),
@@ -92,7 +94,7 @@ fit_KJ16 <-
     file = "../models/KJ16-semisupervised-GLMM.rds")
 
 # fit nested model to extract slopes and intercepts
-fit_nested_KJ16 <- 
+fit_nested_KJ16 <-
   brm(
     bf(
       Response.Voiceless ~ 1,
@@ -105,31 +107,31 @@ fit_nested_KJ16 <-
     cores = chains,
     chains = chains,
     init = 0,
-    iter = 4000, 
-    warmup = 2000, 
+    iter = 4000,
+    warmup = 2000,
     family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
     priors = my_priors,
     control = list(adapt_delta = .995),
     file = "../models/KJ16-semisupervised-nested-GLMM.rds")
 
-cond_fit_KJ16 <- fit_KJ16 %>% 
+cond_fit_KJ16 <- fit_KJ16 %>%
   conditional_effects(
   effects = "VOT_gs:Condition.Exposure",
   method = "posterior_epred",
   ndraws = 500,
-  re_formula = NA) %>% 
-  .[[1]] %>% 
+  re_formula = NA) %>%
+  .[[1]] %>%
   mutate(Item.VOT = descale(VOT_gs, VOT.mean_d.KJ16_unlabeled, VOT.sd_d.KJ16_unlabeled))
 
-d.KJ16_PSE <- 
-  fit_nested_KJ16 %>% 
+d.KJ16_PSE <-
+  fit_nested_KJ16 %>%
   gather_draws(`b_mu2_Condition.Exposure.*`, regex = TRUE, ndraws = 8000) %>%
   mutate(
     term = ifelse(str_detect(.variable, "VOT_gs"), "slope", "Intercept"),
-    .variable = gsub("b_mu2_Condition.ExposureP(\\d{1,2}ms).*$", "\\1", .variable)) %>% 
+    .variable = gsub("b_mu2_Condition.ExposureP(\\d{1,2}ms).*$", "\\1", .variable)) %>%
   pivot_wider(names_from = term, values_from = ".value") %>%
-  rename(Condition.Exposure = .variable) %>% 
-  relocate(c(Condition.Exposure, Intercept, slope, .chain, .iteration, .draw)) %>% 
+  rename(Condition.Exposure = .variable) %>%
+  relocate(c(Condition.Exposure, Intercept, slope, .chain, .iteration, .draw)) %>%
   mutate(
     PSE = descale(-Intercept/slope, VOT.mean_d.KJ16_unlabeled, VOT.sd_d.KJ16_unlabeled),
     Condition.Exposure = paste0("+", Condition.Exposure)) %>%
@@ -143,98 +145,98 @@ d.KJ16_PSE <-
 
 ```{r io-categorization-kleinschmidt-jaeger-2016}
 # Test points by condition
-x <- 
-  d.KJ16_unlabeled %>% 
-  group_by(Condition.Exposure) %>% 
-  distinct(Item.VOT) %>% 
-  rename(x = Item.VOT) 
+x <-
+  d.KJ16_unlabeled %>%
+  group_by(Condition.Exposure) %>%
+  distinct(Item.VOT) %>%
+  rename(x = Item.VOT)
 
 # get io categorizations of the test points by condition
-io.d.KJ16 <- 
+io.d.KJ16 <-
   make_MVG_ideal_observer_from_data(
-  d.KJ16 %>% 
-    rename(VOT = Item.VOT) %>% 
-      group_by(ParticipantID, Condition.Exposure) %>% 
-      nest(data = -c(ParticipantID, Condition.Exposure)) %>% 
-      group_by(Condition.Exposure) %>% 
+  d.KJ16 %>%
+    rename(VOT = Item.VOT) %>%
+      group_by(ParticipantID, Condition.Exposure) %>%
+      nest(data = -c(ParticipantID, Condition.Exposure)) %>%
+      group_by(Condition.Exposure) %>%
       slice_sample(n = 1) %>%  
       unnest(data),
-    group = "Condition.Exposure", 
-    cues = c("VOT"), 
-    Sigma_noise = matrix(80, dimnames = list("VOT", "VOT"))) %>% 
-  nest(io = -c(Condition.Exposure)) %>% 
-  left_join(x) %>% 
-  mutate(x = map(x, ~ c(.x))) %>% 
-  nest(x = x) %>% 
+    group = "Condition.Exposure",
+    cues = c("VOT"),
+    Sigma_noise = matrix(80, dimnames = list("VOT", "VOT"))) %>%
+  nest(io = -c(Condition.Exposure)) %>%
+  left_join(x) %>%
+  mutate(x = map(x, ~ c(.x))) %>%
+  nest(x = x) %>%
   mutate(categorization = map2(
     x, io,
-    ~ get_categorization_from_MVG_ideal_observer(x = .x$x, model = .y, decision_rule = "proportional") %>% 
-    mutate(VOT = map(x, ~ .x[1]) %>% unlist()))) %>% 
-  unnest(cols = categorization, names_repair = "unique") %>% 
+    ~ get_categorization_from_MVG_ideal_observer(x = .x$x, model = .y, decision_rule = "proportional") %>%
+    mutate(VOT = map(x, ~ .x[1]) %>% unlist()))) %>%
+  unnest(cols = categorization, names_repair = "unique") %>%
   pivot_wider(names_from = category, values_from = response, names_prefix = "response_") %>%
-    mutate(n_b = round(`response_b` * 10^12), n_p = 10^12 - n_b) %>% 
-  group_by(Condition.Exposure) %>% 
-  nest(data = -c(Condition.Exposure)) %>% 
+    mutate(n_b = round(`response_b` * 10^12), n_p = 10^12 - n_b) %>%
+  group_by(Condition.Exposure) %>%
+  nest(data = -c(Condition.Exposure)) %>%
   mutate(
     model_unscaled = map(
       data, ~ glm(
-      cbind(n_p, n_b) ~ 1 + VOT, 
-      family = binomial, 
+      cbind(n_p, n_b) ~ 1 + VOT,
+      family = binomial,
       data = .x)),
     intercept_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[1, 2] %>% pull()),
     slope_unscaled = map_dbl(
       model_unscaled, ~ tidy(.x)[2, 2] %>% pull()),
     model_scaled = map(data, ~ glm(
-      cbind(n_p, n_b) ~ 1 + I((VOT - VOT.mean_d.KJ16_unlabeled) / (2 * VOT.sd_d.KJ16_unlabeled)), 
-      family = binomial, 
+      cbind(n_p, n_b) ~ 1 + I((VOT - VOT.mean_d.KJ16_unlabeled) / (2 * VOT.sd_d.KJ16_unlabeled)),
+      family = binomial,
       data = .x)),
     intercept_scaled = map_dbl(model_scaled, ~ tidy(.x)[1, 2] %>% pull()),
     slope_scaled = map_dbl(model_scaled, ~ tidy(.x)[2, 2] %>% pull()),
     PSE = -intercept_unscaled/slope_unscaled)
 
-# get io with lapse-accounted categorization 
-io.d.KJ16.lapse_rate <- 
+# get io with lapse-accounted categorization
+io.d.KJ16.lapse_rate <-
   make_MVG_ideal_observer_from_data(
-    data = d.KJ16 %>% 
-      rename(VOT = Item.VOT) %>% 
-      group_by(ParticipantID, Condition.Exposure) %>% 
-      nest(data = -c(ParticipantID, Condition.Exposure)) %>% 
-      group_by(Condition.Exposure) %>% 
+    data = d.KJ16 %>%
+      rename(VOT = Item.VOT) %>%
+      group_by(ParticipantID, Condition.Exposure) %>%
+      nest(data = -c(ParticipantID, Condition.Exposure)) %>%
+      group_by(Condition.Exposure) %>%
       slice_sample(n = 1) %>%  
       unnest(data),
-    group = "Condition.Exposure", 
+    group = "Condition.Exposure",
     cues = c("VOT"),
     Sigma_noise = matrix(80, dimnames = list("VOT", "VOT")),
-    lapse_rate = plogis(fixef(fit_KJ16)[[2]])) %>% 
-  nest(io = -c(Condition.Exposure)) %>% 
-  crossing(x = seq(-10, 70, .5)) %>% 
-  nest(x = x) %>% 
+    lapse_rate = plogis(fixef(fit_KJ16)[[2]])) %>%
+  nest(io = -c(Condition.Exposure)) %>%
+  crossing(x = seq(-10, 70, .5)) %>%
+  nest(x = x) %>%
   mutate(
     categorization =
     map2(x, io, ~
            get_categorization_from_MVG_ideal_observer(
-             x = .x$x, model = .y, decision_rule = "proportional") %>% 
-           filter(category == "p") %>% 
-           mutate(VOT = map(x, ~.x[1]) %>% unlist()))) %>% 
+             x = .x$x, model = .y, decision_rule = "proportional") %>%
+           filter(category == "p") %>%
+           mutate(VOT = map(x, ~.x[1]) %>% unlist()))) %>%
   unnest(categorization, names_repair = "unique")
 
 # get io of typical talker and its categorization (+0 condition)
-d.typical_talker <- 
-  io.d.KJ16[[2]][[1]][1, 1] %>% 
-  unnest(io) %>% 
-  mutate(lapse_rate = plogis(fixef(fit_KJ16)[[2]])) %>% 
-  nest(io = everything()) %>% 
-  crossing(x = seq(-10, 70, .5)) %>% 
-  nest(x = x) %>% 
+d.typical_talker <-
+  io.d.KJ16[[2]][[1]][1, 1] %>%
+  unnest(io) %>%
+  mutate(lapse_rate = plogis(fixef(fit_KJ16)[[2]])) %>%
+  nest(io = everything()) %>%
+  crossing(x = seq(-10, 70, .5)) %>%
+  nest(x = x) %>%
   mutate(
     categorization =
     map2(x, io, ~
            get_categorization_from_MVG_ideal_observer(
-             x = .x$x, model = .y, decision_rule = "proportional") %>% 
-           filter(category == "p") %>% 
+             x = .x$x, model = .y, decision_rule = "proportional") %>%
+           filter(category == "p") %>%
            mutate(VOT = map(x, ~.x[1]) %>% unlist())),
     line = map(
-      categorization, 
+      categorization,
       ~ geom_line(
           data = .x,
           mapping = aes(x = VOT, y = response),
@@ -250,16 +252,16 @@ d.typical_talker <-
 ```{r kleinschmidt-jaeger-2016-replotted, fig.height=base.height*3.5, fig.width=base.width*5.5, fig.cap="(ref:kleinschmidt-jaeger-2016-replotted)"}
 # make histograms of exposure distributions
 p.KJ16.histogram <-
-  d.KJ16 %>% 
+  d.KJ16 %>%
   group_by(Condition.Exposure) %>%
-  slice_head(n = 222) %>% 
+  slice_head(n = 222) %>%
   ggplot(aes(x = Item.VOT,
              fill = paste(Condition.Exposure, trueCat))) +
   geom_histogram(binwidth = 5) +
   scale_x_continuous("VOT (ms)", breaks = seq(-50, 150, 50)) +
   scale_y_continuous(breaks = c(0, 25, 50)) +
   scale_fill_manual(
-    "Category", 
+    "Category",
     values = c("+0ms b" = "#f8766d",
                "+0ms p" = "#fdd1ce",
                "+10ms b" = "#7cae00",
@@ -278,16 +280,16 @@ p.KJ16.histogram <-
   facet_wrap(~ Condition.Exposure, nrow = 1) +
   theme(legend.justification = "left") +
   remove_x_guides
-  
-p.KJ16.fit <- 
-  cond_fit_KJ16 %>% 
-  rename(Condition = Condition.Exposure) %>% 
+
+p.KJ16.fit <-
+  cond_fit_KJ16 %>%
+  rename(Condition = Condition.Exposure) %>%
   ggplot() +
   geom_ribbon(aes(
     x = Item.VOT,
     y = estimate__,
     group = Condition,
-    ymin = lower__, ymax = upper__, fill = Condition), 
+    ymin = lower__, ymax = upper__, fill = Condition),
     alpha = .1,
     show.legend = F) +
   geom_line(aes(
@@ -299,8 +301,8 @@ p.KJ16.fit <-
     alpha = 0.6,
     show.legend = F) +
   stat_summary(
-    data = d.KJ16_unlabeled %>% 
-      rename(Condition = Condition.Exposure) %>% 
+    data = d.KJ16_unlabeled %>%
+      rename(Condition = Condition.Exposure) %>%
       group_by(Condition),
     fun.data = mean_cl_boot,
     mapping = aes(
@@ -312,8 +314,8 @@ p.KJ16.fit <-
     size = 0.15,
     show.legend = F) +
   geom_line(
-    data = io.d.KJ16.lapse_rate %>% 
-      rename(Condition = Condition.Exposure) %>% 
+    data = io.d.KJ16.lapse_rate %>%
+      rename(Condition = Condition.Exposure) %>%
       group_by(Condition),
     mapping = aes(x = VOT, y = response, group = Condition, colour = Condition),
     linetype = 2,
@@ -326,16 +328,16 @@ p.KJ16.fit <-
   scale_y_continuous("Proportion \"p\"-responses", breaks = c(0, .5, 1)) +
   facet_wrap(~ Condition, nrow = 1)
 
-p.KJ16.PSE <- 
-  d.KJ16_PSE %>% 
-  left_join(io.d.KJ16) %>% 
-  rename(PSE.io = PSE) %>% 
+p.KJ16.PSE <-
+  d.KJ16_PSE %>%
+  left_join(io.d.KJ16) %>%
+  rename(PSE.io = PSE) %>%
   ggplot(aes(y = PSE_mean, x = Condition.Exposure, colour = Condition.Exposure)) +
   geom_hline(
-    yintercept = c(20, 30, 40, 50), 
+    yintercept = c(20, 30, 40, 50),
     linewidth = 1.5,
     alpha = .4,
-    linetype = 2, 
+    linetype = 2,
     colour = scales::hue_pal()(4)) +
   geom_linerange(
     aes(ymin = PSE_lower, ymax = PSE_upper), size = 1, alpha = .8, show.legend = F) +
@@ -370,7 +372,7 @@ crossing(
   Shift = c(20, 40),
   Hypothesis = c("model learning", "model selection")) %>%
   mutate(
-    PSE = 25 + ifelse(Hypothesis == "model learning", Shift, pmin(Shift, 25)) * 
+    PSE = 25 + ifelse(Hypothesis == "model learning", Shift, pmin(Shift, 25)) *
       (1 - exp(-k * Exposure))) %>%
   ggplot(aes(x = Exposure, y = PSE, color = factor(Shift))) +
   geom_hline(
@@ -384,11 +386,6 @@ crossing(
   theme(panel.grid = element_blank())
 ```
 
-The present study employs a novel incremental exposure-test paradigm to address two questions. We test whether the sublinear effects of exposure observed in recent work replicate for exposure that (somewhat) more closely resembles the type of speech input listeners receive on a daily basis. And, we evaluate the predictions of the model learning and selection hypotheses against human perception. We take this question to be of interest beyond the specific hypotheses we contrast: whether there are hard limits to the benefits of exposure to unfamiliar speech patterns ultimately has consequences for education and medical treatment. 
+The present study employs a novel incremental exposure-test paradigm to address two questions. We test whether the sublinear effects of exposure observed in recent work replicate for exposure that (somewhat) more closely resembles the type of speech input listeners receive on a daily basis. And, we evaluate the predictions of the model learning and selection hypotheses against human perception. We take this question to be of interest beyond the specific hypotheses we contrast: whether there are hard limits to the benefits of exposure to unfamiliar speech patterns ultimately has consequences for education and medical treatment.
 
 All data and code for this article can be downloaded from [https://osf.io/hxcy4/](OSF). The article is written in R markdown, allowing readers to replicate our analyses with the press of a button using freely available software [R, @R; @RStudio], while changing any of the parameters of our models (see SI, \@ref(sec:software)).
-
-
-
-
-
