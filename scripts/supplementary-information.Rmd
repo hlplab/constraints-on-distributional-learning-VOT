@@ -765,12 +765,6 @@ d_for_ASP <-
 ## Changes in normalization
 
 ```{r}
-filename <- "../models/best_performing_parameters.normalization.rds"
-
-# This function is intended for the optimization run right below it
-history.optimization_normalization <- tibble(.rows = 0)
-range.prior_kappa.normalization <- c(10^-5, 10^5)
-
 update_normalization_and_normalize_test_data <- function(
   mu_0 = first(prior_marginal_VOT_f0_stats$x_mean),
   kappa,
@@ -842,12 +836,19 @@ get_likelihood_from_updated_normalization <- function(
 # in their cue means even within ExposureGroup (e.g., due to missing data)
 # even though that shouldn't be the case.
 # -------------------------------------------------------------------------
-d_for_ASP.for_normalization <-
-  d_for_ASP %>%
-  group_by(ExposureGroup, Phase) %>%
-  filter(Phase == "test" | ParticipantID == first(ParticipantID))
+filename.parameter <- "../models/best_performing_parameters.normalization.rds"
+filename.df <- "../models/best_performing_data.normalization.rds"
 
-if (RESET_MODELS || !file.exists(filename)) {
+if (RESET_MODELS || !file.exists(filename.parameter)) {
+  # This function is intended for the optimization run right below it
+  history.optimization_normalization <- tibble(.rows = 0)
+  range.prior_kappa.normalization <- c(10^-5, 10^5)
+  
+  d_for_ASP.for_normalization <-
+    d_for_ASP %>%
+    group_by(ExposureGroup, Phase) %>%
+    filter(Phase == "test" | ParticipantID == first(ParticipantID))
+  
   best_performing_parameters.normalization <-
     optim(
       par = log(mean(range.prior_kappa.normalization)),
@@ -860,17 +861,12 @@ if (RESET_MODELS || !file.exists(filename)) {
         factr = 10^8))
   
   best_performing_parameters.normalization <- exp(best_performing_parameters.normalization$par[1])
-  saveRDS(best_performing_parameters.normalization, filename)
-} else {
-  best_performing_parameters.normalization <- readRDS(filename)
-}
-
-df.normalized <- 
+  saveRDS(best_performing_parameters.normalization, filename.parameter)
+  
+  df.normalized <- 
   update_normalization_and_normalize_test_data(
   kappa = best_performing_parameters.normalization,
-  data = d_for_ASP) 
-
-df.normalized %<>%
+  data = d_for_ASP) %>%
   mutate(observationID = 1:nrow(.)) %>%
   left_join(
     df.normalized %>%
@@ -888,20 +884,20 @@ df.normalized %<>%
     VOT = map_dbl(x.x, ~ .x[1]),
     Response = ifelse(Response.Category == "/t/", 1, 0)) %>%
   rename(Predicted_posterior = posterior_probability) 
+  
+  saveRDS(df.normalized, filename.df)
+  d_for_ASP.for_normalization <- NULL
+} else {
+  best_performing_parameters.normalization <- readRDS(filename.parameter)
+  df.normalized <- readRDS(filename.df)
+}
 
 df.normalized %>% compare_predicted_and_actual()
-d_for_ASP.for_normalization <- NULL
 ```
 
 ## Changes in decision-making
 
 ```{r}
-filename <- "../models/best_performing_parameters.decision_making.rds"
-
-# This function is intended for the optimization run right below it
-history.optimization_bias <- tibble(.rows = 0)
-range.beta <- c(10^-3, 10^3)
-
 update_decision_bias <- function(
   prior,
   beta,
@@ -982,27 +978,36 @@ get_likelihood_from_updated_bias <- function(
   
   return(ll)
 }
+```
 
-# Reduce to one participant or keep all of them (the latter is much slower)
-d_for_ASP.for_decision_changes <-
-  d_for_ASP %>%
-#  filter(ExposureGroup == "Cond Shift0CA_Up to test7") %>%
-  # Include all test observations but only the exposure groups that contain all 3 exposure
-  # blocks (which then are reformatted as part of the updating function in order to derive
-  # the predicted updated decision biases after each of the three exposure blocks).
-  filter(Phase == "test" | grepl(x = ExposureGroup, pattern = ".*Up to test7")) %>%
-  group_by(ExposureGroup, Phase) %>%
-  # Since it is not computationally feasible to run the optimization over all participants 
-  # (unlike for the other two adaptive models, the change model for decision biases is order
-  # sensitive), we're sampling 5 participants in each exposure condition
-  filter(Phase == "test" | ParticipantID %in% sample(x = unique(ParticipantID), size = 5)) %>%
-  arrange(Phase, Block) %>%
-  droplevels()
+```{r}
+filename.parameter <- "../models/best_performing_parameters.decision_making.rds"
+filename.df <- "../models/best_performing_data.decision_making.rds"
 
-if (RESET_MODELS || !file.exists(filename)) {
+# This function is intended for the optimization run right below it
+history.optimization_bias <- tibble(.rows = 0)
+range.beta <- c(10^-3, 10^3)
+
+if (RESET_MODELS || !file.exists(filename.parameter)) {
+  # Reduce to one participant or keep all of them (the latter is much slower)
+  d_for_ASP.for_decision_changes <-
+    d_for_ASP %>%
+    #  filter(ExposureGroup == "Cond Shift0CA_Up to test7") %>%
+    # Include all test observations but only the exposure groups that contain all 3 exposure
+    # blocks (which then are reformatted as part of the updating function in order to derive
+    # the predicted updated decision biases after each of the three exposure blocks).
+    filter(Phase == "test" | grepl(x = ExposureGroup, pattern = ".*Up to test7")) %>%
+    group_by(ExposureGroup, Phase) %>%
+    # Since it is not computationally feasible to run the optimization over all participants 
+    # (unlike for the other two adaptive models, the change model for decision biases is order
+    # sensitive), we're sampling 5 participants in each exposure condition
+    filter(Phase == "test" | ParticipantID %in% sample(x = unique(ParticipantID), size = 5)) %>%
+    arrange(Phase, Block) %>%
+    droplevels()
+  
   message("Currently, this function assumes a single order of exposure for each exposure group.", 
           "Consider instead using the participant-specific actual order.")
-
+  
   best_performing_parameters.bias <-
     optim(
       par = log(mean(range.beta)),
@@ -1015,69 +1020,78 @@ if (RESET_MODELS || !file.exists(filename)) {
         factr = 10^8))
 
   best_performing_parameters.bias <- exp(best_performing_parameters.bias$par[1])
-  saveRDS(best_performing_parameters.bias, filename)
+  saveRDS(best_performing_parameters.bias, filename.parameter)
+  
+  # Use the optimal parameter to update the model's decision biases and then apply 
+  # the model to the test data
+  df.bias <- 
+    update_decision_bias( 
+      prior = m_IO.VOT_f0,
+      beta = best_performing_parameters.bias,
+      data =  d_for_ASP %>%
+        group_by(ExposureGroup, ParticipantID, Phase) %>%
+        filter(Phase == "test" | grepl(x = ExposureGroup, pattern = ".*Up to test7")) %>%
+        arrange(ParticipantID, Phase, Block) %>%
+        droplevels()) %>%
+    # Get the posterior from the updated model
+    mutate(posterior = 
+             future_map(
+               posterior, 
+               ~ filter(.x, observation.n %in% c(48, 96, 144)) %>%
+                 mutate(observation.n = case_when(
+                   observation.n == 48 ~ "_Up to test3",
+                   observation.n == 96 ~ "_Up to test5",
+                   observation.n == 144 ~ "_Up to test7")))) %>%
+    unnest(posterior) %>%
+    # Remap the different update steps onto the ExposureGroup
+    mutate(ExposureGroup = paste0(gsub("^(.*)_.*$", "\\1", ExposureGroup), observation.n)) %>%
+    select(-observation.n) %>%
+    # Bind prior model back in and call it "no exposure" 
+    # (since there is nothing to update, the prior model is not in the df up to this point)
+    bind_rows(
+      bind_cols(
+        prior, 
+        tibble(ExposureGroup = "no exposure")) %>%
+        crossing(ParticipantID = NA)) %>%
+    nest(model = -c(ExposureGroup, ParticipantID)) %>%  
+    # Join in test data
+    left_join(
+      data %>% 
+        filter(Phase == "test") %>% 
+        # Remove ParticipantID for no exposure test data
+        mutate(ParticipantID = as.factor(ifelse(ExposureGroup == "no exposure", NA_character_, as.character(ParticipantID)))) %>%
+        group_by(ExposureGroup, ParticipantID) %>%
+        select(x, Response.Category) %>%
+        nest(data = c(x, Response.Category)),
+      by = join_by(ExposureGroup, ParticipantID)) %>%
+    # Categorize test tokens
+    mutate(
+      categorization = future_map2(
+        model, 
+        data, 
+        ~ get_categorization_from_MVG_ideal_observer(
+          model = .x, 
+          x = .y$x,
+          decision_rule = "proportional",
+          noise_treatment = "marginalize",
+          lapse_treatment = "marginalize") %>%
+          filter(category == "/t/"))) %>%
+    # Prepare the data frame for plotting by renaming variable names to those
+    # expected by compare_predicted_and_actual
+    mutate(Response = map(data, ~ ifelse(.x$Response.Category == "/t/", 1, 0))) %>%
+    select(-c(model, data)) %>%
+    unnest(c(categorization, Response)) %>% 
+    mutate(VOT = map_dbl(x, ~ .x[1])) %>%
+    rename(Predicted_posterior = response) 
+  
+  saveRDS(df.bias, filename.df)
+  d_for_ASP.for_decision_changes <- NULL
 } else {
-  best_performing_parameters.bias <- readRDS(filename)
+  best_performing_parameters.bias <- readRDS(filename.parameter)
+  df.bias <- readRDS(filename.df)
 }
 
-df.bias <- 
-  update_decision_bias( 
-    prior = m_IO.VOT_f0,
-    beta = best_performing_parameters.bias,
-    data =  d_for_ASP %>%
-      group_by(ExposureGroup, ParticipantID, Phase) %>%
-      filter(Phase == "test" | grepl(x = ExposureGroup, pattern = ".*Up to test7")) %>%
-      arrange(ParticipantID, Phase, Block) %>%
-      droplevels()) %>%
-  mutate(posterior = 
-           future_map(
-             posterior, 
-             ~ filter(.x, observation.n %in% c(48, 96, 144)) %>%
-               mutate(observation.n = case_when(
-                 observation.n == 48 ~ "_Up to test3",
-                 observation.n == 96 ~ "_Up to test5",
-                 observation.n == 144 ~ "_Up to test7")))) %>%
-  unnest(posterior) %>%
-  # Remap the different update steps onto the ExposureGroup
-  mutate(ExposureGroup = paste0(gsub("^(.*)_.*$", "\\1", ExposureGroup), observation.n)) %>%
-  select(-observation.n) %>%
-  # Bind prior model back in and call it "no exposure"
-  bind_rows(
-    bind_cols(
-      prior, 
-      tibble(ExposureGroup = "no exposure")) %>%
-      crossing(ParticipantID = NA)) %>%
-  nest(model = -c(ExposureGroup, ParticipantID)) %>%  
-  # Join in test data
-  left_join(
-    data %>% 
-      filter(Phase == "test") %>% 
-      # Remove ParticipantID for no exposure test data
-      mutate(ParticipantID = as.factor(ifelse(ExposureGroup == "no exposure", NA_character_, as.character(ParticipantID)))) %>%
-      group_by(ExposureGroup, ParticipantID) %>%
-      select(x, Response.Category) %>%
-      nest(data = c(x, Response.Category)),
-    by = join_by(ExposureGroup, ParticipantID)) %>%
-  # Categorize test tokens
-  mutate(
-    categorization = future_map2(
-      model, 
-      data, 
-      ~ get_categorization_from_MVG_ideal_observer(
-        model = .x, 
-        x = .y$x,
-        decision_rule = "proportional",
-        noise_treatment = "marginalize",
-        lapse_treatment = "marginalize") %>%
-        filter(category == "/t/"))) %>%
-  mutate(Response = map(data, ~ ifelse(.x$Response.Category == "/t/", 1, 0))) %>%
-  select(-c(model, data)) %>%
-  unnest(c(categorization, Response)) %>% 
-  mutate(VOT = map_dbl(x, ~ .x[1])) %>%
-  rename(Predicted_posterior = response) 
-
 df.bias %>% compare_predicted_and_actual()
-d_for_ASP.for_decision_changes <- NULL
 ```
 
 ## Changes in category representations
