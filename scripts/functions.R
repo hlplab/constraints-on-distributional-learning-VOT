@@ -441,9 +441,7 @@ get_IO_categorization <- function(
 }
 
 
-############################################################################
-# function to evaluate the IOs
-############################################################################
+# Evaluation of IOs --------------------------------------------------------
 get_average_accuracy_of_IO <- function(observations, responses, model) {
   get_categorization_from_MVG_ideal_observer(x = observations, model = model, decision_rule = "proportional") %>%
     # we only need one posterior since the other one is simply 1 minus that
@@ -491,6 +489,189 @@ get_average_log_likelihood_of_perception_data_under_IO <- function(observed_inpu
 
  d.likelihood %>%
     summarize(log_likelihood_per_response = mean(log(likelihood), na.rm = T))
+}
+
+
+# Assumes that the model is in a column called "model", the input data and response is
+# in a column data (data$x and data$Response.Category, respectively):
+get_likelihood_from_grouped_data <- function(data) {
+  data %>%
+    mutate(
+      ll = map2(
+        model,
+        data,
+        ~ evaluate_model(
+          model = .x,
+          x = .y$x,
+          response_category = .y$Response.Category,
+          decision_rule = "proportional",
+          noise_treatment = "marginalize",
+          lapse_treatment = "marginalize",
+          method = "likelihood-up-to-constant",
+          return_by_x = F))) %>%
+    pull(ll) %>%
+    # Sum up all the lls of the different exposure conditions
+    reduce(`+`)
+}
+
+# General functions for model updating ------------------------------------
+slice_into_unique_exposure_test <- function(df, block_order, block_var = "Block", condition_var = "Condition") {
+  df %<>%
+    mutate(Block = map(!! sym(block_var), ~ which(block_order == .x)) %>% unlist())
+
+  df.new <- tibble()
+  for (i in grep("test", block_order))
+    for (g in unique(df[[condition_var]])) #different exposure scenarios
+      df.new %<>%
+    rbind(
+      df %>%
+        # Include only exposure blocks from the current exposure condition and the current test block
+        # from the current exposure condition (but not earlier test blocks)
+        filter(!! sym(condition_var) == g, Block <= i, Block == i | !(Block %in% grep("test", block_order))) %>%
+        # could be further simplified by recognizing that by test block7 everyone has seen the same thing
+        mutate(ExposureGroup = if (i == 1) "no exposure" else paste0("Cond ", g, "_Up to ", block_order[i])))
+
+  df.new  %>%
+    select(ExposureGroup, Block, everything())
+}
+
+# Update normalization -----------------------------------------------------
+update_normalization_and_normalize_test_data <- function(
+    mu_0 = first(prior_marginal_VOT_f0_stats$x_mean),
+    kappa,
+    data
+) {
+  # Get normalization parameters for each exposure data (exposure condition, list, block)
+  exposure.normalization <-
+    data %>%
+    filter(Phase == "exposure") %>%
+    group_by(ExposureGroup) %>%
+    summarise(
+      x_N = length(x),
+      x_mean = list(colMeans(reduce(x, rbind))),
+      x_cov = list(cov(reduce(x, rbind)))) %>%
+    # Apply normalization based on exposure to test
+    mutate(
+      mu_n = map2(x_N, x_mean, ~ 1 / (.env$kappa + .x) * (.env$kappa * .env$mu_0 + .x * .y))) %>%
+    bind_rows(tibble(ExposureGroup = "no exposure", x_N = 0, x_mean = list(.env$mu_0), x_cov = NULL, mu_n = list(.env$mu_0)))
+
+  # Apply normalization to each test data, and return those test data
+  data %>%
+    filter(Phase == "test") %>%
+    left_join(
+      exposure.normalization %>%
+        select(ExposureGroup, mu_n),
+      by = "ExposureGroup") %>%
+    mutate(x = map2(x, mu_n, ~ .x - (.y - .env$mu_0)))
+}
+
+get_likelihood_from_updated_normalization <- function(
+    par,
+    prior = m_IO.VOT_f0,
+    data = d_for_ASP.for_normalization
+) {
+  kappa <- exp(par[1])
+
+  ll <-
+    update_normalization_and_normalize_test_data(
+      kappa = kappa,
+      data = data) %>%
+    group_by(ExposureGroup) %>%
+    select(ExposureGroup, x, Response.Category) %>%
+    nest(data = c(x, Response.Category)) %>%
+    # Since the model never changes (only the cues do), there is only
+    # one group of data for normalization
+    mutate(model = list(prior)) %>%
+    get_likelihood_from_grouped_data()
+
+  history.optimization_normalization <<-
+    bind_rows(
+      history.optimization_normalization,
+      tibble(kappa = kappa, log_likelihood = ll))
+
+  return(ll)
+}
+
+# Update decision biases ---------------------------------------------------
+update_decision_bias <- function(
+    prior,
+    beta,
+    data
+) {
+  cues <- get_cue_labels_from_model(prior)
+  u <-
+    data %>%
+    filter(Phase == "exposure") %>%
+    mutate(
+      (!! sym(cues[1])) := map_dbl(x, ~ .x[1]),
+      (!! sym(cues[2])) := map_dbl(x, ~ .x[2])) %>%
+    group_by(ExposureGroup, ParticipantID) %>%
+    group_map(
+      .f = ~ update_model_decision_bias_incrementally(
+        model = prior,
+        beta = beta,
+        exposure = .x,
+        exposure.category = "Response.Category",
+        exposure.cues = cues,
+        noise_treatment = "marginalize",
+        lapse_treatment = "marginalize",
+        keep.update_history = TRUE,
+        keep.exposure_data = FALSE) %>%
+        nest(posterior = everything()) %>%
+        bind_cols(.y)) %>%
+    reduce(bind_rows)
+}
+
+get_likelihood_from_updated_bias <- function(
+    par,
+    prior = m_IO.VOT_f0,
+    data = d_for_ASP.for_decision_changes
+) {
+  beta <- exp(par[1])
+
+  ll <-
+    suppressWarnings(
+      update_decision_bias(
+        prior = prior,
+        beta = beta,
+        data = data))
+  ll %<>%
+    mutate(posterior =
+             map(
+               posterior,
+               ~ filter(.x, observation.n %in% c(48, 96, 144)) %>%
+                 mutate(observation.n = case_when(
+                   observation.n == 48 ~ "_Up to test3",
+                   observation.n == 96 ~ "_Up to test5",
+                   observation.n == 144 ~ "_Up to test7")))) %>%
+    unnest(posterior) %>%
+    # Remap the different update steps onto the ExposureGroup
+    mutate(ExposureGroup = paste0(gsub("^(.*)_.*$", "\\1", ExposureGroup), observation.n)) %>%
+    select(-observation.n) %>%
+    # Bind prior model back in and call it "no exposure"
+    bind_rows(
+      bind_cols(
+        prior,
+        tibble(ExposureGroup = "no exposure")) %>%
+        crossing(ParticipantID = NA)) %>%
+    nest(model = -c(ExposureGroup, ParticipantID)) %>%
+    left_join(
+      data %>%
+        filter(Phase == "test") %>%
+        group_by(ExposureGroup) %>%
+        select(x, Response.Category) %>%
+        nest(data = c(x, Response.Category)),
+      by = join_by(ExposureGroup)) %>%
+    get_likelihood_from_grouped_data()
+
+  history.optimization_bias <<-
+    bind_rows(
+      history.optimization_bias,
+      tibble(
+        beta = beta,
+        log_likelihood = ll))
+
+  return(ll)
 }
 
 
