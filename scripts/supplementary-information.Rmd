@@ -703,6 +703,14 @@ d_for_ASP <-
   filter(
     !(Phase == "exposure" & is.na(Item.ExpectedResponse.Voicing)),
     as.numeric(Block) <= 7) %>%
+  # Use F0 as intended by generation script. This makes fitting more computationally feasible
+  # (336 instead of 1001 unique combinations of group & test locations), and also removes the
+  # potential that annotation / measurement error perturb the f0 values. It does, however,
+  # make the assumption that f0 is the same across the three minimal pairs. While likely wrong,
+  # this assumption better aligns with the fact that the model doesn't have a way to keep track
+  # of any lexical, phonological, or phonetic context effects on VOT (and thus no way to predict
+  # any potential differences between minimal pairs).
+  rename(VOT.CCuRE = Item.VOT, f0_Mel.CCuRE = Item.F0_target_for_generation_script) %>%
   # Create new condition variable that uniquely identifies what participants have seen at any of the 
   # tests and a new block variable that identifies the type and order of blocks. Also create two 
   # convenience variables, x (stimulus) and Response.Category (to make matching with the category 
@@ -710,14 +718,17 @@ d_for_ASP <-
   mutate(
     Condition.for_ASP = paste0(Condition.Exposure, List.ExposureBlockOrder, List.ExposureMaterials),
     Block.for_ASP = paste0(Phase, Block),
-    x = map2(Item.VOT, Item.F0_target_for_generation_script, ~ c(.x, .y)),
-    Response.Category = ifelse(Response.Voicing == "voiced", "/d/", "/t/")) %>%
+    x = map2(VOT.CCuRE, f0_Mel.CCuRE, ~ c(.x, .y)),
+    Response.Category = factor(ifelse(Response.Voicing == "voiced", "/d/", "/t/"), levels = c("/d/", "/t/")),
+    Item.ExpectedResponse.Category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"), levels = c("/d/", "/t/"))) %>%
   slice_into_unique_exposure_test(
     condition_var = "Condition.for_ASP",
     block_var = "Block.for_ASP",
     block_order = c("test1", "exposure2", "test3", "exposure4", "test5", "exposure6", "test7")) %>%
   mutate(ExposureGroup = factor(ExposureGroup)) %>%
-  select(ExposureGroup, Phase, ParticipantID, Block, Trial, x, Response.Category, Item.ExpectedResponse)
+  select(
+    ExposureGroup, Phase, ParticipantID, Block, Trial, x, 
+    VOT.CCuRE, f0_Mel.CCuRE, Response.Category, Item.ExpectedResponse.Category)
 ```
 
 ## Changes in normalization
@@ -825,6 +836,9 @@ if (RESET_MODELS || !file.exists(filename.parameter)) {
     # Since it is not computationally feasible to run the optimization over all participants 
     # (unlike for the other two adaptive models, the change model for decision biases is order
     # sensitive), we're sampling 5 participants in each exposure condition
+    # 
+    # TO DO: change this to sample proportional to amount of data in the condition, rather than
+    # a fixed number of subjects.
     filter(Phase == "test" | ParticipantID %in% sample(x = unique(ParticipantID), size = 5)) %>%
     arrange(Phase, Block) %>%
     droplevels()
@@ -1097,16 +1111,9 @@ m_IA_inferred <-
   infer_prior_beliefs(
     exposure = d_for_ASP %>% filter(Phase == "exposure"), 
     test = d_for_ASP %>% filter(Phase == "test"), 
-    # Use F0 as intended by generation script. This makes fitting more computationally feasible 
-    # (336 instead of 1001 unique combinations of group & test locations), and also removes the
-    # potential that annotation / measurement error perturb the f0 values. It does, however, 
-    # make the assumption that f0 is the same across the three minimal pairs. While likely wrong,
-    # this assumption better aligns with the fact that the model doesn't have a way to keep track
-    # of any lexical, phonological, or phonetic context effects on VOT (and thus no way to predict
-    # any potential differences between minimal pairs).
-    cues = c("Item.VOT", "Item.F0_target_for_generation_script"),  
-    category = "Item.ExpectedResponse.Voicing", 
-    response = "Response.Voicing", 
+    cues = c("VOT.CCuRE", "f0_Mel.CCuRE"),  
+    category = "Item.ExpectedResponse.Category", 
+    response = "Response.Category", 
     group = "ParticipantID",
     group.unique = "ExposureGroup", 
     center.observations = T,   
@@ -1116,26 +1123,43 @@ m_IA_inferred <-
     file = "../models/IBBU-Tan-Jaeger2022-Experiment2-scaled-f0-uncorrected.RDS",
     warmup = 3000, iter = 4000,
     control = list(adapt_delta = .995, max_treedepth = 15))
+
+m_IA_inferred.fixed_mean <- 
+  infer_prior_beliefs(
+    exposure = d_for_ASP %>% filter(Phase == "exposure"), 
+    test = d_for_ASP %>% filter(Phase == "test"), 
+    cues = c("VOT.CCuRE", "f0_Mel.CCuRE"),  
+    category = "Item.ExpectedResponse.Category", 
+    response = "Response.Category", 
+    group = "ParticipantID",
+    group.unique = "ExposureGroup", 
+    center.observations = T,   
+    scale.observations = T,
+    pca.observations = F,
+    sample = T, 
+    lapse_rate = m_IA.VOT_f0$lapse_rate[[1]],
+    m_0 = m_IA.VOT_f0$m,
+    file = "../models/IBBU-Tan-Jaeger2022-Experiment2-scaled-f0-uncorrected-m-fixed.RDS",
+    warmup = 3000, iter = 4000,
+    control = list(adapt_delta = .995, max_treedepth = 15))
+
+model <- m_IA_inferred.fixed_mean
 ```
 
 Table of median estimate and 95% highest posterior densities for all parameters (parameters are back-transformed into the original cue space). The group column could be separated into exposure group and test block, e.g., if it is desired to sort the table differently:
 
 ```{r}
 summarize.NIW_ideal_adaptor_stanfit(
-    m_IA_inferred,
+    model,
     pars = c("kappa", "nu", "m", "S", "lapse_rate"), 
     groups = c(
       "prior",
       "Cond Shift0AA_Up to test3", "Cond Shift0AA_Up to test5", "Cond Shift0AA_Up to test7",
       "Cond Shift10AA_Up to test3", "Cond Shift10AA_Up to test5", "Cond Shift10AA_Up to test7",
       "Cond Shift40AA_Up to test3", "Cond Shift40AA_Up to test5", "Cond Shift40AA_Up to test7")) %>% kable()
-```
 
-Plots:
-
-```{r}
 make_all_plots(
-  m_IA_inferred, 
+  model, 
   groups = c(
     "Cond Shift0AA_Up to test3", "Cond Shift0AA_Up to test5", "Cond Shift0AA_Up to test7",
     "Cond Shift10AA_Up to test3", "Cond Shift10AA_Up to test5", "Cond Shift10AA_Up to test7",
@@ -1154,7 +1178,6 @@ make_all_plots(
 This can be correlated against the actual observed answers XXXXXXXX
 
 ```{r}
-model <- m_IA_inferred
 groups <- c(
     "Cond Shift0AA_Up to test3", "Cond Shift0AA_Up to test5", "Cond Shift0AA_Up to test7",
     "Cond Shift10AA_Up to test3", "Cond Shift10AA_Up to test5", "Cond Shift10AA_Up to test7",
