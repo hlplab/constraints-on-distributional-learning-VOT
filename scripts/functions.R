@@ -593,6 +593,10 @@ get_likelihood_from_updated_normalization <- function(
 }
 
 # Update decision biases ---------------------------------------------------
+#
+# This function assumes that the error signal is relative to the expected response.
+# This assumes that listeners can figure out---even on unlabelled trials---what the
+# expected response is.
 update_decision_bias <- function(
     prior,
     beta,
@@ -611,7 +615,7 @@ update_decision_bias <- function(
         model = prior,
         beta = beta,
         exposure = .x,
-        exposure.category = "Response.Category",
+        exposure.category = "Item.ExpectedResponse.Category",
         exposure.cues = cues,
         noise_treatment = "marginalize",
         lapse_treatment = "marginalize",
