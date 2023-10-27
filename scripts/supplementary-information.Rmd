@@ -1124,7 +1124,7 @@ m_IA_inferred <-
     warmup = 3000, iter = 4000,
     control = list(adapt_delta = .995, max_treedepth = 15))
 
-m_IA_inferred.fixed_mean <- 
+m_IA_inferred.fixed_pars <- 
   infer_prior_beliefs(
     exposure = d_for_ASP %>% filter(Phase == "exposure"), 
     test = d_for_ASP %>% filter(Phase == "test"), 
@@ -1137,13 +1137,14 @@ m_IA_inferred.fixed_mean <-
     scale.observations = T,
     pca.observations = F,
     sample = T, 
-    lapse_rate = m_IA.VOT_f0$lapse_rate[[1]],
-    m_0 = m_IA.VOT_f0$m,
-    file = "../models/IBBU-Tan-Jaeger2022-Experiment2-scaled-f0-uncorrected-m-fixed.RDS",
+    lapse_rate = m_IO.VOT_f0$lapse_rate[[1]],
+    mu_0 = m_IO.VOT_f0$mu,
+    Sigma_0 = m_IO.VOT_f0$Sigma,
+    file = "../models/IBBU-Tan-Jaeger2022-Experiment2-scaled-f0-uncorrected-fixed-pars.RDS",
     warmup = 3000, iter = 4000,
     control = list(adapt_delta = .995, max_treedepth = 15))
 
-model <- m_IA_inferred.fixed_mean
+model <- m_IA_inferred.fixed_pars
 ```
 
 Table of median estimate and 95% highest posterior densities for all parameters (parameters are back-transformed into the original cue space). The group column could be separated into exposure group and test block, e.g., if it is desired to sort the table differently:
@@ -1190,7 +1191,7 @@ groups <- c(
     "Cond Shift40CA_Up to test3", "Cond Shift40CA_Up to test5", "Cond Shift40CA_Up to test7",
     "no exposure")
 untransform_cues <- F
-target_category <- 1 # "t"
+target_category <- 2 # "t"
 
 # Get and summarize posterior draws from fitted model
 d.pars <-
@@ -1231,12 +1232,12 @@ d.pars %<>% mutate(Predicted_posterior = ifelse(is.infinite(Predicted_posterior)
 
 # Compare predicted and actual responses
 d.pars %>%
-  group_by(group, Item.VOT) %>%
+  group_by(group, VOT.CCuRE) %>%
   summarise(across(Predicted_posterior, mean)) %>%
-  mutate(VOT = Item.VOT, ExposureGroup = ifelse(group == "prior", "no exposure", group)) %>%
+  mutate(VOT = VOT.CCuRE, ExposureGroup = ifelse(group == "prior", "no exposure", group)) %>%
   left_join(get_test_data_from_stanfit(model)) %>%
   mutate(
-    Response = voiced / (voiced + voiceless),
+    Response = `/t/` / (`/d/` + `/t/`),
     group = gsub("[ABC]A", "", group)) %>%
   compare_predicted_and_actual()
 ```
