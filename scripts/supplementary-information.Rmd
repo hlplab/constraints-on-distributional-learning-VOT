@@ -682,6 +682,7 @@ m_IO.VOT_f0 <-
   lift_MVG_to_MVG_ideal_observer(
       Sigma_noise = matrix(c(80, 0, 0, 878), ncol = 2, dimnames = list(names(first(.$mu)), names(first(.$mu)))),
       prior = c("/d/" = .5, "/t/" = .5),
+      # TO DO: set to lapse rate inferred in psychometric model fit to participants
       lapse_rate = 0,
       lapse_bias = c("/d/" = .5, "/t/" = .5))
 
