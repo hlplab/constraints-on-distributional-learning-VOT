@@ -755,6 +755,13 @@ table.interactions <-
 table.interactions
 ```
 
+```{r}
+# remove unused objects
+rm(fit_mix_test, fit_mix_test_nested, fit_mix_exposure, fit_mix_exposure_nested)
+```
+
+
+
 ### Comparing within exposure conditions: How quickly does exposure begin to affect participants' responses? 
 Next, we compared how exposure affects listeners' categorization responses within each condition relative to listeners' responses prior to any exposure. These changes are summarized for the slope and PSE in Figure \@ref(fig:plot-fit-slope-PSE)C & D, respectively. This visualization makes apparent two aspects of participants' behavior that were not readily apparent in the statistical comparisons we have summarized so far. First, while the PSEs for the +40 and +10 conditions were shifted rightwards compared to the baseline condition, both the +10 and the baseline condition actually shift leftwards relative to their pre-exposure starting point in Test 1. This is confirmed by Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-block-effects). 
 
@@ -879,7 +886,7 @@ p.density +
   plot_layout(ncol = 1, guides = "collect") &
   theme(legend.position = "top")
 
-ggsave("~/Desktop/densityplot.png", width = 11, height = 8.5, units = "cm")
+# ggsave("~/Desktop/densityplot.png", width = 11, height = 8.5, units = "cm")
 ```
 
 To understand this pattern, it is helpful to relate our exposure conditions to the distribution of VOT in listeners' prior experience. Figure \@ref(fig:exposure-means-database-density) shows the mean and covariance of our exposure conditions relative to the distribution of VOT by talkers of L1-US English [based on @chodroff-wilson2018]. This comparison offers an explanation as to why the baseline condition (and to some extent the +10 condition) shift leftwards with increasing exposure, whereas the +40 condition shifts rightwards: relative to listeners' prior experience our baseline condition actually presented lower-than-expected category means; of our three exposure conditions, only the +40 condition presented larger-than-expected category means. That is, once we take into account how our exposure conditions relate to listeners' prior experience, both the direction of changes from Test 1 to 4 *within* each exposure condition, and the direction of differences *between* exposure conditions receive an explanation.

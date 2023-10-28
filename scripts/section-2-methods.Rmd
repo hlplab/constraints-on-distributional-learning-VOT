@@ -48,7 +48,8 @@ d <-
         Response.ClickPosition, Response.Voicing),
       factor),
     Participant.Sex = str_to_lower(Participant.Sex),
-    Item.F0_Mel = normMel(Item.F0)) 
+    Item.F0_Mel = normMel(Item.F0),
+    Item.F0_target_for_generation_Mel = normMel(Item.F0_target_for_generation_script)) 
 ```
 
 ## Methods 

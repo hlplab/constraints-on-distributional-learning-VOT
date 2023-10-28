@@ -697,6 +697,7 @@ m_IA.VOT_f0 <-
 # representations.
 d_for_ASP <- 
   d_for_analysis %>%
+  mutate(Item.F0_target_Mel = normMel(Item.F0_target_for_generation_script))
   ungroup() %>%
   # Exclude catch trials and the final two test blocks since we expect unlearning during those blocks 
   # (which is not modeled)
@@ -710,7 +711,7 @@ d_for_ASP <-
   # this assumption better aligns with the fact that the model doesn't have a way to keep track
   # of any lexical, phonological, or phonetic context effects on VOT (and thus no way to predict
   # any potential differences between minimal pairs).
-  rename(VOT.CCuRE = Item.VOT, f0_Mel.CCuRE = Item.F0_target_for_generation_script) %>%
+  rename(VOT.CCuRE = Item.VOT, f0_Mel.CCuRE = Item.F0_target_Mel) %>%
   # Create new condition variable that uniquely identifies what participants have seen at any of the 
   # tests and a new block variable that identifies the type and order of blocks. Also create two 
   # convenience variables, x (stimulus) and Response.Category (to make matching with the category 
