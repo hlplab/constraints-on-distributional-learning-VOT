@@ -117,6 +117,7 @@ library(MVBeliefUpdatr)     # generating Ideal Observers
 library(furrr)              # future_map for parallelization
 ```
 
+
 ```{r constants-general, include=FALSE}
 # IF you're using brms or rstan, uncomment the following:
 chains <- 4

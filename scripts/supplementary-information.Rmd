@@ -632,6 +632,7 @@ compare_predicted_and_actual <- function(data) {
 
 ```{r predictions-exposure-conditions-by-IOs}
 cues <- c("VOT.CCuRE", "f0_Mel.CCuRE")
+fitted_lapse <- plogis(fixef(fit_mix_test)[[2]])
 
 # Database for prior
 d.chodroff_wilson <-
@@ -683,7 +684,7 @@ m_IO.VOT_f0 <-
       Sigma_noise = matrix(c(80, 0, 0, 878), ncol = 2, dimnames = list(names(first(.$mu)), names(first(.$mu)))),
       prior = c("/d/" = .5, "/t/" = .5),
       # TO DO: set to lapse rate inferred in psychometric model fit to participants
-      lapse_rate = 0,
+      lapse_rate = fitted_lapse,
       lapse_bias = c("/d/" = .5, "/t/" = .5))
 
 m_IA.VOT_f0 <-
@@ -710,7 +711,7 @@ d_for_ASP <-
   # this assumption better aligns with the fact that the model doesn't have a way to keep track
   # of any lexical, phonological, or phonetic context effects on VOT (and thus no way to predict
   # any potential differences between minimal pairs).
-  rename(VOT.CCuRE = Item.VOT, f0_Mel.CCuRE = Item.F0_target_for_generation_script) %>%
+  rename(VOT.CCuRE = Item.VOT, f0_Mel.CCuRE = Item.F0_target_for_generation_Mel) %>%
   # Create new condition variable that uniquely identifies what participants have seen at any of the 
   # tests and a new block variable that identifies the type and order of blocks. Also create two 
   # convenience variables, x (stimulus) and Response.Category (to make matching with the category 

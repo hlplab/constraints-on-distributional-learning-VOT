@@ -446,7 +446,8 @@ print(m.exp2)
     # "Cond Shift10AA_Up to test3", "Cond Shift10AA_Up to test5", "Cond Shift10AA_Up to test7",
     # "Cond Shift40AA_Up to test3", "Cond Shift40AA_Up to test5", "Cond Shift40AA_Up to test7",
     "prior"), 
-  plot_in_cue_space = F, category.colors = colors.category) + facet_wrap(~ group, ncol = 1)) %>% plot() 
+  plot_in_cue_space = F, category.colors = colors.category) + 
+  facet_wrap(~ group, ncol = 1)) %>% plot() 
 ```
 # Calculate predicted log-odds of "t"-responses based on IBBU fit
 
