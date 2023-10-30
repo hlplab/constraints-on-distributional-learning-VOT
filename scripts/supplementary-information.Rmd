@@ -631,8 +631,10 @@ compare_predicted_and_actual <- function(data) {
 <!-- TO DO: consider subsetting to /i/ as following vowel context -->
 
 ```{r predictions-exposure-conditions-by-IOs}
-cues <- c("VOT.CCuRE", "f0_Mel.CCuRE")
-fitted_lapse <- plogis(fixef(fit_mix_test)[[2]])
+# We decided to use C-CuREd VOT and f0 (in Mel) as the input to the ideal observers.
+# Our approach to C-CuREing removes effects of speech rate as well as talker-specific
+# means of the cues.
+cues <- c("VOT", "f0_Mel")
 
 # Database for prior
 d.chodroff_wilson <-
@@ -640,31 +642,40 @@ d.chodroff_wilson <-
     database_filename = "../data/all_observations_with_non-missing_vot_cog_f0.csv",
     min.n_per_talker_and_stop = 25,
     limits.VOT = c(-Inf, Inf),
+    # TO DO: check how much data this excludes and whether the exclusions for 
+    # bimodality are perhaps too stringent.
     limits.f0 = c(0, 350),
     max.p_for_multimodality = .1) %>%
   filter(poa == "/d/-/t/") %>%
   group_by(Talker, category) %>%
   mutate(n = n()) %>%
   group_by(Talker) %>%
-  # subsample n tokens, as determined by category with fewer tokens
+  # Subsample n tokens, as determined by category with fewer tokens
   mutate(
     n_min = min(n),
     n_category = n_distinct(category)) %>%
-  # select talkers with both /d/ and /t/ observations
+  # Select talkers that have both /d/ and /t/ observations
   filter(n_category == 2) %>%
+  # Sample as many tokens from each unique combination of talker and category
+  # as there are available for the talker with the least amount of data.
   group_by(Talker, category) %>%
   sample_n(size = first(n_min)) %>%
+  # Only use female talkers (TO DO: revisit whether this makes a difference)
   filter(gender == "female") %>% 
   ungroup() %>% 
+  # C-CuRE cues and then rename them to VOT and f0_Mel. The latter is done purely 
+  # for reasons of convenience, in order to facilitate merging with the human 
+  # perceptual data further down (since some of the functions require that the 
+  # cues in the ideal observers and the cues in the perceptual data must have the
+  # same names).
   mutate(across(
     c("VOT", "f0", "f0_Mel", "f0_semitones"),
-    list(CCuRE = function(x) apply_ccure(x, data = .)),
-    .names = "{.col}.CCuRE")) 
+    function(x) apply_ccure(x, data = .)))
 
 prior_marginal_VOT_f0_stats <-
   d.chodroff_wilson %>%
   group_by(Talker) %>%
-  summarise(across(c(VOT, f0_Mel), mean)) %>%
+  summarise(across(all_of(cues), mean)) %>%
   ungroup() %>%
   summarise(
     x_mean = list(c(VOT = mean(VOT), f0 = mean(f0_Mel))),
@@ -684,7 +695,7 @@ m_IO.VOT_f0 <-
       Sigma_noise = matrix(c(80, 0, 0, 878), ncol = 2, dimnames = list(names(first(.$mu)), names(first(.$mu)))),
       prior = c("/d/" = .5, "/t/" = .5),
       # TO DO: set to lapse rate inferred in psychometric model fit to participants
-      lapse_rate = fitted_lapse,
+      lapse_rate = plogis(fixef(fit_mix_test)[[2]]),
       lapse_bias = c("/d/" = .5, "/t/" = .5))
 
 m_IA.VOT_f0 <-
@@ -711,7 +722,7 @@ d_for_ASP <-
   # this assumption better aligns with the fact that the model doesn't have a way to keep track
   # of any lexical, phonological, or phonetic context effects on VOT (and thus no way to predict
   # any potential differences between minimal pairs).
-  rename(VOT.CCuRE = Item.VOT, f0_Mel.CCuRE = Item.F0_target_for_generation_Mel) %>%
+  rename(VOT = Item.VOT, f0_Mel = Item.F0_target_for_generation_Mel) %>%
   # Create new condition variable that uniquely identifies what participants have seen at any of the 
   # tests and a new block variable that identifies the type and order of blocks. Also create two 
   # convenience variables, x (stimulus) and Response.Category (to make matching with the category 
@@ -719,7 +730,7 @@ d_for_ASP <-
   mutate(
     Condition.for_ASP = paste0(Condition.Exposure, List.ExposureBlockOrder, List.ExposureMaterials),
     Block.for_ASP = paste0(Phase, Block),
-    x = map2(VOT.CCuRE, f0_Mel.CCuRE, ~ c(.x, .y)),
+    x = map2(VOT, f0_Mel, ~ c(.x, .y)),
     Response.Category = factor(ifelse(Response.Voicing == "voiced", "/d/", "/t/"), levels = c("/d/", "/t/")),
     Item.ExpectedResponse.Category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"), levels = c("/d/", "/t/"))) %>%
   slice_into_unique_exposure_test(
@@ -729,7 +740,24 @@ d_for_ASP <-
   mutate(ExposureGroup = factor(ExposureGroup)) %>%
   select(
     ExposureGroup, Phase, ParticipantID, Block, Trial, x, 
-    VOT.CCuRE, f0_Mel.CCuRE, Response.Category, Item.ExpectedResponse.Category)
+    VOT, f0_Mel, Response.Category, Item.ExpectedResponse.Category)
+```
+
+```{r set-subsample-proportion}
+# For changes in decision-making, the adaptive algorithm is order-sensitive. This makes it computationally 
+# demanding to find the optimal parameterization for this algorithm (as optimization requires updating the 
+# data and calculating the likelihood of the test responses under the updated model, but order-sensitivity
+# means that the updating cannot be vectorized but must be calculated trial-by-trial). This makes it
+# computationally infeasible to find the optimal learning rate (beta) for the entire data set. We thus 
+# select a subset of participants for each exposure-test combination, optimize the parameter for that subset,
+# and then use that (approximately) 'optimal' parameter to update the *entire* data set (once) to calculate
+# the likelihood, R2, etc. for that parameter. 
+# 
+# In order to penalize all adaptive models equally, we subset the same amount of data for each model, 
+# including the other two change models (even though they are computationally much less demanding to fit).
+sample_proportion_of_participants_per_exposure_test_condition <- .1
+
+# TO DO: IMPLEMENT SUBSAMPLING FOR NORMALIZATION AND FOR IBBU TO COMPARE LIKELIHOODS IN A MEANINGFUL WAY.
 ```
 
 ## Changes in normalization
@@ -771,14 +799,13 @@ if (RESET_MODELS || !file.exists(filename.parameter)) {
         fnscale = -1,
         factr = 10^8))
   
-  best_performing_parameters.normalization <- exp(best_performing_parameters.normalization$par[1])
   saveRDS(best_performing_parameters.normalization, filename.parameter)
-  
+
   # Get the normalized data based on the optimal parameter for normalization 
   # and then prepare it for plotting
   df.normalized <- 
     update_normalization_and_normalize_test_data(
-      kappa = best_performing_parameters.normalization,
+      kappa = exp(best_performing_parameters.normalization$par[1]),
       data = d_for_ASP) 
   
   df.normalized %<>%
@@ -811,6 +838,8 @@ if (RESET_MODELS || !file.exists(filename.parameter)) {
   df.normalized <- readRDS(filename.df)
 }
 
+cat("Changes in normalization achieve maximum likelihood of", best_performing_parameters.normalization$value, "for kappa =", exp(best_performing_parameters.normalization$par))
+
 df.normalized %>% compare_predicted_and_actual()
 ```
 
@@ -820,32 +849,48 @@ df.normalized %>% compare_predicted_and_actual()
 filename.parameter <- "../models/best_performing_parameters.decision_making.rds"
 filename.df <- "../models/best_performing_data.decision_making.rds"
 
-# This function is intended for the optimization run right below it
-history.optimization_bias <- tibble(.rows = 0)
-range.beta <- c(10^-3, 10^3)
-
 if (RESET_MODELS || !file.exists(filename.parameter)) {
-  # Reduce to one participant or keep all of them (the latter is much slower)
+  history.optimization_bias <- tibble(.rows = 0)
+  range.beta <- c(10^-3, 10^3)
+  
   d_for_ASP.for_decision_changes <-
     d_for_ASP %>%
-    #  filter(ExposureGroup == "Cond Shift0CA_Up to test7") %>%
     # Include all test observations but only the exposure groups that contain all 3 exposure
     # blocks (which then are reformatted as part of the updating function in order to derive
     # the predicted updated decision biases after each of the three exposure blocks).
     filter(Phase == "test" | grepl(x = ExposureGroup, pattern = ".*Up to test7")) %>%
     group_by(ExposureGroup, Phase) %>%
-    # Since it is not computationally feasible to run the optimization over all participants 
-    # (unlike for the other two adaptive models, the change model for decision biases is order
-    # sensitive), we're sampling 5 participants in each exposure condition
-    # 
-    # TO DO: change this to sample proportional to amount of data in the condition, rather than
-    # a fixed number of subjects.
-    filter(Phase == "test" | ParticipantID %in% sample(x = unique(ParticipantID), size = 5)) %>%
-    arrange(Phase, Block) %>%
+    # Sample proportion of participants from each condition
+    filter(Phase == "test" | 
+             ParticipantID %in% 
+             sample(
+               x = unique(ParticipantID), 
+               size = round(length(unique(ParticipantID)) * sample_proportion_of_participants_per_exposure_test_condition))) %>%
+    arrange(ExposureGroup, ParticipantID, Phase, Block, Trial) %>%
     droplevels()
   
-  message("Currently, this function assumes a single order of exposure for each exposure group.", 
-          "Consider instead using the participant-specific actual order.")
+  # Calculating exposure and test data outside of the optimization loop, in order to minimize
+  # computations that need to be conducted on each optimization step.
+  d_for_ASP.for_decision_changes.exposure <- 
+    d_for_ASP.for_decision_changes %>% 
+    group_by(ExposureGroup, ParticipantID, Phase) %>%
+    filter(Phase == "exposure", grepl(x = ExposureGroup, pattern = ".*Up to test7")) %>%
+    arrange(ParticipantID, Phase, Block) %>%
+    droplevels() %>%
+    mutate(
+      (!! sym(cues[1])) := map_dbl(x, ~ .x[1]),
+      (!! sym(cues[2])) := map_dbl(x, ~ .x[2])) %>%
+    group_by(ExposureGroup, ParticipantID)
+   
+  d_for_ASP.for_decision_changes.test <- 
+    d_for_ASP.for_decision_changes %>% 
+    # We exclude the no exposure group since its likelihood does not depend on 
+    # beta, and thus cannot affect the optimizaiton of beta.
+    filter(Phase == "test", ExposureGroup != "no exposure") %>%
+    ungroup() %>%
+    select(ExposureGroup, ParticipantID, x, Response.Category) %>%
+    group_by(ExposureGroup, ParticipantID) %>%
+    nest(data = c(x, Response.Category))
   
   best_performing_parameters.bias <-
     optim(
@@ -858,51 +903,37 @@ if (RESET_MODELS || !file.exists(filename.parameter)) {
         fnscale = -1,
         factr = 10^8))
 
-  best_performing_parameters.bias <- exp(best_performing_parameters.bias$par[1])
   saveRDS(best_performing_parameters.bias, filename.parameter)
   
-  # Use the optimal parameter to update the model's decision biases and then apply 
-  # the model to the test data
+  # Use the optimal parameter to update the model's decision biases for *all* observations and then apply 
+  # the model to the test data to calculate the log-likelihood and predicted responses for the entire data.
   df.bias <- 
-    update_decision_bias( 
+    update_decision_bias_by_group( 
       prior = m_IO.VOT_f0,
-      beta = best_performing_parameters.bias,
-      data =  d_for_ASP %>%
+      beta = best_performing_parameters.bias$par,
+      data =  
+        d_for_ASP %>%
         group_by(ExposureGroup, ParticipantID, Phase) %>%
-        filter(Phase == "test" | grepl(x = ExposureGroup, pattern = ".*Up to test7")) %>%
+        filter(Phase == "exposure", grepl(x = ExposureGroup, pattern = ".*Up to test7")) %>%
         arrange(ParticipantID, Phase, Block) %>%
-        droplevels()) %>%
-    # Get the posterior from the updated model
-    mutate(posterior = 
-             future_map(
-               posterior, 
-               ~ filter(.x, observation.n %in% c(48, 96, 144)) %>%
-                 mutate(observation.n = case_when(
-                   observation.n == 48 ~ "_Up to test3",
-                   observation.n == 96 ~ "_Up to test5",
-                   observation.n == 144 ~ "_Up to test7")))) %>%
-    unnest(posterior) %>%
-    # Remap the different update steps onto the ExposureGroup
-    mutate(ExposureGroup = paste0(gsub("^(.*)_.*$", "\\1", ExposureGroup), observation.n)) %>%
-    select(-observation.n) %>%
-    # Bind prior model back in and call it "no exposure" 
-    # (since there is nothing to update, the prior model is not in the df up to this point)
-    bind_rows(
-      bind_cols(
-        prior, 
-        tibble(ExposureGroup = "no exposure")) %>%
-        crossing(ParticipantID = NA)) %>%
-    nest(model = -c(ExposureGroup, ParticipantID)) %>%  
-    # Join in test data
-    left_join(
-      data %>% 
-        filter(Phase == "test") %>% 
-        # Remove ParticipantID for no exposure test data
-        mutate(ParticipantID = as.factor(ifelse(ExposureGroup == "no exposure", NA_character_, as.character(ParticipantID)))) %>%
-        group_by(ExposureGroup, ParticipantID) %>%
-        select(x, Response.Category) %>%
-        nest(data = c(x, Response.Category)),
-      by = join_by(ExposureGroup, ParticipantID)) %>%
+        droplevels() %>%
+        mutate(
+          (!! sym(cues[1])) := map_dbl(x, ~ .x[1]),
+          (!! sym(cues[2])) := map_dbl(x, ~ .x[2])) %>%
+        group_by(ExposureGroup, ParticipantID)) %>%
+    format_updated_bias_models_and_join_test_data(
+      prior = m_IO.VOT_f0,
+      # Here we do *not* exclude the "no exposure" condition since we want to calculate the likelihood for
+      # the entire data set.
+      data.test = d_for_ASP %>%
+        filter(Phase == "test") %>%
+        select(ExposureGroup, x, Response.Category) %>%
+        group_by(ExposureGroup) %>%
+        nest(data = c(x, Response.Category))) 
+  
+  # TO DO: get ll for entire data here
+  
+  df.bias %>%
     # Categorize test tokens
     mutate(
       categorization = future_map2(
@@ -930,12 +961,15 @@ if (RESET_MODELS || !file.exists(filename.parameter)) {
   df.bias <- readRDS(filename.df)
 }
 
+cat("Changes in decision-making achieve maximum likelihood of", best_performing_parameters.normalization$value, "for beta =", exp(best_performing_parameters.normalization$par))
+
 df.bias %>% compare_predicted_and_actual()
 ```
 
 ## Changes in category representations
 
 ```{r}
+# NOT YET IMPLEMENTED
 filename <- "../models/best_performing_parameters.representation.rds"
 
 # This function is intended for the optimization run right below it
@@ -1112,7 +1146,7 @@ m_IA_inferred <-
   infer_prior_beliefs(
     exposure = d_for_ASP %>% filter(Phase == "exposure"), 
     test = d_for_ASP %>% filter(Phase == "test"), 
-    cues = c("VOT.CCuRE", "f0_Mel.CCuRE"),  
+    cues = c("VOT", "f0_Mel"),  
     category = "Item.ExpectedResponse.Category", 
     response = "Response.Category", 
     group = "ParticipantID",
@@ -1129,7 +1163,7 @@ m_IA_inferred.fixed_pars <-
   infer_prior_beliefs(
     exposure = d_for_ASP %>% filter(Phase == "exposure"), 
     test = d_for_ASP %>% filter(Phase == "test"), 
-    cues = c("VOT.CCuRE", "f0_Mel.CCuRE"),  
+    cues = c("VOT", "f0_Mel"),  
     category = "Item.ExpectedResponse.Category", 
     response = "Response.Category", 
     group = "ParticipantID",
@@ -1233,9 +1267,9 @@ d.pars %<>% mutate(Predicted_posterior = ifelse(is.infinite(Predicted_posterior)
 
 # Compare predicted and actual responses
 d.pars %>%
-  group_by(group, VOT.CCuRE) %>%
+  group_by(group, VOT) %>%
   summarise(across(Predicted_posterior, mean)) %>%
-  mutate(VOT = VOT.CCuRE, ExposureGroup = ifelse(group == "prior", "no exposure", group)) %>%
+  mutate(VOT = VOT, ExposureGroup = ifelse(group == "prior", "no exposure", group)) %>%
   left_join(get_test_data_from_stanfit(model)) %>%
   mutate(
     Response = `/t/` / (`/d/` + `/t/`),

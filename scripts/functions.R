@@ -597,7 +597,7 @@ get_likelihood_from_updated_normalization <- function(
 # This function assumes that the error signal is relative to the expected response.
 # This assumes that listeners can figure out---even on unlabelled trials---what the
 # expected response is.
-update_decision_bias <- function(
+update_decision_bias_by_group <- function(
     prior,
     beta,
     data
@@ -605,11 +605,6 @@ update_decision_bias <- function(
   cues <- get_cue_labels_from_model(prior)
   u <-
     data %>%
-    filter(Phase == "exposure") %>%
-    mutate(
-      (!! sym(cues[1])) := map_dbl(x, ~ .x[1]),
-      (!! sym(cues[2])) := map_dbl(x, ~ .x[2])) %>%
-    group_by(ExposureGroup, ParticipantID) %>%
     group_map(
       .f = ~ update_model_decision_bias_incrementally(
         model = prior,
@@ -626,10 +621,47 @@ update_decision_bias <- function(
     reduce(bind_rows)
 }
 
+format_updated_bias_models_and_join_test_data <- function(
+    models,
+    prior,
+    data.test
+) {
+  models %>%
+    mutate(
+      posterior =
+        map(
+          posterior,
+          ~ filter(.x, observation.n %in% c(48, 96, 144)) %>%
+            mutate(observation.n = case_when(
+              observation.n == 48 ~ "_Up to test3",
+              observation.n == 96 ~ "_Up to test5",
+              observation.n == 144 ~ "_Up to test7")))) %>%
+    unnest(posterior) %>%
+    # Remap the different update steps onto the ExposureGroup
+    mutate(ExposureGroup = paste0(gsub("^(.*)_.*$", "\\1", ExposureGroup), observation.n)) %>%
+    select(-observation.n) %>%
+    # If test data contains tests for "no exposure" condition, bind prior model back in
+    # and call it "no exposure" (necessary for likelihood calculation)
+    { if ("no exposure" %in% data.test$ExposureGroup)
+      bind_rows(
+        .,
+        bind_cols(
+          prior,
+          tibble(ExposureGroup = "no exposure")) %>%
+          crossing(ParticipantID = NA)) else . } %>%
+    # Nest updated model and join test responses
+    nest(model = -c(ExposureGroup, ParticipantID)) %>%
+    left_join(data.test, by = join_by(ExposureGroup, ParticipantID))
+}
+
 get_likelihood_from_updated_bias <- function(
     par,
     prior = m_IO.VOT_f0,
-    data = d_for_ASP.for_decision_changes
+    # These data sets are set as a default to speed up computation, since this allows us
+    # to move any steps that would have to repeated on each optimization step but that do
+    # *not* depend on beta out of the optimization.
+    data.exposure = d_for_ASP.for_decision_changes.exposure,
+    data.test = d_for_ASP.for_decision_changes.test
 ) {
   beta <- exp(par[1])
 
@@ -638,36 +670,11 @@ get_likelihood_from_updated_bias <- function(
       update_decision_bias(
         prior = prior,
         beta = beta,
-        data = data))
-  ll %<>%
-    mutate(posterior =
-             map(
-               posterior,
-               ~ filter(.x, observation.n %in% c(48, 96, 144)) %>%
-                 mutate(observation.n = case_when(
-                   observation.n == 48 ~ "_Up to test3",
-                   observation.n == 96 ~ "_Up to test5",
-                   observation.n == 144 ~ "_Up to test7")))) %>%
-    unnest(posterior) %>%
-    # Remap the different update steps onto the ExposureGroup
-    mutate(ExposureGroup = paste0(gsub("^(.*)_.*$", "\\1", ExposureGroup), observation.n)) %>%
-    select(-observation.n) %>%
-    # Bind prior model back in and call it "no exposure"
-    bind_rows(
-      bind_cols(
-        prior,
-        tibble(ExposureGroup = "no exposure")) %>%
-        crossing(ParticipantID = NA)) %>%
-    nest(model = -c(ExposureGroup, ParticipantID)) %>%
-    left_join(
-      data %>%
-        filter(Phase == "test") %>%
-        group_by(ExposureGroup) %>%
-        select(x, Response.Category) %>%
-        nest(data = c(x, Response.Category)),
-      by = join_by(ExposureGroup)) %>%
+        data = data.exposure)) %>%
+    format_updated_bias_models_and_join_test_data(prior = prior, data.test = data.test) %>%
     get_likelihood_from_grouped_data()
 
+  message("For beta = ", beta, " found log-likelihood of ", ll)
   history.optimization_bias <<-
     bind_rows(
       history.optimization_bias,
