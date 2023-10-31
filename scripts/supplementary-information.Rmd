@@ -597,6 +597,7 @@ Use database from @chodroff-wilson2018 as a starting point, and then expose the 
 compare_predicted_and_actual <- function(data) {
   p <- 
     data %>%
+    mutate(ExposureGroup = gsub("_Up\\sto\\s", "", ExposureGroup)) %>% 
     ggplot(aes(x = VOT)) +
     stat_summary(fun = mean, geom = "line", aes(y = Response)) +
     stat_summary(fun = mean, geom = "line", aes(y = Predicted_posterior), color = "gray") +
@@ -605,7 +606,9 @@ compare_predicted_and_actual <- function(data) {
   plot(p)
   
   p %+% 
-    (data %>% mutate(ExposureGroup = gsub("[ABC]A", "", ExposureGroup))) %>%
+    (data %>% 
+       mutate(ExposureGroup = gsub("_Up\\sto\\s", "", ExposureGroup)) %>% 
+       mutate(ExposureGroup = gsub("[ABC]A", "", ExposureGroup))) %>%
     plot()
   
   data %>%
@@ -622,8 +625,8 @@ compare_predicted_and_actual <- function(data) {
                 with(., cor(Predicted_posterior, Response)) %>%
                 . ^ 2, 3) * 100, "%"),
       x = .1, y = .9) +
-    xlab('Predicted proportion "d"-responses') +
-    ylab('Observed proportion "d"-responses') 
+    xlab('Predicted proportion "t"-responses') +
+    ylab('Observed proportion "t"-responses') 
 }
 ```
 
@@ -744,6 +747,7 @@ d_for_ASP <-
 ```
 
 ```{r set-subsample-proportion}
+set.seed(1976)
 # For changes in decision-making, the adaptive algorithm is order-sensitive. This makes it computationally 
 # demanding to find the optimal parameterization for this algorithm (as optimization requires updating the 
 # data and calculating the likelihood of the test responses under the updated model, but order-sensitivity
@@ -755,9 +759,12 @@ d_for_ASP <-
 # 
 # In order to penalize all adaptive models equally, we subset the same amount of data for each model, 
 # including the other two change models (even though they are computationally much less demanding to fit).
-sample_proportion_of_participants_per_exposure_test_condition <- .1
+sample_proportion_of_participants_per_exposure_test_condition <- .5
 
 # TO DO: IMPLEMENT SUBSAMPLING FOR NORMALIZATION AND FOR IBBU TO COMPARE LIKELIHOODS IN A MEANINGFUL WAY.
+# 
+# HMM, actually since the other algorithms are not order sensitive, they should not depend on how many 
+# participants
 ```
 
 ## Changes in normalization
@@ -786,7 +793,11 @@ if (RESET_MODELS || !file.exists(filename.parameter)) {
   d_for_ASP.for_normalization <-
     d_for_ASP %>%
     group_by(ExposureGroup, Phase) %>%
-    filter(Phase == "test" | ParticipantID == first(ParticipantID))
+    filter(
+      ParticipantID %in% 
+        sample(
+          x = unique(ParticipantID), 
+          size = round(length(unique(ParticipantID)) * sample_proportion_of_participants_per_exposure_test_condition)))
   
   best_performing_parameters.normalization <-
     optim(
@@ -831,6 +842,8 @@ if (RESET_MODELS || !file.exists(filename.parameter)) {
       Response = ifelse(Response.Category == "/t/", 1, 0)) %>%
     rename(Predicted_posterior = posterior_probability) 
   
+  # TO DO: calculate likelihood for whole data set here
+  
   saveRDS(df.normalized, filename.df)
   d_for_ASP.for_normalization <- NULL
 } else {
@@ -838,7 +851,8 @@ if (RESET_MODELS || !file.exists(filename.parameter)) {
   df.normalized <- readRDS(filename.df)
 }
 
-cat("Changes in normalization achieve maximum likelihood of", best_performing_parameters.normalization$value, "for kappa =", exp(best_performing_parameters.normalization$par))
+cat("Changes in normalization achieve maximum log-likelihood of", best_performing_parameters.normalization$value, "on", sample_proportion_of_participants_per_exposure_test_condition * 100, "percent of the data for kappa =", exp(best_performing_parameters.normalization$par))
+cat("The same kappa achieved log-likelihood of", NA, "one whole data set.")
 
 df.normalized %>% compare_predicted_and_actual()
 ```
@@ -855,27 +869,32 @@ if (RESET_MODELS || !file.exists(filename.parameter)) {
   
   d_for_ASP.for_decision_changes <-
     d_for_ASP %>%
+    ungroup() %>%
     # Include all test observations but only the exposure groups that contain all 3 exposure
     # blocks (which then are reformatted as part of the updating function in order to derive
     # the predicted updated decision biases after each of the three exposure blocks).
-    filter(Phase == "test" | grepl(x = ExposureGroup, pattern = ".*Up to test7")) %>%
-    group_by(ExposureGroup, Phase) %>%
-    # Sample proportion of participants from each condition
-    filter(Phase == "test" | 
-             ParticipantID %in% 
+    filter(
+      # We exclude the no exposure group since its likelihood does not depend on 
+      # beta, and thus cannot affect the optimization of beta.
+      ExposureGroup != "no exposure", 
+      Phase == "test" | grepl(x = ExposureGroup, pattern = ".*Up to test7")) %>%
+    # Sample proportion of participants from each exposure condition
+    mutate(ExposureGroup_withoutBlock = gsub("_Up to test.*", "", ExposureGroup)) %>%
+    group_by(ExposureGroup_withoutBlock) %>%
+    filter(ParticipantID %in%
              sample(
-               x = unique(ParticipantID), 
+               x = unique(ParticipantID),
                size = round(length(unique(ParticipantID)) * sample_proportion_of_participants_per_exposure_test_condition))) %>%
-    arrange(ExposureGroup, ParticipantID, Phase, Block, Trial) %>%
+    arrange(ParticipantID, Block, ExposureGroup, Phase, Trial) %>%
     droplevels()
   
   # Calculating exposure and test data outside of the optimization loop, in order to minimize
   # computations that need to be conducted on each optimization step.
   d_for_ASP.for_decision_changes.exposure <- 
     d_for_ASP.for_decision_changes %>% 
+    ungroup() %>%
+    filter(Phase == "exposure") %>%
     group_by(ExposureGroup, ParticipantID, Phase) %>%
-    filter(Phase == "exposure", grepl(x = ExposureGroup, pattern = ".*Up to test7")) %>%
-    arrange(ParticipantID, Phase, Block) %>%
     droplevels() %>%
     mutate(
       (!! sym(cues[1])) := map_dbl(x, ~ .x[1]),
@@ -884,9 +903,7 @@ if (RESET_MODELS || !file.exists(filename.parameter)) {
    
   d_for_ASP.for_decision_changes.test <- 
     d_for_ASP.for_decision_changes %>% 
-    # We exclude the no exposure group since its likelihood does not depend on 
-    # beta, and thus cannot affect the optimizaiton of beta.
-    filter(Phase == "test", ExposureGroup != "no exposure") %>%
+    filter(Phase == "test") %>%
     ungroup() %>%
     select(ExposureGroup, ParticipantID, x, Response.Category) %>%
     group_by(ExposureGroup, ParticipantID) %>%
@@ -894,7 +911,7 @@ if (RESET_MODELS || !file.exists(filename.parameter)) {
   
   best_performing_parameters.bias <-
     optim(
-      par = log(mean(range.beta)),
+      par = mean(log(range.beta)),
       fn = get_likelihood_from_updated_bias,
       method = "L-BFGS-B",
       lower = log(min(range.beta)),
@@ -910,7 +927,7 @@ if (RESET_MODELS || !file.exists(filename.parameter)) {
   df.bias <- 
     update_decision_bias_by_group( 
       prior = m_IO.VOT_f0,
-      beta = best_performing_parameters.bias$par,
+      beta = exp(best_performing_parameters.bias$par),
       data =  
         d_for_ASP %>%
         group_by(ExposureGroup, ParticipantID, Phase) %>%
@@ -927,13 +944,13 @@ if (RESET_MODELS || !file.exists(filename.parameter)) {
       # the entire data set.
       data.test = d_for_ASP %>%
         filter(Phase == "test") %>%
-        select(ExposureGroup, x, Response.Category) %>%
-        group_by(ExposureGroup) %>%
+        select(ExposureGroup, ParticipantID, x, Response.Category) %>%
+        group_by(ExposureGroup, ParticipantID) %>%
         nest(data = c(x, Response.Category))) 
   
   # TO DO: get ll for entire data here
   
-  df.bias %>%
+  df.bias %<>%
     # Categorize test tokens
     mutate(
       categorization = future_map2(
@@ -961,7 +978,8 @@ if (RESET_MODELS || !file.exists(filename.parameter)) {
   df.bias <- readRDS(filename.df)
 }
 
-cat("Changes in decision-making achieve maximum likelihood of", best_performing_parameters.normalization$value, "for beta =", exp(best_performing_parameters.normalization$par))
+cat("Changes in decision-making achieve maximum likelihood of", best_performing_parameters.bias$value, "on", sample_proportion_of_participants_per_exposure_test_condition * 100, "percent of the data for beta =", exp(best_performing_parameters.bias$par))
+cat("The same kappa achieved log-likelihood of", NA, "one whole data set.")
 
 df.bias %>% compare_predicted_and_actual()
 ```

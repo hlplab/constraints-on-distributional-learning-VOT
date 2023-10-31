@@ -546,6 +546,7 @@ update_normalization_and_normalize_test_data <- function(
     data %>%
     filter(Phase == "exposure") %>%
     group_by(ExposureGroup) %>%
+    filter(ParticipantID == first(ParticipantID)) %>%
     summarise(
       x_N = length(x),
       x_mean = list(colMeans(reduce(x, rbind))),
@@ -648,7 +649,7 @@ format_updated_bias_models_and_join_test_data <- function(
         bind_cols(
           prior,
           tibble(ExposureGroup = "no exposure")) %>%
-          crossing(ParticipantID = NA)) else . } %>%
+          crossing(ParticipantID = unique(as.character(data.test$ParticipantID)))) else . } %>%
     # Nest updated model and join test responses
     nest(model = -c(ExposureGroup, ParticipantID)) %>%
     left_join(data.test, by = join_by(ExposureGroup, ParticipantID))
