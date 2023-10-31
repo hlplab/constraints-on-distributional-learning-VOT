@@ -46,6 +46,9 @@ fit_mix_exposure <-
     formulation = "standard",
     priorSD = 15, 
     adapt_delta = .999)
+
+# store fitted lapse rate for change modelling
+fitted_lapse <- plogis(fixef(fit_mix_test)[[2]])
 ```
 
 We analyzed participants' categorization responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric models, using brms [@R-brms_a] in R [@R; @RStudio, for details, see SI, \@ref(sec:analysis-approach)]. Psychometric models account for attentional lapses while estimating participants' categorization functions. Failing to account for attentional lapses---while commonplace in research on speech perception [but see @clayards2008; @kleinschmidt-jaeger2016]---can lead to biased estimates of categorization boundaries [@prins2011; @wichmann-hill2001]. For the present experiment, however, lapse rates were negligible (`r make_CI(fit_mix_test, "theta1_Intercept")`), and all results replicate in simple mixed-effects logistic regressions [@jaeger2008]. 
@@ -166,7 +169,7 @@ io <-
       unnest(data) %>% 
       mutate(
         category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")) %>% 
-      rename(VOT = Item.VOT, f0 = Item.F0_Mel)) 
+      rename(VOT = Item.VOT, f0 = Item.f0_Mel)) 
 
 # Estimate the intercept, slope, and PSE that these ideal observers would have 
 # were they analyzed the same way the human data is analyzed.
@@ -782,21 +785,6 @@ What is common to all three conditions is that none of the groups converged on t
 
 (ref:exposure-means-database-density) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for 6914 word-initial /d/ and /t/ productions in L1-US English [based on 92 talkers in @chodroff-wilson2018]. The outermost contour of each category shows the 95% density quantile. Points show the category means of the exposure condition.
 
-```{r getting-means-at-exposure-by-condition, eval=FALSE}
-VOT.database_mean <- mean(d.chodroff_wilson$VOT.CCuRE)
-f0_Mel.database_mean <- mean(d.chodroff_wilson$f0_Mel.CCuRE)
-
-cond_means_exposure <- d_for_analysis %>%
-  filter(Phase == "exposure") %>%
-  group_by(Condition.Exposure) %>%
-  summarise(across(c(VOT.CCuRE, F0_Mel.CCuRE), mean, .names = "{.col}_mean")) %>% 
-  mutate(
-    VOT_diff_database = VOT.CCuRE_mean - VOT.database_mean,
-    F0_diff_database = F0_Mel.CCuRE_mean - f0_Mel.database_mean)
-
-```
-
-
 
 ```{r centering}
 # center exposure cues to speech corpus means
@@ -809,13 +797,27 @@ d_for_analysis %<>%
         ungroup() %>% 
         mutate(VOT = Item.VOT, Talker = "new"),
       cue = "VOT"),
-    F0_Mel.CCuRE = remove_speechrate_effect_from_cue(
+    f0_Mel.CCuRE = remove_speechrate_effect_from_cue(
       data = d.chodroff_wilson, 
       newdata = d_for_analysis %>% 
         ungroup() %>% 
-        mutate(f0_Mel = Item.F0_Mel, Talker = "new"),
+        mutate(f0_Mel = Item.f0_Mel, Talker = "new"),
       cue = "f0_Mel"),
     category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))) 
+```
+
+
+```{r getting-means-at-exposure-by-condition, eval=FALSE}
+VOT.database_mean <- mean(d.chodroff_wilson$VOT.CCuRE)
+f0_Mel.database_mean <- mean(d.chodroff_wilson$f0_Mel.CCuRE)
+
+cond_means_exposure <- d_for_analysis %>%
+  filter(Phase == "exposure") %>%
+  group_by(Condition.Exposure) %>%
+  summarise(across(c(VOT.CCuRE, f0_Mel.CCuRE), mean, .names = "{.col}_mean")) %>% 
+  mutate(
+    VOT_diff_database = VOT.CCuRE_mean - VOT.database_mean,
+    F0_diff_database = f0_Mel.CCuRE_mean - f0_Mel.database_mean)
 ```
 
 
@@ -865,8 +867,8 @@ p.density <-
     data = d_for_analysis %>%
       filter(Phase == "exposure") %>%
       group_by(Condition.Exposure, category) %>%
-      summarise(across(c(VOT.CCuRE, F0_Mel.CCuRE), mean)),
-    mapping = aes(x = VOT.CCuRE, y = F0_Mel.CCuRE, colour = Condition.Exposure, shape = category),
+      summarise(across(c(VOT.CCuRE, f0_Mel.CCuRE), mean)),
+    mapping = aes(x = VOT.CCuRE, y = f0_Mel.CCuRE, colour = Condition.Exposure, shape = category),
     size = 2,
     alpha = 0.8,
   inherit.aes = F,
