@@ -28,16 +28,16 @@ d <-
   read_csv("../data/experiment2_raw_formatted.csv", show_col_types = F) %>%
   # load f0 measurements of stimuli
   left_join(
-    read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv", show_col_types = F) %>% 
-      dplyr::select(filename, VOT, f0_5ms_into_vowel, vowel_duration) %>% 
+    read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv", show_col_types = F) %>%
+      dplyr::select(filename, VOT, f0_5ms_into_vowel, vowel_duration) %>%
       rename(
         Item.VOT = VOT,
         # This is the F0 measured in the same way as Chodroff & Wilson (2018)
         # (i.e., 5ms into the vowel)
-        Item.F0 = f0_5ms_into_vowel,
-        Item.Filename = filename) %>% 
+        Item.Measured_f0 = f0_5ms_into_vowel,
+        Item.Filename = filename) %>%
       mutate(Item.Filename = paste0(Item.Filename, ".wav")),
-    by = c("Item.Filename", "Item.VOT")) %>% 
+    by = c("Item.Filename", "Item.VOT")) %>%
   mutate(
     Response.Voiceless = ifelse(Response.Voicing == "voiceless", 1, 0),
     across(
@@ -48,8 +48,7 @@ d <-
         Response.ClickPosition, Response.Voicing),
       factor),
     Participant.Sex = str_to_lower(Participant.Sex),
-    Item.F0_Mel = normMel(Item.F0),
-    Item.F0_target_for_generation_Mel = normMel(Item.F0_target_for_generation_script)) 
+    Item.f0_Mel = normMel(Item.F0_target_for_generation_script)) 
 ```
 
 ## Methods 

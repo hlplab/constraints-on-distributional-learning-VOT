@@ -1,21 +1,21 @@
 <!-- Do NOT knit this document. It is part of a larger document. Instead knit the main document (my-apa-formatted-article) 
-     If you want to separate the SI from the rest of the paper, we recommend you do so AFTER knitting them into a single PDF. 
-     This will make sure that all references to sections, figures, tables, etc. are working as intended. You can easily separate 
+     If you want to separate the SI from the rest of the paper, we recommend you do so AFTER knitting them into a single PDF.
+     This will make sure that all references to sections, figures, tables, etc. are working as intended. You can easily separate
      the PDF into two parts, using e.g., Acrobat PDF viewer. //-->
-     
+
 # Supplementary information {-}
 \setcounter{section}{0}
 
-Both the main text and these supplementary information (SI) are derived from the same R markdown document available via [OSF](). It is best viewed using Acrobat Reader. Some links and animations might not work in other PDF viewers. 
+Both the main text and these supplementary information (SI) are derived from the same R markdown document available via [OSF](). It is best viewed using Acrobat Reader. Some links and animations might not work in other PDF viewers.
 
 # Required software {#sec:software}
 The document was compiled using \texttt{knitr} [@xie2021] in RStudio with R:
 
-```{r} 
+```{r}
 version
 ```
 
-You will also need to download the IPA font [SIL Doulos](https://software.sil.org/doulos/download/) and a Latex environment like (e.g., [MacTex](https://tug.org/mactex/mactex-download.html) or the R library \texttt{tinytex}). 
+You will also need to download the IPA font [SIL Doulos](https://software.sil.org/doulos/download/) and a Latex environment like (e.g., [MacTex](https://tug.org/mactex/mactex-download.html) or the R library \texttt{tinytex}).
 
 We used the following R packages to create this document: `r cite_r("latex-stuff/r-references.bib", withhold = T, pkgs = c("MVBeliefUpdatr"))`. If opened in RStudio, the top of the R markdown document should alert you to any libraries you will need to download, if you have not already installed them. The full session information is provided at the end of this document.
 
@@ -25,41 +25,41 @@ We show that two of the most influential approaches to adaptive speech perceptio
 We emphasize that our discussion deliberately focuses on *models*, not theories. The finding of sublinear effects of exposure can be accommodated in all three theories that underlie the three models discussed here (Bayesian inference in the ideal adaptor framework, similarity-based inference in exemplar theory, or normalization relative to expectations). Yet, the fact that none of the existing *models* predicts this effect highlights that this property of adaptive speech perception was only recently discovered, and is as-of-yet not well understood.
 
 ## Incremental Bayesian belief-updating [@kleinschmidt-jaeger2011, @kleinschmidt-jaeger2012, @kleinschmidt-jaeger 2015, @kleinschmidt-jaeger2016; @kleinschmidt2020]
-The only distributional learning model that has been more repeatedly tested against adaptive speech perception---incremental Bayesian belief-updating [@kleinschmidt-jaeger2011]---predicts proportional, rather than sublinear, shifts. This model had previously been found to closely predict the cumulative effects of exposure in perceptual recalibration to audio-visually [@kleinschmidt2011-jaeger; @kleinschmidt-jaeger2012] or lexically labeled speech [@cummings-theodore2023], as well as the type of exposure to unlabelled minimal pair words employed by Kleinschmidt and Jaeger [@theodore-monto2019]. However, all of these studies employed comparatively small changes in cue distributions, and lacked the design necessary to detect deviation from proportionality (we return to this point below). The findings presented in @kleinschmidt-jaeger2016 would seem to reject this specific distributional learning model [though not necessarily the theory it is derived from, @kleinschmidt-jaeger2015; for discussion of the relation between theory and model, see also @kleinschmidt2020]  <!-- TO DO: make sure we do --> 
+The only distributional learning model that has been more repeatedly tested against adaptive speech perception---incremental Bayesian belief-updating [@kleinschmidt-jaeger2011]---predicts proportional, rather than sublinear, shifts. This model had previously been found to closely predict the cumulative effects of exposure in perceptual recalibration to audio-visually [@kleinschmidt2011-jaeger; @kleinschmidt-jaeger2012] or lexically labeled speech [@cummings-theodore2023], as well as the type of exposure to unlabelled minimal pair words employed by Kleinschmidt and Jaeger [@theodore-monto2019]. However, all of these studies employed comparatively small changes in cue distributions, and lacked the design necessary to detect deviation from proportionality (we return to this point below). The findings presented in @kleinschmidt-jaeger2016 would seem to reject this specific distributional learning model [though not necessarily the theory it is derived from, @kleinschmidt-jaeger2015; for discussion of the relation between theory and model, see also @kleinschmidt2020]  <!-- TO DO: make sure we do -->
 
 ```{r}
 get_IBBU_updates <- function(
     prior = NULL,
     exposure = NULL,
     test = NULL,
-    condition = NULL, 
+    condition = NULL,
     cues = c("VOT", "f0_Mel"),
     kappa = 72, nu = 72,
-    updates_to_keep = c(0, 48, 96, 144), 
+    updates_to_keep = c(0, 48, 96, 144),
     seed = 1234
 ) {
   set.seed(seed)
   Sigma_noise <- diag(c(80, 878)[1:length(cues)])
   dimnames(Sigma_noise) <- list(cues, cues)
-  
+
   if (is.null(prior)) {
     prior <- d.chodroff_wilson %>%
       make_NIW_ideal_adaptor_from_data(
         cues = cues, kappa = kappa, nu = nu, Sigma_noise = Sigma_noise)
   }
-  
+
   if (is.null(exposure)) {
     message("When exposure is NULL, condition is interpreted as the VOT shift.")
-    exposure <- 
+    exposure <-
       lapply(
-        X = as.list(1:3), 
+        X = as.list(1:3),
         FUN = function(x) d.chodroff_wilson %>%
-          # Sample exposure from VOT distribution regardless of which cues are used 
+          # Sample exposure from VOT distribution regardless of which cues are used
           # for belief-updating, since that's what we did in the experiment.
           make_MVG_ideal_observer_from_data(
-            cues = "VOT", Sigma_noise = matrix(80, dimnames = list("VOT", "VOT"))) %>% 
+            cues = "VOT", Sigma_noise = matrix(80, dimnames = list("VOT", "VOT"))) %>%
           sample_MVG_data_from_model(Ns = 24, randomize.order = T)) %>%
-      reduce(rbind) %>% 
+      reduce(rbind) %>%
       mutate(
         Trial = 1:144,
         Condition.Exposure = paste0("TrueShift", .env$condition),
@@ -69,13 +69,13 @@ get_IBBU_updates <- function(
       relocate(Condition.Exposure, Trial, category, VOT, f0)
   }
 
-  idealized_ios <- 
+  idealized_ios <-
     make_VOT_IOs_from_exposure(exposure) %>%
     get_logistic_parameters_from_model(
-    model = ., x = map(test, ~ .x[1]), 
-    model_col = "io", 
+    model = ., x = map(test, ~ .x[1]),
+    model_col = "io",
     groups = "Condition.Exposure")
-    
+
   update_NIW_ideal_adaptor_incrementally(
     prior = prior,
     exposure = exposure,
@@ -89,25 +89,25 @@ get_IBBU_updates <- function(
       Condition.Exposure = unique(exposure$Condition.Exposure),
       observation.bin = as.numeric(factor(observation.n, levels = sort(observation.n))),
       observation.alpha = observation.bin / max(observation.bin),
-      cf = map(ia, 
+      cf = map(ia,
                ~ get_categorization_function_from_NIW_ideal_adaptor(.x, noise_treatment = "no_noise")),
-      sf = map2(cf, observation.alpha, 
+      sf = map2(cf, observation.alpha,
                 ~ stat_function(
                   fun = function(x) {
                     as.numeric(.x(
-                      map(x, function(y) c(y, predict_f0(y, Mel = T))), 
-                      target_category = 2)) }, 
-                  alpha = .y, 
+                      map(x, function(y) c(y, predict_f0(y, Mel = T))),
+                      target_category = 2)) },
+                  alpha = .y,
                   color = if (condition %in% c("Shift0", "Shift10", "Shift40")) colours.condition[condition] else "black"))) %>%
     select(-c(observation.bin, observation.alpha)) %>%
     relocate(Condition.Exposure, observation.n, ia, cf, sf) %>%
     # Convert updated beliefs into estimated PSE and slope
     get_logistic_parameters_from_model(
-      model = ., x = test, model_col = "ia", 
+      model = ., x = test, model_col = "ia",
       groups = c("Condition.Exposure", "observation.n", "cf", "sf")) %>%
-    # Join in information about idealized prior and posterior 
+    # Join in information about idealized prior and posterior
     # (the latter based on ideal observer that has fully learned the exposure distribution).
-    # Then calculate for each update step the proportion of updating relative to those 
+    # Then calculate for each update step the proportion of updating relative to those
     # idealized priors and posteriors.
     left_join(
       idealized_ios %>%
@@ -125,13 +125,13 @@ get_IBBU_updates <- function(
 }
 
 get_IBBU_updates_for_experiment <- function(
-    condition, 
+    condition,
     test = NULL,
     cues = c("VOT", "f0_Mel"),
     kappa = 72, nu = 72
 ) {
-  exposure <- 
-    d_for_analysis %>% 
+  exposure <-
+    d_for_analysis %>%
     ungroup() %>%
     filter(
       Condition.Exposure == condition,
@@ -141,12 +141,12 @@ get_IBBU_updates_for_experiment <- function(
       category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")) %>%
     rename(
       VOT = Item.VOT,
-      f0_Mel = Item.F0_Mel)
-  
+      f0_Mel = Item.f0_Mel)
+
   get_IBBU_updates(
-    exposure = exposure, 
+    exposure = exposure,
     test = test,
-    condition = condition, 
+    condition = condition,
     cues = cues, kappa = kappa, nu = nu)
 }
 
@@ -154,18 +154,18 @@ x <-
   d_for_analysis %>%
   ungroup() %>%
   filter(Phase == "test") %>%
-  distinct(Item.VOT, Item.F0_Mel) %>%
+  distinct(Item.VOT, Item.f0_Mel) %>%
   arrange(Item.VOT) %>%
-  mutate(x = map2(Item.VOT, Item.F0_Mel, ~ c(.x, .y))) %>%
+  mutate(x = map2(Item.VOT, Item.f0_Mel, ~ c(.x, .y))) %>%
   pull(x)
 
 # Plot updates for our three exposure condition
 d.updates <-  
-  bind_rows(get_IBBU_updates_for_experiment("Shift0", test = x), 
-            get_IBBU_updates_for_experiment("Shift10", test = x), 
-            get_IBBU_updates_for_experiment("Shift40", test = x)) 
+  bind_rows(get_IBBU_updates_for_experiment("Shift0", test = x),
+            get_IBBU_updates_for_experiment("Shift10", test = x),
+            get_IBBU_updates_for_experiment("Shift40", test = x))
 
-# d.exposure %>% 
+# d.exposure %>%
 #   distinct(VOT) %>%
 #   ggplot(aes(x = VOT)) +
 #   d.updates$sf +
@@ -188,10 +188,10 @@ x <-
 
 # Plot updates for true rightward shifts of various magnitudes
 d.updates <-  
-  bind_rows(get_IBBU_updates(condition = 10, test = x), 
-            get_IBBU_updates(condition = 20, test = x), 
-            get_IBBU_updates(condition = 30, test = x), 
-            get_IBBU_updates(condition = 40, test = x)) 
+  bind_rows(get_IBBU_updates(condition = 10, test = x),
+            get_IBBU_updates(condition = 20, test = x),
+            get_IBBU_updates(condition = 30, test = x),
+            get_IBBU_updates(condition = 40, test = x))
 
 tibble(VOT = seq(10, 90)) %>%
   ggplot(aes(x = VOT)) +
@@ -208,10 +208,10 @@ tibble(VOT = seq(10, 90)) %>%
 
 ```{r get-updates-nu-larger-kappa}
 d.updates <-  
-  bind_rows(get_IBBU_updates(condition = 10, test = x, nu = 10000), 
-            get_IBBU_updates(condition = 20, test = x, nu = 10000), 
-            get_IBBU_updates(condition = 30, test = x, nu = 10000), 
-            get_IBBU_updates(condition = 40, test = x, nu = 10000)) 
+  bind_rows(get_IBBU_updates(condition = 10, test = x, nu = 10000),
+            get_IBBU_updates(condition = 20, test = x, nu = 10000),
+            get_IBBU_updates(condition = 30, test = x, nu = 10000),
+            get_IBBU_updates(condition = 40, test = x, nu = 10000))
 
 tibble(VOT = seq(10, 90)) %>%
   ggplot(aes(x = VOT)) +
@@ -229,10 +229,10 @@ tibble(VOT = seq(10, 90)) %>%
 
 ```{r get-updates-nu-smaller-kappa}
 d.updates <-  
-  bind_rows(get_IBBU_updates(condition = 10, test = x, kappa = 10000), 
-            get_IBBU_updates(condition = 20, test = x, kappa = 10000), 
-            get_IBBU_updates(condition = 30, test = x, kappa = 10000), 
-            get_IBBU_updates(condition = 40, test = x, kappa = 10000)) 
+  bind_rows(get_IBBU_updates(condition = 10, test = x, kappa = 10000),
+            get_IBBU_updates(condition = 20, test = x, kappa = 10000),
+            get_IBBU_updates(condition = 30, test = x, kappa = 10000),
+            get_IBBU_updates(condition = 40, test = x, kappa = 10000))
 
 tibble(VOT = seq(10, 90)) %>%
   ggplot(aes(x = VOT)) +
@@ -261,27 +261,27 @@ Similarly, existing models of perceptual normalization---an alternative, but mut
 # Materials {sec:stimulus-generation}
 
 ## Recordings
-An L1-US English female talker originally from New Hampshire was recruited for recording of the stimuli. She was recorded at the Human Language Processing lab at the Brain & Cognitive Sciences Department, University of Rochester with the help of research assistant (also an L1-US English speaker). She was 23 years old at the time of recording and was judged by the research assistant to have a generic US American accent known as "general American". 
+An L1-US English female talker originally from New Hampshire was recruited for recording of the stimuli. She was recorded at the Human Language Processing lab at the Brain & Cognitive Sciences Department, University of Rochester with the help of research assistant (also an L1-US English speaker). She was 23 years old at the time of recording and was judged by the research assistant to have a generic US American accent known as "general American".
 
-Four /d-t/ minimal pairs (dill-till, din-tin, dim-tim, dip-tip) were recorded together with 20 filler words. These fillers were made up of 10 minimal or near minimal pairs with different sounds at onset. The word pairs were separated into two lists so that they would appear in separate blocks during recording. Each critical pair was repeated 8 times while the filler pairs were repeated 5 times. Word presentation was delivered with PsychoPy [@peirce2007] and the presentation was controlled by the researcher from a computer located outside the recording room. The order of each block was randomised such that target words never appeared consecutively. The talker was instructed to speak clearly and confidently, and to maintain a consistent distance from the microphone. 
+Four /d-t/ minimal pairs (dill-till, din-tin, dim-tim, dip-tip) were recorded together with 20 filler words. These fillers were made up of 10 minimal or near minimal pairs with different sounds at onset. The word pairs were separated into two lists so that they would appear in separate blocks during recording. Each critical pair was repeated 8 times while the filler pairs were repeated 5 times. Word presentation was delivered with PsychoPy [@peirce2007] and the presentation was controlled by the researcher from a computer located outside the recording room. The order of each block was randomised such that target words never appeared consecutively. The talker was instructed to speak clearly and confidently, and to maintain a consistent distance from the microphone.
 
 ## Annotation
 All critical pairs of the talker's recordings were annotated.
 Durational measurements of voicing lead, VOT, and vowel were taken in addition to the mean F0 of the first 25% of the vowel duration. Annotations were made with a combination of listening to the audio file and inspection of the waveform and spectrogram. The annotation boundaries were made according to the following principles:
 
-- pre-voicing (voicing during closure) 
-  -**start:** the first sign of periodicity in the waveform before closure release. 
+- pre-voicing (voicing during closure)
+  -**start:** the first sign of periodicity in the waveform before closure release.
   -**End:** the point of closure release
 
-- VOT 
-  -**start:** the point of closure release. 
+- VOT
+  -**start:** the point of closure release.
   -**End:** the beginning of clearly defined periodicity in the waveform and at the appearance of low frequency energy in the spectrogram.
 
-- Vowel 
-  -**start:** the beginning of clearly defined periodicity in the waveform and at the appearance of low frequency energy in the spectrogram. 
-  -**End:** if before a stop, when periodicity becomes irregular or at closure onset; if before a lateral, when formant transition approaches steady state; if before a nasal, at point where formants show a step-wise shift and when intensity shows a steep decline. 
+- Vowel
+  -**start:** the beginning of clearly defined periodicity in the waveform and at the appearance of low frequency energy in the spectrogram.
+  -**End:** if before a stop, when periodicity becomes irregular or at closure onset; if before a lateral, when formant transition approaches steady state; if before a nasal, at point where formants show a step-wise shift and when intensity shows a steep decline.
 
-- F0 at vowel onset 
+- F0 at vowel onset
   -the average pitch measurement estimated at the beginning of the vowel.
 
 ## Resynthesis
@@ -290,13 +290,13 @@ The stimuli was created using the "progressive cutback and replacement method" b
 ### Tokens with positive VOTs
 For each minimal pair a continuum of 31 tokens was generated between 0ms and 150ms with a step-size of 5ms. A token of the voiced category from each pair was selected to be the base sound file to make the continuum. All four minimal pair continua had an identical aspiration sound which was excised from one of the voiceless tokens produced by the talker.  
 While the main manipulation of the recordings was done on VOT we set the fundamental frequency (F0) to covary with VOT according to the natural correlation exhibited by our talker. The F0 values were predicted by regressing the talker's F0 measurements on VOT. Target F0 values for each token were then generated by setting the predicted F0 values of the end-point VOT tokens (0ms and 150ms) in the Praat script.   
-The vowel cut-back ratio was set at 0.33 which translates into .33ms vowel reduction for every 1ms of VOT. This ratio followed the estimated vowel duration-VOT trade-off for dip-tip minimal pair tokens reported in @allen-miller1999. The maximum allowed vowel cut-back was 0.5ms to avoid the short vowel in **dip** becoming too short. 
+The vowel cut-back ratio was set at 0.33 which translates into .33ms vowel reduction for every 1ms of VOT. This ratio followed the estimated vowel duration-VOT trade-off for dip-tip minimal pair tokens reported in @allen-miller1999. The maximum allowed vowel cut-back was 0.5ms to avoid the short vowel in **dip** becoming too short.
 Lastly, the rate of increase for aspiration intensity was kept at the default settings of the script.
 
 ### Token with pre-voicing ('negative VOTs')
 Pre-voicing in 5ms increments were generated from a a clear pre-voicing waveform excised from a pre-voiced token produced by the talker. To achieve a desired duration a duration factor was first computed and then converted with the "lengthen (overlap-add)" function in Praat. For example, if the desired amount of pre-voicing was 50ms then the duration factor would be 50ms/length of the original pre-voicing sample. Each pre-voicing step was then prepended to a token with 0ms VOT. Each of these 0ms tokens was generated with @winn2020 Praat script by manually entering the expected F0 value for a given pre-voicing duration based on the predictions of the linear model. No vowel-cut back was implemented for pre-voiced tokens.
 
-All the synthesised stimuli were subsequently annotated for pre-voicing, VOT, vowel duration and F0 at the first 5ms from vowel onset. This F0 measurement was made in order to align the data with the production database that we use for ideal observer analysis. Each item's F0 in relation to VOT is plotted in figure X. 
+All the synthesised stimuli were subsequently annotated for pre-voicing, VOT, vowel duration and F0 at the first 5ms from vowel onset. This F0 measurement was made in order to align the data with the production database that we use for ideal observer analysis. Each item's F0 in relation to VOT is plotted in figure X.
 
 ```{r}
 # annotation information of synthesised stimuli
@@ -304,11 +304,11 @@ files <- list.files(path = "../materials/stimuli_AE/annotation_files/", pattern 
 
 file_list <- seq(1:length(files))
 
-d.stimuli <- map(file_list, ~ read_csv(file = str_c("../materials/stimuli_AE/annotation_files/", files[[.x]]))) 
-d.stimuli %<>% bind_rows() %>% 
-  mutate(temp = filename) %>% 
-  separate(temp, c("word", "VOT", "target_f0"), sep = "_") %>% 
-  mutate(VOT = as.numeric(gsub("VOT(.*)$", "\\1", VOT))) %>% 
+d.stimuli <- map(file_list, ~ read_csv(file = str_c("../materials/stimuli_AE/annotation_files/", files[[.x]])))
+d.stimuli %<>% bind_rows() %>%
+  mutate(temp = filename) %>%
+  separate(temp, c("word", "VOT", "target_f0"), sep = "_") %>%
+  mutate(VOT = as.numeric(gsub("VOT(.*)$", "\\1", VOT))) %>%
   arrange(filename, word, vowel, VOT, target_f0, f0_5ms_into_vowel, f0_10ms_into_vowel)
 
 #write_csv(d, "../../materials/stimuli_AE/annotation_files/AE_stimuli_synthesised_actualf0.csv")
@@ -316,17 +316,17 @@ d.stimuli %<>% bind_rows() %>%
 # using lm() to obtain general linear function
 talker_m <- lm(f0_5ms_into_vowel ~ 1 + VOT, data = d)
 
-d.stimuli %>% 
+d.stimuli %>%
   ggplot(aes(x = VOT, y = f0_5ms_into_vowel, colour = word)) +
-  geom_point(alpha = .4, size = 2) + 
+  geom_point(alpha = .4, size = 2) +
   scale_x_continuous(breaks = seq(-100, 150, 10)) +
   scale_y_continuous(breaks = seq(240, 252, 0.5)) +
   geom_abline(intercept = tidy(talker_m)$estimate[1], slope = tidy(talker_m)$estimate[2], alpha = .5) +
   scale_colour_discrete("Minimal pair")
 
-d.stimuli %>% 
+d.stimuli %>%
   ggplot(aes(x = VOT, y = vowel, colour = word)) +
-  geom_point(alpha = .4, size = 2) + 
+  geom_point(alpha = .4, size = 2) +
   scale_x_continuous(breaks = seq(-100, 150, 10)) +
   scale_y_continuous("vowel length") +
   scale_colour_discrete("Minimal pair")
@@ -341,65 +341,65 @@ We provide additional information on participants' performance during catch tria
 (ref:plot-catch-trial-performance) Of the 122 participants, 1 committed more than 3 errors (<84% accuracy)
 
 ```{r plot-catch-trial-performance, fig.height=4, fig.width=6, fig.cap="ref:plot-catch-trial-performance"}
-d %>% 
-  group_by(ParticipantID) %>% 
+d %>%
+  group_by(ParticipantID) %>%
   summarise(Total_errors = 18 - sum(CatchTrial.Correct, na.rm = T)) %>%
   ggplot(aes(x = Total_errors)) +
   geom_bar(width = .5) +
   scale_x_continuous("Total catch trial errors", breaks = seq(0, 6, 1)) +
-  scale_y_continuous("Number of participants", breaks = seq(0, 120, 5)) 
+  scale_y_continuous("Number of participants", breaks = seq(0, 120, 5))
 ```
 
 ### Performance on labelled exposure trials
 
 ```{r labeled-trial-performance-group, fig.width=6, fig.height=4, message=F}
-p.labelled <- d %>% 
-  filter(Phase == "exposure") %>% 
-  group_by(ParticipantID, Condition.Exposure) %>% 
-  summarise(LabeledTrial.Correct = 72 - sum(LabeledTrial.Correct, na.rm = TRUE)) %>% 
-  group_by(Condition.Exposure, LabeledTrial.Correct) %>% 
-  summarise(freq = n()) %>% 
+p.labelled <- d %>%
+  filter(Phase == "exposure") %>%
+  group_by(ParticipantID, Condition.Exposure) %>%
+  summarise(LabeledTrial.Correct = 72 - sum(LabeledTrial.Correct, na.rm = TRUE)) %>%
+  group_by(Condition.Exposure, LabeledTrial.Correct) %>%
+  summarise(freq = n()) %>%
   ggplot(aes(x = LabeledTrial.Correct, y = freq, fill = Condition.Exposure)) +
   geom_bar(stat = "identity", position = position_dodge2(width = .5, preserve = "single"), width = .5) +
   geom_text(aes(label = freq), position = position_dodge(width = .5), vjust = -.5) +
-  scale_colour_manual("Exposure condition", 
-                      aesthetics = c("colour", "fill"), 
-                      labels = c("baseline", "+10", "+40"), 
+  scale_colour_manual("Exposure condition",
+                      aesthetics = c("colour", "fill"),
+                      labels = c("baseline", "+10", "+40"),
                       values = colours.condition) +
   scale_x_continuous("Total labelled trial errors") +
   scale_y_continuous("No. of participants", breaks  = seq(0, 115, 5)) +
-  theme(legend.position = "none") 
+  theme(legend.position = "none")
 
-p.labelled.group <- d %>% 
-  filter(Phase == "exposure" & Item.Labeled == T) %>% 
-  group_by(ParticipantID, Condition.Exposure, Block) %>% 
-  summarise(LabeledTrial.Errors = 24 - sum(LabeledTrial.Correct, na.rm = TRUE)) %>% 
+p.labelled.group <- d %>%
+  filter(Phase == "exposure" & Item.Labeled == T) %>%
+  group_by(ParticipantID, Condition.Exposure, Block) %>%
+  summarise(LabeledTrial.Errors = 24 - sum(LabeledTrial.Correct, na.rm = TRUE)) %>%
   ggplot(aes(x = LabeledTrial.Errors, fill = Condition.Exposure)) +
   geom_bar(position = position_dodge(width = .5, preserve = "single"), width = .5) +
-  scale_colour_manual("Exposure condition", 
-                      aesthetics = c("colour", "fill"), 
-                      labels = c("baseline", "+10", "+40"), 
+  scale_colour_manual("Exposure condition",
+                      aesthetics = c("colour", "fill"),
+                      labels = c("baseline", "+10", "+40"),
                       values = colours.condition) +
   scale_x_continuous("Total labelled trial errors") +
   theme(legend.position = "top") +
-  facet_grid(Condition.Exposure ~ Block) 
+  facet_grid(Condition.Exposure ~ Block)
 
-p.labelled | p.labelled.group + 
+p.labelled | p.labelled.group +
   plot_layout(guides = "collect") & theme(legend.position = "top")
 ```
 
 
 ```{r, message=FALSE, fig.width=6, fig.height=5}
-d_for_analysis %>% 
-  filter(Is.CatchTrial == FALSE & Phase == "exposure") %>% 
-  mutate(Item.Labeled = factor(ifelse(Item.Labeled == TRUE, "labeled", "unlabeled"))) %>% 
-  summarise(Condition.Exposure, Block, Item.Labeled, Response.Correct) %>% 
+d_for_analysis %>%
+  filter(Is.CatchTrial == FALSE & Phase == "exposure") %>%
+  mutate(Item.Labeled = factor(ifelse(Item.Labeled == TRUE, "labeled", "unlabeled"))) %>%
+  summarise(Condition.Exposure, Block, Item.Labeled, Response.Correct) %>%
   ggplot(aes(x = Response.Correct, fill = Item.Labeled)) +
   geom_bar(position = position_dodge2(width = .5, preserve = "single"), width = .5) +
   scale_x_discrete("Response", labels = c("incorrect", "correct")) +
   scale_colour_manual("Labelling", aesthetics = c("colour", "fill"), breaks = c("labeled", "unlabeled"), values = c("#f6546a", "#00ced1")) +
   theme(legend.position = "top") +
-  facet_grid(Condition.Exposure ~ Block) 
+  facet_grid(Condition.Exposure ~ Block)
 ```
 
 
@@ -414,9 +414,9 @@ d %>%
   geom_rug(aes(colour = Condition.Exposure), alpha = .5) +
   scale_x_continuous("mean log-RT (log10 of ms)") +
   scale_y_continuous("SD of log-RT") +
-  scale_color_manual("Exposure condition", 
-                      aesthetics = c("colour", "fill"), 
-                      breaks = c("Shift0", "Shift10", "Shift40"), 
+  scale_color_manual("Exposure condition",
+                      aesthetics = c("colour", "fill"),
+                      breaks = c("Shift0", "Shift10", "Shift40"),
                       values = colours.condition) +
   theme(legend.position = "top") +
   facet_wrap( ~ Block )
@@ -429,16 +429,16 @@ d %>%
     Is.CatchTrial == FALSE &
     Exclude_participant.due_to_catch_trials == FALSE &
     Exclude_participant.due_to_labeled_trials == FALSE &
-    Exclude_participant.due_to_VOT_slope == FALSE) %>% 
+    Exclude_participant.due_to_VOT_slope == FALSE) %>%
   group_by(ParticipantID, Block) %>%
   mutate(
     Response.log_RT = log10(ifelse(Response.RT <= 0, NA_real_, Response.RT)),
     Response.log_RT.scaled = scale(Response.log_RT), # deducts each value with subject's own mean, divide by own SD
-    Response.log_RT.mean = mean(Response.log_RT, na.rm = T)) %>% 
-  ungroup() %>% 
+    Response.log_RT.mean = mean(Response.log_RT, na.rm = T)) %>%
+  ungroup() %>%
   mutate(across(c(ParticipantID, Condition.Exposure, Block), factor)) %>%
-  group_by(ParticipantID, Condition.Exposure,Block, Trial) %>% 
-  summarise(Response.log_RT) %>% 
+  group_by(ParticipantID, Condition.Exposure,Block, Trial) %>%
+  summarise(Response.log_RT) %>%
   ggplot(aes(x = Trial, y = Response.log_RT, colour = ParticipantID, group = Condition.Exposure)) +
   geom_path(aes(group = ParticipantID), alpha = .3) +
   scale_x_continuous("Trial", breaks = c(12, 24, 36, 48)) +
@@ -447,20 +447,21 @@ d %>%
   theme(legend.position = "none")
 ```
 
+
 ```{r, fig.width=8, fig.height=3}
-d %>% 
+d %>%
   group_by(Trial, Condition.Exposure, Block) %>%
   mutate(Response.log_RT = log10(Response.RT)) %>%
-  summarise_at("Response.log_RT", .funs = list("mean" = mean, "sd" = sd)) %>% 
+  summarise_at("Response.log_RT", .funs = list("mean" = mean, "sd" = sd)) %>%
   ggplot(aes(x = Trial, y = mean)) +
   geom_ribbon(aes(ymin = mean - 2*sd, ymax = mean + 2*sd), colour = "lightgrey", alpha = .1) +
   geom_line(aes(group = Condition.Exposure, color = Condition.Exposure), size = 1) +
   scale_x_continuous("Trial", breaks = c(12, 24, 36, 48)) +
   scale_y_continuous("mean log-RT (log10 of ms)") +
   coord_trans(y = "log10") +
-      scale_color_manual("Exposure condition", 
-                      aesthetics = c("colour", "fill"), 
-                      labels = c("baseline", "+10", "+40"), 
+      scale_color_manual("Exposure condition",
+                      aesthetics = c("colour", "fill"),
+                      labels = c("baseline", "+10", "+40"),
                       values = colours.condition) +
   facet_grid(Condition.Exposure~ Block, scales = "free_x", space = "free_x") +
   theme(legend.position = "top")
@@ -468,7 +469,7 @@ d %>%
 
 
 ## Analysis approach {sec:analysis-approach}
-We analyzed participants' categorisation responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric model [@prins2011]. The psychometric model is an extension of mixed-effects logistic regression that also takes into account attentional lapses. 
+We analyzed participants' categorisation responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric model [@prins2011]. The psychometric model is an extension of mixed-effects logistic regression that also takes into account attentional lapses.
 
 The mixed-effects psychometric model describes the probability of "t"-responses as a weighted mixture of a perceptual and a lapsing model. The perceptual model predicts responses on trials where participants pay attention and respond based on the stimulus. We implemented the perceptual model as used mixed-effects logistic regression, predicting "t"-responses from exposure condition (backward difference coded, comparing the +10ms against the +0ms shift condition, and the +40ms against the +10ms shift condition), test block (backward difference coded from the first to last test block), VOT (Gelman scaled), and their full factorial interaction. The model included by-participant random intercepts and slopes for all within-participant maniplations (block and VOT) and by-item random intercepts and slopes for all within-participant manipulations (exposure condition, block, VOT).
 
@@ -496,12 +497,12 @@ VOT.mean_test <-
 
 d.GAMM <-
   d_for_analysis %>%
-  # Get Gelman-scaled trial ID across blocks 
+  # Get Gelman-scaled trial ID across blocks
   # (do so before filtering, so that trial roughly corresponds to amount of evidence)
   arrange(ParticipantID, Block, Trial) %>%
   group_by(ParticipantID) %>%
-  # This does not include catch trials anymore (that's ok since 
-  # those trials do not contain information about the distribution 
+  # This does not include catch trials anymore (that's ok since
+  # those trials do not contain information about the distribution
   # of VOTs for the learner)
   mutate(Trial = 1:length(Trial)) %>%
   filter(Item.Labeled == F) %>%
@@ -512,29 +513,29 @@ my_priors <-
     c(
       prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),
       prior(cauchy(0, 2.5), class = "sd", dpar = "mu2"),
-      prior(lkj(1), class = "cor")) 
+      prior(lkj(1), class = "cor"))
 
-# Recode condition as ordered factor if one wants difference smooths(comparing 
-# levels against each other), rather than separate smooths for each level of 
+# Recode condition as ordered factor if one wants difference smooths(comparing
+# levels against each other), rather than separate smooths for each level of
 # Condition.Exposure
 m <- brm(
-    formula = 
+    formula =
       bf(
         Response.Voiceless ~ 1,
          mu1 ~ 0 + offset(0),
         # Think further about the specific basis functions for this 2D tensor smooth
         # e.g., bs = c("cc", "tp"), k=c(10, 10)
          mu2 ~ 1 + t2(VOT_gs, Trial_gs, by = Condition.Exposure, bs = "tp") +
-          # Random effects (could use bs = "re" or "fs"; "fs" only works when the 
+          # Random effects (could use bs = "re" or "fs"; "fs" only works when the
           # non RE predictors are continuous)
           # Could determine order of smooth via, e.g., m = 1
-          s(ParticipantID, bs = "re") + 
-          s(VOT_gs, ParticipantID, bs = "re") + 
-          s(Trial_gs, ParticipantID, bs = "re") + 
-          s(VOT_gs, Trial_gs, ParticipantID, bs = "re") + 
+          s(ParticipantID, bs = "re") +
+          s(VOT_gs, ParticipantID, bs = "re") +
+          s(Trial_gs, ParticipantID, bs = "re") +
+          s(VOT_gs, Trial_gs, ParticipantID, bs = "re") +
           s(Item.MinimalPair, bs = "re") +
           s(VOT_gs, Item.MinimalPair, bs = "re") +
-          s(Trial_gs, Item.MinimalPair, bs = "re") + 
+          s(Trial_gs, Item.MinimalPair, bs = "re") +
           s(Condition.Exposure, Item.MinimalPair, bs = "re") +
           s(VOT_gs, Trial_gs, Item.MinimalPair, bs = "re") +
           s(VOT_gs, Condition.Exposure, Item.MinimalPair, bs = "re") +
@@ -556,11 +557,11 @@ m <- brm(
 ```
 
 ## Results
-Figure \@ref(fig:GAMM-figure) shows the predicted log-odds of "t"-responses that result from the fitted GAMM. 
+Figure \@ref(fig:GAMM-figure) shows the predicted log-odds of "t"-responses that result from the fitted GAMM.
 
 The GAMM results replicate the directional effects of exposure. For the baseline condition, the contour lines largely shift downwards with exposure. This means that the same VOT is more likely to be categorized as "t" with increasing exposure. For the +40 condition, the opposite trend is observed (and much more clearly), indicating that the same VOT is *less* likely to be categorized as "t" with increasing exposure. The +10 condition falls between the baseline and +40 condition.
 
-The GAMM results also confirm that the changes introduced by exposure are undone with repeated testing. This shows in the contour lines over trials XXX-XXX, which trend towards reverting the changes introduced by the preceding exposure. The trend shows most clearly for the baseline and +40 condition (in opposite directions since the exposure effects are in opposite directions for these two conditions). 
+The GAMM results also confirm that the changes introduced by exposure are undone with repeated testing. This shows in the contour lines over trials XXX-XXX, which trend towards reverting the changes introduced by the preceding exposure. The trend shows most clearly for the baseline and +40 condition (in opposite directions since the exposure effects are in opposite directions for these two conditions).
 
 Noticeably absent from the GAMM results is any indication of the 'zigzag' pattern between exposure and test blocks. <!-- TO DO: more here. Three possible reasons: Perhaps the GAMM’s 2D smooth just not sensitive enough. I guess that’s quite possible.
 Or it’s the absence of random slopes that masks the wiggliness.
@@ -571,7 +572,7 @@ Or the apparent wiggliness in your other analyses has, in fact, something to do 
 ```{r GAMM-figure, fig.cap="(ref:GAMM-figure)"}
 # Plot smooth over rescaled data
 ms <- conditional_smooths(
-  m, 
+  m,
   smooths = 't2(VOT_gs, Trial_gs, by = Condition.Exposure, bs = "tp")',
   too_far = .025)
 ms[[1]] %<>%
@@ -579,10 +580,10 @@ ms[[1]] %<>%
     VOT_gs = VOT_gs * 2 * sd(d.GAMM$Item.VOT) + VOT.mean_test,
     Trial_gs = Trial_gs * 2 * sd(d.GAMM$Trial) + mean(d.GAMM$Trial))
 p <- brms:::plot.brms_conditional_effects(ms, stype = "raster", plot = F)
-p[[1]] + 
+p[[1]] +
   aes(x = Trial_gs, y = VOT_gs) +
   geom_contour(aes(z = estimate__), color = "black") +
-  xlab("Trial") + ylab("VOT") + 
+  xlab("Trial") + ylab("VOT") +
   scale_fill_viridis_c('log-odds of "t"-response') +
   coord_cartesian(expand = F) +
   theme(legend.position = "top")
@@ -592,25 +593,25 @@ p[[1]] +
 Use database from @chodroff-wilson2018 as a starting point, and then expose the three different adaptive mechanisms introduced in @xie2023 to the distributions from the experiment.
 
 ```{r functions-for-adaptive-changes}
-# TO DO: consider making plots a bit pretty, e.g., by grouping participant responses together 
+# TO DO: consider making plots a bit pretty, e.g., by grouping participant responses together
 # into 5msec VOT bins and by making model prediction a line plot, rather than a point plot.
 compare_predicted_and_actual <- function(data) {
-  p <- 
+  p <-
     data %>%
-    mutate(ExposureGroup = gsub("_Up\\sto\\s", "", ExposureGroup)) %>% 
+    mutate(ExposureGroup = gsub("_Up\\sto\\s", "", ExposureGroup)) %>%
     ggplot(aes(x = VOT)) +
     stat_summary(fun = mean, geom = "line", aes(y = Response)) +
     stat_summary(fun = mean, geom = "line", aes(y = Predicted_posterior), color = "gray") +
     stat_summary(fun.data = mean_cl_boot, geom = "pointrange", aes(y = Response), size = 1/4) +
-    facet_wrap(~ ExposureGroup, ncol = 3) 
+    facet_wrap(~ ExposureGroup, ncol = 3)
   plot(p)
-  
-  p %+% 
-    (data %>% 
-       mutate(ExposureGroup = gsub("_Up\\sto\\s", "", ExposureGroup)) %>% 
+
+  p %+%
+    (data %>%
+       mutate(ExposureGroup = gsub("_Up\\sto\\s", "", ExposureGroup)) %>%
        mutate(ExposureGroup = gsub("[ABC]A", "", ExposureGroup))) %>%
     plot()
-  
+
   data %>%
     group_by(ExposureGroup, VOT) %>%
     summarise(across(c(Response, Predicted_posterior), mean)) %>%
@@ -618,7 +619,7 @@ compare_predicted_and_actual <- function(data) {
     geom_point() +
     geom_smooth() +
     annotate(
-      geom = "text", 
+      geom = "text",
       label = paste0(
         "R^2 = ",
         round(data %>%
@@ -626,7 +627,7 @@ compare_predicted_and_actual <- function(data) {
                 . ^ 2, 3) * 100, "%"),
       x = .1, y = .9) +
     xlab('Predicted proportion "t"-responses') +
-    ylab('Observed proportion "t"-responses') 
+    ylab('Observed proportion "t"-responses')
 }
 ```
 
@@ -645,7 +646,7 @@ d.chodroff_wilson <-
     database_filename = "../data/all_observations_with_non-missing_vot_cog_f0.csv",
     min.n_per_talker_and_stop = 25,
     limits.VOT = c(-Inf, Inf),
-    # TO DO: check how much data this excludes and whether the exclusions for 
+    # TO DO: check how much data this excludes and whether the exclusions for
     # bimodality are perhaps too stringent.
     limits.f0 = c(0, 350),
     max.p_for_multimodality = .1) %>%
@@ -664,11 +665,11 @@ d.chodroff_wilson <-
   group_by(Talker, category) %>%
   sample_n(size = first(n_min)) %>%
   # Only use female talkers (TO DO: revisit whether this makes a difference)
-  filter(gender == "female") %>% 
-  ungroup() %>% 
-  # C-CuRE cues and then rename them to VOT and f0_Mel. The latter is done purely 
-  # for reasons of convenience, in order to facilitate merging with the human 
-  # perceptual data further down (since some of the functions require that the 
+  filter(gender == "female") %>%
+  ungroup() %>%
+  # C-CuRE cues and then rename them to VOT and f0_Mel. The latter is done purely
+  # for reasons of convenience, in order to facilitate merging with the human
+  # perceptual data further down (since some of the functions require that the
   # cues in the ideal observers and the cues in the perceptual data must have the
   # same names).
   mutate(across(
@@ -708,12 +709,12 @@ m_IA.VOT_f0 <-
 
 ```{r prepare-data-for-adaptive-changes}
 # Make a data frame that splits the entire data in unique exposure-test combinations.
-# This data frame will be used for adaptive changes in normalization and category 
+# This data frame will be used for adaptive changes in normalization and category
 # representations.
-d_for_ASP <- 
+d_for_ASP <-
   d_for_analysis %>%
   ungroup() %>%
-  # Exclude catch trials and the final two test blocks since we expect unlearning during those blocks 
+  # Exclude catch trials and the final two test blocks since we expect unlearning during those blocks
   # (which is not modeled)
   filter(
     !(Phase == "exposure" & is.na(Item.ExpectedResponse.Voicing)),
@@ -726,9 +727,9 @@ d_for_ASP <-
   # of any lexical, phonological, or phonetic context effects on VOT (and thus no way to predict
   # any potential differences between minimal pairs).
   rename(VOT = Item.VOT, f0_Mel = Item.F0_target_for_generation_Mel) %>%
-  # Create new condition variable that uniquely identifies what participants have seen at any of the 
-  # tests and a new block variable that identifies the type and order of blocks. Also create two 
-  # convenience variables, x (stimulus) and Response.Category (to make matching with the category 
+  # Create new condition variable that uniquely identifies what participants have seen at any of the
+  # tests and a new block variable that identifies the type and order of blocks. Also create two
+  # convenience variables, x (stimulus) and Response.Category (to make matching with the category
   # column of ideal observers/adaptors more straightforward).
   mutate(
     Condition.for_ASP = paste0(Condition.Exposure, List.ExposureBlockOrder, List.ExposureMaterials),
@@ -742,28 +743,28 @@ d_for_ASP <-
     block_order = c("test1", "exposure2", "test3", "exposure4", "test5", "exposure6", "test7")) %>%
   mutate(ExposureGroup = factor(ExposureGroup)) %>%
   select(
-    ExposureGroup, Phase, ParticipantID, Block, Trial, x, 
+    ExposureGroup, Phase, ParticipantID, Block, Trial, x,
     VOT, f0_Mel, Response.Category, Item.ExpectedResponse.Category)
 ```
 
 ```{r set-subsample-proportion}
 set.seed(1976)
-# For changes in decision-making, the adaptive algorithm is order-sensitive. This makes it computationally 
-# demanding to find the optimal parameterization for this algorithm (as optimization requires updating the 
+# For changes in decision-making, the adaptive algorithm is order-sensitive. This makes it computationally
+# demanding to find the optimal parameterization for this algorithm (as optimization requires updating the
 # data and calculating the likelihood of the test responses under the updated model, but order-sensitivity
 # means that the updating cannot be vectorized but must be calculated trial-by-trial). This makes it
-# computationally infeasible to find the optimal learning rate (beta) for the entire data set. We thus 
+# computationally infeasible to find the optimal learning rate (beta) for the entire data set. We thus
 # select a subset of participants for each exposure-test combination, optimize the parameter for that subset,
 # and then use that (approximately) 'optimal' parameter to update the *entire* data set (once) to calculate
-# the likelihood, R2, etc. for that parameter. 
-# 
-# In order to penalize all adaptive models equally, we subset the same amount of data for each model, 
+# the likelihood, R2, etc. for that parameter.
+#
+# In order to penalize all adaptive models equally, we subset the same amount of data for each model,
 # including the other two change models (even though they are computationally much less demanding to fit).
 sample_proportion_of_participants_per_exposure_test_condition <- .5
 
 # TO DO: IMPLEMENT SUBSAMPLING FOR NORMALIZATION AND FOR IBBU TO COMPARE LIKELIHOODS IN A MEANINGFUL WAY.
-# 
-# HMM, actually since the other algorithms are not order sensitive, they should not depend on how many 
+#
+# HMM, actually since the other algorithms are not order sensitive, they should not depend on how many
 # participants
 ```
 
@@ -771,14 +772,14 @@ sample_proportion_of_participants_per_exposure_test_condition <- .5
 
 ```{r}
 # Only one participant per exposure group is needed for exposure data
-# (since they all have the same exposure up to that point, and our 
-# approach to normalization is order-insensitive; so doing this separately 
+# (since they all have the same exposure up to that point, and our
+# approach to normalization is order-insensitive; so doing this separately
 # for each participant shouldn't make a difference).
-# 
+#
 # -------------------------------------------------------------------------
-# TO DO: results changes after limiting data to first participant in each 
+# TO DO: results changes after limiting data to first participant in each
 # exposure group. this is unexpected. One possibility is that this is simply
-# an optimization problem. another possibility is that participants differ 
+# an optimization problem. another possibility is that participants differ
 # in their cue means even within ExposureGroup (e.g., due to missing data)
 # even though that shouldn't be the case.
 # -------------------------------------------------------------------------
@@ -789,16 +790,16 @@ if (RESET_MODELS || !file.exists(filename.parameter)) {
   # This function is intended for the optimization run right below it
   history.optimization_normalization <- tibble(.rows = 0)
   range.prior_kappa.normalization <- c(10^-5, 10^5)
-  
+
   d_for_ASP.for_normalization <-
     d_for_ASP %>%
     group_by(ExposureGroup, Phase) %>%
     filter(
-      ParticipantID %in% 
+      ParticipantID %in%
         sample(
-          x = unique(ParticipantID), 
+          x = unique(ParticipantID),
           size = round(length(unique(ParticipantID)) * sample_proportion_of_participants_per_exposure_test_condition)))
-  
+
   best_performing_parameters.normalization <-
     optim(
       par = log(mean(range.prior_kappa.normalization)),
@@ -809,26 +810,26 @@ if (RESET_MODELS || !file.exists(filename.parameter)) {
       control = list(
         fnscale = -1,
         factr = 10^8))
-  
+
   saveRDS(best_performing_parameters.normalization, filename.parameter)
 
-  # Get the normalized data based on the optimal parameter for normalization 
+  # Get the normalized data based on the optimal parameter for normalization
   # and then prepare it for plotting
-  df.normalized <- 
+  df.normalized <-
     update_normalization_and_normalize_test_data(
       kappa = exp(best_performing_parameters.normalization$par[1]),
-      data = d_for_ASP) 
-  
+      data = d_for_ASP)
+
   df.normalized %<>%
     mutate(observationID = 1:nrow(.)) %>%
-    # Get posterior of prior model for the normalized data and join it to the 
+    # Get posterior of prior model for the normalized data and join it to the
     # data.
     left_join(
       df.normalized %>%
         group_map(
-          .f = 
+          .f =
             ~ get_posterior_from_model(
-              model = m_IO.VOT_f0, 
+              model = m_IO.VOT_f0,
               x = .x$x,
               noise_treatment = "marginalize",
               lapse_treatment = "marginalize") %>%
@@ -840,10 +841,10 @@ if (RESET_MODELS || !file.exists(filename.parameter)) {
     mutate(
       VOT = map_dbl(x.x, ~ .x[1]),
       Response = ifelse(Response.Category == "/t/", 1, 0)) %>%
-    rename(Predicted_posterior = posterior_probability) 
-  
+    rename(Predicted_posterior = posterior_probability)
+
   # TO DO: calculate likelihood for whole data set here
-  
+
   saveRDS(df.normalized, filename.df)
   d_for_ASP.for_normalization <- NULL
 } else {
@@ -866,7 +867,7 @@ filename.df <- "../models/best_performing_data.decision_making.rds"
 if (RESET_MODELS || !file.exists(filename.parameter)) {
   history.optimization_bias <- tibble(.rows = 0)
   range.beta <- c(10^-3, 10^3)
-  
+
   d_for_ASP.for_decision_changes <-
     d_for_ASP %>%
     ungroup() %>%
@@ -874,9 +875,9 @@ if (RESET_MODELS || !file.exists(filename.parameter)) {
     # blocks (which then are reformatted as part of the updating function in order to derive
     # the predicted updated decision biases after each of the three exposure blocks).
     filter(
-      # We exclude the no exposure group since its likelihood does not depend on 
+      # We exclude the no exposure group since its likelihood does not depend on
       # beta, and thus cannot affect the optimization of beta.
-      ExposureGroup != "no exposure", 
+      ExposureGroup != "no exposure",
       Phase == "test" | grepl(x = ExposureGroup, pattern = ".*Up to test7")) %>%
     # Sample proportion of participants from each exposure condition
     mutate(ExposureGroup_withoutBlock = gsub("_Up to test.*", "", ExposureGroup)) %>%
@@ -887,11 +888,11 @@ if (RESET_MODELS || !file.exists(filename.parameter)) {
                size = round(length(unique(ParticipantID)) * sample_proportion_of_participants_per_exposure_test_condition))) %>%
     arrange(ParticipantID, Block, ExposureGroup, Phase, Trial) %>%
     droplevels()
-  
+
   # Calculating exposure and test data outside of the optimization loop, in order to minimize
   # computations that need to be conducted on each optimization step.
-  d_for_ASP.for_decision_changes.exposure <- 
-    d_for_ASP.for_decision_changes %>% 
+  d_for_ASP.for_decision_changes.exposure <-
+    d_for_ASP.for_decision_changes %>%
     ungroup() %>%
     filter(Phase == "exposure") %>%
     group_by(ExposureGroup, ParticipantID, Phase) %>%
@@ -900,15 +901,15 @@ if (RESET_MODELS || !file.exists(filename.parameter)) {
       (!! sym(cues[1])) := map_dbl(x, ~ .x[1]),
       (!! sym(cues[2])) := map_dbl(x, ~ .x[2])) %>%
     group_by(ExposureGroup, ParticipantID)
-   
-  d_for_ASP.for_decision_changes.test <- 
-    d_for_ASP.for_decision_changes %>% 
+
+  d_for_ASP.for_decision_changes.test <-
+    d_for_ASP.for_decision_changes %>%
     filter(Phase == "test") %>%
     ungroup() %>%
     select(ExposureGroup, ParticipantID, x, Response.Category) %>%
     group_by(ExposureGroup, ParticipantID) %>%
     nest(data = c(x, Response.Category))
-  
+
   best_performing_parameters.bias <-
     optim(
       par = mean(log(range.beta)),
@@ -921,11 +922,11 @@ if (RESET_MODELS || !file.exists(filename.parameter)) {
         factr = 10^8))
 
   saveRDS(best_performing_parameters.bias, filename.parameter)
-  
-  # Use the optimal parameter to update the model's decision biases for *all* observations and then apply 
+
+  # Use the optimal parameter to update the model's decision biases for *all* observations and then apply
   # the model to the test data to calculate the log-likelihood and predicted responses for the entire data.
-  df.bias <- 
-    update_decision_bias_by_group( 
+  df.bias <-
+    update_decision_bias_by_group(
       prior = m_IO.VOT_f0,
       beta = exp(best_performing_parameters.bias$par),
       data =  
@@ -946,18 +947,18 @@ if (RESET_MODELS || !file.exists(filename.parameter)) {
         filter(Phase == "test") %>%
         select(ExposureGroup, ParticipantID, x, Response.Category) %>%
         group_by(ExposureGroup, ParticipantID) %>%
-        nest(data = c(x, Response.Category))) 
-  
+        nest(data = c(x, Response.Category)))
+
   # TO DO: get ll for entire data here
-  
+
   df.bias %<>%
     # Categorize test tokens
     mutate(
       categorization = future_map2(
-        model, 
-        data, 
+        model,
+        data,
         ~ get_categorization_from_MVG_ideal_observer(
-          model = .x, 
+          model = .x,
           x = .y$x,
           decision_rule = "proportional",
           noise_treatment = "marginalize",
@@ -967,10 +968,10 @@ if (RESET_MODELS || !file.exists(filename.parameter)) {
     # expected by compare_predicted_and_actual
     mutate(Response = map(data, ~ ifelse(.x$Response.Category == "/t/", 1, 0))) %>%
     select(-c(model, data)) %>%
-    unnest(c(categorization, Response)) %>% 
+    unnest(c(categorization, Response)) %>%
     mutate(VOT = map_dbl(x, ~ .x[1])) %>%
-    rename(Predicted_posterior = response) 
-  
+    rename(Predicted_posterior = response)
+
   saveRDS(df.bias, filename.df)
   d_for_ASP.for_decision_changes <- NULL
 } else {
@@ -1000,8 +1001,8 @@ update_representations <- function(
   data
 ) {
   cues <- get_cue_labels_from_model(prior)
-  
-  data %>% 
+
+  data %>%
     filter(Phase == "exposure")
     mutate(
       (!!! syms(cues))[1] := map_dbl(x, ~ .x[1]),
@@ -1023,23 +1024,23 @@ update_representations <- function(
 }
 
 get_likelihood_from_updated_representation <- function(
-    par, 
+    par,
     prior = m_IA.VOT_f0,
     data = d_for_ASP
 ) {
   kappa <- exp(par[1])
 
-  ll <- 
+  ll <-
     update_representations(
       kappa = kappa,
       data = data) %>%
     get_likelihood_from_grouped_data(model = prior)
-  
-  history.optimization_normalization <<- 
+
+  history.optimization_normalization <<-
     bind_rows(
-      history.optimization_normalization, 
-      tibble(kappa = kappa, log_likelihood = ll)) 
-  
+      history.optimization_normalization,
+      tibble(kappa = kappa, log_likelihood = ll))
+
   return(ll)
 }
 
@@ -1054,26 +1055,26 @@ if (RESET_MODELS || !file.exists(filename)) {
       control = list(
         fnscale = -1,
         factr = 10^8))
-  
+
   best_performing_parameters.normalization <- exp(best_performing_parameters.normalization$par[1])
   saveRDS(best_performing_parameters.normalization, filename)
 } else {
   best_performing_parameters.normalization <- readRDS(filename)
 }
 
-df.normalized <- 
+df.normalized <-
   update_normalization_and_normalize_test_data(
   kappa = best_performing_parameters.normalization,
-  data = d_for_ASP) 
+  data = d_for_ASP)
 
 df.normalized %<>%
   mutate(observationID = 1:nrow(.)) %>%
   left_join(
     df.normalized %>%
       group_map(
-        .f = 
+        .f =
           ~ get_categorization_from_MVG_ideal_observer(
-            model = m_IO.VOT_f0, 
+            model = m_IO.VOT_f0,
             x = .x$x,
             decision_rule = "proportional",
             noise_treatment = "marginalize",
@@ -1084,7 +1085,7 @@ df.normalized %<>%
   mutate(
     VOT = unlist(map(x.x, ~ .x[1])),
     Response = ifelse(Response.Category == "/t/", 1, 0)) %>%
-  rename(Predicted_posterior = response) 
+  rename(Predicted_posterior = response)
 
 df.normalized %>% compare_predicted_and_actual()
 ```
@@ -1093,11 +1094,11 @@ df.normalized %>% compare_predicted_and_actual()
 
 ```{r}
 summarize.NIW_ideal_adaptor_stanfit <- function(
-    x, 
-    pars = c("kappa", "nu", "m", "S", "lapse_rate"), 
+    x,
+    pars = c("kappa", "nu", "m", "S", "lapse_rate"),
     groups = c("prior")
 ) {
-  add_ibbu_stanfit_draws(x, groups = groups, summarize = F) %>% 
+  add_ibbu_stanfit_draws(x, groups = groups, summarize = F) %>%
     unnest_cue_information_in_model() %>%
     gather_variables(exclude = c(".chain", ".iteration", ".draw", ".row", "cue", "cue2", "group", "category")) %>%
     ungroup() %>%
@@ -1132,13 +1133,13 @@ summarize.NIW_ideal_adaptor_stanfit <- function(
       !! sym(unique(paste0("lower ", unique(.$.width * 100), "% ", toupper(unique(.$.interval))))) := .lower,
       !! sym(unique(paste0("upper ", unique(.$.width * 100), "% ", toupper(unique(.$.interval))))) := .upper) %>%
     select(-c(.width, .point, .interval))
-  
+
 }
 
 make_all_plots <- function(
-  fit, 
-  groups = NULL, 
-  colors.group = NULL, 
+  fit,
+  groups = NULL,
+  colors.group = NULL,
   colors.category = c("red", "blue"),
   ncol = NULL
 ) {
@@ -1146,11 +1147,11 @@ make_all_plots <- function(
   if (!is.null(groups)) {
     plot_ibbu_stanfit_parameters(fit, groups = groups, group.colors = colors.group) %>% plot()
     (plot_expected_ibbu_stanfit_categories_contour2D(fit, groups = groups, category.colors = colors.category) + facet_wrap(~ group, ncol = ncol)) %>% plot()
-    (plot_ibbu_stanfit_test_categorization(fit, groups = groups, plot_in_cue_space = T, category.colors = colors.category) + facet_wrap(~ group, ncol = ncol)) %>% plot() 
+    (plot_ibbu_stanfit_test_categorization(fit, groups = groups, plot_in_cue_space = T, category.colors = colors.category) + facet_wrap(~ group, ncol = ncol)) %>% plot()
   } else {
     plot_ibbu_stanfit_parameters(fit) %>% plot()
     plot_expected_ibbu_stanfit_categories_contour2D(fit, category.colors = colors.category) + facet_wrap(~ group, ncol = ncol) %>% plot()
-    plot_ibbu_stanfit_test_categorization(fit, plot_in_cue_space = T, category.colors = colors.category) + facet_wrap(~ group, ncol = ncol) %>% plot() 
+    plot_ibbu_stanfit_test_categorization(fit, plot_in_cue_space = T, category.colors = colors.category) + facet_wrap(~ group, ncol = ncol) %>% plot()
   }
 }
 ```
@@ -1160,36 +1161,36 @@ make_all_plots <- function(
 Here some initial plots. While the plots are back-transformed into the original cue space, the table is not (yet).
 
 ```{r, size='tiny', fig.width=12, fig.height=12, warning=FALSE, results='asis'}
-m_IA_inferred <- 
+m_IA_inferred <-
   infer_prior_beliefs(
-    exposure = d_for_ASP %>% filter(Phase == "exposure"), 
-    test = d_for_ASP %>% filter(Phase == "test"), 
+    exposure = d_for_ASP %>% filter(Phase == "exposure"),
+    test = d_for_ASP %>% filter(Phase == "test"),
     cues = c("VOT", "f0_Mel"),  
-    category = "Item.ExpectedResponse.Category", 
-    response = "Response.Category", 
+    category = "Item.ExpectedResponse.Category",
+    response = "Response.Category",
     group = "ParticipantID",
-    group.unique = "ExposureGroup", 
+    group.unique = "ExposureGroup",
     center.observations = T,   
     scale.observations = T,
     pca.observations = F,
-    sample = T, 
+    sample = T,
     file = "../models/IBBU-Tan-Jaeger2022-Experiment2-scaled-f0-uncorrected.RDS",
     warmup = 3000, iter = 4000,
     control = list(adapt_delta = .995, max_treedepth = 15))
 
-m_IA_inferred.fixed_pars <- 
+m_IA_inferred.fixed_pars <-
   infer_prior_beliefs(
-    exposure = d_for_ASP %>% filter(Phase == "exposure"), 
-    test = d_for_ASP %>% filter(Phase == "test"), 
+    exposure = d_for_ASP %>% filter(Phase == "exposure"),
+    test = d_for_ASP %>% filter(Phase == "test"),
     cues = c("VOT", "f0_Mel"),  
-    category = "Item.ExpectedResponse.Category", 
-    response = "Response.Category", 
+    category = "Item.ExpectedResponse.Category",
+    response = "Response.Category",
     group = "ParticipantID",
-    group.unique = "ExposureGroup", 
+    group.unique = "ExposureGroup",
     center.observations = T,   
     scale.observations = T,
     pca.observations = F,
-    sample = T, 
+    sample = T,
     lapse_rate = m_IO.VOT_f0$lapse_rate[[1]],
     mu_0 = m_IO.VOT_f0$mu,
     Sigma_0 = m_IO.VOT_f0$Sigma,
@@ -1205,7 +1206,7 @@ Table of median estimate and 95% highest posterior densities for all parameters 
 ```{r}
 summarize.NIW_ideal_adaptor_stanfit(
     model,
-    pars = c("kappa", "nu", "m", "S", "lapse_rate"), 
+    pars = c("kappa", "nu", "m", "S", "lapse_rate"),
     groups = c(
       "prior",
       "Cond Shift0AA_Up to test3", "Cond Shift0AA_Up to test5", "Cond Shift0AA_Up to test7",
@@ -1213,16 +1214,16 @@ summarize.NIW_ideal_adaptor_stanfit(
       "Cond Shift40AA_Up to test3", "Cond Shift40AA_Up to test5", "Cond Shift40AA_Up to test7")) %>% kable()
 
 make_all_plots(
-  model, 
+  model,
   groups = c(
     "Cond Shift0AA_Up to test3", "Cond Shift0AA_Up to test5", "Cond Shift0AA_Up to test7",
     "Cond Shift10AA_Up to test3", "Cond Shift10AA_Up to test5", "Cond Shift10AA_Up to test7",
     "Cond Shift40AA_Up to test3", "Cond Shift40AA_Up to test5", "Cond Shift40AA_Up to test7",
     "prior"),
   colors.group =  c(
-    "#550000", "#AA0000", "#FF0000", 
-    "#005500", "#00AA00", "#00FF00", 
-    "#000055", "#0000AA", "#0000FF", 
+    "#550000", "#AA0000", "#FF0000",
+    "#005500", "#00AA00", "#00FF00",
+    "#000055", "#0000AA", "#0000FF",
     "gray"),
   ncol = 3)
 ```
@@ -1260,7 +1261,7 @@ d.pars <-
 # Prepare test_data
 # --------- THIS MIGHT NEED WORK --------
 cue.labels <- get_cue_levels_from_stanfit(model)
-data.test <- 
+data.test <-
   get_test_data_from_stanfit(model) %>%
   distinct(!!! syms(cue.labels)) %>%
   { if (untransform_cues) get_untransform_function_from_stanfit(model)(.) else . } %>%
@@ -1300,113 +1301,114 @@ d.pars %>%
 The database contains 92 talkers (female = XXX, male = XXX; for details, see SI, \@ref(sec:VOT-production)).
 
 # Norming experiment: Estimating listener's expectations prior to informative exposure {sec:norming-experiment}
-The norming experiment investigates native (L1) US English listeners' categorization of word-initial stop voicing by an unfamiliar female L1 US English talker, prior to more informative exposure. Specifically, listeners heard isolated recordings from a /d/-/t/ continuum, and had to respond which word they  heard (e.g., "din" or "tin"). The recordings varied in voice onset time (VOT), the primary phonetic cue to word-initial stop voicing in L1 US English, as well as correlated secondary cues (f0 and rhyme duration). Critically, exposure was relatively uninformative about the talker's use of the phonetic cues in that all phonetic realizations occurred equally often. 
+The norming experiment investigates native (L1) US English listeners' categorization of word-initial stop voicing by an unfamiliar female L1 US English talker, prior to more informative exposure. Specifically, listeners heard isolated recordings from a /d/-/t/ continuum, and had to respond which word they  heard (e.g., "din" or "tin"). The recordings varied in voice onset time (VOT), the primary phonetic cue to word-initial stop voicing in L1 US English, as well as correlated secondary cues (f0 and rhyme duration). Critically, exposure was relatively uninformative about the talker's use of the phonetic cues in that all phonetic realizations occurred equally often.
 
 The primary goal of norming was methodological. We used the norming experiment to test basic assumptions about the paradigm and stimuli we employ in this study. We obtain estimates of the category boundary between /d/ and /t/ *for the specific stimuli used in Experiment 2*, as perceived by *the type of listeners we seek to recruit for the main experiment*. We also test whether prolonged testing across the phonetic continuum changes listeners' categorization behavior. Previous work has found that prolonged testing on uniform distributions can reduce the effects of previous exposure [e.g., @mitterer2011; @liu-jaeger2018], at least in listeners of the age group we recruit from [@scharenborg2013comparing]. However, these studies employed only a small number of 5-7 perceptually highly ambiguous stimuli, each repeated many times. In the norming experiment, we employ a much larger set of stimuli that span the entire continuum from very clear /d/s to very clear /t/s, each presented only twice. If prolonged testing changes listeners' responses, this has to be taken into account in the design of the main.
 
 
-## Methods 
+## Methods
 ### Participants
-Participants were recruited over Amazon's Mechanical Turk platform, and paid $2.50 each (for a targeted remuneration of \$6/hour). The experiment was only visible to Mechanical Turk participants who (1) had an IP address in the United States, (2) had an approval rating of 95% based on at least 50 previous assignments, and (3) had not previously participated in any experiment on stop voicing from our lab. 
+Participants were recruited over Amazon's Mechanical Turk platform, and paid $2.50 each (for a targeted remuneration of \$6/hour). The experiment was only visible to Mechanical Turk participants who (1) had an IP address in the United States, (2) had an approval rating of 95% based on at least 50 previous assignments, and (3) had not previously participated in any experiment on stop voicing from our lab.
 
-24 L1 US English listeners (female = 9; mean age = 36.2 years; SD age = 9.2 years) completed the experiment. To be eligible, participants had to confirm that they (1) spent at least the first 10 years of their life in the US speaking only English, (2) were in a quiet place, and (3) wore in-ear or over-the-ears headphones that cost at least \$15. 
+24 L1 US English listeners (female = 9; mean age = 36.2 years; SD age = 9.2 years) completed the experiment. To be eligible, participants had to confirm that they (1) spent at least the first 10 years of their life in the US speaking only English, (2) were in a quiet place, and (3) wore in-ear or over-the-ears headphones that cost at least \$15.
 
-### Materials 
-The VOT continua ranged from -100ms VOT to +130ms VOT in 5ms steps. Experiment 1 employs 24 of these steps (-100, -50, -10, 5  `r paste0(seq(15, 90, 5), collapse = ", ")`, `r paste0(seq(100, 130, 10), collapse = ", ")`). VOT tokens in the lower and upper ends were distributed over larger increments because stimuli in those ranges were expected to elicit floor and ceiling effects, respectively. 
+### Materials
+The VOT continua ranged from -100ms VOT to +130ms VOT in 5ms steps. Experiment 1 employs 24 of these steps (-100, -50, -10, 5  `r paste0(seq(15, 90, 5), collapse = ", ")`, `r paste0(seq(100, 130, 10), collapse = ", ")`). VOT tokens in the lower and upper ends were distributed over larger increments because stimuli in those ranges were expected to elicit floor and ceiling effects, respectively.
 
 We further set the F0 at vowel onset to follow the speaker's natural correlation which was estimated through a linear regression analysis of all the recorded speech tokens. We did this so that we could determine the approximate corresponding f0 values at each VOT value along the continua as predicted by this talker's VOT. The duration of the vowel was set to follow the natural trade-off relation with VOT reported in @allen1999. This approach closely resembles that taken in @theodore-monto2019, and resulted in continuum steps that sound highly natural [unlike the robotic-sounding stimuli employed in @clayards2008; @kleinschmidt-jaeger2016]. All stimuli are available as part of the OSF repository for this article.
 
-In addition to the critical minimal pair continua we also recorded three words that did not did not contain any stop consonant sounds ("flare", "share", and "rare"). These word recordings were used as catch trials. Stimulus intensity was set to 70 dB sound pressure level for all recordings. 
+In addition to the critical minimal pair continua we also recorded three words that did not did not contain any stop consonant sounds ("flare", "share", and "rare"). These word recordings were used as catch trials. Stimulus intensity was set to 70 dB sound pressure level for all recordings.
 
 ### Procedure
-The code for the experiment is available as part of the OSF repository for this article. A live version is available at (https://www.hlp.rochester.edu//experiments/DLVOT/series-A/experiment-A.html?list_test=NORM-A-forward-test). The first page of the experiment informed participants of their rights and the requirements for the experiment: that they had to be native listeners of English, wear headphones for the entire duration of the experiment, and be in a quiet room without distractions. Participants had to pass a headphone test, and were asked to keep the volume unchanged throughout the experiment. Participants could only advance to the start of the experiment by acknowledging each requirement and consenting to the guidelines of the Research Subjects Review Board of the University of Rochester. 
+The code for the experiment is available as part of the OSF repository for this article. A live version is available at (https://www.hlp.rochester.edu//experiments/DLVOT/series-A/experiment-A.html?list_test=NORM-A-forward-test). The first page of the experiment informed participants of their rights and the requirements for the experiment: that they had to be native listeners of English, wear headphones for the entire duration of the experiment, and be in a quiet room without distractions. Participants had to pass a headphone test, and were asked to keep the volume unchanged throughout the experiment. Participants could only advance to the start of the experiment by acknowledging each requirement and consenting to the guidelines of the Research Subjects Review Board of the University of Rochester.
 
 On the next page, participants were informed about the task for the remainder of the experiment. They were informed that they would hear a female talker speak a single word on each trial, and had to select which word they heard. Participants were instructed to listen carefully and answer as quickly and as accurately as possible. They were also alerted to the fact that the recordings were subtly different and therefore may sound repetitive. This was done to encourage their full attention.
 
 Each trial started with a dark-shaded green fixation dot being displayed. At 500ms from trial onset, two minimal pair words appeared on the screen, as shown in Figure \@ref(fig:exp1-example-trial). At 1000ms from trial onset, the fixation dot would turn bright green and an audio recording from the matching minimal pair continuum started playing. Participants were required to click on the word they heard. For each participant, /d/-initial words were either always displayed on the left side or always displayed on the right side. Across participants, this ordering was counter-balanced. After participants clicked on the word, the next trial began.
 
 
-Participants heard 192 target trials (four minimal pair continua, each with 24 VOT steps, each heard twice). In addition, participants heard 12 catch trials. On catch trials, participant saw two written catch stimuli on the screen (e.g., "flare" and "rare"), and heard one of them (e.g. "rare"). Since these recordings were easily distinguishable, they served as a check on participant attention throughout the experiment. 
+Participants heard 192 target trials (four minimal pair continua, each with 24 VOT steps, each heard twice). In addition, participants heard 12 catch trials. On catch trials, participant saw two written catch stimuli on the screen (e.g., "flare" and "rare"), and heard one of them (e.g. "rare"). Since these recordings were easily distinguishable, they served as a check on participant attention throughout the experiment.
 
-The order of trials was randomized for each participant with the only constraint that no stimulus was repeated before each stimulus had been heard at least once. Catch trials were distributed randomly throughout the experiment with the constraint that no more than two catch trials would occur in a row. Participants were given the opportunity to take breaks after every 60 trials. Participants took an average of 12 minutes (SD = 4.8) to complete the 204 trials, after which they answered a short survey about the experiment. 
+The order of trials was randomized for each participant with the only constraint that no stimulus was repeated before each stimulus had been heard at least once. Catch trials were distributed randomly throughout the experiment with the constraint that no more than two catch trials would occur in a row. Participants were given the opportunity to take breaks after every 60 trials. Participants took an average of 12 minutes (SD = 4.8) to complete the 204 trials, after which they answered a short survey about the experiment.
 
 ```{r, echo=FALSE, warning=FALSE}
 # load formatted dataframe from experiment 1
 d.test <- read_csv("../data/d.test.Exp1.csv", show_col_types = F)
 
 # load f0-5ms-into-vowel measurements of stimuli
-d.f0.5ms <- 
-  read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv", show_col_types = F) %>% 
-  dplyr::select(filename, VOT, f0_5ms_into_vowel) %>% 
+d.f0.5ms <-
+  read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv", show_col_types = F) %>%
+  dplyr::select(filename, VOT, f0_5ms_into_vowel) %>%
   # This is the F0 measured in the same way as Chodroff & Wilson (2018)
         # (i.e., 5ms into the vowel)
   rename(Item.VOT = VOT,
-         Item.F0 = f0_5ms_into_vowel,
-         Item.Filename = filename) %>% 
+         Item.Measured_f0 = f0_5ms_into_vowel,
+         Item.Filename = filename) %>%
   mutate(Item.Filename = paste0(Item.Filename, ".wav"))
 
-d.test %<>% 
+d.test %<>%
 ungroup() %>%
-  left_join(d.f0.5ms, by = c("Item.Filename", "Item.VOT")) %>% 
-              mutate(Item.F0_Mel = normMel(Item.F0))
+  left_join(d.f0.5ms, by = c("Item.Filename", "Item.VOT")) %>%
+              mutate(Item.Measured_f0_Mel = normMel(Item.Measured_f0),
+                     Item.f0_Mel = normMel(Item.F0_target_for_generation_script))
 
 # mark catch trials rows and check correct
-d.test %<>% 
+d.test %<>%
   mutate(
     Is.CatchTrial = ifelse(Item.ExpectedResponse %in% c("flare", "rare", "share"), TRUE, FALSE),
     CatchTrial.Correct = ifelse(Is.CatchTrial == TRUE & Item.MinimalPair == Response, TRUE, FALSE),
-    CatchTrial.Correct = ifelse(Is.CatchTrial == FALSE, NA, CatchTrial.Correct)) %>% 
-  group_by(ParticipantID) %>% 
+    CatchTrial.Correct = ifelse(Is.CatchTrial == FALSE, NA, CatchTrial.Correct)) %>%
+  group_by(ParticipantID) %>%
   mutate(Excluded.due.to.CatchTrial = ifelse(sum(CatchTrial.Correct, na.rm = TRUE) < 10, TRUE, FALSE))
 
 # get the rows removed due to catch trial performance
-excluded.data.due.to.catch <- 
-  d.test %>% 
+excluded.data.due.to.catch <-
+  d.test %>%
   group_by(ParticipantID) %>%
   filter(Excluded.due.to.CatchTrial == TRUE)
 
 # set RT exclusion criteria and create excluded columns
 d.test %<>%
   group_by(ParticipantID) %>%
-  filter(Excluded.due.to.CatchTrial == FALSE) %>% 
+  filter(Excluded.due.to.CatchTrial == FALSE) %>%
   mutate(Response.log_RT = log10(ifelse(Response.RT <= 0, NA_real_, Response.RT)),
-         Response.log_RT.scaled = scale(Response.log_RT), 
+         Response.log_RT.scaled = scale(Response.log_RT),
          # this gives each subject's mean log_RT
-         Response.log_RT.mean = mean(Response.log_RT, na.rm = T)) %>% 
-  ungroup() %>% 
+         Response.log_RT.mean = mean(Response.log_RT, na.rm = T)) %>%
+  ungroup() %>%
   mutate(Excluded.participant.due.to.mean.RT = ifelse(abs(scale(Response.log_RT.mean)) > 3, TRUE, FALSE))
          # Get participants whose means are more than 3x sd of mean of participant means. Mean of means is the same as mean of all rows because each participant has the same number of rows.
-         
-excluded.participants.due.to.mean.RT <- 
-  d.test %>% 
+
+excluded.participants.due.to.mean.RT <-
+  d.test %>%
   filter(Excluded.participant.due.to.mean.RT == TRUE)
 
-d.test %<>% 
-  filter(Excluded.due.to.CatchTrial == FALSE & Excluded.participant.due.to.mean.RT == FALSE) %>% 
-  group_by(ParticipantID) %>% 
+d.test %<>%
+  filter(Excluded.due.to.CatchTrial == FALSE & Excluded.participant.due.to.mean.RT == FALSE) %>%
+  group_by(ParticipantID) %>%
   mutate(Excluded.trial.due.to.RT = ifelse(abs(Response.log_RT.scaled) > 3, TRUE, FALSE))
-  
+
 # get the rows removed due to RT
-excluded.data.due.to.RT <- 
-  d.test %>% 
-  filter(Excluded.participant.due.to.mean.RT == TRUE | Excluded.trial.due.to.RT == TRUE) 
+excluded.data.due.to.RT <-
+  d.test %>%
+  filter(Excluded.participant.due.to.mean.RT == TRUE | Excluded.trial.due.to.RT == TRUE)
 
 # get the proportion of rows excluded from analysis
 proportion.excluded <- (nrow(excluded.data.due.to.RT)) / (nrow(d.test))
 
 # make a dataframe after exclusion to be used for analysis
-d.test.excluded <- 
-  d.test %>% 
+d.test.excluded <-
+  d.test %>%
   filter(
-    Is.CatchTrial == FALSE, 
-    Excluded.due.to.CatchTrial == FALSE, 
-    Excluded.trial.due.to.RT == FALSE) %>% 
+    Is.CatchTrial == FALSE,
+    Excluded.due.to.CatchTrial == FALSE,
+    Excluded.trial.due.to.RT == FALSE) %>%
   mutate(Response.ProportionVoiceless = ifelse(Response.Voicing == "voiceless", 1, 0))
 ```
 
 
 ### Exclusions
-We excluded from analysis participants who committed more than 2 errors out of the 12 catch trials (<83% accuracy, N = 3), participants with an average reaction time (RT) more than three standard deviations from the mean of the by-participant means (N = 0), and participants who reported not to have used headphones (N = 0) or not to be native (L1) speakers of US English (N = 0). For the remaining participants, trials that were more than three SDs from the participant's mean RT were excluded from analysis (`r proportion.excluded * 100 `%). Finally, we excluded participants (N = 0) who had less than 50% data remaining after these exclusions. 
+We excluded from analysis participants who committed more than 2 errors out of the 12 catch trials (<83% accuracy, N = 3), participants with an average reaction time (RT) more than three standard deviations from the mean of the by-participant means (N = 0), and participants who reported not to have used headphones (N = 0) or not to be native (L1) speakers of US English (N = 0). For the remaining participants, trials that were more than three SDs from the participant's mean RT were excluded from analysis (`r proportion.excluded * 100 `%). Finally, we excluded participants (N = 0) who had less than 50% data remaining after these exclusions.
 
 ### Analysis approach
 The goal of our behavioral analyses was to address three methodological questions that are of relevance to Experiment 2: (1) whether our stimuli resulted in 'reasonable' categorisation functions, (2) whether these functions differed between the four minimal pair items, and (3) whether participants' categorisation functions changed throughout the 192 test trials.
@@ -1415,18 +1417,18 @@ To address these questions, we fit a single Bayesian mixed-effects psychometric 
 
 We fit the model using the package \texttt{brms} [@R-brms_a] in R [@R; @RStudio]. Following previous work from our lab [@horberg2021; @xie2021cross], we used weakly regularizing priors to facilitate model convergence. For fixed effect parameters, we standardized continuous predictors (VOT) by dividing through twice their standard deviation [@gelman2008], and used Student priors centered around zero with a scale of 2.5 units [following @gelman-prior2008] and 3 degrees of freedom. For random effect standard deviations, we used a Cauchy prior with location 0 and scale 2, and for random effect correlations, we used an uninformative LKJ-Correlation prior with its only parameter set to 1, describing a uniform prior over correlation matrices [@Lewandowski2009]. Four chains with 2000 warm-up samples and 2000 posterior samples each were fit. No divergent transitions after warm-up were observed, and all $\hat{R}$ were close to 1.
 
-### Expectations 
-Based on previous experiments, we expected a strong positive effect of VOT, with increasing proportions of "t"-responses for increasing VOTs. We did not have clear expectations for the effect of trial other than that responses should become more uniformed (i.e move towards 50-50 "d"/"t"-bias or 0-log-odds) as the experiment progressed [@liu-jaeger2018] due to the un-informativeness of the stimuli. 
-Previous studies with similar paradigms have typically found lapse rates of 0-10% [< -2.2 log-odds, e.g., @clayards2008; @kleinschmidt-jaeger2016]. 
+### Expectations
+Based on previous experiments, we expected a strong positive effect of VOT, with increasing proportions of "t"-responses for increasing VOTs. We did not have clear expectations for the effect of trial other than that responses should become more uniformed (i.e move towards 50-50 "d"/"t"-bias or 0-log-odds) as the experiment progressed [@liu-jaeger2018] due to the un-informativeness of the stimuli.
+Previous studies with similar paradigms have typically found lapse rates of 0-10% [< -2.2 log-odds, e.g., @clayards2008; @kleinschmidt-jaeger2016].
 
 ```{r, warning=FALSE}
 # set the mean and SD values for scaling/unscaling purposes
 VOT.mean_exp1 <- mean(d.test.excluded$Item.VOT)
 VOT.sd_exp1 <- sd(d.test.excluded$Item.VOT)
-Trial.mean <- mean(d.test.excluded$Trial) 
+Trial.mean <- mean(d.test.excluded$Trial)
 Trial.sd <- sd(d.test.excluded$Trial)
-f0.mean_exp1 <- mean(d.test.excluded$Item.F0_Mel)
-f0.sd_exp1 <- sd(d.test.excluded$Item.F0_Mel)
+f0.mean_exp1 <- mean(d.test.excluded$Item.f0_Mel)
+f0.sd_exp1 <- sd(d.test.excluded$Item.f0_Mel)
 
 d.test.excluded %<>%
   mutate(
@@ -1454,7 +1456,7 @@ if (file.exists("../models/conditional_effects_VOT_Trial.rds")) {
   psychometric_fit_exp1 <- read_rds("../models/conditional_effects_VOT_Trial.rds")
 } else {
   int_conditions <- list(sTrial = sort(unique((d.test.excluded$Trial - Trial.mean)) / (2 * Trial.sd)))
-  
+
   psychometric_fit_exp1 <-
     conditional_effects(
       fit_mix,
@@ -1462,17 +1464,17 @@ if (file.exists("../models/conditional_effects_VOT_Trial.rds")) {
       int_conditions = int_conditions,
       ndraws = 1000,
       plot = F)[[1]]
-  
+
   write_rds(psychometric_fit_exp1, file = "../models/conditional_effects_VOT_Trial.rds")
 }
 
 # get the PSE from the fitted categorisation function
-PSE.fit_mix <- descale(-(summary(fit_mix)$fixed["mu2_Intercept", 1] / summary(fit_mix)$fixed["mu2_sVOT", 1]), VOT.mean_exp1, VOT.sd_exp1) 
+PSE.fit_mix <- descale(-(summary(fit_mix)$fixed["mu2_Intercept", 1] / summary(fit_mix)$fixed["mu2_sVOT", 1]), VOT.mean_exp1, VOT.sd_exp1)
 
 # get posterior samples of intercept and slope, and median qi of the PSEs
-post_sample_norm <- fit_mix %>% 
-  spread_draws(b_mu2_Intercept, b_mu2_sVOT) %>% 
-  mutate(PSE = descale(-(b_mu2_Intercept/b_mu2_sVOT), VOT.mean_exp1, VOT.sd_exp1)) %>% 
+post_sample_norm <- fit_mix %>%
+  spread_draws(b_mu2_Intercept, b_mu2_sVOT) %>%
+  mutate(PSE = descale(-(b_mu2_Intercept/b_mu2_sVOT), VOT.mean_exp1, VOT.sd_exp1)) %>%
   median_qi(PSE)
 ```
 
@@ -1504,15 +1506,15 @@ if (file.exists("../models/categorisation_by_min_pair.rds")) {
 ```{r fitted-categorisation-minimal-pair"}
 remove_axes_titles <- theme(axis.title.x = element_blank(),
                             axis.title.y = element_blank())
-MinPair_plot <- 
-  cat_minimalpair %>% 
-  group_by(sVOT, Item.MinimalPair) %>% 
-  ggplot(aes(x = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1), 
+MinPair_plot <-
+  cat_minimalpair %>%
+  group_by(sVOT, Item.MinimalPair) %>%
+  ggplot(aes(x = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1),
              y = .epred, colour = Item.MinimalPair)) +
   stat_lineribbon(alpha = .9, .width = 0.95) +
   scale_y_continuous("Fitted proportion of 't'-responses") +
   scale_color_manual("Minimal Pair", breaks = c("dilltill", "dimtim", "dintin", "diptip"),  
-                     values = c("#002699", "#0040ff", "#668cff", "#b3c6ff"), 
+                     values = c("#002699", "#0040ff", "#668cff", "#b3c6ff"),
                      labels = c("dill/till", "dim/tim", "din/tin", "dip/tip")) +
   scale_fill_brewer("CI", palette = "Greys", type = "qual") +
   remove_axes_titles +
@@ -1523,65 +1525,65 @@ MinPair_plot <-
 
 
 ```{r psychometric-plot, fig.width=3.8, fig.height =2.6, message=FALSE}
-p.vot <- 
-  psychometric_fit_exp1 %>% 
-  group_by(sVOT) %>% 
+p.vot <-
+  psychometric_fit_exp1 %>%
+  group_by(sVOT) %>%
   summarise(estimate__ = mean(estimate__),
          lower__ = mean(lower__),
-         upper__ = mean(upper__)) %>% 
-  ggplot(aes(x = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1), 
+         upper__ = mean(upper__)) %>%
+  ggplot(aes(x = descale(sVOT, VOT.mean_exp1, VOT.sd_exp1),
              y = estimate__)) +
   scale_x_continuous("VOT (ms)", breaks = scales::pretty_breaks(n = 4), limits = c(-100, 130)) +
   scale_y_continuous("Fitted proportion of 't' responses") +
   geom_ribbon(
-    aes(ymin = lower__, 
+    aes(ymin = lower__,
         ymax = upper__), alpha = .08) +
-  geom_line(linewidth = 1.5, 
+  geom_line(linewidth = 1.5,
             colour = "#333333",
             alpha = .8) +
   geom_errorbarh(
-    data = post_sample_norm %>% 
+    data = post_sample_norm %>%
       mutate(y = .01),
-    mapping = aes(xmin = .lower, xmax = .upper, y = y), 
+    mapping = aes(xmin = .lower, xmax = .upper, y = y),
     color = "#333333",
     height = 0,
     alpha = .8,
-    size = 1, 
+    size = 1,
     inherit.aes = F) +
-  geom_label(data = post_sample_norm %>% 
+  geom_label(data = post_sample_norm %>%
       mutate(y = 0.01, PSE = round(PSE)),
     mapping = aes(x = PSE, y = y, label = PSE),
-    color = "#333333", 
+    color = "#333333",
     size = 1.8,
     label.padding = unit(0.18, "lines"),
     inherit.aes = F) +
   annotate(
     geom = "text",
     x = 75,
-    y = 0.01, 
+    y = 0.01,
     label = paste(round(post_sample_norm[[2]]), "ms", "-", round(post_sample_norm[[3]]), "ms"),
     size = 2.5,
     colour = "darkgray") +
 ## transformation of by-participant means into empirical logits
    # stat_summary(
-   #  data = d.test.excluded %>% 
-   #    group_by(ParticipantID, Item.VOT) %>% 
+   #  data = d.test.excluded %>%
+   #    group_by(ParticipantID, Item.VOT) %>%
    #    mutate(Response.ProportionVoiceless = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
-   #    summarise(Response.EmpiricalLogitVoiceless = qlogis((sum(Response.ProportionVoiceless) + .5)/(length(Response.ProportionVoiceless) + 1))), 
-   #  mapping = aes(x = Item.VOT, 
+   #    summarise(Response.EmpiricalLogitVoiceless = qlogis((sum(Response.ProportionVoiceless) + .5)/(length(Response.ProportionVoiceless) + 1))),
+   #  mapping = aes(x = Item.VOT,
    #                y = Response.EmpiricalLogitVoiceless),
    #  geom = "pointrange",
    #  fun.data = function(x){mean_cl_boot(x) %>% mutate(across(c(y, ymin, ymax), ~ plogis(.x)))},
    #  size = .4,
    #  colour = "#c4b7a6",
    #  alpha = .6,
-   #  inherit.aes = F) 
+   #  inherit.aes = F)
   stat_summary(
-    data = d.test.excluded %>% 
-      group_by(ParticipantID, Item.VOT) %>% 
+    data = d.test.excluded %>%
+      group_by(ParticipantID, Item.VOT) %>%
       mutate(Response.ProportionVoiceless = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
-      summarise(Response.ProportionVoiceless = mean(Response.ProportionVoiceless)), 
-    mapping = aes(x = Item.VOT, 
+      summarise(Response.ProportionVoiceless = mean(Response.ProportionVoiceless)),
+    mapping = aes(x = Item.VOT,
                   y = Response.ProportionVoiceless),
     geom = "pointrange",
     fun.data = "mean_cl_boot",
@@ -1600,7 +1602,7 @@ MinPair_plot <- MinPair_plot + labs(x = "VOT (ms)")
 xlab <- p.vot$labels$x
 p.vot$labels$x <- MinPair_plot$labels$x <- " "
 
-(p.vot | MinPair_plot) + 
+(p.vot | MinPair_plot) +
   plot_layout(ncol = 2, guides = "collect") &
   theme(legend.position = "top")
 ```
@@ -1608,7 +1610,8 @@ p.vot$labels$x <- MinPair_plot$labels$x <- " "
 
 
 ```{r by-participant-lapse-bias, warning=FALSE, fig.height=2.6, fig.width=6.5}
-lapse_participant <- fit_mix %>% spread_draws(r_ParticipantID__theta1[ParticipantID, term], b_theta1_Intercept) %>%
+lapse_participant <- fit_mix %>%
+  spread_draws(r_ParticipantID__theta1[ParticipantID, term], b_theta1_Intercept) %>%
   group_by(ParticipantID) %>%
   mutate(ParticipantID = factor(ParticipantID),
          Participant_lapse = b_theta1_Intercept + r_ParticipantID__theta1,
@@ -1634,8 +1637,8 @@ estimate_minpair <- fit_mix %>% spread_draws(r_Item.MinimalPair__mu2[Item.Minima
               values_from = c(predicted_eff, .lower, .upper))
 ```
 
-The lapse rate was estimated to be on the slightly larger side, but within the expected range 
-(`r make_CI(fit_mix, "theta1_Intercept", "theta1_Intercept < 0")`). Maximum a posteriori (MAP) estimates of by-participant lapse rates ranged from XX . Very high lapse rates were estimated for four of the participants with one in particular whose CI indicated exceptionally high uncertainty. These lapse rates might reflect data quality issues with Mechanical Turk that started to emerge over recent years [see @REFS; and, specifically for experiments on speech perception, @cummings-theodore2023], and we return to this issue in Experiment 2. 
+The lapse rate was estimated to be on the slightly larger side, but within the expected range
+(`r make_CI(fit_mix, "theta1_Intercept", "theta1_Intercept < 0")`). Maximum a posteriori (MAP) estimates of by-participant lapse rates ranged from XX . Very high lapse rates were estimated for four of the participants with one in particular whose CI indicated exceptionally high uncertainty. These lapse rates might reflect data quality issues with Mechanical Turk that started to emerge over recent years [see @REFS; and, specifically for experiments on speech perception, @cummings-theodore2023], and we return to this issue in Experiment 2.
 
 The response bias were estimated to slightly favor "t"-responses (`r make_CI(fit_mix, "mu1_Intercept", "mu1_Intercept > 0")`), as also visible in Figure \@ref(fig:fitted-categorisation-plots) (left).
 Unsurprisingly, the psychometric model suggests high uncertainty about the participant-specific response biases, as it is difficult to reliably estimate participant-specific biases while also accounting for trial and VOT effects (range of by-participant MAP estimates: XX). For all but four participants, the 95% CI includes the hypothesis that responses were unbiased. Of the remaining four participants, three were biased towards "t"-responses and one was biased toward "d"-responses.
@@ -1654,24 +1657,24 @@ Overall, there was little evidence that participants substantially changed their
 d.intercept_estimates <-
   full_join(
     fit_mix_test_nested %>% get_intercepts_and_slopes(),
-    fit_mix_exposure_nested %>% get_intercepts_and_slopes() %>% 
+    fit_mix_exposure_nested %>% get_intercepts_and_slopes() %>%
       mutate(Intercept = Intercept + fixef(fit_mix_exposure)[3] * ((VOT.mean_test - VOT.mean_exposure) / (2 * VOT.sd_exposure)))) %>%
   group_by(Condition.Exposure, Block) %>%
   summarise(
     across(
       c(Intercept, slope),
-      list(lower = ~ quantile(.x, probs = .025), median = median, upper = ~ quantile(.x, probs = .975)))) 
+      list(lower = ~ quantile(.x, probs = .025), median = median, upper = ~ quantile(.x, probs = .975))))
 
 
 p.intercept_1to7_adjusted <-
 d.intercept_estimates %>%   
   ggplot(aes(
-    x = Block, y = Intercept_median, 
+    x = Block, y = Intercept_median,
     ymin = Intercept_lower, ymax = Intercept_upper,
     colour = Condition.Exposure, group = Condition.Exposure)) +
   geom_rect(
     data = tibble(
-      xmin = c(seq(0.55, 6.55, 2), seq(7.55, 8.55, 1)), 
+      xmin = c(seq(0.55, 6.55, 2), seq(7.55, 8.55, 1)),
       xmax = c(seq(1.45, 7.45, 2), seq(8.45, 9.45, 1))),
     aes(xmin = xmin, xmax = xmax),
     ymin = -Inf, ymax = Inf, fill = "grey", alpha = .1, inherit.aes = F) +
@@ -1696,4 +1699,3 @@ p.intercept_1to7_adjusted
 ```{r session_info, echo=FALSE, results='markup'}
 devtools::session_info()
 ```
-
