@@ -106,15 +106,22 @@ d.estimates <-
 
 
 ```{r predictions-exposure-conditions-by-IOs}
-# Database for prior
+# Get production data to estimate the range of PSEs expected from distribution of 
+# VOT and f0 in the input
+#
+# We are subsetting the Mixer 6 data to talkers that have at least 15 instances each 
+# of the relevant stops (we're being conservative here since we're creating ideal 
+# observers below that are averaging across talkers, and so we'd like to make sure 
+# that each talker-specific IO is based on enough data).
+
 d.chodroff_wilson <-
   get_ChodroffWilson_data(
     database_filename = "../data/all_observations_with_non-missing_vot_cog_f0.csv",
-    min.n_per_talker_and_stop = 25,
+    categories = c("/d/", "/t/"),
+    min.n_per_talker_and_category = 5,
     limits.VOT = c(-Inf, Inf),
-    limits.f0 = c(0, 350),
+    limits.f0 = c(-Inf, Inf),
     max.p_for_multimodality = .1) %>%
-  filter(poa == "/d/-/t/") %>%
   group_by(Talker, category) %>%
   mutate(n = n()) %>%
   group_by(Talker) %>%
@@ -321,7 +328,8 @@ d.true_shift <-
 
 
 # compute PSEs from the 92 talkers in Chodroff-Wilson corpus
-d.talkerPSEs <- get_IO_categorization(
+d.talkerPSEs <- 
+  get_IO_categorization(
     data = d.chodroff_wilson,
     cues = c("VOT"),
     groups = c("Talker", "gender"),

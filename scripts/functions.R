@@ -87,8 +87,9 @@ descale <- function(x, mean, sd) {
 }
 
 get_ChodroffWilson_data <- function(
-    database_filename,
-    min.n_per_talker_and_stop = 0,
+    database_filename = "all_observations_with_non-missing_vot_cog_f0.csv",
+    categories = c("/b/", "/d/", "/g/", "/p/", "/t/", "/k/"),
+    min.n_per_talker_and_category = 0,
     limits.VOT = c(-Inf, Inf),
     limits.f0 = c(0, Inf),
     max.p_for_multimodality = 1
@@ -97,9 +98,13 @@ get_ChodroffWilson_data <- function(
   require(magrittr)
   require(diptest)
 
+  # Standardizing variable names and values to confirm to what we usually use.
   d.chodroff_wilson <-
     read_csv(database_filename, show_col_types = FALSE) %>%
-    rename(category = stop, VOT = vot, f0 = usef0, Talker = subj, Word = word, Trial = trial, Vowel = vowel, vowel_duration = vdur) %>%
+    rename(
+      category = stop, VOT = vot, f0 = usef0, Talker = subj, Word = word, Trial = trial,
+      Vowel = vowel, vowel_duration = vdur, word_duration = wdur, speech_rate = spk_rate,
+      spectral_M1 = cog, spectral_M2 = spectral.var, spectral_M3 = skew, spectral_M4 = kurtosis) %>%
     mutate(
       category =
         plyr::mapvalues(
@@ -122,49 +127,45 @@ get_ChodroffWilson_data <- function(
         ifelse(category %in% c("/b/", "/d/", "/g/"), "yes", "no"),
         levels = c("yes", "no"))) %>%
     mutate(across(c(Talker, Word, gender, category), factor)) %>%
-    dplyr::select(Talker, Word, Trial, Vowel, gender, category, poa, voicing, VOT, f0, vowel_duration)
+    dplyr::select(
+      Talker, Word, Trial, Vowel, gender, category, poa, voicing, VOT, f0,
+      spectral_M1, spectral_M2, spectral_M3, spectral_M4, vowel_duration,
+      word_duration, speech_rate)
 
-  # Filter VOT and f0 for absolute values to deal with outliers
   d.chodroff_wilson %<>%
+    # Filter VOT and f0 for absolute values to deal with outliers
     filter(
       between(VOT, min(limits.VOT), max(limits.VOT)),
-      between(f0, min(limits.f0), max(limits.f0)))
-
-  # Keep only talkers with at last n.min observations for each stop
-  # (this is done both prior to and after the multimodality test in order to avoid low N warnings)
-  d.chodroff_wilson %<>%
-    group_by(Talker, category) %>%
-    mutate(n = length(category)) %>%
-    group_by(Talker) %>%
-    mutate(n = ifelse(any(is.na(n)), 0, min(n))) %>%
-    ungroup() %>%
-    filter(n > min.n_per_talker_and_stop)
+      between(f0, min(limits.f0), max(limits.f0))) %>%
+    # Filter to requested categories
+    filter(category %in% categories) %>%
+    droplevels()
 
   # Identify and remove talkers with bimodal f0 distributions
   # (indicating pitch halving/doubling)
-  d.chodroff_wilson %<>%
-    group_by(Talker) %>%
-    mutate(f0_Mel = phonR::normMel(f0)) %>%
-    group_by(Talker, category) %>%
-    mutate(
-      f0_Mel.multimodal = dip.test(f0_Mel)$p.value < max.p_for_multimodality) %>%
-    filter(!f0_Mel.multimodal) %>%
-    droplevels()
+  suppressWarnings(
+    d.chodroff_wilson %<>%
+      group_by(Talker) %>%
+      mutate(f0_Mel = phonR::normMel(f0)) %>%
+      group_by(Talker, category) %>%
+      mutate(
+        f0_Mel.multimodal = dip.test(f0_Mel)$p.value < max.p_for_multimodality) %>%
+      filter(!f0_Mel.multimodal) %>%
+      droplevels())
 
   # Keep only talkers with at least n.min observations for each stop
   d.chodroff_wilson %<>%
     group_by(Talker, category) %>%
-    mutate(n = length(category)) %>%
+    mutate(n_per_category = length(category)) %>%
     group_by(Talker) %>%
-    mutate(n = ifelse(any(is.na(n)), 0, min(n))) %>%
+    mutate(n_per_category = ifelse(any(is.na(n_per_category)), 0, min(n_per_category))) %>%
     ungroup() %>%
-    filter(n > min.n_per_talker_and_stop)
+    filter(n_per_category > min.n_per_talker_and_category)
 
   # Get Mel and Semitones, then C-CuRE
   d.chodroff_wilson %<>%
     group_by(Talker) %>%
-    mutate(
-      f0_semitones = 12 * log(f0 / mean(f0)) / log(2)) %>%
+    mutate(f0_semitones = 12 * log(f0 / mean(f0)) / log(2)) %>%
     ungroup()
 }
 

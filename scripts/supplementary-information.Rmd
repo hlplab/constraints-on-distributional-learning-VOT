@@ -598,7 +598,7 @@ Use database from @chodroff-wilson2018 as a starting point, and then expose the 
 compare_predicted_and_actual <- function(data) {
   p <-
     data %>%
-    mutate(ExposureGroup = gsub("_Up\\sto\\s", "", ExposureGroup)) %>%
+    mutate(ExposureGroup = gsub("_Up\\sto", "", ExposureGroup)) %>%
     ggplot(aes(x = VOT)) +
     stat_summary(fun = mean, geom = "line", aes(y = Response)) +
     stat_summary(fun = mean, geom = "line", aes(y = Predicted_posterior), color = "gray") +
@@ -608,16 +608,22 @@ compare_predicted_and_actual <- function(data) {
 
   p %+%
     (data %>%
-       mutate(ExposureGroup = gsub("_Up\\sto\\s", "", ExposureGroup)) %>%
-       mutate(ExposureGroup = gsub("[ABC]A", "", ExposureGroup))) %>%
+       mutate(
+         ExposureGroup = gsub("_Up\\sto", "", ExposureGroup),
+         ExposureGroup = gsub("[ABC]A", "", ExposureGroup))) %>%
     plot()
 
   data %>%
     group_by(ExposureGroup, VOT) %>%
     summarise(across(c(Response, Predicted_posterior), mean)) %>%
+    mutate(
+      ExposureGroup = gsub("_Up\\sto", "", ExposureGroup),
+      ExposureGroup = gsub("[ABC]A", "", ExposureGroup),
+      ExposureGroup = gsub("^.*Shift([0-9]+).*$", "+\\1", ExposureGroup),
+      Test = gsub("^.*(test.*)$", "\\1", ExposureGroup)) %>%
     ggplot(aes(x = Predicted_posterior, y = Response)) +
     geom_point() +
-    geom_smooth() +
+    geom_smooth(color = ExposureGroup, alpha = Test) +
     annotate(
       geom = "text",
       label = paste0(
@@ -640,32 +646,37 @@ compare_predicted_and_actual <- function(data) {
 # means of the cues.
 cues <- c("VOT", "f0_Mel")
 
-# Database for prior
+# Get production data for the prior.
+#
+# We are reimporting the data because here we are subsetting the Mixer 6 data to 
+# talkers that have at least 15 instances each of the relevant stops (we're being 
+# conservative here since we're creating ideal observers below that are averaging 
+# across talkers, and so we'd like to make sure that each talker-specific IO is 
+# based on enough data).
 d.chodroff_wilson <-
   get_ChodroffWilson_data(
     database_filename = "../data/all_observations_with_non-missing_vot_cog_f0.csv",
-    min.n_per_talker_and_stop = 25,
+    categories = c("/d/", "/t/"),
+    min.n_per_talker_and_category = 15,
     limits.VOT = c(-Inf, Inf),
-    # TO DO: check how much data this excludes and whether the exclusions for
-    # bimodality are perhaps too stringent.
-    limits.f0 = c(0, 350),
+    limits.f0 = c(-Inf, Inf),
     max.p_for_multimodality = .1) %>%
-  filter(poa == "/d/-/t/") %>%
+  # Only use female talkers 
+  # (TO DO: revisit whether this makes a difference)
+  filter(gender == "female") %>%
+  # Subsample talkers to talkers that have both categories, and subsample
+  # tokens, so as to make the data of each talker balanced with regard to
+  # the number of tokens per categories)
   group_by(Talker, category) %>%
-  mutate(n = n()) %>%
+  mutate(n_per_category = n()) %>%
   group_by(Talker) %>%
-  # Subsample n tokens, as determined by category with fewer tokens
   mutate(
-    n_min = min(n),
+    n_min_per_category = min(n_per_category),
     n_category = n_distinct(category)) %>%
   # Select talkers that have both /d/ and /t/ observations
   filter(n_category == 2) %>%
-  # Sample as many tokens from each unique combination of talker and category
-  # as there are available for the talker with the least amount of data.
   group_by(Talker, category) %>%
-  sample_n(size = first(n_min)) %>%
-  # Only use female talkers (TO DO: revisit whether this makes a difference)
-  filter(gender == "female") %>%
+  sample_n(size = first(n_min_per_category)) %>%
   ungroup() %>%
   # C-CuRE cues and then rename them to VOT and f0_Mel. The latter is done purely
   # for reasons of convenience, in order to facilitate merging with the human
@@ -675,6 +686,8 @@ d.chodroff_wilson <-
   mutate(across(
     c("VOT", "f0", "f0_Mel", "f0_semitones"),
     function(x) apply_ccure(x, data = .)))
+
+n_distinct(d.chodroff_wilson$Talker)
 
 prior_marginal_VOT_f0_stats <-
   d.chodroff_wilson %>%
@@ -854,7 +867,9 @@ if (RESET_MODELS || !file.exists(filename.parameter)) {
 
 cat("Changes in normalization achieve maximum log-likelihood of", best_performing_parameters.normalization$value, "on", sample_proportion_of_participants_per_exposure_test_condition * 100, "percent of the data for kappa =", exp(best_performing_parameters.normalization$par))
 cat("The same kappa achieved log-likelihood of", NA, "one whole data set.")
+```
 
+```{r, fig.width=7, fig.height=6}
 df.normalized %>% compare_predicted_and_actual()
 ```
 
@@ -981,7 +996,9 @@ if (RESET_MODELS || !file.exists(filename.parameter)) {
 
 cat("Changes in decision-making achieve maximum likelihood of", best_performing_parameters.bias$value, "on", sample_proportion_of_participants_per_exposure_test_condition * 100, "percent of the data for beta =", exp(best_performing_parameters.bias$par))
 cat("The same kappa achieved log-likelihood of", NA, "one whole data set.")
+```
 
+```{r, fig.width=7, fig.height=6}
 df.bias %>% compare_predicted_and_actual()
 ```
 
@@ -1036,58 +1053,31 @@ get_likelihood_from_updated_representation <- function(
       data = data) %>%
     get_likelihood_from_grouped_data(model = prior)
 
-  history.optimization_normalization <<-
+  history.optimization_representation <<-
     bind_rows(
-      history.optimization_normalization,
-      tibble(kappa = kappa, log_likelihood = ll))
+      history.optimization_representation,
+      tibble(kappa = kappa, nu = nu, log_likelihood = ll))
 
   return(ll)
 }
 
 if (RESET_MODELS || !file.exists(filename)) {
-  best_performing_parameters.normalization <-
+  best_performing_parameters.representation <-
     optim(
-      par = log(mean(range.prior_kappa.normalization)),
+      par = log(mean(range.prior_kappanu.representation)),
       fn = get_likelihood_from_updated_normalization,
       method = "L-BFGS-B",
-      lower = log(min(range.prior_kappa.normalization)),
-      upper = log(max(range.prior_kappa.normalization)),
+      lower = log(min(range.prior_kappanu.representation)),
+      upper = log(max(range.prior_kappanu.representation)),
       control = list(
         fnscale = -1,
         factr = 10^8))
 
-  best_performing_parameters.normalization <- exp(best_performing_parameters.normalization$par[1])
-  saveRDS(best_performing_parameters.normalization, filename)
+  best_performing_parameters.representation <- exp(best_performing_parameters.representation$par[1])
+  saveRDS(best_performing_parameters.representation, filename)
 } else {
-  best_performing_parameters.normalization <- readRDS(filename)
+  best_performing_parameters.representation <- readRDS(filename)
 }
-
-df.normalized <-
-  update_normalization_and_normalize_test_data(
-  kappa = best_performing_parameters.normalization,
-  data = d_for_ASP)
-
-df.normalized %<>%
-  mutate(observationID = 1:nrow(.)) %>%
-  left_join(
-    df.normalized %>%
-      group_map(
-        .f =
-          ~ get_categorization_from_MVG_ideal_observer(
-            model = m_IO.VOT_f0,
-            x = .x$x,
-            decision_rule = "proportional",
-            noise_treatment = "marginalize",
-            lapse_treatment = "marginalize") %>%
-          filter(category == "/t/")) %>%
-      .[[1]],
-    by = "observationID") %>%
-  mutate(
-    VOT = unlist(map(x.x, ~ .x[1])),
-    Response = ifelse(Response.Category == "/t/", 1, 0)) %>%
-  rename(Predicted_posterior = response)
-
-df.normalized %>% compare_predicted_and_actual()
 ```
 
 ## Changes in category representations while inferring prior category means and covariance matrices
@@ -1140,7 +1130,7 @@ make_all_plots <- function(
   fit,
   groups = NULL,
   colors.group = NULL,
-  colors.category = c("red", "blue"),
+  colors.category = c("blue", "red"),
   ncol = NULL
 ) {
   plot_ibbu_stanfit_parameter_correlations(fit, category.colors = colors.category) %>% plot()
