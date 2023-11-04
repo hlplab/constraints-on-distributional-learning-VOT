@@ -1,0 +1,108 @@
+# Libraries ---------------------------------------------------------------------
+
+# If installation of remote libraries is necessary, uncomment this code:
+# library(curl)               # Check availability of internet for install of remote libraries
+# if(!requireNamespace("remotes", quietly = TRUE)) if (has_internet()) install.packages("remotes")
+# if (has_internet()) remotes::install_github("crsh/papaja")
+# if (has_internet()) remotes::install_github("hlplab/MVBeliefUpdatr")
+# if (has_internet()) remotes::install_github('kleinschmidt/phonetic-sup-unsup')
+
+library(papaja)             # APA formatted ms
+
+library(MASS)               # sliding difference coding (load before tidyverse b/c of select-conflict)
+library(tidyverse)          # keeping things tidy
+library(magrittr)           # pipes
+library(rlang)              # quosures (in functions)
+library(assertthat)         # asserts (in functions)
+
+library(patchwork)          # plot layouts
+library(magick)
+library(webshot)
+library(ggstance)
+library(ggtext)            # make geom textboxes
+library(ggnewscale)        # extra colour scale in ggplots
+library(kableExtra)        # for formatting tables
+
+library(linguisticsdown)    # IPA symbols
+library(latexdiffr)         # track changes
+
+library(lme4)               # c-CuRE fn and cue adjustments
+library(brms)               # fit Bayesian regression models
+library(tidybayes)          # posterior samples and plots in tidy format
+library(broom.mixed)        # extracting effects from lmer models
+library(posterior)
+
+library(phonR)              # normalization of f0
+library(supunsup)           # Kleinschmidt & Jaeger 2016 data
+library(MVBeliefUpdatr)     # generating Ideal Observers
+library(furrr)              # future_map for parallelization
+
+# Functions ---------------------------------------------------------------------
+source("functions.R")
+
+
+# Constants ---------------------------------------------------------------------
+RESET_FIGURES = F   # switch on/off whether figures that have been stored in files are regenerated
+RESET_MODELS = F    # switch on/off whether models that have been stored in files are rerun
+
+# For Stan/rstan
+chains <- 4
+options(
+  width = 1000,
+  mc.cores = min(chains, parallel::detectCores()))
+
+# Get citation information
+r_refs(file = "latex-stuff/r-references.bib")
+
+# plot formatting
+myGplot.defaults("paper")
+colours.condition <- c("Shift0" = "#cc0000", "Shift10" = "#12D432", "Shift40" = "#0481F3")
+
+set.seed(42007)
+
+# Load data ---------------------------------------------------------------------
+
+# Get production data for the prior.
+#
+# We are reimporting the data because here we are subsetting the Mixer 6 data to
+# talkers that have at least 15 instances each of the relevant stops (we're being
+# conservative here since we're creating ideal observers baseed on this data that
+# are averaging across talkers, and so we'd like to make sure that each talker-
+# specific IO is based on enough data).
+d.chodroff_wilson <-
+  get_ChodroffWilson_data(
+    database_filename = "../data/all_observations_with_non-missing_vot_cog_f0.csv",
+    categories = c("/d/", "/t/"),
+    min.n_per_talker_and_category = 15,
+    limits.VOT = c(-Inf, Inf),
+    limits.f0 = c(-Inf, Inf),
+    max.p_for_multimodality = .1) %>%
+  # Only use female talkers
+  # (TO DO: revisit whether this makes a difference)
+  filter(gender == "female") %>%
+  # Subsample talkers to talkers that have both categories, and subsample
+  # tokens, so as to make the data of each talker balanced with regard to
+  # the number of tokens per categories)
+  group_by(Talker, category) %>%
+  mutate(n_per_category = n()) %>%
+  group_by(Talker) %>%
+  mutate(
+    n_min_per_category = min(n_per_category),
+    n_category = n_distinct(category)) %>%
+  # Select talkers that have both /d/ and /t/ observations
+  filter(n_category == 2) %>%
+  group_by(Talker, category) %>%
+  sample_n(size = first(n_min_per_category)) %>%
+  ungroup() %>%
+  # C-CuRE cues and then rename them to VOT and f0_Mel. The latter is done purely
+  # for reasons of convenience, in order to facilitate merging with the human
+  # perceptual data further down (since some of the functions require that the
+  # cues in the ideal observers and the cues in the perceptual data must have the
+  # same names).
+  mutate(across(
+    c("VOT", "f0", "f0_Mel", "f0_semitones"),
+    function(x) apply_ccure(x, data = .)))
+
+message("Imported phonetic data from Chodroff & Wilson (2018). After applying exlcusion criteria, this data contains ", n_distinct(d.chodroff_wilson$Talker), " talkers")
+
+PREAMBLE_LOADED <- TRUE
