@@ -872,9 +872,6 @@ p.density <-
     alpha = 0.8,
   inherit.aes = F,
   show.legend = T) +
-  geom_vline(xintercept = 25, colour = "#cc0000", linetype = 2) +
-  geom_vline(xintercept = 35, colour = "#12D432", linetype = 2) +
-  geom_vline(xintercept = 65, colour = "#0481F3", linetype = 2) +
   scale_colour_manual("Condition",
              labels = c("baseline", "+10ms", "+40ms"),
              values = colours.condition) +
