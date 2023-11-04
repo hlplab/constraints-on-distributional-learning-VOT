@@ -1,3 +1,7 @@
+```{r setup, include=FALSE, message=FALSE}
+if (!exists("PREAMBLE_LOADED")) source("preamble.R")
+```
+
 # Introduction
 One of the hallmarks of human speech perception is its adaptivity. Listeners' interpretation of acoustic input can change within minutes of exposure to an unfamiliar talker, supporting robust speech recognition across talkers [@bradlow2008; @clarke2004; @xie2018; @xie2021]. Recent reviews have identified distributional learning of marginal cue statistics ['normalization', @apfelbaum-mcmurray2015; @mcmurray-jongman2011; @magnuson-nusbaum2007] or the statistics of cue-to-category mappings as an important mechanism affording this adaptivity ['representational learning', @clayards2008; @idemaru-holt2011; @kleinschmidt-jaeger2015; @davis-sohoglu2020; for review, @schertz-clare2020; @xie2023]. This hypothesis has gained considerable influence over the past decade, with findings that changes in listener perception are qualitatively predicted by the statistics of exposure stimuli [@bejjanki2011; @clayards2008; @idemaru-holt2020; @kleinschmidt2012; @munson2011; @nixon2016; @theodore-monto2019; @tan2021; for important caveats, see @harmon2019].
 

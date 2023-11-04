@@ -1,13 +1,5 @@
-```{r load-libraries}
-require(tidyverse)
-require(magrittr)
-
-require(brms)
-require(MVBeliefUpdatr)
-require(phonR)
-require(rsample)
-
-source("functions.R")
+```{r, include=FALSE, message=FALSE}
+if (!exists("PREAMBLE_LOADED")) source("preamble.R")
 ```
 
 ## Results
@@ -51,7 +43,7 @@ fit_mix_exposure <-
 fitted_lapse <- plogis(fixef(fit_mix_test)[[2]])
 ```
 
-We analyzed participants' categorization responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric models, using brms [@R-brms_a] in R [@R; @RStudio, for details, see SI, \@ref(sec:analysis-approach)]. Psychometric models account for attentional lapses while estimating participants' categorization functions. Failing to account for attentional lapses---while commonplace in research on speech perception [but see @clayards2008; @kleinschmidt-jaeger2016]---can lead to biased estimates of categorization boundaries [@prins2011; @wichmann-hill2001]. For the present experiment, however, lapse rates were negligible (`r make_CI(fit_mix_test, "theta1_Intercept")`), and all results replicate in simple mixed-effects logistic regressions [@jaeger2008]. 
+We analyzed participants' categorization responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric models, using brms [@R-brms_a] in R [@R; @RStudio, for details, see SI, \@ref(sec:analysis-approach)]. Psychometric models account for attentional lapses while estimating participants' categorization functions. Failing to account for attentional lapses---while commonplace in research on speech perception [but see @clayards2008; @kleinschmidt-jaeger2016]---can lead to biased estimates of categorization boundaries [@prins2011; @wichmann-hill2001]. For the present experiment, however, lapse rates were negligible (`r print_CI(fit_mix_test, "theta1_Intercept")`), and all results replicate in simple mixed-effects logistic regressions [@jaeger2008]. 
 
 Each psychometric model regressed participants' categorization responses against the full factorial interaction of VOT, exposure condition, and block, while including the maximal random effect structure (see SI, \@ref(sec:analysis-approach). Figure \@ref(fig:plot-fit-slope-PSE) summarizes the results that we describe in more detail next. Panels A and B show participants’ categorization responses during exposure and test blocks, along with the categorization function estimated from those responses via the mixed-effects psychometric models. These panels facilitate comparison between exposure conditions within each block. Panels C and D show the slope and point of subject equality (PSE)---i.e., the point at which participants are equally likely to respond "d" and "t"---of the categorization function across blocks and conditions. These panels facilitate comparison across blocks within each exposure condition. Here we focus on the test blocks, which were identical within and across exposure conditions. Analyses of the exposure blocks are reported in the SI (\@ref(sec:exposure-analyses)), and replicate all effects found in the test blocks. 
 
@@ -102,45 +94,6 @@ d.estimates <-
       c(Intercept, slope, PSE),
       list(lower = ~ quantile(.x, probs = .025), median = median, upper = ~ quantile(.x, probs = .975)))) 
 ```
-
-
-
-```{r predictions-exposure-conditions-by-IOs}
-# Get production data to estimate the range of PSEs expected from distribution of 
-# VOT and f0 in the input
-#
-# We are subsetting the Mixer 6 data to talkers that have at least 15 instances each 
-# of the relevant stops (we're being conservative here since we're creating ideal 
-# observers below that are averaging across talkers, and so we'd like to make sure 
-# that each talker-specific IO is based on enough data).
-
-d.chodroff_wilson <-
-  get_ChodroffWilson_data(
-    database_filename = "../data/all_observations_with_non-missing_vot_cog_f0.csv",
-    categories = c("/d/", "/t/"),
-    min.n_per_talker_and_category = 5,
-    limits.VOT = c(-Inf, Inf),
-    limits.f0 = c(-Inf, Inf),
-    max.p_for_multimodality = .1) %>%
-  group_by(Talker, category) %>%
-  mutate(n = n()) %>%
-  group_by(Talker) %>%
-  # subsample n tokens, as determined by category with fewer tokens
-  mutate(
-    n_min = min(n),
-    n_category = n_distinct(category)) %>%
-  # select talkers with both /d/ and /t/ observations
-  filter(n_category == 2) %>%
-  group_by(Talker, category) %>%
-  sample_n(size = first(n_min)) %>%
-  filter(gender == "female") %>% 
-  ungroup() %>% 
-  mutate(across(
-    c("VOT", "f0", "f0_Mel", "f0_semitones"),
-    list(CCuRE = function(x) apply_ccure(x, data = .)),
-    .names = "{.col}.CCuRE")) 
-```
-
 
 
 ```{r}
@@ -832,11 +785,11 @@ cond_means_exposure <- d_for_analysis %>%
 ```{r prepare-quantile-plot}
 # specify quantiles for density plots
 quantile_levels <- c(.05, .25, .5, .75, .95)
-d_breaks <- density_quantiles(x = d.chodroff_wilson %>% filter(category == "/d/") %>% pull(VOT.CCuRE),
-                               y = d.chodroff_wilson %>% filter(category == "/d/") %>% pull(f0_Mel.CCuRE),
+d_breaks <- density_quantiles(x = d.chodroff_wilson %>% filter(category == "/d/") %>% pull(VOT),
+                               y = d.chodroff_wilson %>% filter(category == "/d/") %>% pull(f0_Mel),
                                quantiles = quantile_levels)
-t_breaks <- density_quantiles(x = d.chodroff_wilson %>% filter(category == "/t/") %>% pull(VOT.CCuRE),
-                               y = d.chodroff_wilson %>% filter(category == "/t/") %>% pull(f0_Mel.CCuRE),
+t_breaks <- density_quantiles(x = d.chodroff_wilson %>% filter(category == "/t/") %>% pull(VOT),
+                               y = d.chodroff_wilson %>% filter(category == "/t/") %>% pull(f0_Mel),
                                quantiles = quantile_levels)
 
 # matching breaks in each category to corresponding quantile
@@ -848,7 +801,7 @@ quantile_breaks <- tibble(quantile_levels, d_breaks, t_breaks)
 
 p.density <-
   d.chodroff_wilson %>%
-  ggplot(aes(x = VOT.CCuRE, y = f0_Mel.CCuRE, linetype = category, group = category)) +
+  ggplot(aes(x = VOT, y = f0_Mel, linetype = category, group = category)) +
   geom_density2d(
     data = . %>% filter(category == "/d/"),
     aes(colour = d_quantile[as.character(after_stat(level))]),

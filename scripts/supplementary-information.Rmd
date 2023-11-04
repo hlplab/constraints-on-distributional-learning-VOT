@@ -1,3 +1,7 @@
+```{r, include=FALSE, message=FALSE}
+if (!exists("PREAMBLE_LOADED")) source("preamble.R")
+```
+
 <!-- Do NOT knit this document. It is part of a larger document. Instead knit the main document (my-apa-formatted-article) 
      If you want to separate the SI from the rest of the paper, we recommend you do so AFTER knitting them into a single PDF.
      This will make sure that all references to sections, figures, tables, etc. are working as intended. You can easily separate
@@ -645,49 +649,6 @@ compare_predicted_and_actual <- function(data) {
 # Our approach to C-CuREing removes effects of speech rate as well as talker-specific
 # means of the cues.
 cues <- c("VOT", "f0_Mel")
-
-# Get production data for the prior.
-#
-# We are reimporting the data because here we are subsetting the Mixer 6 data to 
-# talkers that have at least 15 instances each of the relevant stops (we're being 
-# conservative here since we're creating ideal observers below that are averaging 
-# across talkers, and so we'd like to make sure that each talker-specific IO is 
-# based on enough data).
-d.chodroff_wilson <-
-  get_ChodroffWilson_data(
-    database_filename = "../data/all_observations_with_non-missing_vot_cog_f0.csv",
-    categories = c("/d/", "/t/"),
-    min.n_per_talker_and_category = 15,
-    limits.VOT = c(-Inf, Inf),
-    limits.f0 = c(-Inf, Inf),
-    max.p_for_multimodality = .1) %>%
-  # Only use female talkers 
-  # (TO DO: revisit whether this makes a difference)
-  filter(gender == "female") %>%
-  # Subsample talkers to talkers that have both categories, and subsample
-  # tokens, so as to make the data of each talker balanced with regard to
-  # the number of tokens per categories)
-  group_by(Talker, category) %>%
-  mutate(n_per_category = n()) %>%
-  group_by(Talker) %>%
-  mutate(
-    n_min_per_category = min(n_per_category),
-    n_category = n_distinct(category)) %>%
-  # Select talkers that have both /d/ and /t/ observations
-  filter(n_category == 2) %>%
-  group_by(Talker, category) %>%
-  sample_n(size = first(n_min_per_category)) %>%
-  ungroup() %>%
-  # C-CuRE cues and then rename them to VOT and f0_Mel. The latter is done purely
-  # for reasons of convenience, in order to facilitate merging with the human
-  # perceptual data further down (since some of the functions require that the
-  # cues in the ideal observers and the cues in the perceptual data must have the
-  # same names).
-  mutate(across(
-    c("VOT", "f0", "f0_Mel", "f0_semitones"),
-    function(x) apply_ccure(x, data = .)))
-
-n_distinct(d.chodroff_wilson$Talker)
 
 prior_marginal_VOT_f0_stats <-
   d.chodroff_wilson %>%
@@ -1628,9 +1589,9 @@ estimate_minpair <- fit_mix %>% spread_draws(r_Item.MinimalPair__mu2[Item.Minima
 ```
 
 The lapse rate was estimated to be on the slightly larger side, but within the expected range
-(`r make_CI(fit_mix, "theta1_Intercept", "theta1_Intercept < 0")`). Maximum a posteriori (MAP) estimates of by-participant lapse rates ranged from XX . Very high lapse rates were estimated for four of the participants with one in particular whose CI indicated exceptionally high uncertainty. These lapse rates might reflect data quality issues with Mechanical Turk that started to emerge over recent years [see @REFS; and, specifically for experiments on speech perception, @cummings-theodore2023], and we return to this issue in Experiment 2.
+(`r print_CI(fit_mix, "theta1_Intercept", "theta1_Intercept < 0")`). Maximum a posteriori (MAP) estimates of by-participant lapse rates ranged from XX . Very high lapse rates were estimated for four of the participants with one in particular whose CI indicated exceptionally high uncertainty. These lapse rates might reflect data quality issues with Mechanical Turk that started to emerge over recent years [see @REFS; and, specifically for experiments on speech perception, @cummings-theodore2023], and we return to this issue in Experiment 2.
 
-The response bias were estimated to slightly favor "t"-responses (`r make_CI(fit_mix, "mu1_Intercept", "mu1_Intercept > 0")`), as also visible in Figure \@ref(fig:fitted-categorisation-plots) (left).
+The response bias were estimated to slightly favor "t"-responses (`r print_CI(fit_mix, "mu1_Intercept", "mu1_Intercept > 0")`), as also visible in Figure \@ref(fig:fitted-categorisation-plots) (left).
 Unsurprisingly, the psychometric model suggests high uncertainty about the participant-specific response biases, as it is difficult to reliably estimate participant-specific biases while also accounting for trial and VOT effects (range of by-participant MAP estimates: XX). For all but four participants, the 95% CI includes the hypothesis that responses were unbiased. Of the remaining four participants, three were biased towards "t"-responses and one was biased toward "d"-responses.
 
 There was no convincing evidence of a main effect of trial ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sTrial", "mu2_sTrial < 0")`). Given the slight overall bias towards "t"-responses, the direction of this effect indicates that participants converged towards a 50/50 bias as the test phase proceeded. This is also evident in Figure \@ref(fig:fitted-categorisation-plots) (right). In contrast, there was clear evidence for a positive main effect of VOT on the proportion of "t"-responses ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sVOT", "mu2_sVOT > 0")`). The effect of VOT was consistent across all minimal pair words as evident from the slopes of the fitted lines by minimal pair \@ref(fig:fitted-categorisation-plots) (left). MAP estimates of by minimal pair slopes ranged from . The by minimal-pair intercepts were more varied (MAP estimates: ) with one of the pairs, dim/tim having a slightly lower intercept resulting in fewer 't'-responses on average. In all, this justifies our assumptions that word pair would not have a substantial effect on categorisation behaviour. From the parameter estimates of the overall fit we obtained the category boundary from the point of subjective equality (PSE) `r( descale(-(summary(fit_mix)$fixed["mu2_Intercept", 1] / summary(fit_mix)$fixed["mu2_sVOT", 1]), VOT.mean_exp1, VOT.sd_exp1) ms)` which we use for the design of Experiment 2.

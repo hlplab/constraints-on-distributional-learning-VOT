@@ -1,13 +1,5 @@
-```{r, stand-alone-preamble}
-require(tidyverse)
-require(magrittr)
-
-require(brms)
-require(tidybayes)
-require(MVBeliefUpdatr)
-require(phonR)
-
-source("functions.R")
+```{r, include=FALSE, message=FALSE}
+if (!exists("PREAMBLE_LOADED")) source("preamble.R")
 ```
 
 # Experiment
@@ -102,12 +94,6 @@ d.exposure_trials <-
 # set variances of categories
 var_d <- 80
 var_t <- 270
-
-# from https://stackoverflow.com/questions/44283852/merging-expressions-for-plotting
-comb_plotmath <- function(...) {
-  Reduce(function(x, y) substitute(x ~ y, env = list(x = x, y = y)), 
-         list(...))
-}
 
 d.means <- 
   crossing(

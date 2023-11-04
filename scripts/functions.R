@@ -1,6 +1,20 @@
-# It is recommended to put all your functions that are used across reports for this project in one place.
-# Try hard to assure backward compatibility.
+# General functionality ----------------------------------------------
+logit_to_prob <- function(model, term, index = 1) {
+  paste0(round(plogis(as.numeric(summary(model)$fixed[term, index])) * 100, 1), "%")
+}
 
+# function to transform Gelman-scaled values back
+descale <- function(x, mean, sd) {
+  x_0 = (x * 2 * sd) + mean
+  return(x_0)
+}
+
+
+# Knitr output formatting --------------------------------------------
+percent <- function(x) paste0(round(x * 100, 1), "%")
+
+
+# Plotting -----------------------------------------------------------
 myGplot.defaults = function(
   type = c("paper","poster","slides")[1],
   base_size = if (type == "paper") { 10 } else if (type == "slides") { 32 } else if (type == "poster") { 36 } else { 10 },
@@ -38,54 +52,27 @@ myGplot.defaults = function(
   }
 }
 
-percent <- function(x) paste0(round(x * 100, 1), "%")
+remove_all_axes <-
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
+remove_axes_titles <-
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank())
+remove_x_guides <-
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.x = element_blank())
 
-# function to get PSE from a model already in tibble format
-get_PSE <- function(model, y) {
-  y <- model %>% pull(y)
-  as.numeric(model[which(abs(y - .5) == min(abs(y - .5))), 1])
+# from https://stackoverflow.com/questions/44283852/merging-expressions-for-plotting
+comb_plotmath <- function(...) {
+  Reduce(function(x, y) substitute(x ~ y, env = list(x = x, y = y)),
+         list(...))
 }
 
 
-# Function for calculating CI from logits of a model summary
-get_coefficient_fr_model <- function(model, term) {
-  round(as.numeric(summary(model)$fixed[term, 1]), 1)
-}
-
-get_bf <- function(model, hypothesis) {
-  h <- hypothesis(model, hypothesis)[[1]]
-  paste0(
-    "\\hat{\\beta} = ", round(h$Estimate, 2),
-    ",\\ 90\\%{\\rm -CI} = [", round(h$CI.Lower, 3), ", ", round(h$CI.Upper, 3),
-    "],\\ BF = ", round(h$Evid.Ratio, 1),
-    ",\\ p_{posterior} = ", signif(h$Post.Prob, 3))
-}
-
-make_CI <- function(model, term) {
-  paste0(round(plogis(as.numeric(summary(model)$fixed[term, 1])) * 100, 1),
-         "%, 95%-CI: ",
-         paste0(round(plogis(as.numeric(summary(model)$fixed[term, 3:4])) * 100, 1), collapse = " to "), "%")
-}
-
-# Function to get identity CI of a model summary
-get_CI <- function(model, term, hypothesis) {
-  paste0(round(as.numeric(summary(model)$fixed[term, 1]), 1), " 95%-CI: ",
-         paste(round(as.numeric(summary(model)$fixed[term, 3:4]), 1), collapse = " to "),
-         "; ",
-         get_bf(model = model, hypothesis = hypothesis))
-}
-
-
-logit_to_prob <- function(model, term, index = 1) {
-  paste0(round(plogis(as.numeric(summary(model)$fixed[term, index])) * 100, 1), "%")
-}
-
-# function to transform Gelman-scaled values back
-descale <- function(x, mean, sd) {
-  x_0 = (x * 2 * sd) + mean
-  return(x_0)
-}
-
+# Load data --------------------------------------------------------------
 get_ChodroffWilson_data <- function(
     database_filename = "all_observations_with_non-missing_vot_cog_f0.csv",
     categories = c("/b/", "/d/", "/g/", "/p/", "/t/", "/k/"),
@@ -167,6 +154,43 @@ get_ChodroffWilson_data <- function(
     group_by(Talker) %>%
     mutate(f0_semitones = 12 * log(f0 / mean(f0)) / log(2)) %>%
     ungroup()
+}
+
+
+# Get info from psychometric model -----------------------------------------------------------
+
+# function to get PSE from a model already in tibble format
+get_PSE <- function(model, y) {
+  y <- model %>% pull(y)
+  as.numeric(model[which(abs(y - .5) == min(abs(y - .5))), 1])
+}
+
+# Function for calculating CI from logits of a model summary
+get_coefficient_fr_model <- function(model, term) {
+  round(as.numeric(summary(model)$fixed[term, 1]), 1)
+}
+
+get_bf <- function(model, hypothesis) {
+  h <- hypothesis(model, hypothesis)[[1]]
+  paste0(
+    "\\hat{\\beta} = ", round(h$Estimate, 2),
+    ",\\ 90\\%{\\rm -CI} = [", round(h$CI.Lower, 3), ", ", round(h$CI.Upper, 3),
+    "],\\ BF = ", round(h$Evid.Ratio, 1),
+    ",\\ p_{posterior} = ", signif(h$Post.Prob, 3))
+}
+
+print_CI <- function(model, term) {
+  paste0(round(plogis(as.numeric(summary(model)$fixed[term, 1])) * 100, 1),
+         "%, 95%-CI: ",
+         paste0(round(plogis(as.numeric(summary(model)$fixed[term, 3:4])) * 100, 1), collapse = " to "), "%")
+}
+
+# Function to get identity CI of a model summaryx
+get_CI <- function(model, term, hypothesis) {
+  paste0(round(as.numeric(summary(model)$fixed[term, 1]), 1), " 95%-CI: ",
+         paste(round(as.numeric(summary(model)$fixed[term, 3:4]), 1), collapse = " to "),
+         "; ",
+         get_bf(model = model, hypothesis = hypothesis))
 }
 
 # NORMALIZATION -----------------------------------------------------------
