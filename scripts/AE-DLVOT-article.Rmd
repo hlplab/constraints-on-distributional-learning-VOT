@@ -78,78 +78,8 @@ always_allow_html: true
 
 \setcounter{secnumdepth}{5}
 
-```{r libraries, include=FALSE, message=FALSE}
-# If installation of remote libraries is necessary, uncomment this code:
-# library(curl)               # Check availability of internet for install of remote libraries
-# if(!requireNamespace("remotes", quietly = TRUE)) if (has_internet()) install.packages("remotes")
-# if (has_internet()) remotes::install_github("crsh/papaja")
-# if (has_internet()) remotes::install_github("hlplab/MVBeliefUpdatr")
-# if (has_internet()) remotes::install_github('kleinschmidt/phonetic-sup-unsup')
-
-library(papaja)             # APA formatted ms
-
-library(MASS)               # sliding difference coding (load before tidyverse b/c of select-conflict)
-library(tidyverse)          # keeping things tidy
-library(magrittr)           # pipes
-library(rlang)              # quosures (in functions)
-library(assertthat)         # asserts (in functions)
-
-library(patchwork)          # plot layouts  
-library(magick)
-library(webshot)
-library(ggstance)
-library(ggtext)            # make geom textboxes
-library(ggnewscale)        # extra colour scale in ggplots
-library(kableExtra)        # for formatting tables
-
-library(linguisticsdown)    # IPA symbols
-library(latexdiffr)         # track changes
-
-library(lme4)               # c-CuRE fn and cue adjustments
-library(brms)               # fit Bayesian regression models
-library(tidybayes)          # posterior samples and plots in tidy format
-library(broom.mixed)        # extracting effects from lmer models
-library(posterior)
-
-library(phonR)              # normalization of f0
-library(supunsup)           # Kleinschmidt & Jaeger 2016 data
-library(MVBeliefUpdatr)     # generating Ideal Observers
-library(furrr)              # future_map for parallelization
-```
-
-
-```{r constants-general, include=FALSE}
-# IF you're using brms or rstan, uncomment the following:
-chains <- 4
-options(
-  width = 1000,
-  mc.cores = min(chains, parallel::detectCores()))
-
-# plot formatting
-colours.condition <- c("Shift0" = "#cc0000", "Shift10" = "#12D432", "Shift40" = "#0481F3")
-remove_all_axes <- 
-  theme(axis.title.y = element_blank(),
-        axis.title.x = element_blank(),
-        axis.text.y = element_blank(),
-        axis.ticks.y = element_blank())
-remove_axes_titles <- 
-  theme(axis.title.x = element_blank(),
-        axis.title.y = element_blank())
-remove_x_guides <- 
-  theme(axis.text.x = element_blank(),
-        axis.ticks.x = element_blank(),
-        axis.title.x = element_blank())
-```
-
-
-```{r functions-general, include=FALSE}
-source("functions.R")
-
-# For plotting
-myGplot.defaults("paper")
-
-# Get citation information
-r_refs(file = "latex-stuff/r-references.bib")
+```{r, include=FALSE, message=FALSE}
+if (!exists("PREAMBLE_LOADED")) source("preamble.R")
 ```
 
 ```{r knitr-setup, include=FALSE}
@@ -175,19 +105,14 @@ color_block = function(color) {
   function(x, options) sprintf('\\color{%s}\\begin{verbatim}%s\\end{verbatim}\\color{black}', color, x) }
 knitr::knit_hooks$set(error = color_block('red'))
 knitr::knit_hooks$set(warning = color_block('orange'))
-
-animate = T         # switch on/off to replace animations with facets (not yet implemented for all instances)
-TODO = T            # switch on/off to get to do list.
-RESET_FIGURES = F   # switch on/off whether figures that exist as files are regenerated
-RESET_MODELS = F
-```
-
-```{r analysis-preferences}
-set.seed(42007)
 knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 ```
 
-```{r, child="section-0-TO-DO.Rmd", eval= if (TODO) TRUE else FALSE}
+```{r}
+INCLUDE_TODO = T            # switch on/off to get to do list.
+```
+
+```{r, child="section-0-TO-DO.Rmd", eval= if (INCLUDE_TODO) TRUE else FALSE}
 ```
 
 \newpage 
