@@ -118,7 +118,7 @@ d.chodroff_wilson <-
   get_ChodroffWilson_data(
     database_filename = "../data/all_observations_with_non-missing_vot_cog_f0.csv",
     categories = c("/d/", "/t/"),
-    min.n_per_talker_and_category = 5,
+    min.n_per_talker_and_category = 15,
     limits.VOT = c(-Inf, Inf),
     limits.f0 = c(-Inf, Inf),
     max.p_for_multimodality = .1) %>%
@@ -881,6 +881,9 @@ p.density <-
     alpha = 0.8,
   inherit.aes = F,
   show.legend = T) +
+  geom_vline(xintercept = 25, colour = "#cc0000", linetype = 2) +
+  geom_vline(xintercept = 35, colour = "#12D432", linetype = 2) +
+  geom_vline(xintercept = 65, colour = "#0481F3", linetype = 2) +
   scale_colour_manual("Condition",
              labels = c("baseline", "+10ms", "+40ms"),
              values = colours.condition) +
@@ -895,8 +898,6 @@ p.density <-
 p.density +
   plot_layout(ncol = 1, guides = "collect") &
   theme(legend.position = "top")
-
-ggsave("~/Desktop/densityplot.png", width = 11, height = 8.5, units = "cm")
 ```
 
 To understand this pattern, it is helpful to relate our exposure conditions to the distribution of VOT in listeners' prior experience. Figure \@ref(fig:exposure-means-database-density) shows the mean and covariance of our exposure conditions relative to the distribution of VOT by talkers of L1-US English [based on @chodroff-wilson2018]. This comparison offers an explanation as to why the baseline condition (and to some extent the +10 condition) shift leftwards with increasing exposure, whereas the +40 condition shifts rightwards: relative to listeners' prior experience our baseline condition actually presented lower-than-expected category means; of our three exposure conditions, only the +40 condition presented larger-than-expected category means. That is, once we take into account how our exposure conditions relate to listeners' prior experience, both the direction of changes from Test 1 to 4 *within* each exposure condition, and the direction of differences *between* exposure conditions receive an explanation.
