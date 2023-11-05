@@ -315,8 +315,6 @@ d.stimuli %<>% bind_rows() %>%
   mutate(VOT = as.numeric(gsub("VOT(.*)$", "\\1", VOT))) %>%
   arrange(filename, word, vowel, VOT, target_f0, f0_5ms_into_vowel, f0_10ms_into_vowel)
 
-#write_csv(d, "../../materials/stimuli_AE/annotation_files/AE_stimuli_synthesised_actualf0.csv")
-
 # using lm() to obtain general linear function
 talker_m <- lm(f0_5ms_into_vowel ~ 1 + VOT, data = d)
 

@@ -513,8 +513,8 @@ p.fit_7to9 <-
     alpha = 0.6) +
   geom_rug(
     data = d_for_analysis %>%
-      group_by(Phase, Block) %>%
-      filter(Block %in% c(7:9)) %>%
+      group_by(Phase, Block, Block.plot_label) %>%
+      filter(Block %in% c(7:9)),
     aes(x = Item.VOT),
     alpha = 0.5,
     colour = "grey",
@@ -522,7 +522,7 @@ p.fit_7to9 <-
   stat_summary(
     data = d_for_analysis %>%
       filter(Block %in% c(7:9), Item.Labeled == FALSE) %>%
-      group_by(Condition.Exposure, Block),
+      group_by(Condition.Exposure, Block, Block.plot_label),
     fun.data = mean_cl_boot,
     mapping = aes(
       x = Item.VOT,

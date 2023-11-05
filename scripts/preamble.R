@@ -66,7 +66,7 @@ set.seed(42007)
 #
 # We are reimporting the data because here we are subsetting the Mixer 6 data to
 # talkers that have at least 15 instances each of the relevant stops (we're being
-# conservative here since we're creating ideal observers baseed on this data that
+# conservative here since we're creating ideal observers based on this data that
 # are averaging across talkers, and so we'd like to make sure that each talker-
 # specific IO is based on enough data).
 d.chodroff_wilson <-
