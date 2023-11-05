@@ -857,7 +857,7 @@ prepVars <- function(d, test_mean = NULL, levels.Condition = NULL, contrast_type
 
   message("VOT mean:", signif(mean(d$Item.VOT, na.rm = T)))
   message("VOT sd:", signif(sd(d$Item.VOT, na.rm = T)))
-  print(paste("VOT test mean:", test_mean))
+  #print(paste("VOT test mean:", test_mean))
 
   d %<>%
     ungroup() %>%
@@ -938,7 +938,7 @@ make_hyp_table <- function(hyp_readable, hyp, caption, col1_width = "15em") {
     column_spec(1, width = col1_width)
 }
 
-### function to fit Bayesian model
+### function to fit Bayesian model; priorSD argument refers to the SD for the VOT estimate
 fit_model <- function(data, phase, formulation = "standard", priorSD = 2.5, adapt_delta = .99) {
   require(tidyverse)
   require(magrittr)

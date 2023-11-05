@@ -431,7 +431,7 @@ p.KJ16.histogram + p.KJ16.fit + p.KJ16.PSE +
 
 
 
-```{r remove-objects-unused-beyond-previous-chunk}
+```{r remove-unused-objects-section1}
 rm(d.KJ16, d.KJ16_unlabeled, d.KJ16_PSE, cond_fit_KJ16, fit_KJ16, fit_nested_KJ16, p.KJ16.PSE)
 ```
 

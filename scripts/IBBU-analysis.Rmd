@@ -102,7 +102,7 @@ theme_set(theme_classic())
 
 ```{r load data}
 d <- 
-  read_csv("../data/experiment2_raw_formatted.csv", show_col_types = F) %>%
+  read_csv("../data/experiment-results.csv", show_col_types = F) %>%
   # load f0 measurements of stimuli
   left_join(
     read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv", show_col_types = F) %>% 
