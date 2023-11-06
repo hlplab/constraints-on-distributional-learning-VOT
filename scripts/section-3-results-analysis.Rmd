@@ -49,7 +49,7 @@ Each psychometric model regressed participants' categorization responses against
 
 We begin by presenting the overall effects, averaging across all test blocks. This part of our analysis matches previous work, which has focused on the overall effect of exposure across the entire experiment ['batch tests', e.g., @clayards2008; @kleinschmidt-jaeger2016; @nixon2016; @theodore-monto2019] and/or during a single post-exposure test block [e.g., @kleinschmidt2020]. Then we turn to the goals of this study---to characterize the incremental changes in participants' categorization responses as a function of exposure and, in particular, to test 1) whether we replicate the sublinear effects of exposure observed in previous work under the ecologically more valid stimuli and distributions employed in the present work, and 2) whether we can begin to distinguish between the predictions of the model learning and selection hypotheses. 
 
-```{r fit-nested-models-for-intercepts-slopes-plot, message=FALSE}
+```{r fit-nested-models-for-intercepts-slopes-plot}
 # Refit the same model, formulated as nesting intercepts and slopes within each unique combination of
 # exposure condition and block. This makes it easier to extract the intercept, slope, and PSE for the
 # large result figure (Panels C and D).
@@ -66,8 +66,10 @@ fit_mix_exposure_nested <-
             formulation = "nested_slope",
             priorSD = 15, 
             adapt_delta = .999)
+```
 
-# Extract intercepts and slopes from test and exposure model
+
+```{r extract-intercepts-slopes-from-test-and-exposure-models}
 get_intercepts_and_slopes <-
   . %>%
   gather_draws(`b_mu2_IpasteCondition.ExposureBlocksepEQ.*`, regex = TRUE, ndraws = 8000) %>%
@@ -97,10 +99,9 @@ d.estimates <-
 
 
 
-```{r predictions-exposure-conditions-by-IOs}
+```{r predictions-exposure-conditions-by-IOs, eval=FALSE}
 # Get production data to estimate the range of PSEs expected from distribution of 
 # VOT and f0 in the input
-#
 # We are subsetting the Mixer 6 data to talkers that have at least 15 instances each 
 # of the relevant stops (we're being conservative here since we're creating ideal 
 # observers below that are averaging across talkers, and so we'd like to make sure 

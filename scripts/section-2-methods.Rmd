@@ -236,33 +236,6 @@ d %<>% left_join(d.VOT_exclusion)
 
 
 ```{r set-RT-exclusion-criteria}
-# get number of participants excluded due to catch trial
-excl.catch <- 
-  d %>% 
-  filter(Exclude_participant.due_to_catch_trials == TRUE) %>% 
-  group_by(ParticipantID) %>% 
-  summarise() %>% 
-  tally() %>%
-  pull(n)
-
-# get number of participants excluded due to labelled trials
-excl.labeled <- 
-  d %>% 
-  filter(Exclude_participant.due_to_labeled_trials == TRUE) %>% 
-  group_by(ParticipantID) %>% 
-  summarise() %>% 
-  tally() %>%
-  pull(n)
-
-# count number of exclusions due to VOT slope
-excl.VOT <- 
-  d %>% 
-  filter(Exclude_participant.due_to_VOT_slope == TRUE) %>% 
-  group_by(ParticipantID) %>% 
-  summarise() %>% 
-  tally() %>%
-  pull(n)
-
 # get exclusions due to RT
 excl.RT <- 
   d %>%
@@ -280,14 +253,6 @@ excl.RT <-
   mutate(Exclude_participant.due_to_RT = ifelse(abs(scale(Response.log_RT.mean)) > 3, TRUE, FALSE)) %>% 
   filter(Exclude_participant.due_to_RT == TRUE) %>% 
   distinct(ParticipantID) %>% 
-  nrow()
-
-# headphone types
-excl.headphone <- 
-  d %>% 
-  group_by(ParticipantID, audio_type) %>% 
-  summarise() %>% 
-  filter(!(audio_type %in% c("in-ear", "over-ear"))) %>% 
   nrow()
 ```
 
@@ -315,18 +280,14 @@ d_for_analysis <-
         Block.plot_label = fct_relevel(Block.plot_label, c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3",  "Test 4", "Test 5", "Test 6")))
 ```
 
-Due to data transfer errors 4 participants' data were not stored and therefore excluded from analysis. We further excluded from analysis participants who committed more than 3 errors out of the 18 catch trials (<83% accuracy, N = `r excl.catch`), participants who committed more than 4 errors out of the 72 labelled trials (<94% accuracy, N = `r excl.labeled`), participants with an average reaction time more than three standard deviations from the mean of the by-participant means (N = `r excl.RT`),  participants who had atypical categorization functions at the start of the experiment (N = `r excl.VOT`, see SI, \@ref(XXX) for details), and participants who reported not to have used headphones (N = `r excl.headphone`). This left for analysis `r nrow(d_for_analysis %>% filter(Phase == "exposure"))` exposure and `r nrow(d_for_analysis %>% filter(Phase == "test"))` test observations from `r nrow(d_for_analysis %>% distinct(ParticipantID))` participants (94% of total), evenly split across the three exposure conditions.
+Due to data transfer errors 4 participants' data were not stored and therefore excluded from analysis. We further excluded from analysis participants who committed more than 3 errors out of the 18 catch trials (<83% accuracy, N = `r d %>% filter(Exclude_participant.due_to_catch_trials == TRUE) %>% group_by(ParticipantID) %>% summarise() %>% tally() %>% pull(n)`), participants who committed more than 4 errors out of the 72 labelled trials (<94% accuracy, N = `r d %>% filter(Exclude_participant.due_to_labeled_trials == TRUE) %>% group_by(ParticipantID) %>% summarise() %>% tally() %>% pull(n)`), participants with an average reaction time more than three standard deviations from the mean of the by-participant means (N = `r excl.RT`),  participants who had atypical categorization functions at the start of the experiment (N = `r d %>% filter(Exclude_participant.due_to_VOT_slope == TRUE) %>% group_by(ParticipantID) %>% summarise() %>% tally() %>% pull(n)`, see SI, \@ref(XXX) for details), and participants who reported not to have used headphones (N = `r d %>% group_by(ParticipantID, audio_type) %>% summarise() %>% filter(!(audio_type %in% c("in-ear", "over-ear"))) %>% nrow()`). This left for analysis `r nrow(d_for_analysis %>% filter(Phase == "exposure"))` exposure and `r nrow(d_for_analysis %>% filter(Phase == "test"))` test observations from `r nrow(d_for_analysis %>% ungroup() %>% distinct(ParticipantID))` participants (94% of total), evenly split across the three exposure conditions.
 
 
 ```{r remove-unused-objects-section2}
 rm(
-  excl.catch,
-  excl.headphone,
-  excl.labeled,
-  excl.RT,
-  excl.VOT,
   d.exposure_blocks,
-  d.VOT_exclusion
+  d.VOT_exclusion,
+  d.means
 )
 ```
 
