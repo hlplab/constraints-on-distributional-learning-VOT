@@ -725,7 +725,7 @@ table.interactions <-
 table.interactions
 ```
 
-```{r}
+```{r remove-unused-objects-section3}
 # remove unused objects
 rm(fit_mix_test, fit_mix_test_nested, fit_mix_exposure, fit_mix_exposure_nested)
 ```

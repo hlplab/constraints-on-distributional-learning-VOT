@@ -73,8 +73,8 @@ Next, we created the two additional exposure conditions by shifting these VOT di
 (ref:exp2-design-distribution) Histogram of voice onset times (VOTs) for each of the three exposure blocks A-C by trial type (/d/ or /t/, labeled or unlabeled) and exposure condition (baseline vs. +10 vs. +40). Each exposure block contained 12 labeled /d/, 12 labeled /t/, 12 unlabeled /d/, and 12 unlabeled /t/ trials, as well as 6 catch trials (not shown). Except for the shift in VOTs (+0, 10 or 40 ms VOT to each trial), the VOT distribution of these trials was identical across exposure conditions. The order of exposure blocks A-C was counter-balanced across participants using a Latin-square design.
 
 ```{r exp2-design-distribution, fig.height=base.height*3+1/2, fig.width=base.width*4, fig.cap="(ref:exp2-design-distribution)", warning=FALSE, message=FALSE}
-d.exposure_trials <- 
-  read_csv("../data/exposure_block_tokens.csv", show_col_types = F) %>% 
+d.exposure_blocks <- 
+  read_csv("../data/exposure_conditions_lists.csv", show_col_types = F) %>% 
   mutate(
     condition = factor(case_when(condition == "Shift0" ~ "baseline",
                           condition == "Shift10" ~ "+10ms",
@@ -100,14 +100,14 @@ d.means <-
     label = map2(mu_label, sigma_label, ~ comb_plotmath(.x, ", ", .y)))
 
 p.histogram_conditions <- 
-  d.exposure_trials %>% 
+  d.exposure_blocks %>% 
   na.omit() %>% 
   filter(image_selection == "forward" & list_LSQ_variant == "A") %>%
     mutate(block = case_when(
     block == 2 ~ "Block A",
     block == 4 ~ "Block B",
     block == 6 ~ "Block C")) %>% bind_rows(
-      d.exposure_trials %>% na.omit() %>% filter(image_selection == "forward" & list_LSQ_variant == "A") %>% mutate(block = "Block D")) %>%
+      d.exposure_blocks %>% na.omit() %>% filter(image_selection == "forward" & list_LSQ_variant == "A") %>% mutate(block = "Block D")) %>%
   mutate(block = fct_relevel(block, c("Block A", "Block B", "Block C", "Block D"))) %>% 
   ggplot() +
   geom_histogram(
@@ -318,6 +318,17 @@ d_for_analysis <-
 Due to data transfer errors 4 participants' data were not stored and therefore excluded from analysis. We further excluded from analysis participants who committed more than 3 errors out of the 18 catch trials (<83% accuracy, N = `r excl.catch`), participants who committed more than 4 errors out of the 72 labelled trials (<94% accuracy, N = `r excl.labeled`), participants with an average reaction time more than three standard deviations from the mean of the by-participant means (N = `r excl.RT`),  participants who had atypical categorization functions at the start of the experiment (N = `r excl.VOT`, see SI, \@ref(XXX) for details), and participants who reported not to have used headphones (N = `r excl.headphone`). This left for analysis `r nrow(d_for_analysis %>% filter(Phase == "exposure"))` exposure and `r nrow(d_for_analysis %>% filter(Phase == "test"))` test observations from `r nrow(d_for_analysis %>% distinct(ParticipantID))` participants (94% of total), evenly split across the three exposure conditions.
 
 
+```{r remove-unused-objects-section2}
+rm(
+  excl.catch,
+  excl.headphone,
+  excl.labeled,
+  excl.RT,
+  excl.VOT,
+  d.exposure_blocks,
+  d.VOT_exclusion
+)
+```
 
 
 
