@@ -2,10 +2,6 @@
 if (!exists("PREAMBLE_LOADED")) source("preamble.R")
 ```
 
-# Moved from intro (to be integrated)
-
-We cannot afford *extended* intermittent testing for three reasons. First, listeners' attention span is limited. Second, previous work has found that repeated testing over uniform test continua can reduce or undo the effects of informative exposure [@liu-jaeger2018; @liu-jaeger2019; @cummings-theodore2023].<!-- TO DO: Maryann, I don't think the 2023 paper shows that, right? is it the 2022 paper or an even more recent one by Shawn? --> Third, holding the distribution of test stimuli constant across exposure condition inevitably means that the relative unexpectedness of these test stimuli differs between the exposure conditions. By keeping tests short relative exposure, we aimed to minimize the influence of test trials on adaptation while still being able to estimate changes in listeners categorization function. 
- 
 # Experiment
 
 ```{r load data}
@@ -60,7 +56,9 @@ knitr::include_graphics("../figures/trial_example.png")
 
 Unbeknownst to participants, the 234 trials were split into exposure (54 trials each) and test blocks (12 trials each). Participants were given the opportunity to take breaks after every 60 trials, which was always during an exposure block. Finally, participants completed an exit survey and an optional demographics survey.
 
-*Test blocks. * The experiment started with a test block. Test blocks were identical within and across conditions, always including 12 minimal pair trials assessing participants' categorization at 12 different VOTs (-5, 5, 15, 25, 30, 35, 40, 45, 50, 55, 65, 70 ms). A uniform distribution over VOTs was chosen to maximize the statistical power to determine participants' categorization function. The assignment of VOTs to minimal pair continua was randomized for each participant, while counter-balancing it within and across test blocks. Each minimal pair appear equally often within each test block (four times), and each minimal pair appear with each VOT equally often (twice) across all six test blocks (and no more than once per test block). 
+*Test blocks. * The experiment started with a test block. Test blocks were identical within and across conditions, always including 12 minimal pair trials assessing participants' categorization at 12 different VOTs (-5, 5, 15, 25, 30, 35, 40, 45, 50, 55, 65, 70 ms). Test blocks were designed to be short for three reasons.<!-- TO DO: make link more apparent back to anticipated challenges of repeated testing mentioned in intro --> First, listeners' attention span is limited. Second, previous work has found that repeated testing over uniform test continua can reduce or undo the effects of informative exposure [@liu-jaeger2018; @liu-jaeger2019; @cummings-theodore2023].<!-- TO DO: Maryann, I don't think the 2023 paper shows that, right? is it the 2022 paper or an even more recent one by Shawn? --> Third, holding the distribution of test stimuli constant across exposure condition inevitably means that the relative unexpectedness of these test stimuli differs between the exposure conditions. By keeping tests short relative exposure, we aimed to minimize the influence of test trials on adaptation while still being able to estimate changes in listeners categorization function. 
+
+A uniform distribution over VOTs was chosen to maximize the statistical power to determine participants' categorization function. The assignment of VOTs to minimal pair continua was randomized for each participant, while counter-balancing it within and across test blocks. Each minimal pair appear equally often within each test block (four times), and each minimal pair appear with each VOT equally often (twice) across all six test blocks (and no more than once per test block). 
 
 Each trial started with a dark-shaded green fixation dot being displayed. At 500ms from trial onset, two minimal pair words appeared on the screen, as shown in Figure \@ref(fig:example-trial). At 1000ms from trial onset, the fixation dot would turn bright green and participants had to click on the dot to play the recording. This was meant to reduce trial-to-trial correlations by resetting the mouse pointer to the center of the screen at the start of each trial. Participants responded by clicking on the word they heard and the next trial would begin. 
 
