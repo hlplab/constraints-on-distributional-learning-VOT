@@ -184,6 +184,9 @@ d.updates <-
 #     y = .5)
 ```
 
+
+
+
 ```{r get-updates-nu-equal-kappa}
 x <-
   tibble(VOT = seq(0, 100)) %>%

@@ -53,17 +53,17 @@ myGplot.defaults = function(
 }
 
 remove_all_axes <-
-  theme(axis.title.y = element_blank(),
-        axis.title.x = element_blank(),
-        axis.text.y = element_blank(),
-        axis.ticks.y = element_blank())
+theme(axis.title.y = element_blank(),
+      axis.title.x = element_blank(),
+      axis.text.y = element_blank(),
+      axis.ticks.y = element_blank())
 remove_axes_titles <-
-  theme(axis.title.x = element_blank(),
-        axis.title.y = element_blank())
+theme(axis.title.x = element_blank(),
+      axis.title.y = element_blank())
 remove_x_guides <-
-  theme(axis.text.x = element_blank(),
-        axis.ticks.x = element_blank(),
-        axis.title.x = element_blank())
+theme(axis.text.x = element_blank(),
+      axis.ticks.x = element_blank(),
+      axis.title.x = element_blank())
 
 # from https://stackoverflow.com/questions/44283852/merging-expressions-for-plotting
 comb_plotmath <- function(...) {
@@ -185,13 +185,45 @@ print_CI <- function(model, term) {
          paste0(round(plogis(as.numeric(summary(model)$fixed[term, 3:4])) * 100, 1), collapse = " to "), "%")
 }
 
-# Function to get identity CI of a model summaryx
+# Function to get identity CI of a model summary
 get_CI <- function(model, term, hypothesis) {
   paste0(round(as.numeric(summary(model)$fixed[term, 1]), 1), " 95%-CI: ",
          paste(round(as.numeric(summary(model)$fixed[term, 3:4]), 1), collapse = " to "),
          "; ",
          get_bf(model = model, hypothesis = hypothesis))
 }
+
+
+# plotting the Bayesian psychometric fit
+geom_linefit <- function(data, x, y, fill, legend.position, legend.justification = NULL) {
+  list(
+    geom_ribbon(aes(x = {{ x }}, y = {{ y }}, group = Condition.Exposure,
+                    ymin = lower__, ymax = upper__, fill = Condition.Exposure), alpha = .1),
+    geom_line(aes(
+      x = {{ x }}, y = {{ y }}, group = Condition.Exposure, colour = Condition.Exposure), linewidth = .7, alpha = 0.6),
+    geom_rug(data = data %>% distinct(Item.VOT), aes(x = {{ x }}), alpha = 0.5, colour = "grey", inherit.aes = F),
+    stat_summary(
+      data = data, fun.data = mean_cl_boot, mapping = aes(x = {{ x }}, y = Response.Voiceless, colour = Condition.Exposure),
+      geom = "pointrange", size = 0.1, alpha = 0.7, position = position_dodge2(width = 2), inherit.aes = F),
+    scale_x_continuous("VOT (ms)"),
+    scale_y_continuous("Proportion \"t\"-responses"),
+    scale_color_manual(
+      "Condition",
+      labels = c("baseline", "+10ms", "+40ms"),
+      values = colours.condition,
+      aesthetics = c("color", "fill")),
+    theme(
+      legend.position = legend.position,
+      legend.justification = legend.justification,
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+      axis.title.y = element_blank(),
+      strip.background = element_rect(fill = fill),
+      strip.text.x = element_text(colour = "black")),
+    facet_grid(~ Block.plot_label, scales = "free_x", space = "free_x")
+  )
+}
+
 
 # NORMALIZATION -----------------------------------------------------------
 
@@ -711,142 +743,6 @@ get_likelihood_from_updated_bias <- function(
   return(ll)
 }
 
-
-############################################################################
-# function to plot IOs in exp1 (section 2.3) & exp2 Block 1
-############################################################################
-add_psychometric_fit_CI <- function(data.perception){
-  geom_ribbon(
-    data = data.perception,
-    mapping = aes(
-      x = Item.VOT,
-      ymin = lower__,
-      ymax = upper__),
-    alpha = .08,
-    inherit.aes = F)
-}
-
-add_psychometric_fit <- function(data.perception){
-  geom_line(
-    data = data.perception,
-    mapping = aes(x = Item.VOT,
-                  y = estimate__),
-    linewidth = 1.2,
-    colour = "#333333",
-    alpha = .8,
-    inherit.aes = F)
-}
-
-add_PSE_perception_CI <- function(data.percept.PSE){
-  geom_errorbarh(
-    data = data.percept.PSE %>%
-      mutate(y = .018),
-    mapping = aes(xmin = .lower, xmax = .upper, y = y),
-    color = "#333333",
-    height = 0,
-    alpha = .5,
-    size = .8,
-    inherit.aes = F)
-}
-
-add_PSE_perception_median <- function(data.percept.PSE){
-  geom_point(
-    data = data.percept.PSE %>%
-      mutate(y = .018),
-    mapping = aes(x = PSE, y = y),
-    color = "#333333",
-    size = 1,
-    alpha = .5,
-    inherit.aes = F)
-}
-
-add_rug <- function(data.test) {
-  geom_rug(data = data.test %>%
-             ungroup() %>%
-             distinct(Item.VOT),
-           mapping = aes(x = Item.VOT),
-           colour = "grey",
-           alpha = .6,
-           inherit.aes = F)
-}
-
-add_annotations <- function(data.percept.PSE){
-  annotate(
-    geom = "text",
-    x = 70,
-    y = .02,
-    label = paste(round(data.percept.PSE[[2]]), "ms", "-", round(data.percept.PSE[[3]]), "ms"),
-    size = 1.8,
-    colour = "darkgray")
-}
-
-
-plot_IO_fit <- function(
-    data.production,
-    data.perception,
-    data.percept.PSE = posterior.sample,
-    data.test,
-    PSEs
-) {
-  plot <- ggplot() +
-    # geom_ribbon(
-    #   data =
-    #     data %>%
-    #     select(-x) %>%
-    #     unnest(categorization) %>%
-    #     group_by(gender, x) %>%
-    #     summarise(
-    #       VOT = map(x, ~ .x[1]) %>% unlist(),
-    #       across(response, list("lower" = ~ quantile(.x, .025), "upper" = ~ quantile(.x, .975)))),
-    #   mapping = aes(x = VOT, ymin = response_lower, ymax = response_upper, fill = gender),
-    #   alpha = .1) +
-  data.production$line +
-    scale_x_continuous("VOT (ms)", breaks = c(0, 25, 50, 75), limits = c(-15, 85), expand = c(0, 0)) +
-    scale_y_continuous('Proportion "t"-responses') +
-    scale_colour_manual("Model",
-                        values = c(colours.sex),
-                        labels = c("IO (female)", "IO (male)"),
-                        aesthetics = c("color", "fill")) +
-    geom_errorbarh(
-      data = PSEs %>%
-        mutate(y = ifelse(gender == "male", -.025, - .068)),
-      mapping = aes(xmin = PSE.lower, xmax = PSE.upper, y = y, color = gender),
-      height = 0, alpha = .5, size = .8) +
-    geom_point(
-      data = PSEs %>%
-        mutate(y = ifelse(gender == "male", -.025, - .068)),
-      mapping = aes(x = PSE.median, y = y, color = gender),
-      size = 1) +
-    annotate(geom = "text",
-             y = -.025, x = 70,
-             label = paste(PSEs[[1, 2]], "ms", "-", PSEs[[1, 4]], "ms"),
-             size = 1.8,
-             colour = "#87bdd8") +
-    annotate(geom = "text",
-             y = -.068, x = 70,
-             label = paste(PSEs[[2, 2]], "ms", "-", PSEs[[2, 4]], "ms"),
-             size = 1.8,
-             colour = "#c1502e")
-  plot +
-    # add plot specifics of the perception data
-    add_psychometric_fit_CI(data.perception) +
-    add_psychometric_fit(data.perception) +
-    add_PSE_perception_CI(data.percept.PSE) +
-    add_PSE_perception_median(data.percept.PSE) +
-    add_annotations(data.percept.PSE) +
-    add_rug(data.test)
-}
-
-############################################################################
-
-get_PSE_quantiles <- function(data, group) {
-  data %>%
-  group_by(!!! syms(group)) %>%
-  summarise(
-    PSE.lower = round(quantile(PSE, probs = c(.025))),
-    PSE.median = round(quantile(PSE, probs = c(.5))),
-    PSE.upper = round(quantile(PSE, probs = c(.975))))
-}
 
 ############################################################################
 # function to prepare variables for modelling
