@@ -2,6 +2,10 @@
 if (!exists("PREAMBLE_LOADED")) source("preamble.R")
 ```
 
+# Moved from intro (to be integrated)
+
+We cannot afford *extended* intermittent testing for three reasons. First, listeners' attention span is limited. Second, previous work has found that repeated testing over uniform test continua can reduce or undo the effects of informative exposure [@liu-jaeger2018; @liu-jaeger2019; @cummings-theodore2023].<!-- TO DO: Maryann, I don't think the 2023 paper shows that, right? is it the 2022 paper or an even more recent one by Shawn? --> Third, holding the distribution of test stimuli constant across exposure condition inevitably means that the relative unexpectedness of these test stimuli differs between the exposure conditions. By keeping tests short relative exposure, we aimed to minimize the influence of test trials on adaptation while still being able to estimate changes in listeners categorization function. 
+ 
 # Experiment
 
 ```{r load data}
