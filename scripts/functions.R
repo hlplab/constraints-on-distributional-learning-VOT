@@ -245,13 +245,11 @@ prep_predictors_for_CCuRE <- function(data, newdata = NULL){
 
 get_CCuRE_model <- function(data, tidy_result = TRUE, cue = "VOT") {
   f <- formula(paste(cue, "~ 1 + vowel_duration + (1 | Talker)"))
-  m <- lmer(f, data =  prep_predictors_for_CCuRE(data))
+  m <- lme4::lmer(f, data =  prep_predictors_for_CCuRE(data))
   return(if (tidy_result) tidy(m, effects = "fixed") else m)
 }
 
 apply_ccure <- function(x, data) {
-  require(lme4)
-
   m <- get_CCuRE_model(
     data = data %>% mutate(current_outcome = .env$x),
     cue = "current_outcome",
@@ -769,9 +767,8 @@ prepVars <- function(d, test_mean = NULL, levels.Condition = NULL, contrast_type
 
   contrasts(d$Condition.Exposure) <- cbind("_Shift10 vs. Shift0" = c(-2/3, 1/3, 1/3),
                                           "_Shift40 vs. Shift10" = c(-1/3,-1/3, 2/3))
-  require(MASS)
   if (all(d$Phase == "test") & n_distinct(d$Block) > 1 & contrast_type == "difference") {
-    contrasts(d$Block) <- fractions(contr.sdif(6))
+    contrasts(d$Block) <- MASS::fractions(MASS::contr.sdif(6))
     dimnames(contrasts(d$Block))[[2]] <- c("_Test2 vs. Test1", "_Test3 vs. Test2", "_Test4 vs. Test3", "_Test5 vs. Test4", "_Test6 vs. Test5")
 
     message(contrasts(d$Condition.Exposure))
@@ -800,11 +797,10 @@ prepVars <- function(d, test_mean = NULL, levels.Condition = NULL, contrast_type
 # adjusted from https://stackoverflow.com/questions/75598144/interpretation-of-2d-density-estimate-charts
 # we can get the 2d density with MASS::kde2d, then convert to a raster using terra. We can then order the points according to the density in the associated 2d density grid and find the density at which a quantile is passed with approx
 density_quantiles <- function(x, y, quantiles) {
-  require(terra)
   dens <- MASS::kde2d(x, y, n = 500)
   df   <- cbind(expand.grid(x = dens$x, y = dens$y), z = c(dens$z))
   r    <- terra::rast(df)
-  ind  <- sapply(seq_along(x), function(i) cellFromXY(r, cbind(x[i], y[i])))
+  ind  <- sapply(seq_along(x), function(i) terra::cellFromXY(r, cbind(x[i], y[i])))
   ind  <- ind[order(-r[ind][[1]])]
   vals <- r[ind][[1]]
   ret  <- approx(seq_along(ind)/length(ind), vals, xout = quantiles)$y

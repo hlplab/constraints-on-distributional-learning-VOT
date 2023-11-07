@@ -201,7 +201,7 @@ d.VOT_exclusion <-
   filter(Block == 1 | (Block == 2 & Trial %in% c(13:36))) %>% 
   drop_na(c(ParticipantID, Response.Voicing, Item.VOT)) %>% 
   mutate(Response.ProportionVoiceless = ifelse(Response.Voicing == "voiceless", 1, 0)) %>%
-  dplyr::select(c(Experiment, ParticipantID, Condition.Exposure, Response.Voicing, Response.ProportionVoiceless, Item.VOT)) %>%
+  select(c(Experiment, ParticipantID, Condition.Exposure, Response.Voicing, Response.ProportionVoiceless, Item.VOT)) %>%
   # Fit logistic regression by participant to get model predictions 
   group_by(ParticipantID, Experiment, Condition.Exposure) %>%
   nest() %>%
@@ -214,26 +214,33 @@ d.VOT_exclusion <-
           data = .x, 
           family = binomial))) %>% 
   # type = "response" in predict() gives the probability
-  summarise(Model.predicted.Reponse = 
-              map(
-                CategorizationModel, 
-                ~ predict(object = .x, 
-                          newdata = tibble(Item.VOT = VOT_for_required_proportion_t), 
-                          type = "response"))) %>% 
-  mutate(Exclude_participant.due_to_VOT_slope = 
-           map(Model.predicted.Reponse, ~ ifelse(.x[1] > required_proportion_t[1] || .x[2] < required_proportion_t[2], TRUE, FALSE)),
-         Exclude_participant.due_to_lower_VOT = map(Model.predicted.Reponse, ~ ifelse(.x[1] > required_proportion_t[1], TRUE, FALSE)),
-         Exclude_participant.due_to_higher_VOT = map(Model.predicted.Reponse, ~ ifelse(.x[2] < required_proportion_t[2], TRUE, FALSE))) %>% 
-  dplyr::select(ParticipantID, Experiment, Condition.Exposure, Exclude_participant.due_to_VOT_slope, Exclude_participant.due_to_lower_VOT, Exclude_participant.due_to_higher_VOT) %>% 
+  summarise(
+    Model.predicted.Reponse = 
+      map(
+        CategorizationModel, 
+        ~ predict(
+          object = .x, 
+          newdata = tibble(Item.VOT = VOT_for_required_proportion_t), 
+          type = "response"))) %>% 
   mutate(
-    across(c(Exclude_participant.due_to_VOT_slope, Exclude_participant.due_to_lower_VOT, Exclude_participant.due_to_higher_VOT), 
-           unlist)) %>% 
+    Exclude_participant.due_to_VOT_slope = 
+      map(
+        Model.predicted.Reponse, 
+        ~ ifelse(.x[1] > required_proportion_t[1] || .x[2] < required_proportion_t[2], TRUE, FALSE)),
+    Exclude_participant.due_to_lower_VOT = 
+      map(
+        Model.predicted.Reponse, 
+        ~ ifelse(.x[1] > required_proportion_t[1], TRUE, FALSE)),
+    Exclude_participant.due_to_higher_VOT = 
+      map(
+        Model.predicted.Reponse, 
+        ~ ifelse(.x[2] < required_proportion_t[2], TRUE, FALSE))) %>% 
+  select(ParticipantID, Experiment, Condition.Exposure, Exclude_participant.due_to_VOT_slope, Exclude_participant.due_to_lower_VOT, Exclude_participant.due_to_higher_VOT) %>% 
+  mutate(across(c(Exclude_participant.due_to_VOT_slope, Exclude_participant.due_to_lower_VOT, Exclude_participant.due_to_higher_VOT), unlist)) %>% 
   ungroup()
 
 d %<>% left_join(d.VOT_exclusion)
 ```
-
-
 
 ```{r set-RT-exclusion-criteria}
 # get exclusions due to RT
