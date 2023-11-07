@@ -292,9 +292,11 @@ Due to data transfer errors 4 participants' data were not stored and therefore e
 
 ```{r remove-unused-objects-section2}
 rm(
+  d,
   d.exposure_blocks,
   d.VOT_exclusion,
-  d.means
+  d.means,
+  p.histogram_conditions
 )
 ```
 
