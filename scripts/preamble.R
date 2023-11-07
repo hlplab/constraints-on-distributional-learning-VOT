@@ -1,15 +1,22 @@
 # Libraries ---------------------------------------------------------------------
 
-# If installation of remote libraries is necessary, uncomment this code:
-# library(curl)               # Check availability of internet for install of remote libraries
-# if(!requireNamespace("remotes", quietly = TRUE)) if (has_internet()) install.packages("remotes")
-# if (has_internet()) remotes::install_github("crsh/papaja")
-# if (has_internet()) remotes::install_github("hlplab/MVBeliefUpdatr")
-# if (has_internet()) remotes::install_github('kleinschmidt/phonetic-sup-unsup')
+# Make sure the following are installed. This includes packages that are not on CRAN
+# and packages that are not loaded below but instead directly references in the code
+# (to avoid having to load packages into memory of which we only use a few functions).
+list.of.packages <- c("remotes", "papaja", "MVBeliefUpdatr", "supunsup", "MASS", "terra", "lme4")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if (length(new.packages)) {
+  if ("remotes" %in% new.packages) install.packages("remotes")
+  if ("papaja" %in% new.packages) remotes::install_github("crsh/papaja")
+  if ("MVBeliefUpdatr" %in% new.packages) remotes::install_github("hlplab/MVBeliefUpdatr")
+  if ("supunsup" %in% new.packages) remotes::install_github("kleinschmidt/phonetic-sup-unsup")
+  new.packages <- setdiff(new.packages, c("remotes", "papaja", "MVBeliefUpdatr", "supunsup"))
+
+  install.packages(new.packages)
+}
 
 library(papaja)             # APA formatted ms
 
-library(MASS)               # sliding difference coding (load before tidyverse b/c of select-conflict)
 library(tidyverse)          # keeping things tidy
 library(magrittr)           # pipes
 library(rlang)              # quosures (in functions)
@@ -26,7 +33,6 @@ library(kableExtra)        # for formatting tables
 library(linguisticsdown)    # IPA symbols
 library(latexdiffr)         # track changes
 
-library(lme4)               # c-CuRE fn and cue adjustments
 library(brms)               # fit Bayesian regression models
 library(tidybayes)          # posterior samples and plots in tidy format
 library(broom.mixed)        # extracting effects from lmer models
@@ -35,6 +41,7 @@ library(posterior)
 library(phonR)              # normalization of f0
 library(supunsup)           # Kleinschmidt & Jaeger 2016 data
 library(MVBeliefUpdatr)     # generating Ideal Observers
+
 library(furrr)              # future_map for parallelization
 
 # Functions ---------------------------------------------------------------------
