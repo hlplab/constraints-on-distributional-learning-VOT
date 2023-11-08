@@ -217,7 +217,6 @@ geom_linefit <- function(data, x, y, fill, legend.position, legend.justification
       legend.justification = legend.justification,
       panel.grid.major.x = element_blank(),
       panel.grid.minor.x = element_blank(),
-      axis.title.y = element_blank(),
       strip.background = element_rect(fill = fill),
       strip.text.x = element_text(colour = "black")),
     facet_grid(~ Block.plot_label, scales = "free_x", space = "free_x")

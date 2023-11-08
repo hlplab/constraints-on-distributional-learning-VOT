@@ -463,7 +463,8 @@ p.fit_7to9 <- cond_fit_test_exposure %>%
       x = Item.VOT,
       y = estimate__,
       fill = "grey",
-      legend.position = "none") 
+      legend.position = "none") +
+  theme( axis.title.y = element_blank())
 ```
 
 (ref:plot-fit-slope-PSE) Summary of results. **Panel A:** Changes in listeners psychometric categorization functions as a function of exposure, from Test 1 to Test 4 with all intervening exposure blocks (only unlabeled trials were included in the analysis of exposure blocks since labeled trials provide no information about listeners' categorization function). Point ranges indicate the mean proportion of "t"-responses and their 95% bootstrapped CI. Lines and shaded intervals show the MAP predictions and 95% posterior CIs of a Bayesian mixed-effects psychometric model fit to participants' responses. **Panel B:** Same as Panel A but for the final three test blocks without intervening exposure. Test 4 is shown as part of both Panels A and B. **Panels C \& D:** Changes across blocks in the slope and boundary (point-of-subjective-equality, PSE) of the categorization functions shown in Panels A-B. Point ranges represent the posterior medians and their 95% CI. Dashed reference lines show the intercepts and PSEs that naive (non-rational) learner would be expected to converge against after sufficient exposure (an ideal observer model that knows the exposure distributions). Percentage labels indicate the amount of shift as a proportion of the expected shift under an ideal observer.
