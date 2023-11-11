@@ -482,6 +482,69 @@ The lapsing model predicts participant responses that are made independent of th
 
 We fit the psychometric model using the package \texttt{brms} [@R-brms_a] in R [@R; @RStudio]. To faciltiate comparison of effect sizes across predictors, we standardized continuous predictors (VOT) by dividing through twice their standard deviation [@gelman2008]. Following previous work from our lab [@horberg2021; @xie2021], we used weakly regularizing priors to facilitate model convergence. For fixed effect parameters, we used Student priors centered around zero with a scale of 2.5 units [following @gelman-prior2008] and 3 degrees of freedom. For random effect standard deviations, we used a Cauchy prior with location 0 and scale 2, and for random effect correlations, we used an uninformative LKJ-Correlation prior with its only parameter set to 1, describing a uniform prior over correlation matrices [@Lewandowski2009]. Four chains with 2000 warm-up samples and 2000 posterior samples each were fit. No divergent transitions after warm-up were observed, and all $1 < \hat{R} < 1.01$.
 
+
+### Table of interactions 
+```{r hypothesis-table-interactions, results='asis'}
+# hypotheses to answer question, "was the change incremental between blocks?"
+hyp_interactions <- c(
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 < 0",
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 < 0",
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 < 0",
+  "(mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1) < 0",
+  
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 > 0",
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 > 0",
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 > 0",
+  
+  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 < 0",
+  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 < 0",
+  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 < 0",
+  "(mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1) < 0",
+  
+  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 > 0",
+  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
+  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
+  
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 < 0",
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 < 0",
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 < 0",
+  "(mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 + 
+    mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 + 
+    mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1) < 0",
+  
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 > 0",
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + 
+   mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0")
+
+hyp_interactions <- hypothesis(fit_mix_test, hyp_interactions, robust = T)
+hyp_interactions <- hyp_interactions$hypothesis %>% dplyr::select(-Star)
+
+# translate the hypotheses above into intelligible statements
+hyp_interactions_readable <- 
+  tibble(Hypothesis_readable = rep(c(
+  # Comparing differences in +10 vs. baseline between blocks
+  "Block 1 to 2: increased $\\Delta_{PSE}$",
+  "Block 2 to 3: increased $\\Delta_{PSE}$",
+  "Block 3 to 4: increased $\\Delta_{PSE}$",
+  "{\\em Block 1 to 4: increased $\\Delta_{PSE}$}",
+  "Block 4 to 5: decreased $\\Delta_{PSE}$",
+  "Block 5 to 6: decreased $\\Delta_{PSE}$",
+  "{\\em Block 4 to 6: decreased $\\Delta_{PSE}$}"), 3))
+
+table.interactions <- 
+  make_hyp_table(
+    hyp_interactions_readable,
+    hyp_interactions,
+    caption = "Was there incremental change from test block 1 to 4? Did these changes dissipate with repeated testing from block 4 to 6? This table summarizes the interactions between exposure condition and block, whether the differences between exposure conditions changed from test block to test block.") %>% 
+  pack_rows("Difference in +10 vs. baseline", 1, 7) %>%
+  pack_rows("Difference in +40 vs. +10", 8, 14) %>%
+  pack_rows("Difference in +40 vs. baseline", 15, 21) 
+
+table.interactions
+```
+
+
 # Generalized additive mixed-effects analysis
 The analyses presented in the main text assume that VOT has a linear effect on the log-odds of "t"-responses. We made this assumptions for the sake of simplicity, and in order to avoid over-fitting. However, there are reasons to expect that the effects of VOT are non-linear. Specifically, ideal observers with Gaussian categories along a single cue dimension (here: VOT) predict that the posterior log-odds of each category change linearly along that cue dimension if and only if the variance of both Gaussian categories is equal [for details, see @bicknell2018; @kleinschmidt-jaeger2015; @kronrod2016]. For US English /d/ and /t/, this is well-known *not* to be the case, with /t/ having larger variance than /d/ (see also Figure XXX in the main text). Under the assumption of Gaussian categories, ideal observer thus predict a quadratic effect along VOT---specifically, the log-odds of "t"-responses are predicted to increase more than linearly with increasing VOT between the two category means (since the /t/ category has larger variance). While Gaussian categories are a simplifying assumption for the sake of modeling, rather than a critical assumption of the ideal adaptor framework [cf. @kleinschmidt-jaeger2015, Appendix]^[For example, the assumption of Gaussian categories leads to implausible predictions for extreme VOT values that lie outside the range of the two category means. Specifically, for VOTs smaller than the category mean of /d/, "t"-responses are predicted to eventually increase with decreasing VOT values (as a consequence of the same quadratic trend mentioned above). Additionally, distribution of VOTs for the /d/ category tends to be noticeably positively-skewed and thus non-normal.], the predicted quadratic trend is also likely to emerge in exemplar models. <!-- TO DO: Check -->
 
