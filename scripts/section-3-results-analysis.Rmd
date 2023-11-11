@@ -68,6 +68,7 @@ fit_mix_exposure_nested <-
             adapt_delta = .999)
 ```
 
+
 ```{r extract-intercepts-slopes-from-test-and-exposure-models}
 get_intercepts_and_slopes <-
   . %>%
@@ -453,7 +454,8 @@ simple_effects_condition <-
   filter(term != "theta1_(Intercept)")
 ```
 
-```{r hypothesis-table-simple-effects-condition, results='asis'}
+
+```{r hypothesis-table-simple-effects-block, results='asis'}
 # hypotheses to answer questions "when did change first emerge?" 
 hyp_contrasts_nested_block <-
   c(
@@ -493,65 +495,40 @@ table.simple_effects <-
 table.simple_effects
 ```
 
-```{r hypothesis-table-interactions, results='asis'}
-# hypotheses to answer question, "was the change incremental between blocks?"
-hyp_interactions <- c(
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 < 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 < 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 < 0",
-  "(mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1) < 0",
-  
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 > 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 > 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 > 0",
-  
-  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 < 0",
-  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 < 0",
-  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 < 0",
-  "(mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1) < 0",
-  
-  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 > 0",
-  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
-  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
-  
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 < 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 < 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 < 0",
-  "(mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 + 
-    mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 + 
-    mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1) < 0",
-  
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 > 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + 
-   mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0")
 
-hyp_interactions <- hypothesis(fit_mix_test, hyp_interactions, robust = T)
-hyp_interactions <- hyp_interactions$hypothesis %>% dplyr::select(-Star)
+```{r hypothesis-table-simple-effects-condition, results='asis', fig.cap="TEMPORARY TABLE; TO BE REPLACED BY THE PENDING MODEL"}
+fit_test_nested_condition <- read_rds("../models/Exp-AE-DLVOT-nested-condition.rds")
 
-# translate the hypotheses above into intelligible statements
-hyp_interactions_readable <- 
-  tibble(Hypothesis_readable = rep(c(
-  # Comparing differences in +10 vs. baseline between blocks
-  "Block 1 to 2: increased $\\Delta_{PSE}$",
-  "Block 2 to 3: increased $\\Delta_{PSE}$",
-  "Block 3 to 4: increased $\\Delta_{PSE}$",
-  "{\\em Block 1 to 4: increased $\\Delta_{PSE}$}",
-  "Block 4 to 5: decreased $\\Delta_{PSE}$",
-  "Block 5 to 6: decreased $\\Delta_{PSE}$",
-  "{\\em Block 4 to 6: decreased $\\Delta_{PSE}$}"), 3))
+# hypotheses to answer questions "when did change first emerge?" 
+hyp_contrasts_nested_condition <-
+  c(
+    "mu2_Condition.ExposureShift0:Block_Test2vs.Test1 > 0",
+    "mu2_Condition.ExposureShift0:Block_Test3vs.Test2 > 0",
+    "mu2_Condition.ExposureShift0:Block_Test4vs.Test3 > 0",
+    "mu2_Condition.ExposureShift0:Block_Test2vs.Test1 + mu2_Condition.ExposureShift0:Block_Test3vs.Test2 + mu2_Condition.ExposureShift0:Block_Test4vs.Test3 > 0",
+    "mu2_Condition.ExposureShift10:Block_Test2vs.Test1 > 0",
+    "mu2_Condition.ExposureShift10:Block_Test3vs.Test2 > 0",
+    "mu2_Condition.ExposureShift10:Block_Test4vs.Test3 > 0",
+    "mu2_Condition.ExposureShift10:Block_Test2vs.Test1 + mu2_Condition.ExposureShift10:Block_Test3vs.Test2 + mu2_Condition.ExposureShift10:Block_Test4vs.Test3 > 0",
+    "mu2_Condition.ExposureShift40:Block_Test2vs.Test1 > 0",
+    "mu2_Condition.ExposureShift40:Block_Test3vs.Test2 > 0",
+    "mu2_Condition.ExposureShift40:Block_Test4vs.Test3 > 0",
+    "mu2_Condition.ExposureShift40:Block_Test2vs.Test1 + mu2_Condition.ExposureShift40:Block_Test3vs.Test2 + mu2_Condition.ExposureShift40:Block_Test4vs.Test3 > 0")
 
-table.interactions <- 
-  make_hyp_table(
-    hyp_interactions_readable,
-    hyp_interactions,
-    caption = "Was there incremental change from test block 1 to 4? Did these changes dissipate with repeated testing from block 4 to 6? This table summarizes the interactions between exposure condition and block, whether the differences between exposure conditions changed from test block to test block.") %>% 
-  pack_rows("Difference in +10 vs. baseline", 1, 7) %>%
-  pack_rows("Difference in +40 vs. +10", 8, 14) %>%
-  pack_rows("Difference in +40 vs. baseline", 15, 21) 
+hyp_contrasts_nested_condition <- hypothesis(fit_test_nested_condition, hyp_contrasts_nested_condition, robust = T)
+hyp_contrasts_nested_condition <- hyp_contrasts_nested_condition$hypothesis %>% dplyr::select(-Star)
 
-table.interactions
+# translate hypotheses into intelligible statements
+hyp_contrasts_nested_condition_readable <- tibble(Hypothesis = rep(c("Test 2 vs. Test 1 > 0", "Test 3 vs. Test 2 > 0", "Test 4 vs. Test 3 > 0", "Test 4 vs. Test 1 > 0"), 3))
+
+table.simple_effects_condition <- 
+  make_hyp_table(hyp_contrasts_nested_condition_readable, hyp_contrasts_nested_condition, caption = "When did exposure begin to affect participants' categorization responses? This table summarizes the simple effects of block for each condition. Note that righward shifts correspond to negative effects (lower intercepts in predicting the log-odds of \"t\"-responses).") %>%
+  pack_rows("baseline ", 1, 4) %>%
+  pack_rows("+10", 5, 8) %>% 
+  pack_rows("+40", 9, 12)
+table.simple_effects_condition
 ```
+
 
 ```{r remove-unused-objects-section3}
 # remove unused objects

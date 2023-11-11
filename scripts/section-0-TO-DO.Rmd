@@ -4,10 +4,8 @@
 
 ## Highest priority
  * MARYANN
-  * CHECK THE PREPVARS FUNCTION TO INCLUDE DIFF. CODING FOR ALL PHASES -- 1) DIFF CODING FOR TEST ONLY 2)DIFF CODING FOR EXPOSURE ONLY AND 3)DIFF CODING FOR ALL PHASES
   * REFIT THE EXPOSURE MODEL UNDER THE CORRECT DIFF CODING if it wasn't coded that way before
   * edit Analaysis Approach section in the SI
-  * write function to represent BF = Inf to be >[number of posterior draws/samples]
   * have simple effects of block table
   * move interaction table to SI
   * Please read this carefully.
