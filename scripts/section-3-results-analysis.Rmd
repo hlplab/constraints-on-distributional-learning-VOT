@@ -45,7 +45,7 @@ fitted_lapse <- plogis(fixef(fit_mix_test)[[2]])
 
 We analyzed participants' categorization responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric models, using brms [@R-brms_a] in R [@R; @RStudio]. Psychometric models account for attentional lapses while estimating participants' categorization functions. Failing to account for attentional lapses---while commonplace in research on speech perception [but see @clayards2008; @kleinschmidt-jaeger2016]---can lead to biased estimates of categorization boundaries [@prins2011; @wichmann-hill2001]. For the present experiment, lapse rates were negligible (`r print_CI(fit_mix_test, "theta1_Intercept")`), and all results replicate in simple mixed-effects logistic regressions [@jaeger2008]. This lapse rate compares favorably against those assumed or reported in prior work [e.g.,@kleinschmidt-jaeger2016; @kleinschmidt2020; @clayards2008].
 
-The two psychometric models for exposure and test blocks each regressed participants' categorization responses against the full factorial interaction of VOT, block, and exposure condition, along with the maximal random effect structure (by-subject intercepts and slopes for VOT, block, and their interaction, and by-item intercept and slopes for the full factorial design; see SI, \@ref(sec:analysis-approach)). Figure \@ref(fig:plot-fit-slope-PSE) summarizes the results that we describe in more detail next. Panels A and B show participants’ categorization responses during exposure and test blocks, along with the categorization function estimated from those responses via the mixed-effects psychometric models. These panels facilitate comparison between exposure conditions within each block. Panels C and D show the slope and point of subject equality (PSE)---i.e., the point at which participants are equally likely to respond "d" and "t"---of the categorization function across blocks and conditions. These panels facilitate comparison across blocks within each exposure condition. Here we focus on the test blocks, which were identical within and across exposure conditions.^[Previous studies have estimated changes in participants' categorization responses by analyzing responses on unlabeled exposure trials [e.g., @clayards2008; @kleinschmidt-jaeger2016; @theodore-monto2019]. This approach compares responses across different values of acoustic-phonetic cues (since the exposure inputs differed by exposure condition), so that assumptions baked into the analysis approach (e.g., linearity along the acoustic-phonetic continuum) can potentially bias the results. The analysis of test blocks that are identical within and across participants avoids this issue [see also @kleinschmidt2020, Experiment 4].] Analyses of the exposure blocks are reported in the SI (\@ref(sec:exposure-analyses)), and replicate all effects found in the test blocks. 
+The two psychometric models for exposure and test blocks each regressed participants' categorization responses against the full factorial interaction of VOT, block, and exposure condition, along with the maximal random effect structure (by-subject intercepts and slopes for VOT, block, and their interaction, and by-item intercept and slopes for the full factorial design; see SI, \@ref(sec:analysis-approach)). Figure \@ref(fig:plot-fit-slope-PSE) summarizes the results that we describe in more detail next. Panels A and B show participants’ categorization responses during exposure and test blocks, along with the categorization function estimated from those responses via the mixed-effects psychometric models. These panels facilitate comparison between exposure conditions within each block. Panels C and D show the slope and point of subject equality (PSE)---i.e., the point at which participants are equally likely to respond "d" and "t"---of the categorization function across blocks and conditions. These panels facilitate comparison across blocks within each exposure condition. Here we focus on the test blocks, which were identical within and across exposure conditions.^[Previous studies have estimated changes in participants' categorization responses by analyzing responses on unlabeled exposure trials [e.g., @clayards2008; @kleinschmidt-jaeger2016; @theodore-monto2019]. This approach compares responses across different VOT values (since the exposure inputs differed by exposure condition), increasing the risk that assumptions baked into the analysis approach (e.g., linearity along the acoustic-phonetic continuum) bias the results. The analysis of test blocks that are identical within and across participants avoids this issue.] Analyses of the exposure blocks are reported in the SI (\@ref(sec:exposure-analyses)), and replicate all effects found in the test blocks. 
 
 We begin by presenting the overall effects, averaging across all test blocks. This part of our analysis matches previous work, which analyzed the *average* effect of exposure across the entire experiment ['batch tests', e.g., @clayards2008; @kleinschmidt-jaeger2016; @nixon2016; @theodore-monto2019] or during a single post-exposure test [e.g., @kleinschmidt2020]. Then we present novel analyses that address questions about the incremental adaptation---testing the predictions described in the introduction. 
 
@@ -97,13 +97,26 @@ d.estimates <-
 ```
 
 ```{r}
- io <-    
+# Make ideal observers that are fit on the exposure VOTs of the three exposure conditions.
+# These ideal observers can be thought of as reflecting a learner that has fully learned 
+# the exposure distributions. Note that we include perceptual noise in the ideal observers
+# (estimated in Kronrod et al., 2016) to make their perception more human-like.
+io <-    
   make_VOT_IOs_from_exposure(
     d_for_analysis %>% 
       filter(Phase == "exposure") %>% 
       group_by(ParticipantID, Condition.Exposure) %>% 
       nest(data = -c(ParticipantID, Condition.Exposure)) %>% 
       group_by(Condition.Exposure) %>% 
+      # Subset data to a single participant per exposure condition. This is sufficient since 
+      # the ideal observer's /d/ and /t/ categories only depend on the sufficient statistics 
+      # (mean and SD) at the end of the experiment, which were identical across participants 
+      # in each condition. 
+      # 
+      # Note that this approach trains the ideal observers on the *actual* VOT distribution 
+      # that participants heard, not on the theoretical distributions these VOTs were sampled
+      # from. This is in line with our goal to simulate behavior of an idealized participant
+      # who has fully learned the exposure distributions.
       slice_sample(n = 1) %>% 
       unnest(data) %>% 
       mutate(category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")) %>% 
@@ -132,13 +145,14 @@ d.io.categorization <-
       mutate(Phase = "test") %>% 
       crossing(Block = c(1, 3, 5, 7, 8, 9)), 
     # Assess the ideal observers on the VOT locations that occur in the three different 
-    # exposure conditions. 
+    # exposure conditions. Only use unlabeled exposure trials, since those are the trials
+    # we assess participants' behavior on.
     get_logistic_parameters_from_model(
       io %>% filter(Condition.Exposure != "prior"), 
       d_for_analysis %>%  
         filter(Phase == "exposure", Item.Labeled == F) %>%
         group_by(Condition.Exposure) %>%
-        # Since blocks differ in which VOTs are unlabelled, we include all blocks
+        # Since blocks differ in which VOTs are unlabeled, we include all blocks
         # (we are simulating the expected parameters across all exposure blocks)
         filter(ParticipantID == first(ParticipantID)) %>% 
         select(Item.VOT) %>% 
@@ -147,7 +161,7 @@ d.io.categorization <-
       groups = "Condition.Exposure") %>% 
       mutate(Phase = "exposure") %>% 
       crossing(Block = c(2, 4, 6))) %>%
-  select(Condition.Exposure, Phase, intercept_scaled, slope_scaled, PSE) %>% 
+  select(Condition.Exposure, Phase, Block, intercept_scaled, slope_scaled, PSE) %>% 
   mutate(across(c(Phase, Condition.Exposure, Block), factor)) 
 ```
 
@@ -359,7 +373,7 @@ p.fit_7to9 <- cond_fit_test_exposure %>%
   theme( axis.title.y = element_blank())
 ```
 
-(ref:plot-fit-slope-PSE) Summary of results. **Panel A:** Changes in listeners psychometric categorization functions as a function of exposure, from Test 1 to Test 4 with all intervening exposure blocks (only unlabeled trials were included in the analysis of exposure blocks since labeled trials provide no information about listeners' categorization function). Point ranges indicate the mean proportion of "t"-responses and their 95% bootstrapped CI. Lines and shaded intervals show the *maximum a posteriori* (MAP) estimates and 95% posterior CIs of a Bayesian mixed-effects psychometric model fit to participants' responses. **Panel B:** Same as Panel A but for the final three test blocks without intervening exposure. Test 4 is shown as part of both Panels A and B. **Panels C \& D:** Changes across blocks in the slope and boundary (point-of-subjective-equality, PSE) of the categorization functions shown in Panels A \& B. Point ranges represent the posterior medians and their 95% CI. Dashed reference lines show the intercepts and PSEs that naive learner would be expected to converge against after sufficient exposure (an ideal observer model that has fully learned the exposure distributions). Percentage labels indicate the amount of shift as a proportion of the expected shift under an ideal observer.
+(ref:plot-fit-slope-PSE) Summary of results. **Panel A:** Changes in listeners psychometric categorization functions as a function of exposure, from Test 1 to Test 4 with all intervening exposure blocks (only unlabeled trials were included in the analysis of exposure blocks since labeled trials provide no information about listeners' categorization function). Point ranges indicate the mean proportion of participants' "t"-responses and their 95% bootstrapped CI. Lines and shaded intervals show the *maximum a posteriori* (MAP) estimates and 95% posterior CIs of a Bayesian mixed-effects psychometric model fit to participants' responses. **Panel B:** Same as Panel A but for the final three test blocks without intervening exposure. Test 4 is shown as part of both Panels A and B. **Panels C \& D:** Changes across blocks in the slope and boundary (point-of-subjective-equality, PSE) of the categorization functions shown in Panels A \& B. Point ranges represent the posterior medians and their 95% CI. Dashed reference lines show the intercepts and PSEs that naive learner would be expected to converge against after sufficient exposure (an ideal observer model that has fully learned the exposure distributions). Percentage labels indicate the amount of shift as a proportion of the expected shift under an ideal observer.
 
 \begin{landscape}
 
@@ -372,22 +386,22 @@ BBB######
 DDDDDDDDD
 ",
 heights = c(1, 1, 2)) +
-   plot_annotation(tag_levels = 'A', tag_suffix = ")") & 
+  plot_annotation(tag_levels = 'A', tag_suffix = ")") & 
   theme(plot.tag = element_text(face = "bold")) 
 ```
 
 \end{landscape}
-
 
 ```{r remove-plot-objects}
 rm(p.across_blocks, p.estimates_1to7, p.PSE_1to7, p.slope_1to7, p.fit_1to7, p.fit_7to9)
 ```
 
 
+<!-- TO DO: If we need to cut, this section could probably go. It's only here to 'ease in' readers. -->
 ### Does exposure affect participants' categorizations (averaging across all blocks)?
-We first used the psychometric mixed-effects model to assess whether the exposure conditions had the expected effects across all test blocks *relative to each other*. Unsurprisingly, participants were more likely to respond "t" the longer the VOT ($`r get_bf(fit_mix_test, "mu2_VOT_gs > 0")`$). Critically, exposure affects participants' categorization responses in the expected direction. Marginalizing over all test blocks, participants in the +40 condition were less likely to respond "t" than participants in the +10 condition ($`r get_bf(fit_mix_test, "mu2_Condition.Exposure_Shift40vs.Shift10 < 0")`$) or the baseline condition ($`r get_bf(fit_mix_test, "mu2_Condition.Exposure_Shift40vs.Shift10 + mu2_Condition.Exposure_Shift10vs.Shift0 < 0")`$). There was also evidence---albeit less decisive---that participants in the +10 condition were less likely to respond "t" than participants in the baseline condition ($`r get_bf(fit_mix_test, "mu2_Condition.Exposure_Shift10vs.Shift0 < 0")`$). That is, the +10 and +40 conditions resulted in categorization functions that were shifted rightwards compared to the baseline condition, as also evident in Figures \@ref(fig:plot-fit-slope-PSE).
+We first used the psychometric mixed-effects model to assess whether the exposure conditions had the expected effects across all test blocks *relative to each other*. Unsurprisingly, participants were more likely to respond "t" the longer the VOT ($`r get_bf(fit_mix_test, "mu2_VOT_gs > 0")`$). Critically, exposure affected participants' categorization responses in the expected direction. Marginalizing over all test blocks, participants in the +40 condition were less likely to respond "t" than participants in the +10 condition ($`r get_bf(fit_mix_test, "mu2_Condition.Exposure_Shift40vs.Shift10 < 0")`$) or the baseline condition ($`r get_bf(fit_mix_test, "mu2_Condition.Exposure_Shift40vs.Shift10 + mu2_Condition.Exposure_Shift10vs.Shift0 < 0")`$). There was also evidence---albeit less decisive---that participants in the +10 condition were less likely to respond "t" than participants in the baseline condition ($`r get_bf(fit_mix_test, "mu2_Condition.Exposure_Shift10vs.Shift0 < 0")`$). That is, the +10 and +40 conditions resulted in categorization functions that were shifted rightwards compared to the baseline condition, as also evident in Figures \@ref(fig:plot-fit-slope-PSE).
 
-This replicates previous findings that exposure to changed VOT distributions changes listeners' categorization responses [for /b/-/p/: @clayards2008; @kleinschmidt-jaeger2016; @kleinschmidt2020; for /g/-/k/, @theodore-monto2019]. Having established that exposure affected categorization, we turn to the questions of primary interest. Incremental changes in participants' categorization responses can be assessed from three mutually complementing perspectives. First, we compare how exposure affects listeners' categorization responses relative to other exposure conditions. This tests how early in the experiment differences between exposure conditions began to emerge. Second, we compare how exposure affects listeners' categorization responses within each condition relative to listeners' responses prior to any exposure. Third and finally, we compare changes in listeners' responses to those expected from an ideal observer that has fully learned the exposure distributions. This investigates the degree of boundary shift listeners make at each test block relative to their expectations before informative exposure. 
+This replicates previous findings that exposure to changed VOT distributions changes listeners' categorization responses [for /b/-/p/: @clayards2008; @kleinschmidt-jaeger2016; @kleinschmidt2020; for /g/-/k/, @theodore-monto2019]. Having established that exposure affected categorization, we turn to the questions of primary interest. Incremental changes in participants' categorization responses can be assessed from three mutually complementing perspectives. First, we compare how exposure affects listeners' categorization responses relative to other exposure conditions. This tests how early in the experiment differences between exposure conditions began to emerge. Second, we compare how exposure changes listeners' categorization responses from block to block within each condition, relative to listeners' responses prior to any exposure. Third and finally, we compare changes in listeners' responses to those expected from an ideal observer that has fully learned the exposure distributions. This investigates the degree of boundary shift listeners make at each test block relative to their expectations before informative exposure. 
 
 ### Comparing across exposure conditions: How quickly does exposure begin to affect participants' responses? 
 Figure \@ref(fig:plot-fit-slope-PSE)A suggests that differences between exposure conditions emerged early in the experiment: already in Test 2, listener's categorization functions in the +10 and +40 conditions have shifted rightwards (larger PSEs). This is confirmed by the Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-effects). Prior to any exposure, during Test 1, participants' responses did not differ across exposure condition. After exposure to only 24 /d/ and 24 /t/ stimuli, during Test 2, participants' responses already differed between exposure conditions (BFs > 13.7). The difference between the +40 condition and the +10 or baseline condition kept increasing with exposure up to Test 4. 
