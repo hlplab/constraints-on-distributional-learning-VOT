@@ -354,6 +354,80 @@ get_bivariate_normal_ellipse <- function(
   return(ellipse)
 }
 
+# LINK IDEAL OBSERVERS TO PERCEPTION EXPERIMENT ---------------------------
+
+# Make ideal observer based on exposure conditions
+make_VOT_IOs_from_exposure <- function(data){
+  data %>%
+
+    # This takes all of the actual data to make ideal observers. Alternatively, one could
+    # first distinct the data to one full list of each condition.
+    make_MVG_ideal_observer_from_data(
+      group = "Condition.Exposure",
+      cues = c("VOT"),
+      Sigma_noise = matrix(80, dimnames = list("VOT", "VOT"))) %>%
+    # Add prior based on Chodroff & Wilson (2018)
+    # (comment out to not express gray reference line below)
+    bind_rows(
+      d.chodroff_wilson %>%
+        make_MVG_ideal_observer_from_data(
+          cues = c("VOT"),
+          Sigma_noise = matrix(80, dimnames = list("VOT", "VOT"))) %>%
+        mutate(Condition.Exposure = "prior")) %>%
+    nest(io = -c(Condition.Exposure))
+}
+
+# Estimate the intercept, slope, and PSE that these ideal observers would have
+# were they analyzed the same way the human data is analyzed.
+get_logistic_parameters_from_model <- function(
+    model,
+    x,
+    model_col = "model",
+    groups = NULL,
+    resolution = 10^12
+) {
+  f <-
+    if (any(map(model[[model_col]], is.MVG_ideal_observer) %>% unlist()))
+      get_categorization_from_MVG_ideal_observer else
+        if (any(map(model[[model_col]], is.NIW_ideal_adaptor) %>% unlist()))
+          get_categorization_from_NIW_ideal_adaptor else stop("Model type not recognized.")
+
+  model %>%
+    # Cross in test tokens
+    left_join(x, by = "Condition.Exposure") %>%
+    mutate(x = map(x, ~ c(.x))) %>%
+    nest(x = x) %>%
+    # Get categorization proportions (turned into counts below)
+    mutate(
+      categorization =
+        map2(x, !! sym(model_col),
+             ~ f(
+               x = .x$x, model = .y, decision_rule = "proportional") %>%
+               mutate(VOT = map(x, ~ .x[1]) %>% unlist()))) %>%
+    unnest(cols = categorization, names_repair = "unique") %>%
+    # Prepare data frame for logistic regression
+    pivot_wider(names_from = category, values_from = response, names_prefix = "response_") %>%
+    mutate(n_d = round(`response_/d/` * .env$resolution), n_t = .env$resolution - n_d) %>%
+    group_by(!!! syms(groups)) %>%
+    nest() %>%
+    # Fit logistic regression and extract relevant information
+    # (the regression only uses VOT regardless of what cues are used for the categorization
+    # so that this matches the analysis of the human responses)
+    mutate(
+      model_unscaled = map(data, ~ glm(
+        cbind(n_t, n_d) ~ 1 + VOT,
+        family = binomial,
+        data = .x)),
+      intercept_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[1, 2] %>% pull()),
+      slope_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[2, 2] %>% pull()),
+      model_scaled = map(data, ~ glm(
+        cbind(n_t, n_d) ~ 1 + I((VOT - VOT.mean_test) / (2 * VOT.sd_test)),
+        family = binomial,
+        data = .x)),
+      intercept_scaled = map_dbl(model_scaled, ~ tidy(.x)[1, 2] %>% pull()),
+      slope_scaled = map_dbl(model_scaled, ~ tidy(.x)[2, 2] %>% pull()),
+      PSE = -intercept_unscaled/slope_unscaled)
+}
 
 ############################################################################
 # Get approximate f0 of synthesised stimuli from VOT values
