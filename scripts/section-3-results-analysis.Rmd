@@ -268,7 +268,7 @@ p.slope_1to7 <-
     linetype = 2, linewidth = .9, alpha = 0.5,
     direction = "mid",
     inherit.aes = F) +
-  scale_y_continuous("slope (log-odds/ms)")
+  scale_y_continuous("slope (log-odds/ms VOT)")
 
 d.true_shift <- 
   d.estimates %>% 
@@ -302,7 +302,7 @@ d.talkerPSEs <-
 
 p.PSE_1to7 <-     
   p.across_blocks +  
-  scale_y_continuous("PSE (ms)") +
+  scale_y_continuous("PSE (ms VOT)") +
   aes(y = PSE_median, ymin = PSE_lower, ymax = PSE_upper) +
   geom_linerange(linewidth = .6, position = position_dodge(.3), alpha = .5) +
   geom_label(
@@ -623,7 +623,7 @@ rm(fit_mix_test, fit_mix_test_nested, fit_mix_test_nested_block, fit_mix_exposur
 ### Comparing within exposure conditions: How quickly does exposure begin to affect participants' responses? 
 Next, we compared how exposure affects listeners' categorization responses within each condition relative to listeners' responses prior to any exposure. These changes are summarized for the slope and PSE in Figure \@ref(fig:plot-fit-slope-PSE)C & D, respectively. This visualization makes apparent two aspects of participants' behavior that were not readily apparent in the statistical comparisons we have summarized so far. First, while the PSEs for the +40 and +10 conditions were shifted rightwards compared to the baseline condition, both the +10 and the baseline condition actually shift leftwards relative to their pre-exposure starting point in Test 1. This is confirmed by Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-block-effects). 
 
-(ref:exposure-means-database-density) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for 6914 word-initial /d/ and /t/ productions in L1-US English [based on 65 female talkers in @chodroff-wilson2018]. The outermost contour of each category shows the 95% density quantile. Points show the category means of the exposure condition.
+(ref:exposure-means-database-density) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for 4212 word-initial /d/ and /t/ productions in L1-US English [based on 65 female talkers in @chodroff-wilson2018]. The outermost contour of each category shows the 95% density quantile. Points show the category means of the exposure condition.
 
 ```{r centering}
 # center exposure cues to speech corpus means
