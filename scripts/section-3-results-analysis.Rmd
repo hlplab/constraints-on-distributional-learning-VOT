@@ -47,8 +47,7 @@ We analyzed participants' categorization responses during exposure and test bloc
 
 The two psychometric models for exposure and test blocks each regressed participants' categorization responses against the full factorial interaction of VOT, block, and exposure condition, along with the maximal random effect structure (by-subject intercepts and slopes for VOT, block, and their interaction, and by-item intercept and slopes for the full factorial design; see SI, \@ref(sec:analysis-approach)). Figure \@ref(fig:plot-fit-slope-PSE) summarizes the results that we describe in more detail next. Panels A and B show participants’ categorization responses during exposure and test blocks, along with the categorization function estimated from those responses via the mixed-effects psychometric models. These panels facilitate comparison between exposure conditions within each block. Panels C and D show the slope and point of subject equality (PSE)---i.e., the point at which participants are equally likely to respond "d" and "t"---of the categorization function across blocks and conditions. These panels facilitate comparison across blocks within each exposure condition. Here we focus on the test blocks, which were identical within and across exposure conditions.^[Previous studies have estimated changes in participants' categorization responses by analyzing responses on unlabeled exposure trials [e.g., @clayards2008; @kleinschmidt-jaeger2016; @theodore-monto2019]. This approach compares responses across different values of acoustic-phonetic cues (since the exposure inputs differed by exposure condition), so that assumptions baked into the analysis approach (e.g., linearity along the acoustic-phonetic continuum) can potentially bias the results. The analysis of test blocks that are identical within and across participants avoids this issue [see also @kleinschmidt2020, Experiment 4].] Analyses of the exposure blocks are reported in the SI (\@ref(sec:exposure-analyses)), and replicate all effects found in the test blocks. 
 
-We begin by presenting the overall effects, averaging across all test blocks. This part of our analysis matches previous work, which has focused on the overall effect of exposure across the entire experiment ['batch tests', e.g., @clayards2008; @kleinschmidt-jaeger2016; @nixon2016; @theodore-monto2019] and/or during a single post-exposure test block [e.g., @kleinschmidt2020]. Then we present novel analyses that address questions about the incremental adaptation---testing the predictions of models of adaptive speech perception described in the introduction. 
-
+We begin by presenting the overall effects, averaging across all test blocks. This part of our analysis matches previous work, which analyzed the *average* effect of exposure across the entire experiment ['batch tests', e.g., @clayards2008; @kleinschmidt-jaeger2016; @nixon2016; @theodore-monto2019] or during a single post-exposure test [e.g., @kleinschmidt2020]. Then we present novel analyses that address questions about the incremental adaptation---testing the predictions described in the introduction. 
 
 ```{r fit-nested-models-for-intercepts-slopes-plot}
 # Refit the same model, formulated as nesting intercepts and slopes within each unique combination of
@@ -98,131 +97,68 @@ d.estimates <-
 ```
 
 ```{r}
-# Make ideal observer based on exposure conditions
-make_VOT_IOs_from_exposure <- function(data){ 
-  data %>%
-    
-  # This takes all of the actual data to make ideal observers. Alternatively, one could 
-  # first distinct the data to one full list of each condition.
-  make_MVG_ideal_observer_from_data(
-    group = "Condition.Exposure", 
-    cues = c("VOT"), 
-    Sigma_noise = matrix(80, dimnames = list("VOT", "VOT"))) %>%
-  # Add prior based on Chodroff & Wilson (2018)
-  # (comment out to not express gray reference line below)
-  bind_rows(
-    d.chodroff_wilson %>%
-      make_MVG_ideal_observer_from_data(
-        cues = c("VOT"), 
-        Sigma_noise = matrix(80, dimnames = list("VOT", "VOT"))) %>% 
-      mutate(Condition.Exposure = "prior")) %>%
-  nest(io = -c(Condition.Exposure))
-}  
-
-io <-    
+ io <-    
   make_VOT_IOs_from_exposure(
-   d_for_analysis %>% 
+    d_for_analysis %>% 
       filter(Phase == "exposure") %>% 
       group_by(ParticipantID, Condition.Exposure) %>% 
       nest(data = -c(ParticipantID, Condition.Exposure)) %>% 
       group_by(Condition.Exposure) %>% 
       slice_sample(n = 1) %>% 
       unnest(data) %>% 
-      mutate(
-        category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")) %>% 
+      mutate(category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")) %>% 
       rename(VOT = Item.VOT, f0 = Item.f0_Mel)) 
 
-# Estimate the intercept, slope, and PSE that these ideal observers would have 
-# were they analyzed the same way the human data is analyzed.
-get_logistic_parameters_from_model <- function(
-    model, 
-    x, 
-    model_col = "model", 
-    groups = NULL, 
-    resolution = 10^12
-) {
-  f <- if (any(map(model[[model_col]], is.MVG_ideal_observer) %>% unlist())) 
-    get_categorization_from_MVG_ideal_observer else
-      if (any(map(model[[model_col]], is.NIW_ideal_adaptor) %>% unlist())) 
-        get_categorization_from_NIW_ideal_adaptor else stop("Model type not recognized.")
-  
-  model %>%
-    # Cross in test tokens
-    left_join(x, by = "Condition.Exposure") %>%
-    mutate(x = map(x, ~ c(.x))) %>%
-    nest(x = x) %>%
-    # Get categorization proportions (turned into counts below)
-    mutate(
-      categorization =
-        map2(x, !! sym(model_col),
-             ~ f(
-               x = .x$x, model = .y, decision_rule = "proportional") %>%
-               mutate(VOT = map(x, ~ .x[1]) %>% unlist()))) %>%
-    unnest(cols = categorization, names_repair = "unique") %>%
-    # Prepare data frame for logistic regression 
-    pivot_wider(names_from = category, values_from = response, names_prefix = "response_") %>%
-    mutate(n_d = round(`response_/d/` * .env$resolution), n_t = .env$resolution - n_d) %>%
-    group_by(!!! syms(groups)) %>%
-    nest() %>%
-    # Fit logistic regression and extract relevant information
-    # (the regression only uses VOT regardless of what cues are used for the categorization
-    # so that this matches the analysis of the human responses)
-    mutate(
-      model_unscaled = map(data, ~ glm(
-        cbind(n_t, n_d) ~ 1 + VOT, 
-        family = binomial, 
-        data = .x)),
-      intercept_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[1, 2] %>% pull()),
-      slope_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[2, 2] %>% pull()),
-      model_scaled = map(data, ~ glm(
-        cbind(n_t, n_d) ~ 1 + I((VOT - VOT.mean_test) / (2 * VOT.sd_test)), 
-        family = binomial, 
-        data = .x)),
-      intercept_scaled = map_dbl(model_scaled, ~ tidy(.x)[1, 2] %>% pull()),
-      slope_scaled = map_dbl(model_scaled, ~ tidy(.x)[2, 2] %>% pull()),
-      PSE = -intercept_unscaled/slope_unscaled)
-}
-
-# Test points at which responses were measured
-d.io.categorization.test <- get_logistic_parameters_from_model(
-  io %>% filter(Condition.Exposure != "prior"), 
-  d_for_analysis %>%  
-    filter(Phase == "test") %>%
-    distinct(Condition.Exposure, Item.VOT) %>%
-    rename(x = Item.VOT), 
-  model_col = "io", 
-  groups = "Condition.Exposure") %>% 
-  mutate(Phase = "test") %>% 
-  select(Condition.Exposure, Phase, intercept_scaled, slope_scaled, PSE) %>% 
-  crossing(Block = c(1, 3, 5, 7, 8, 9))
-
-d.io.categorization.exposure <- get_logistic_parameters_from_model(
-  io %>% filter(Condition.Exposure != "prior"), 
-  d_for_analysis %>%  
-    filter(Phase == "exposure", Item.Labeled == F) %>%
-    group_by(Condition.Exposure) %>%
-    # Since blocks differ in which VOTs are unlabelled, we include all blocks
-    # (we are simulating the expected parameters across all exposure blocks)
-    filter(ParticipantID == first(ParticipantID)) %>% 
-    select(Item.VOT) %>% 
-    rename(x = Item.VOT), 
-  model_col = "io", 
-  groups = "Condition.Exposure") %>% 
-  mutate(Phase = "exposure") %>% 
-  select(Condition.Exposure, Phase, intercept_scaled, slope_scaled, PSE) %>% 
-  crossing(Block = c(2, 4, 6))
-
+# Get logistic parameter estimates for a simulated ideal observer listener. Do so for both 
+# exposure and test. Even though this turned out to be overkill, we did it because it was 
+# theoretically possible that the procedure we use to analyze *listeners'* responses (a 
+# logistic model with a linear effect of VOT) introduces a bias into the estimation. Here, 
+# we thus apply a variant of that same analysis approach to responses that are sampled from
+# the three ideal observer fit on the exposure data (one each per exposure condition).
+# 
+# Unlike for the analysis of participants' responses, there is no need to use a psychometric
+# model since ideal observers have not attentional lapses (i.e., lambda = 0). 
 d.io.categorization <- 
-  rbind(d.io.categorization.exposure, d.io.categorization.test) %>% 
-    mutate(across(c(Phase, Condition.Exposure, Block), factor)) 
+  rbind(
+    # Assess the ideal observers at the exact same locations used during test blocks
+    get_logistic_parameters_from_model(
+      io %>% filter(Condition.Exposure != "prior"), 
+      d_for_analysis %>%  
+        filter(Phase == "test") %>%
+        distinct(Condition.Exposure, Item.VOT) %>%
+        rename(x = Item.VOT), 
+      model_col = "io", 
+      groups = "Condition.Exposure") %>% 
+      mutate(Phase = "test") %>% 
+      crossing(Block = c(1, 3, 5, 7, 8, 9)), 
+    # Assess the ideal observers on the VOT locations that occur in the three different 
+    # exposure conditions. 
+    get_logistic_parameters_from_model(
+      io %>% filter(Condition.Exposure != "prior"), 
+      d_for_analysis %>%  
+        filter(Phase == "exposure", Item.Labeled == F) %>%
+        group_by(Condition.Exposure) %>%
+        # Since blocks differ in which VOTs are unlabelled, we include all blocks
+        # (we are simulating the expected parameters across all exposure blocks)
+        filter(ParticipantID == first(ParticipantID)) %>% 
+        select(Item.VOT) %>% 
+        rename(x = Item.VOT), 
+      model_col = "io", 
+      groups = "Condition.Exposure") %>% 
+      mutate(Phase = "exposure") %>% 
+      crossing(Block = c(2, 4, 6))) %>%
+  select(Condition.Exposure, Phase, intercept_scaled, slope_scaled, PSE) %>% 
+  mutate(across(c(Phase, Condition.Exposure, Block), factor)) 
 ```
 
 ```{r prepare-plot-intercepts-slopes}
 p.across_blocks <-
   d.estimates %>% 
-  ggplot(aes(x = Block, y = Intercept_median,
-             ymin = Intercept_lower, ymax = Intercept_upper,
-             colour = Condition.Exposure, group = Condition.Exposure)) +
+  ggplot(
+    aes(
+      x = Block, y = Intercept_median,
+      ymin = Intercept_lower, ymax = Intercept_upper,
+      colour = Condition.Exposure, group = Condition.Exposure)) +
   geom_rect(
     data = tibble(
       xmin = c(seq(0.5, 6.5, 2), seq(7.55, 8.55, 1)), 
@@ -266,18 +202,20 @@ p.slope_1to7 <-
 d.true_shift <- 
   d.estimates %>% 
   # join the ideal PSEs from io predictions
-  left_join(d.io.categorization %>% 
-              dplyr::select(Phase, Condition.Exposure, Block, PSE) %>% 
-              rename(PSE.io_predicted = PSE), by = c("Condition.Exposure", "Block")) %>%
+  left_join(
+    d.io.categorization %>% 
+      dplyr::select(Phase, Condition.Exposure, Block, PSE) %>% 
+      rename(PSE.io_predicted = PSE), by = c("Condition.Exposure", "Block")) %>%
   group_by(Condition.Exposure) %>% 
   mutate(
-    PSE_block1 = case_when(Condition.Exposure == "Shift0" ~ d.estimates$PSE_median[1], 
-                                Condition.Exposure == "Shift10" ~ d.estimates$PSE_median[10],
-                                Condition.Exposure == "Shift40" ~ d.estimates$PSE_median[19]),
+    PSE_block1 = 
+      case_when(
+        Condition.Exposure == "Shift0" ~ d.estimates$PSE_median[1], 
+        Condition.Exposure == "Shift10" ~ d.estimates$PSE_median[10],
+        Condition.Exposure == "Shift40" ~ d.estimates$PSE_median[19]),
     true_shift = PSE.io_predicted - PSE_block1,
     proportion_shift = (PSE_median - PSE_block1)/true_shift,
     proportion_shift = ifelse(Condition.Exposure != "Shift40", -(proportion_shift), proportion_shift))
-
 
 # compute PSEs from talkers in Chodroff-Wilson corpus
 d.talkerPSEs <- 
@@ -287,11 +225,13 @@ d.talkerPSEs <-
     groups = c("Talker", "gender"),
     with_noise = TRUE,
     VOTs = seq(0, 85, .5)) %>% 
-  mutate(center_constant = mean(d.true_shift$PSE_block1) - mean(PSE),
-                        PSE_centered = PSE + center_constant) %>% 
-  summarise(lower_PSE = quantile(PSE_centered, probs = .025), 
-            mean_PSE = mean(PSE_centered),
-            upper_PSE = quantile(PSE_centered, probs = .975)) 
+  mutate(
+    center_constant = mean(d.true_shift$PSE_block1) - mean(PSE),
+    PSE_centered = PSE + center_constant) %>% 
+  summarise(
+    lower_PSE = quantile(PSE_centered, probs = .025), 
+    mean_PSE = mean(PSE_centered),
+    upper_PSE = quantile(PSE_centered, probs = .975)) 
 
 p.PSE_1to7 <-     
   p.across_blocks +  
@@ -300,12 +240,12 @@ p.PSE_1to7 <-
   geom_linerange(linewidth = .6, position = position_dodge(.3), alpha = .5) +
   geom_label(
     data = d.true_shift %>% filter(Block != 1), 
-  mapping = aes(label = paste(scales::percent(proportion_shift, accuracy = .1))),
-  position = position_dodge(.3),
-  label.size = .15,
-  label.padding = unit(.18, "lines"),
-  size = 2.2,
-  show.legend = F) +
+    mapping = aes(label = paste(scales::percent(proportion_shift, accuracy = .1))),
+    position = position_dodge(.3),
+    label.size = .15,
+    label.padding = unit(.18, "lines"),
+    size = 2.2,
+    show.legend = F) +
   geom_step(
     data = d.io.categorization,
     mapping = aes(x = Block, y = PSE, color = Condition.Exposure, group = Condition.Exposure),
@@ -315,32 +255,26 @@ p.PSE_1to7 <-
     direction = "mid",
     inherit.aes = F) +
   geom_text(
-   data = d.true_shift %>% 
-     filter(Phase == "exposure") %>% 
-     group_by(Condition.Exposure, true_shift) %>% 
-     summarise(),
-   mapping = aes(
-    x = 10.2,
-    y = c(25, 35, 65),
-    label = paste(round(true_shift), "(100%)"),
-    colour = Condition.Exposure),
-   colour = colours.condition,
-   fontface = "bold",
-   size = 3,
-   inherit.aes = F) +
+    data = d.true_shift %>% 
+      filter(Phase == "exposure") %>% 
+      group_by(Condition.Exposure, true_shift) %>% 
+      summarise(),
+    mapping = aes(
+      x = 10.2, y = c(25, 35, 65),
+      label = paste(round(true_shift), "(100%)"),
+      colour = Condition.Exposure),
+    colour = colours.condition,
+    fontface = "bold",
+    size = 3,
+    inherit.aes = F) +
   annotate(
     "crossbar",
-    x = 9.7,
-    y = d.talkerPSEs$mean_PSE,
-    ymin = d.talkerPSEs$lower_PSE,
-    ymax = d.talkerPSEs$upper_PSE,
-    width = 0.1,
+    x = 9.7, y = d.talkerPSEs$mean_PSE, ymin = d.talkerPSEs$lower_PSE, ymax = d.talkerPSEs$upper_PSE,
     colour = "black",
+    width = 0.1,
     alpha = .6) +
-    coord_cartesian(
-      xlim = c(0.75, 9),
-      clip = "off") +
-    theme(plot.margin = unit(c(1, 3.2, 1, 1), "lines"))
+  coord_cartesian(xlim = c(0.75, 9), clip = "off") +
+  theme(plot.margin = unit(c(1, 3.2, 1, 1), "lines"))
 
 p.estimates_1to7 <-  
   (p.slope_1to7 | p.PSE_1to7) +
