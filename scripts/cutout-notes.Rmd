@@ -557,3 +557,14 @@ The distributional make up was determined through a process of sampling tokens f
 
 
 In addition, participants' categorization during the early phase of the experiment were scrutinised for their slope orientation and their proportion of "t"-responses at the least ambiguous locations of the VOT continuum. The early phase of the experiment was defined as the first 36 trials and the least ambiguous locations were defined as -20ms below the empirical mean of the /d/ category and +20ms above the empirical mean of the /t/ category. These means were obtained from the production data estimates by @Kurumada_Xie_Jaeger_2022.
+
+
+# Results leftovers
+
+
+
+----
+Additional hypothesis tests in Table \@ref(tab:hypothesis-table-interactions) show that the change from Test 1 to 2 was largest (BF = 57.82), followed by the change from Test 2 to 3 (BF = 10), with only minimal changes from Test 3 to 4 (BF = 1.68). Qualitatively paralleling the changes across blocks for the +40 condition, the change in the difference between the +10 and baseline conditions was largest from Test 1 to 2 (BF = 5.42), and then somewhat decreased from Test 2 to Test 4 (BFs < 1). 
+-----
+
+
