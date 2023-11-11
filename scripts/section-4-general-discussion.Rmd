@@ -2,7 +2,7 @@
 
 # General discussion
  
- 
+ + discuss the fact that changes from block to block were largest at the beginning is consistent with the predictions of error-based learning [@sohoglu-davis2016] and Bayesian inference [@kleinschmidt-jaeger2015; for demonstration, see @jaeger2019].
  + discuss consequences of findings for other accounts (decision-making; normalization)
  
  + discuss fact that test stimuli deviate from exposure stimuli to different extent.  on the one hand, it's just 1/4 of all trials. on the other hand, we do see relatively systematic changes in slopes each time we test. so there is evidence that even these 12 trials can affect categorisation slopes (though it is worth keeping in mind that this is a comparison across different sets of stimuli). could this explain shrinkage? unlikely since it wasn't the case in kleinschmidt and jaeger. could it explain the constraint on adaptation? that's less clear. we can, however, compare the relative mean of exposure and test. future studies could rerun the exact same paradigm but only test at position x (i.e., a between-subject version of our design)
