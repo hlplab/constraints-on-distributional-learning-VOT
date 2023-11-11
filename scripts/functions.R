@@ -172,10 +172,11 @@ get_coefficient_fr_model <- function(model, term) {
 
 get_bf <- function(model, hypothesis) {
   h <- hypothesis(model, hypothesis)[[1]]
+  if (is.infinite(h$Evid.Ratio)) ER <- "> 8000" else ER <- round(h$Evid.Ratio, 1)
   paste0(
     "\\hat{\\beta} = ", round(h$Estimate, 2),
     ",\\ 90\\%{\\rm -CI} = [", round(h$CI.Lower, 3), ", ", round(h$CI.Upper, 3),
-    "],\\ BF = ", round(h$Evid.Ratio, 1),
+    "],\\ BF = ", ER,
     ",\\ p_{posterior} = ", signif(h$Post.Prob, 3))
 }
 
@@ -844,8 +845,8 @@ prepVars <- function(d, test_mean = NULL, levels.Condition = NULL, contrast_type
     contrasts(d$Block) <- MASS::fractions(MASS::contr.sdif(6))
     dimnames(contrasts(d$Block))[[2]] <- c("_Test2 vs. Test1", "_Test3 vs. Test2", "_Test4 vs. Test3", "_Test5 vs. Test4", "_Test6 vs. Test5")
 
-    message(contrasts(d$Condition.Exposure))
-    message(contrasts(d$Block))
+    message("Condition contrast is:", contrasts(d$Condition.Exposure))
+    message("Block contrast is:", contrasts(d$Block))
   } else if (all(d$Phase == "test") & n_distinct(d$Block) > 1 & contrast_type == "helmert"){
     contrasts(d$Block) <- cbind("_Test2 vs. Test1" = c(-1/2, 1/2, 0, 0, 0, 0),
                                 "_Test3 vs. Test2_1" = c(-1/3, -1/3, 2/3, 0, 0, 0),
@@ -857,11 +858,16 @@ prepVars <- function(d, test_mean = NULL, levels.Condition = NULL, contrast_type
   } else if (all(d$Phase == "exposure") & n_distinct(d$Block) > 1 & contrast_type == "difference"){
     contrasts(d$Block) <- cbind("_Exposure2 vs. Exposure1" = c(-2/3, 1/3, 1/3),
                                 "_Exposure3 vs. Exposure2" = c(-1/3,-1/3, 2/3))
-    message(contrasts(d$Block))
+    message("Condition contrast is:", MASS::fractions(contrasts(d$Condition.Exposure)))
+    message("Block contrast is:", MASS::fractions(contrasts(d$Block)))
+  } else if (n_distinct(d$Block) > 1 & contrast_type == "difference"){
+    contrasts(d$Block) <- MASS::fractions(MASS::contr.sdif(9))
+    dimnames(contrasts(d$Block))[[2]] <- c("_Exp1 vs. Test1", "_Test2 vs. Exp1", "_Exp2 vs. Test2", "_Test3 vs. Exp2", "_Exp3 vs. Test3", "_Test4 vs. Exp3", "_Test5 vs. Test4", "_Test6 vs. Test5")
+    message("Condition contrast is:", MASS::fractions(contrasts(d$Condition.Exposure)))
+    message("Block contrast is:", MASS::fractions(contrasts(d$Block)))
   } else {
     message(contrasts(d$Condition.Exposure))
   }
-
   return(d)
 }
 
