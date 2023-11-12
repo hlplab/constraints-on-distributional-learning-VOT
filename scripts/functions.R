@@ -159,16 +159,36 @@ get_ChodroffWilson_data <- function(
 
 # Get info from psychometric model -----------------------------------------------------------
 
+get_intercepts_and_slopes <-
+  . %>%
+  gather_draws(`b_mu2_IpasteCondition.ExposureBlocksepEQ.*`, regex = TRUE, ndraws = 8000) %>%
+  mutate(.variable = gsub("b_mu2_IpasteCondition.ExposureBlocksepEQxShift(\\d{1,2})x(\\d{1}.*$)", "Shift\\1.\\2", .variable),
+         term = ifelse(str_detect(.variable, "VOT_gs"), "slope", "Intercept")) %>%
+  separate(col = .variable, into = c("Condition.Exposure", "Block"), sep = "\\.") %>%
+  mutate(Block = ifelse(str_detect(Block, "VOT"), str_replace(Block, "(\\d{1}):VOT_gs", "\\1"), Block)) %>%
+  pivot_wider(names_from = term, values_from = ".value") %>%
+  relocate(c(Condition.Exposure, Block, Intercept, slope, .chain, .iteration, .draw))
+
 # function to get PSE from a model already in tibble format
 get_PSE <- function(model, y) {
   y <- model %>% pull(y)
   as.numeric(model[which(abs(y - .5) == min(abs(y - .5))), 1])
 }
 
-# Function for calculating CI from logits of a model summary
-get_coefficient_fr_model <- function(model, term) {
-  round(as.numeric(summary(model)$fixed[term, 1]), 1)
+get_conditional_effects <- function(model, data, phase) {
+  conditional_effects(
+    x = model,
+    effects = "VOT_gs:Condition.Exposure",
+    conditions = make_conditions(
+      data %>%
+        filter(Phase == .env$phase & Item.Labeled == FALSE) %>%
+        prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = "difference"),
+      vars = c("Block")),
+    method = "posterior_epred",
+    ndraws = 500,
+    re_formula = NA)
 }
+
 
 get_bf <- function(model, hypothesis) {
   h <- hypothesis(model, hypothesis)[[1]]
@@ -180,12 +200,6 @@ get_bf <- function(model, hypothesis) {
     ",\\ p_{posterior} = ", signif(h$Post.Prob, 3))
 }
 
-print_CI <- function(model, term) {
-  paste0(round(plogis(as.numeric(summary(model)$fixed[term, 1])) * 100, 1),
-         "%, 95%-CI: ",
-         paste0(round(plogis(as.numeric(summary(model)$fixed[term, 3:4])) * 100, 1), collapse = " to "), "%")
-}
-
 # Function to get identity CI of a model summary
 get_CI <- function(model, term, hypothesis) {
   paste0(round(as.numeric(summary(model)$fixed[term, 1]), 1), " 95%-CI: ",
@@ -194,6 +208,11 @@ get_CI <- function(model, term, hypothesis) {
          get_bf(model = model, hypothesis = hypothesis))
 }
 
+print_CI <- function(model, term) {
+  paste0(round(plogis(as.numeric(summary(model)$fixed[term, 1])) * 100, 1),
+         "%, 95%-CI: ",
+         paste0(round(plogis(as.numeric(summary(model)$fixed[term, 3:4])) * 100, 1), collapse = " to "), "%")
+}
 
 # plotting the Bayesian psychometric fit
 geom_linefit <- function(data, x, y, fill, legend.position, legend.justification = NULL) {
@@ -222,6 +241,28 @@ geom_linefit <- function(data, x, y, fill, legend.position, legend.justification
       strip.text.x = element_text(colour = "black")),
     facet_grid(~ Block.plot_label, scales = "free_x", space = "free_x")
   )
+}
+
+### function for Formatting hypothesis tables
+align_tab <- function(hyp) {
+  map_chr(hyp, ~ ifelse(class(.x) == "numeric", "r","l"))
+}
+
+make_hyp_table <- function(hypothesis, hypothesis_names, caption, col1_width = "15em") {
+  bind_cols(tibble(Hypothesis = hypothesis_names), hypothesis) %>%
+    dplyr::select(-2) %>%
+    mutate(
+      across(where(is.numeric), ~ round(., digits = 3)),
+      CI = paste0("[", CI.Lower, ", ", CI.Upper, "]")) %>%
+    dplyr::select(-c(CI.Upper, CI.Lower)) %>%
+    relocate(CI, .before = "Evid.Ratio") %>%
+    kbl(caption = caption, align = align_tab(hypothesis),
+        format = "latex",
+        booktabs = TRUE,
+        escape = FALSE,
+        col.names = c("Hypothesis", "Estimate", "SE", "90\\%-CI", "BF", "$p_{posterior}$")) %>%
+    kable_styling(full_width = FALSE) %>%
+    column_spec(1, width = col1_width)
 }
 
 
@@ -887,27 +928,6 @@ density_quantiles <- function(x, y, quantiles) {
 }
 
 
-### function for formatting hypothesis tables
-align_tab <- function(hyp) {
-  map_chr(hyp, ~ ifelse(class(.x) == "numeric", "r","l"))
-}
-
-make_hyp_table <- function(hyp_readable, hyp, caption, col1_width = "15em") {
-  cbind(hyp_readable, hyp) %>%
-    dplyr::select(-2) %>%
-    mutate(
-      across(where(is.numeric), ~ round(., digits = 3)),
-      CI = paste0("[", CI.Lower, ", ", CI.Upper, "]")) %>%
-    dplyr::select(-c(CI.Upper, CI.Lower)) %>%
-    relocate(CI, .before = "Evid.Ratio") %>%
-    kbl(caption = caption, align = align_tab(hyp),
-        format = "latex",
-        booktabs = TRUE,
-        escape = FALSE,
-        col.names = c("Hypothesis", "Estimate", "SE", "90\\%-CI", "BF", "$p_{posterior}$")) %>%
-    kable_styling(full_width = FALSE) %>%
-    column_spec(1, width = col1_width)
-}
 
 ### function to fit Bayesian model; priorSD argument refers to the SD for the VOT estimate
 fit_model <- function(data, phase, formulation = "standard", priorSD = 2.5, adapt_delta = .99) {

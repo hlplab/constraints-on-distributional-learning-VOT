@@ -517,7 +517,7 @@ hyp_interactions <- c(
   "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + 
    mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0")
 
-hyp_interactions <- hypothesis(fit_mix_test, hyp_interactions, robust = T)
+hyp_interactions <- hypothesis(fit_test, hyp_interactions, robust = T)
 hyp_interactions <- hyp_interactions$hypothesis %>% dplyr::select(-Star)
 
 # translate the hypotheses above into intelligible statements
@@ -737,7 +737,7 @@ m_IO.VOT_f0 <-
       Sigma_noise = matrix(c(80, 0, 0, 878), ncol = 2, dimnames = list(names(first(.$mu)), names(first(.$mu)))),
       prior = c("/d/" = .5, "/t/" = .5),
       # TO DO: set to lapse rate inferred in psychometric model fit to participants
-      lapse_rate = plogis(fixef(fit_mix_test)[[2]]),
+      lapse_rate = plogis(fixef(fit_test)[[2]]),
       lapse_bias = c("/d/" = .5, "/t/" = .5))
 
 m_IA.VOT_f0 <-
@@ -1451,7 +1451,7 @@ d.test.excluded %<>%
     sTrial = (Trial - Trial.mean) / (2 * Trial.sd))
 
 # load (or run) the psychometric model with interaction
-fit_mix <- brm(
+fit <- brm(
   bf(
     Response.Voicing == "voiceless" ~ 1,
     mu1 ~ 1 + (1 | g | ParticipantID),
@@ -1474,7 +1474,7 @@ if (file.exists("../models/conditional_effects_VOT_Trial.rds")) {
 
   psychometric_fit_exp1 <-
     conditional_effects(
-      fit_mix,
+      fit,
       effects = "sVOT:sTrial",
       int_conditions = int_conditions,
       ndraws = 1000,
@@ -1484,10 +1484,10 @@ if (file.exists("../models/conditional_effects_VOT_Trial.rds")) {
 }
 
 # get the PSE from the fitted categorisation function
-PSE.fit_mix <- descale(-(summary(fit_mix)$fixed["mu2_Intercept", 1] / summary(fit_mix)$fixed["mu2_sVOT", 1]), VOT.mean_exp1, VOT.sd_exp1)
+PSE.fit <- descale(-(summary(fit)$fixed["mu2_Intercept", 1] / summary(fit)$fixed["mu2_sVOT", 1]), VOT.mean_exp1, VOT.sd_exp1)
 
 # get posterior samples of intercept and slope, and median qi of the PSEs
-post_sample_norm <- fit_mix %>%
+post_sample_norm <- fit %>%
   spread_draws(b_mu2_Intercept, b_mu2_sVOT) %>%
   mutate(PSE = descale(-(b_mu2_Intercept/b_mu2_sVOT), VOT.mean_exp1, VOT.sd_exp1)) %>%
   median_qi(PSE)
@@ -1507,7 +1507,7 @@ newdata <- expand_grid(
 if (file.exists("../models/categorisation_by_min_pair.rds")) {
   cat_minimalpair <- read_rds("../models/categorisation_by_min_pair.rds")
 } else {
-  cat_minimalpair <- fit_mix %>%
+  cat_minimalpair <- fit %>%
     epred_draws(
       newdata = newdata,
       ndraws = 1000,
@@ -1625,7 +1625,7 @@ p.vot$labels$x <- MinPair_plot$labels$x <- " "
 
 
 ```{r by-participant-lapse-bias, warning=FALSE, fig.height=2.6, fig.width=6.5}
-lapse_participant <- fit_mix %>%
+lapse_participant <- fit %>%
   spread_draws(r_ParticipantID__theta1[ParticipantID, term], b_theta1_Intercept) %>%
   group_by(ParticipantID) %>%
   mutate(ParticipantID = factor(ParticipantID),
@@ -1634,7 +1634,7 @@ lapse_participant <- fit_mix %>%
   select(ParticipantID, term, r_ParticipantID__theta1, Participant_lapse, estimated_lapse) %>%
   mode_hdci(estimated_lapse)
 
-bias_participant <- fit_mix %>%
+bias_participant <- fit %>%
   spread_draws(r_ParticipantID__mu1[ParticipantID, term], b_mu1_Intercept) %>%
   group_by(ParticipantID) %>%
   mutate(ParticipantID = factor(ParticipantID),
@@ -1643,7 +1643,7 @@ bias_participant <- fit_mix %>%
   select(ParticipantID, term, r_ParticipantID__mu1, Participant_bias, estimated_bias) %>%
   mode_hdci(estimated_bias)
 
-estimate_minpair <- fit_mix %>% spread_draws(r_Item.MinimalPair__mu2[Item.MinimalPair, term], b_mu2_Intercept, b_mu2_sVOT) %>%
+estimate_minpair <- fit %>% spread_draws(r_Item.MinimalPair__mu2[Item.MinimalPair, term], b_mu2_Intercept, b_mu2_sVOT) %>%
   group_by(Item.MinimalPair) %>%
   mutate(predicted_eff = ifelse(term == "Intercept", r_Item.MinimalPair__mu2 + b_mu2_Intercept, r_Item.MinimalPair__mu2 + b_mu2_sVOT)) %>%
   group_by(Item.MinimalPair, term) %>%
@@ -1653,14 +1653,14 @@ estimate_minpair <- fit_mix %>% spread_draws(r_Item.MinimalPair__mu2[Item.Minima
 ```
 
 The lapse rate was estimated to be on the slightly larger side, but within the expected range
-(`r print_CI(fit_mix, "theta1_Intercept", "theta1_Intercept < 0")`). Maximum a posteriori (MAP) estimates of by-participant lapse rates ranged from XX . Very high lapse rates were estimated for four of the participants with one in particular whose CI indicated exceptionally high uncertainty. These lapse rates might reflect data quality issues with Mechanical Turk that started to emerge over recent years [see @REFS; and, specifically for experiments on speech perception, @cummings-theodore2023], and we return to this issue in Experiment 2.
+(`r print_CI(fit, "theta1_Intercept", "theta1_Intercept < 0")`). Maximum a posteriori (MAP) estimates of by-participant lapse rates ranged from XX . Very high lapse rates were estimated for four of the participants with one in particular whose CI indicated exceptionally high uncertainty. These lapse rates might reflect data quality issues with Mechanical Turk that started to emerge over recent years [see @REFS; and, specifically for experiments on speech perception, @cummings-theodore2023], and we return to this issue in Experiment 2.
 
-The response bias were estimated to slightly favor "t"-responses (`r print_CI(fit_mix, "mu1_Intercept", "mu1_Intercept > 0")`), as also visible in Figure \@ref(fig:fitted-categorisation-plots) (left).
+The response bias were estimated to slightly favor "t"-responses (`r print_CI(fit, "mu1_Intercept", "mu1_Intercept > 0")`), as also visible in Figure \@ref(fig:fitted-categorisation-plots) (left).
 Unsurprisingly, the psychometric model suggests high uncertainty about the participant-specific response biases, as it is difficult to reliably estimate participant-specific biases while also accounting for trial and VOT effects (range of by-participant MAP estimates: XX). For all but four participants, the 95% CI includes the hypothesis that responses were unbiased. Of the remaining four participants, three were biased towards "t"-responses and one was biased toward "d"-responses.
 
-There was no convincing evidence of a main effect of trial ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sTrial", "mu2_sTrial < 0")`). Given the slight overall bias towards "t"-responses, the direction of this effect indicates that participants converged towards a 50/50 bias as the test phase proceeded. This is also evident in Figure \@ref(fig:fitted-categorisation-plots) (right). In contrast, there was clear evidence for a positive main effect of VOT on the proportion of "t"-responses ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sVOT", "mu2_sVOT > 0")`). The effect of VOT was consistent across all minimal pair words as evident from the slopes of the fitted lines by minimal pair \@ref(fig:fitted-categorisation-plots) (left). MAP estimates of by minimal pair slopes ranged from . The by minimal-pair intercepts were more varied (MAP estimates: ) with one of the pairs, dim/tim having a slightly lower intercept resulting in fewer 't'-responses on average. In all, this justifies our assumptions that word pair would not have a substantial effect on categorisation behaviour. From the parameter estimates of the overall fit we obtained the category boundary from the point of subjective equality (PSE) `r( descale(-(summary(fit_mix)$fixed["mu2_Intercept", 1] / summary(fit_mix)$fixed["mu2_sVOT", 1]), VOT.mean_exp1, VOT.sd_exp1) ms)` which we use for the design of Experiment 2.
+There was no convincing evidence of a main effect of trial ($\hat{\beta} =$ `r get_CI(fit, "mu2_sTrial", "mu2_sTrial < 0")`). Given the slight overall bias towards "t"-responses, the direction of this effect indicates that participants converged towards a 50/50 bias as the test phase proceeded. This is also evident in Figure \@ref(fig:fitted-categorisation-plots) (right). In contrast, there was clear evidence for a positive main effect of VOT on the proportion of "t"-responses ($\hat{\beta} =$ `r get_CI(fit, "mu2_sVOT", "mu2_sVOT > 0")`). The effect of VOT was consistent across all minimal pair words as evident from the slopes of the fitted lines by minimal pair \@ref(fig:fitted-categorisation-plots) (left). MAP estimates of by minimal pair slopes ranged from . The by minimal-pair intercepts were more varied (MAP estimates: ) with one of the pairs, dim/tim having a slightly lower intercept resulting in fewer 't'-responses on average. In all, this justifies our assumptions that word pair would not have a substantial effect on categorisation behaviour. From the parameter estimates of the overall fit we obtained the category boundary from the point of subjective equality (PSE) `r( descale(-(summary(fit)$fixed["mu2_Intercept", 1] / summary(fit)$fixed["mu2_sVOT", 1]), VOT.mean_exp1, VOT.sd_exp1) ms)` which we use for the design of Experiment 2.
 
-Finally to accomplish the first goal of experiment 1, we look at the interaction between VOT and trial. There was weak evidence that the effect of VOT decreased across trials ($\hat{\beta} =$ `r get_CI(fit_mix, "mu2_sVOT:sTrial", "mu2_sVOT:sTrial < 0")`). The direction of this change---towards more shallow VOT slopes as the experiment progressed---makes sense since the test stimuli were not informative about the talker's pronunciation. Similar changes throughout prolonged testing have been reported in previous work. [@liu-jaeger2018; @liu-jaeger2019; @REFS].
+Finally to accomplish the first goal of experiment 1, we look at the interaction between VOT and trial. There was weak evidence that the effect of VOT decreased across trials ($\hat{\beta} =$ `r get_CI(fit, "mu2_sVOT:sTrial", "mu2_sVOT:sTrial < 0")`). The direction of this change---towards more shallow VOT slopes as the experiment progressed---makes sense since the test stimuli were not informative about the talker's pronunciation. Similar changes throughout prolonged testing have been reported in previous work. [@liu-jaeger2018; @liu-jaeger2019; @REFS].
 
 Overall, there was little evidence that participants substantially changed their categorisation behaviour as the experiment progressed. Still, to err on the cautious side, Experiment 2 employs shorter test phases.
 
@@ -1671,9 +1671,9 @@ Overall, there was little evidence that participants substantially changed their
 ```{r}
 d.intercept_estimates <-
   full_join(
-    fit_mix_test_nested %>% get_intercepts_and_slopes(),
-    fit_mix_exposure_nested %>% get_intercepts_and_slopes() %>%
-      mutate(Intercept = Intercept + fixef(fit_mix_exposure)[3] * ((VOT.mean_test - VOT.mean_exposure) / (2 * VOT.sd_exposure)))) %>%
+    fit_test_nested %>% get_intercepts_and_slopes(),
+    fit_exposure_nested %>% get_intercepts_and_slopes() %>%
+      mutate(Intercept = Intercept + fixef(fit_exposure)[3] * ((VOT.mean_test - VOT.mean_exposure) / (2 * VOT.sd_exposure)))) %>%
   group_by(Condition.Exposure, Block) %>%
   summarise(
     across(
