@@ -72,7 +72,7 @@ set.seed(42007)
 # Get production data for the prior.
 #
 # We are reimporting the data because here we are subsetting the Mixer 6 data to
-# talkers that have at least 15 instances each of the relevant stops (we're being
+# talkers that have at least 10 instances each of the relevant stops (we're being
 # conservative here since we're creating ideal observers based on this data that
 # are averaging across talkers, and so we'd like to make sure that each talker-
 # specific IO is based on enough data).
@@ -80,7 +80,7 @@ d.chodroff_wilson <-
   get_ChodroffWilson_data(
     database_filename = "../data/all_observations_with_non-missing_vot_cog_f0.csv",
     categories = c("/d/", "/t/"),
-    min.n_per_talker_and_category = 15,
+    min.n_per_talker_and_category = 10,
     limits.VOT = c(-Inf, Inf),
     limits.f0 = c(-Inf, Inf),
     max.p_for_multimodality = .1) %>%

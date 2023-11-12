@@ -404,23 +404,14 @@ get_bivariate_normal_ellipse <- function(
 # LINK IDEAL OBSERVERS TO PERCEPTION EXPERIMENT ---------------------------
 
 # Make ideal observer based on exposure conditions
-make_VOT_IOs_from_exposure <- function(data){
+make_VOT_IOs_from_exposure <- function(data, Sigma_noise = matrix(80, dimnames = list("VOT", "VOT"))) {
   data %>%
-
     # This takes all of the actual data to make ideal observers. Alternatively, one could
     # first distinct the data to one full list of each condition.
     make_MVG_ideal_observer_from_data(
       group = "Condition.Exposure",
       cues = c("VOT"),
-      Sigma_noise = matrix(80, dimnames = list("VOT", "VOT"))) %>%
-    # Add prior based on Chodroff & Wilson (2018)
-    # (comment out to not express gray reference line below)
-    bind_rows(
-      d.chodroff_wilson %>%
-        make_MVG_ideal_observer_from_data(
-          cues = c("VOT"),
-          Sigma_noise = matrix(80, dimnames = list("VOT", "VOT"))) %>%
-        mutate(Condition.Exposure = "prior")) %>%
+      Sigma_noise = Sigma_noise) %>%
     nest(io = -c(Condition.Exposure))
 }
 
@@ -439,8 +430,21 @@ get_logistic_parameters_from_model <- function(
         if (any(map(model[[model_col]], is.NIW_ideal_adaptor) %>% unlist()))
           get_categorization_from_NIW_ideal_adaptor else stop("Model type not recognized.")
 
+  if ("prior" %in% model$Condition.Exposure) {
+    x <-
+      bind_rows(
+        x,
+        x %>%
+          # Intentionally do not distinct tokens x here, since we want to capture
+          # the predictions of the model for the entire distribution of x, which
+          # might be non-uniform (for exposure). For the "prior" model, this means
+          # that we are capturing what this model would do if exposed to *all* the
+          # tokens from all three exposure conditions.
+          mutate(Condition.Exposure = "prior"))
+  }
+
   model %>%
-    # Cross in test tokens
+    # Join test tokens for each exposure condition
     left_join(x, by = "Condition.Exposure") %>%
     mutate(x = map(x, ~ c(.x))) %>%
     nest(x = x) %>%
