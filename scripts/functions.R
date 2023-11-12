@@ -191,12 +191,17 @@ get_conditional_effects <- function(model, data, phase) {
 
 
 get_bf <- function(model, hypothesis) {
+  n.posterior_samples <-
+    ((map(model$fit@stan_args, ~ .x$iter) %>% reduce(`+`)) -
+    (map(model$fit@stan_args, ~ .x$warmup) %>% reduce(`+`))) /
+    (first(map(model$fit@stan_args, ~ .x$thin)))
+
   h <- hypothesis(model, hypothesis)[[1]]
-  if (is.infinite(h$Evid.Ratio)) ER <- "> 8000" else ER <- round(h$Evid.Ratio, 1)
+  BF <- if (is.infinite(h$Evid.Ratio)) paste("\\geq", n.posterior_samples) else paste("=", round(h$Evid.Ratio, 1))
   paste0(
     "\\hat{\\beta} = ", round(h$Estimate, 2),
     ",\\ 90\\%{\\rm -CI} = [", round(h$CI.Lower, 3), ", ", round(h$CI.Upper, 3),
-    "],\\ BF = ", ER,
+    "],\\ BF ", BF,
     ",\\ p_{posterior} = ", signif(h$Post.Prob, 3))
 }
 
