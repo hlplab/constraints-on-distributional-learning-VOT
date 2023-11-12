@@ -278,28 +278,29 @@ excl.RT <-
 d_for_analysis <- 
   d %>%
   filter(
-    Is.CatchTrial == FALSE &
-    Exclude_participant.due_to_catch_trials == FALSE &
-    Exclude_participant.due_to_labeled_trials == FALSE &
+    Is.CatchTrial == FALSE,
+    Exclude_participant.due_to_catch_trials == FALSE,
+    Exclude_participant.due_to_labeled_trials == FALSE,
     Exclude_participant.due_to_VOT_slope == FALSE) %>% 
   group_by(Block) %>%
-      mutate(
-        Block.plot_label = factor(case_when(
-          Block == 1 ~ "Test 1",
-          Block == 3 ~ "Test 2",
-          Block == 5 ~ "Test 3",
-          Block == 7 ~ "Test 4",
-          Block == 8 ~ "Test 5",
-          Block == 9 ~ "Test 6",
-          Block == 2 ~ "Exposure 1",
-          Block == 4 ~ "Exposure 2",
-          Block == 6 ~ "Exposure 3")),
-        Block.plot_label = fct_relevel(Block.plot_label, c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3",  "Test 4", "Test 5", "Test 6")))
+  mutate(
+    Block.plot_label = factor(case_when(
+      Block == 1 ~ "Test 1",
+      Block == 3 ~ "Test 2",
+      Block == 5 ~ "Test 3",
+      Block == 7 ~ "Test 4",
+      Block == 8 ~ "Test 5",
+      Block == 9 ~ "Test 6",
+      Block == 2 ~ "Exposure 1",
+      Block == 4 ~ "Exposure 2",
+      Block == 6 ~ "Exposure 3")),
+    Block.plot_label = fct_relevel(Block.plot_label, c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3",  "Test 4", "Test 5", "Test 6"))) %>% 
+  ungroup()
 ```
 
 Due to data transfer errors, 4 participants' data were not stored and therefore excluded from analysis. We further excluded from analysis participants who committed more than 3 errors out of the 18 catch trials (<83% accuracy, N = `r d %>% filter(Exclude_participant.due_to_catch_trials == TRUE) %>% group_by(ParticipantID) %>% summarise() %>% tally() %>% pull(n)`), participants who committed more than 4 errors out of the 72 labelled trials (<94% accuracy, N = `r d %>% filter(Exclude_participant.due_to_labeled_trials == TRUE) %>% group_by(ParticipantID) %>% summarise() %>% tally() %>% pull(n)`), participants with an average reaction time more than three standard deviations from the mean of the by-participant means (N = `r excl.RT`),  participants who had atypical categorization functions at the start of the experiment (N = `r d %>% filter(Exclude_participant.due_to_VOT_slope == TRUE) %>% group_by(ParticipantID) %>% summarise() %>% tally() %>% pull(n)`, see SI, \@ref(XXX) for details), and participants who reported not to have used headphones (N = `r d %>% group_by(ParticipantID, audio_type) %>% summarise() %>% filter(!(audio_type %in% c("in-ear", "over-ear"))) %>% nrow()`). This left for analysis `r nrow(d_for_analysis %>% filter(Phase == "exposure"))` exposure and `r nrow(d_for_analysis %>% filter(Phase == "test"))` test observations from `r nrow(d_for_analysis %>% ungroup() %>% distinct(ParticipantID))` participants (94% of total), approximately evenly split across the three exposure conditions.
 
-```{r remove-unused-objects-section2}
+```{r}
 rm(
   d,
   d.exposure_blocks,
