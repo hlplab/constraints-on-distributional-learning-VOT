@@ -2,6 +2,10 @@
 
 # General discussion
  
+ + discuss rapid adaptation. link to findings from LGPL and VGPL [cummings-theodore; lj18,19]
+ + discuss fast-then-slow adaptation. link to findings in VGPL [kj11, 12, K20] 
+ + discuss other evidence for constraints in DL work [kj16; k20], potentially also limits in vroomen 07, kj12 though these are harder to compare.
+
  + discuss the fact that changes from block to block were largest at the beginning is consistent with the predictions of error-based learning [@sohoglu-davis2016] and Bayesian inference [@kleinschmidt-jaeger2015; for demonstration, see @jaeger2019].
  + discuss consequences of findings for other accounts (decision-making; normalization)
  
