@@ -213,7 +213,7 @@ p.slope_1to7 <-
 
 d.true_shift <- 
   d.estimates %>% 
-  # join the ideal PSEs from io predictions
+  # Join the PSEs from ideal observers
   left_join(
     d.io.categorization %>% 
       dplyr::select(Phase, Condition.Exposure, Block, PSE) %>% 
@@ -226,10 +226,9 @@ d.true_shift <-
         Condition.Exposure == "Shift10" ~ d.estimates$PSE_median[10],
         Condition.Exposure == "Shift40" ~ d.estimates$PSE_median[19]),
     true_shift = PSE.io_predicted - PSE_block1,
-    proportion_shift = (PSE_median - PSE_block1)/true_shift,
-    proportion_shift = ifelse(Condition.Exposure != "Shift40", -(proportion_shift), proportion_shift))
+    proportion_shift = (PSE_median - PSE_block1)/true_shift)
 
-# compute PSEs from talkers in Chodroff-Wilson corpus
+# Compute distribution of talker-specific PSEs from Chodroff & Wilson (2018) corpus
 d.talkerPSEs <- 
   get_IO_categorization(
     data = d.chodroff_wilson,
