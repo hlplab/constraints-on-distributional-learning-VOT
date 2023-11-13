@@ -5,9 +5,7 @@
 ## Highest priority
  * MARYANN
   * REFIT THE EXPOSURE MODEL UNDER THE CORRECT DIFF CODING if it wasn't coded that way before
-  * edit Analaysis Approach section in the SI
-  * have simple effects of block table
-  * move interaction table to SI
+  * edit Analysis Approach section in the SI
   * Please read this carefully.
   * TIME TO STOP MESSY CODING. Let's have a zero-tolerance policy for that from now on in the main working branch (i.e., you can do what you'd like in branches that aren't the main branch, but you canNOT merge without cleaning up first). It is a real time-sink for everyone else and makes it near impossible for me to effectively help. 
      * on the main working branch, functions should be in functions.R, in a clearly named section (see existing examples).

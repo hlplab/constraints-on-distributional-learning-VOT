@@ -480,11 +480,40 @@ Next, we compare how exposure affected listeners' categorization responses from 
 First, Panel C highlights the relative lack of changes in the slope of listeners categorization function. Slope changes, or lack thereof, have received comparatively attention in previous work [but see @clayards2008; @theodore-monto2019] but they form part of the empirical facts that theories of speech perception need to account for. Compared to the changes in PSEs in Panel D, changes in the slope of listeners' categorization functions in Panel C were similar across exposure conditions (BFs < XXX; SI, \@ref(sec:SI-slope-tests)). Indeed, slopes changed very little relative to listeners' categorization responses in Test 1 (BFs < XXX; see SI, \@ref(sec:SI-slope-tests)). Both of these findings are in line with distributional learning theories of adaptive speech perception [@kleinschmidt-jaeger2015], given that the variance of /d/ and /t/ was (a) held constant across all three exposure conditions, and (b) designed to resemble the variance of /d/ and /t/ in typical speech input.<!-- TO DO: THIS NEEDS TO BE TESTED PROBABLY. add those tables to SI and CHECK whether they agree with what we've written here. --> 
 
 ```{r fit-simple-effects-block, results='hide'}
-# TO DO: replace with same prior (if necessary) and model code as for simple effects model above
-fit_test.simple_effects_block <- read_rds("../models/Exp-AE-DLVOT-nested-condition.rds")
+my_priors <- c(
+  prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),
+  set_prior("student_t(3, 0, 15)", dpar = "mu2", coef = "Condition.ExposureShift0:VOT_gs"),
+  set_prior("student_t(3, 0, 15)", dpar = "mu2", coef = "Condition.ExposureShift10:VOT_gs"),
+  set_prior("student_t(3, 0, 15)", dpar = "mu2", coef = "Condition.ExposureShift40:VOT_gs"),
+  prior(cauchy(0, 2.5), class = "sd", dpar = "mu2"),
+  prior(lkj(1), class = "cor")
+)
+
+fit_test.simple_effects_block <- 
+  brm(
+  bf(
+    Response.Voiceless ~ 1,
+    mu1 ~ 0 + offset(0),
+    mu2 ~ 0 + Condition.Exposure/(Block * VOT_gs) + 
+      (0 + Block * VOT_gs | ParticipantID) + 
+      (0 + Condition.Exposure/(Block * VOT_gs) | Item.MinimalPair),
+    theta1 ~ 1),
+    data = d_for_analysis %>%
+      filter(Phase == "test") %>%
+      prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
+    priors = my_priors,
+    cores = 4,
+    chains = chains,
+    init = 0,
+    iter = 4000,
+    warmup = 2000,
+    family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
+    sample_prior = "yes",
+    control = list(adapt_delta = .995),
+    file ="../models/test-nested-block.rds")
 ```
 
-```{r hypothesis-table-simple-effects-block, results='asis', fig.cap="TEMPORARY TABLE; TO BE REPLACED BY THE PENDING MODEL"}
+```{r hypothesis-table-simple-effects-block, results='asis', fig.cap=""}
 hyp.simple_effects_block <- 
   hypothesis(
     fit_test.simple_effects_block, 
@@ -492,26 +521,33 @@ hyp.simple_effects_block <-
       "mu2_Condition.ExposureShift0:Block_Test2vs.Test1 > 0",
       "mu2_Condition.ExposureShift0:Block_Test3vs.Test2 > 0",
       "mu2_Condition.ExposureShift0:Block_Test4vs.Test3 > 0",
+      "mu2_Condition.ExposureShift0:Block_Test5vs.Test4 < 0",
+      "mu2_Condition.ExposureShift0:Block_Test6vs.Test5 < 0",
       "mu2_Condition.ExposureShift0:Block_Test2vs.Test1 + mu2_Condition.ExposureShift0:Block_Test3vs.Test2 + mu2_Condition.ExposureShift0:Block_Test4vs.Test3 > 0",
       "mu2_Condition.ExposureShift10:Block_Test2vs.Test1 > 0",
       "mu2_Condition.ExposureShift10:Block_Test3vs.Test2 > 0",
       "mu2_Condition.ExposureShift10:Block_Test4vs.Test3 > 0",
+      "mu2_Condition.ExposureShift10:Block_Test5vs.Test4 < 0",
+      "mu2_Condition.ExposureShift10:Block_Test6vs.Test5 < 0",
       "mu2_Condition.ExposureShift10:Block_Test2vs.Test1 + mu2_Condition.ExposureShift10:Block_Test3vs.Test2 + mu2_Condition.ExposureShift10:Block_Test4vs.Test3 > 0",
-      "mu2_Condition.ExposureShift40:Block_Test2vs.Test1 > 0",
-      "mu2_Condition.ExposureShift40:Block_Test3vs.Test2 > 0",
-      "mu2_Condition.ExposureShift40:Block_Test4vs.Test3 > 0",
-      "mu2_Condition.ExposureShift40:Block_Test2vs.Test1 + mu2_Condition.ExposureShift40:Block_Test3vs.Test2 + mu2_Condition.ExposureShift40:Block_Test4vs.Test3 > 0"),
+      "mu2_Condition.ExposureShift40:Block_Test2vs.Test1 < 0",
+      "mu2_Condition.ExposureShift40:Block_Test3vs.Test2 < 0",
+      "mu2_Condition.ExposureShift40:Block_Test4vs.Test3 < 0",
+      "mu2_Condition.ExposureShift40:Block_Test5vs.Test4 > 0",
+      "mu2_Condition.ExposureShift40:Block_Test6vs.Test5 > 0",
+      "mu2_Condition.ExposureShift40:Block_Test2vs.Test1 + mu2_Condition.ExposureShift40:Block_Test3vs.Test2 + mu2_Condition.ExposureShift40:Block_Test4vs.Test3 < 0"),
     robust = T) %>%
   .$hypothesis %>% 
   dplyr::select(-Star)
 
 make_hyp_table(
     hyp.simple_effects_block, 
-    rep(c("Test 2 vs. Test 1 > 0", "Test 3 vs. Test 2 > 0", "Test 4 vs. Test 3 > 0", "Test 4 vs. Test 1 > 0"), 3),
+    c(rep(c("Test 2 vs. Test 1 > 0", "Test 3 vs. Test 2 > 0", "Test 4 vs. Test 3 > 0", "Test 5 vs. Test 4 < 0", "Test 6 vs. Test 5 < 0", "Test 4 vs. Test 1 > 0"), 2), 
+    "Test 2 vs. Test 1 < 0", "Test 3 vs. Test 2 < 0", "Test 4 vs. Test 3 < 0", "Test 5 vs. Test 4 > 0", "Test 6 vs. Test 5 > 0", "Test 4 vs. Test 1 < 0"),
     caption = "When did exposure begin to affect participants' categorization responses? This table summarizes the simple effects of block for each exposure condition. Note that righward shifts correspond to negative effects (lower intercepts in predicting the log-odds of \"t\"-responses).") %>%
-  pack_rows("baseline ", 1, 4) %>%
-  pack_rows("+10", 5, 8) %>% 
-  pack_rows("+40", 9, 12)
+  pack_rows("baseline ", 1, 6) %>%
+  pack_rows("+10", 7, 12) %>% 
+  pack_rows("+40", 13, 18)
 
 rm(fit_test.simple_effects_block)
 ```

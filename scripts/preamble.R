@@ -78,7 +78,7 @@ set.seed(42007)
 # specific IO is based on enough data).
 d.chodroff_wilson <-
   get_ChodroffWilson_data(
-    database_filename = "../data/all_observations_with_non-missing_vot_cog_f0.csv",
+    database_filename = "../data/chodroff_wilson_mixer6_non-missing_vot_cog_f0.csv",
     categories = c("/d/", "/t/"),
     min.n_per_talker_and_category = 10,
     limits.VOT = c(-Inf, Inf),

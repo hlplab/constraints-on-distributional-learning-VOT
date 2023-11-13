@@ -74,7 +74,7 @@ comb_plotmath <- function(...) {
 
 # Load data --------------------------------------------------------------
 get_ChodroffWilson_data <- function(
-    database_filename = "all_observations_with_non-missing_vot_cog_f0.csv",
+    database_filename = "chodroff_wilson_mixer6_non-missing_vot_cog_f0.csv",
     categories = c("/b/", "/d/", "/g/", "/p/", "/t/", "/k/"),
     min.n_per_talker_and_category = 0,
     limits.VOT = c(-Inf, Inf),
@@ -875,7 +875,7 @@ prepVars <- function(d, test_mean = NULL, levels.Condition = NULL, contrast_type
 
   message("VOT mean:", signif(mean(d$Item.VOT, na.rm = T)))
   message("VOT sd:", signif(sd(d$Item.VOT, na.rm = T)))
-  #print(paste("VOT test mean:", test_mean))
+  print(paste("VOT test mean:", test_mean))
 
   d %<>%
     ungroup() %>%
@@ -886,7 +886,7 @@ prepVars <- function(d, test_mean = NULL, levels.Condition = NULL, contrast_type
       Condition.Exposure = factor(Condition.Exposure, levels = levels.Condition)) %>%
 
     drop_na(Block, Response, Item.VOT) %>%
-    mutate(VOT_gs = (Item.VOT - mean(Item.VOT, na.rm = TRUE)) / (2 * sd(Item.VOT, na.rm = TRUE))) %>%
+    mutate(VOT_gs = (Item.VOT - test_mean) / (2 * sd(Item.VOT, na.rm = TRUE))) %>%
     droplevels()
 
   contrasts(d$Condition.Exposure) <- cbind("_Shift10 vs. Shift0" = c(-2/3, 1/3, 1/3),

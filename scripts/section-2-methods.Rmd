@@ -5,7 +5,7 @@ if (!exists("PREAMBLE_LOADED")) source("preamble.R")
 
 ```{r load data}
 d <- 
-  read_csv("../data/experiment-results.csv", show_col_types = F) %>%
+  read_csv("../data/experiment-results.csv", show_col_types = F) %>% 
   # load f0 measurements of stimuli
   left_join(
     read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv", show_col_types = F) %>%
@@ -181,26 +181,6 @@ Next, we created the two additional exposure conditions by shifting all VOTs sam
 ## Exclusions
 
 ```{r get-exclusion-indicators, warning=FALSE}
-# mark catch trials rows and mark those to be excluded
-d %<>% 
-  mutate(
-    Is.CatchTrial = ifelse(Item.ExpectedResponse %in% c("flare", "rare", "share"), TRUE, FALSE),
-    CatchTrial.Correct = ifelse(
-      Is.CatchTrial == TRUE, 
-      ifelse(Item.ExpectedResponse == Response, TRUE, FALSE), NA),
-    Answer.sex.Correct = ifelse(sex == "woman", TRUE, FALSE)) %>% 
-  group_by(ParticipantID) %>% 
-  mutate(Exclude_participant.due_to_catch_trials = ifelse(sum(CatchTrial.Correct, na.rm = TRUE) < 17, TRUE, FALSE)) %>%
-  ungroup()
-
-# mark labelled trials
-d %<>% 
-  mutate(
-    Response.Correct = ifelse(Item.ExpectedResponse == Response, TRUE, FALSE),
-    LabeledTrial.Correct = ifelse(Item.Labeled == TRUE, ifelse(Response.Correct == TRUE, TRUE, FALSE), NA)) %>% 
-  group_by(ParticipantID) %>% 
-  mutate(Exclude_participant.due_to_labeled_trials = ifelse(sum(LabeledTrial.Correct, na.rm = T) < 68, TRUE, FALSE))
-
 # get data for exclusion due to categorization slope of first 36 trials. 
 # set the range of VOT values 
 empirical_means <- c(17, 62)
