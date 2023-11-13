@@ -182,7 +182,7 @@ get_conditional_effects <- function(model, data, phase) {
     conditions = make_conditions(
       data %>%
         filter(Phase == .env$phase & Item.Labeled == FALSE) %>%
-        prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = "difference"),
+        prepVars(test_mean = VOT.mean_test, levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
       vars = c("Block")),
     method = "posterior_epred",
     ndraws = 500,
