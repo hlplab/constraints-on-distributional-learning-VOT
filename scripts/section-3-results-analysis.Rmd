@@ -45,7 +45,7 @@ The psychometric models for exposure and test blocks each regressed participants
 
 We begin by presenting the overall effects, averaging across all test blocks. This part of our analysis matches previous work, which analyzed the *average* effect of exposure across the entire experiment ['batch tests', e.g., @clayards2008; @kleinschmidt-jaeger2016; @nixon2016; @theodore-monto2019] or during a single post-exposure test [e.g., @kleinschmidt2020]. Then we present novel analyses that address questions about the incremental adaptation---testing the predictions described in the introduction. 
 
-```{r fit-nested-models-for-intercepts-slopes-plot}
+```{r fit-nested-models-for-intercepts-slopes-plot, message=FALSE}
 # Refit the same model, formulated as nesting intercepts and slopes within each unique combination of
 # exposure condition and block. This makes it easier to extract the intercept, slope, and PSE for the
 # large result figure (Panels C and D).
