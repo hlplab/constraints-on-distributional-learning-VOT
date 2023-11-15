@@ -293,7 +293,7 @@ table.interactions <-
   "Block 4 to 5: decreased $\\Delta_{PSE}$",
   "Block 5 to 6: decreased $\\Delta_{PSE}$",
   "{\\em Block 4 to 6: decreased $\\Delta_{PSE}$}"), 3),
-    caption = "Was there incremental change from test block 1 to 4? Did these changes dissipate with repeated testing from block 4 to 6? This table summarizes the interactions between exposure condition and block, whether the differences between exposure conditions changed from test block to test block.") %>%
+    caption = "Did the rate of block-to-block changes differ across exposure conditions? This table summarizes the interactions between exposure condition and block---specifically, whether the differences between exposure conditions changed from test block to test block.") %>%
   pack_rows("Difference in +10 vs. baseline", 1, 7) %>%
   pack_rows("Difference in +40 vs. +10", 8, 14) %>%
   pack_rows("Difference in +40 vs. baseline", 15, 21)
@@ -316,7 +316,7 @@ This section reports the hypothesis tables for exposure blocks corresponding the
 <!-- TO DO -->
 
 ## Can assumptions of our analyses explain differences between exposure and test blocks?
-<!-- TO DO: add a bit of context / intro here -->
+In the main text, we pointed the 'zigzag' pattern in Figure \@ref(fig:plot-fit-slope-PSE)C: the slopes of listeners' categorization functions were smaller during test than during exposure blocks (BF = XXX). <!-- TO DO: can we run a model that contains exposure and test block and runs: Response ~ Block.Type[effect coded] * VOT + Random effects and everything else identical to your main analysis? No exposure condition. The BF of the interaction term is the evidence we need. --> Here, we present auxiliary analyses that suggest that these differences are not due to biases in our analysis.
 
 ### Effects of priors on the estimates for exposure and test blocks
 The psychometric mixed-effects analyses followed our previous work [e.g., @hoerberg-jaeger2022; @xie2021] and recommendations in the literature, and used weakly regularizing priors. This raises the question whether the fact that epxosure and test blocks differed in the amount of data they contained (24 unlabelled trials during each exposure block vs. 12 during test) can explain the 'zigzag' pattern evidence in Figure \@ref(fig:plot-fit-slope-PSE)C for slopes and, to a lesser extent, in Figure \@ref(fig:plot-fit-slope-PSE)D for PSEs.
