@@ -315,7 +315,7 @@ This section reports the hypothesis tables for exposure blocks corresponding the
 ### Differences in block to block changes across conditions
 <!-- TO DO -->
 
-## Can assumptions of our analyses explain differences between exposure and test blocks?
+## Can assumptions of our analyses explain differences between exposure and test blocks? {sec:exposure-test-zigzag}
 In the main text, we pointed the 'zigzag' pattern in Figure \@ref(fig:plot-fit-slope-PSE)C: the slopes of listeners' categorization functions were smaller during test than during exposure blocks (BF = XXX). <!-- TO DO: can we run a model that contains exposure and test block and runs: Response ~ Block.Type[effect coded] * VOT + Random effects and everything else identical to your main analysis? No exposure condition. The BF of the interaction term is the evidence we need. --> Here, we present auxiliary analyses that suggest that these differences are not due to biases in our analysis.
 
 ### Effects of priors on the estimates for exposure and test blocks
