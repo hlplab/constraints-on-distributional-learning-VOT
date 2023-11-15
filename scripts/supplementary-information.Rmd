@@ -2,7 +2,7 @@
 if (!exists("PREAMBLE_LOADED")) source("preamble.R")
 ```
 
-<!-- Do NOT knit this document. It is part of a larger document. Instead knit the main document (my-apa-formatted-article) 
+<!-- Do NOT knit this document. It is part of a larger document. Instead knit the main document (my-apa-formatted-article)
      If you want to separate the SI from the rest of the paper, we recommend you do so AFTER knitting them into a single PDF.
      This will make sure that all references to sections, figures, tables, etc. are working as intended. You can easily separate
      the PDF into two parts, using e.g., Acrobat PDF viewer. //-->
@@ -10,7 +10,16 @@ if (!exists("PREAMBLE_LOADED")) source("preamble.R")
 # Supplementary information {-}
 \setcounter{section}{0}
 
-Both the main text and these supplementary information (SI) are derived from the same R markdown document available via [OSF](). It is best viewed using Acrobat Reader. Some links and animations might not work in other PDF viewers.
+Both the main text and these supplementary information (SI) are derived from the same R markdown document available via [OSF](). It is best viewed using Acrobat Reader.
+
+\newcommand{\changelocaltocdepth}[1]{%
+  \addtocontents{toc}{\protect\setcounter{tocdepth}{#1}}%
+  \setcounter{tocdepth}{#1}%
+}
+
+\tableofcontents
+\setcounter{tocdepth}{-10}
+\changelocaltocdepth{-10}
 
 # Required software {#sec:software}
 The document was compiled using \texttt{knitr} [@xie2021] in RStudio with R:
@@ -23,258 +32,17 @@ You will also need to download the IPA font [SIL Doulos](https://software.sil.or
 
 We used the following R packages to create this document: `r cite_r("latex-stuff/r-references.bib", withhold = T, pkgs = c("MVBeliefUpdatr"))`. If opened in RStudio, the top of the R markdown document should alert you to any libraries you will need to download, if you have not already installed them. The full session information is provided at the end of this document.
 
-# Predictions of existing models of adaptive speech perception {sec:proof}
-We show that two of the most influential approaches to adaptive speech perception do not predict the sublinear (less than proportional) shifts in categorisation functions observed both in the present study and in in previous work [@kleinschmidt-jaeger2016; @kleinschmidt2020]. We focus on these two models since they are the only widely-used accounts of adaptive speech perception that are (1) not limited to specific types of contrasts (unlike, e.g., vowel normalization accounts) and (2) sufficiently specific to make concrete predictions [for review of existing models, see @xie2023]. We only briefly discuss why a third type of account---exemplar models of speech perception---*likely* would also fail to predict the sublinear effects.
 
-We emphasize that our discussion deliberately focuses on *models*, not theories. The finding of sublinear effects of exposure can be accommodated in all three theories that underlie the three models discussed here (Bayesian inference in the ideal adaptor framework, similarity-based inference in exemplar theory, or normalization relative to expectations). Yet, the fact that none of the existing *models* predicts this effect highlights that this property of adaptive speech perception was only recently discovered, and is as-of-yet not well understood.
-
-## Incremental Bayesian belief-updating [@kleinschmidt-jaeger2011, @kleinschmidt-jaeger2012, @kleinschmidt-jaeger 2015, @kleinschmidt-jaeger2016; @kleinschmidt2020]
-The only distributional learning model that has been more repeatedly tested against adaptive speech perception---incremental Bayesian belief-updating [@kleinschmidt-jaeger2011]---predicts proportional, rather than sublinear, shifts. This model had previously been found to closely predict the cumulative effects of exposure in perceptual recalibration to audio-visually [@kleinschmidt2011-jaeger; @kleinschmidt-jaeger2012] or lexically labeled speech [@cummings-theodore2023], as well as the type of exposure to unlabelled minimal pair words employed by Kleinschmidt and Jaeger [@theodore-monto2019]. However, all of these studies employed comparatively small changes in cue distributions, and lacked the design necessary to detect deviation from proportionality (we return to this point below). The findings presented in @kleinschmidt-jaeger2016 would seem to reject this specific distributional learning model [though not necessarily the theory it is derived from, @kleinschmidt-jaeger2015; for discussion of the relation between theory and model, see also @kleinschmidt2020]  <!-- TO DO: make sure we do -->
-
-```{r}
-get_IBBU_updates <- function(
-    prior = NULL,
-    exposure = NULL,
-    test = NULL,
-    condition = NULL,
-    cues = c("VOT", "f0_Mel"),
-    kappa = 72, nu = 72,
-    updates_to_keep = c(0, 48, 96, 144),
-    seed = 1234
-) {
-  set.seed(seed)
-  Sigma_noise <- diag(c(80, 878)[1:length(cues)])
-  dimnames(Sigma_noise) <- list(cues, cues)
-
-  if (is.null(prior)) {
-    prior <- d.chodroff_wilson %>%
-      make_NIW_ideal_adaptor_from_data(
-        cues = cues, kappa = kappa, nu = nu, Sigma_noise = Sigma_noise)
-  }
-
-  if (is.null(exposure)) {
-    message("When exposure is NULL, condition is interpreted as the VOT shift.")
-    exposure <-
-      lapply(
-        X = as.list(1:3),
-        FUN = function(x) d.chodroff_wilson %>%
-          # Sample exposure from VOT distribution regardless of which cues are used
-          # for belief-updating, since that's what we did in the experiment.
-          make_MVG_ideal_observer_from_data(
-            cues = "VOT", Sigma_noise = matrix(80, dimnames = list("VOT", "VOT"))) %>%
-          sample_MVG_data_from_model(Ns = 24, randomize.order = T)) %>%
-      reduce(rbind) %>%
-      mutate(
-        Trial = 1:144,
-        Condition.Exposure = paste0("TrueShift", .env$condition),
-        VOT = VOT + as.numeric(.env$condition),
-        f0 = predict_f0(VOT, Mel = F),
-        f0_Mel = predict_f0(VOT, Mel = T)) %>%
-      relocate(Condition.Exposure, Trial, category, VOT, f0)
-  }
-
-  idealized_ios <-
-    make_VOT_IOs_from_exposure(exposure) %>%
-    get_logistic_parameters_from_model(
-    model = ., x = map(test, ~ .x[1]),
-    model_col = "io",
-    groups = "Condition.Exposure")
-
-  update_NIW_ideal_adaptor_incrementally(
-    prior = prior,
-    exposure = exposure,
-    exposure.order = "Trial",
-    noise_treatment = "no_noise",
-    lapse_treatment = "no_lapses",
-    method = "label-certain") %>%
-    filter(observation.n %in% updates_to_keep) %>%
-    nest(ia = -observation.n) %>%
-    mutate(
-      Condition.Exposure = unique(exposure$Condition.Exposure),
-      observation.bin = as.numeric(factor(observation.n, levels = sort(observation.n))),
-      observation.alpha = observation.bin / max(observation.bin),
-      cf = map(ia,
-               ~ get_categorization_function_from_NIW_ideal_adaptor(.x, noise_treatment = "no_noise")),
-      sf = map2(cf, observation.alpha,
-                ~ stat_function(
-                  fun = function(x) {
-                    as.numeric(.x(
-                      map(x, function(y) c(y, predict_f0(y, Mel = T))),
-                      target_category = 2)) },
-                  alpha = .y,
-                  color = if (condition %in% c("Shift0", "Shift10", "Shift40")) colours.condition[condition] else "black"))) %>%
-    select(-c(observation.bin, observation.alpha)) %>%
-    relocate(Condition.Exposure, observation.n, ia, cf, sf) %>%
-    # Convert updated beliefs into estimated PSE and slope
-    get_logistic_parameters_from_model(
-      model = ., x = test, model_col = "ia",
-      groups = c("Condition.Exposure", "observation.n", "cf", "sf")) %>%
-    # Join in information about idealized prior and posterior
-    # (the latter based on ideal observer that has fully learned the exposure distribution).
-    # Then calculate for each update step the proportion of updating relative to those
-    # idealized priors and posteriors.
-    left_join(
-      idealized_ios %>%
-        select(Condition.Exposure, slope_scaled, PSE) %>%
-        rename(idealized_posterior_slope_scaled = slope_scaled, idealized_posterior_PSE = PSE)) %>%
-    cross_join(
-      idealized_ios %>%
-        ungroup() %>%
-        filter(Condition.Exposure == "prior") %>%
-        select(slope_scaled, PSE) %>%
-        rename(idealized_prior_slope_scaled = slope_scaled, idealized_prior_PSE = PSE)) %>%
-    mutate(
-      proportion_of_idealized_PSE = (PSE - idealized_prior_PSE) / (idealized_posterior_PSE - idealized_prior_PSE),
-      proportion_of_idealized_slope_scaled = (slope_scaled - idealized_prior_slope_scaled) / (idealized_posterior_slope_scaled - idealized_prior_slope_scaled))
-}
-
-get_IBBU_updates_for_experiment <- function(
-    condition,
-    test = NULL,
-    cues = c("VOT", "f0_Mel"),
-    kappa = 72, nu = 72
-) {
-  exposure <-
-    d_for_analysis %>%
-    ungroup() %>%
-    filter(
-      Condition.Exposure == condition,
-      Phase == "exposure") %>%
-    filter(ParticipantID == first(ParticipantID)) %>%
-    mutate(
-      category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")) %>%
-    rename(
-      VOT = Item.VOT,
-      f0_Mel = Item.f0_Mel)
-
-  get_IBBU_updates(
-    exposure = exposure,
-    test = test,
-    condition = condition,
-    cues = cues, kappa = kappa, nu = nu)
-}
-
-x <-
-  d_for_analysis %>%
-  ungroup() %>%
-  filter(Phase == "test") %>%
-  distinct(Item.VOT, Item.f0_Mel) %>%
-  arrange(Item.VOT) %>%
-  mutate(x = map2(Item.VOT, Item.f0_Mel, ~ c(.x, .y))) %>%
-  pull(x)
-
-# Plot updates for our three exposure condition
-d.updates <-  
-  bind_rows(get_IBBU_updates_for_experiment("Shift0", test = x),
-            get_IBBU_updates_for_experiment("Shift10", test = x),
-            get_IBBU_updates_for_experiment("Shift40", test = x))
-
-# d.exposure %>%
-#   distinct(VOT) %>%
-#   ggplot(aes(x = VOT)) +
-#   d.updates$sf +
-#   scale_x_continuous(limits = c(10, 90)) +
-#   geom_label(
-#     data = d.updates %>% filter(observation.n == 144),
-#     aes(
-#       x = PSE,
-#       color = Condition.Exposure,
-#       label = percent(proportion_of_idealized_PSE)),x
-
-#     y = .5)
-```
-
-
-
-
-```{r get-updates-nu-equal-kappa}
-x <-
-  tibble(VOT = seq(0, 100)) %>%
-  mutate(x = map(VOT, ~ c(.x, predict_f0(.x, Mel = T)))) %>%
-  pull(x)
-
-# Plot updates for true rightward shifts of various magnitudes
-d.updates <-  
-  bind_rows(get_IBBU_updates(condition = 10, test = x),
-            get_IBBU_updates(condition = 20, test = x),
-            get_IBBU_updates(condition = 30, test = x),
-            get_IBBU_updates(condition = 40, test = x))
-
-tibble(VOT = seq(10, 90)) %>%
-  ggplot(aes(x = VOT)) +
-  d.updates[d.updates$observation.n == 144,]$sf +
-  scale_x_continuous() +
-  geom_label(
-    data = d.updates %>% filter(observation.n == 144),
-    aes(
-      x = PSE,
-      color = Condition.Exposure,
-      label = percent(proportion_of_idealized_PSE)),
-    y = .5)
-```
-
-```{r get-updates-nu-larger-kappa}
-d.updates <-  
-  bind_rows(get_IBBU_updates(condition = 10, test = x, nu = 10000),
-            get_IBBU_updates(condition = 20, test = x, nu = 10000),
-            get_IBBU_updates(condition = 30, test = x, nu = 10000),
-            get_IBBU_updates(condition = 40, test = x, nu = 10000))
-
-tibble(VOT = seq(10, 90)) %>%
-  ggplot(aes(x = VOT)) +
-  d.updates[d.updates$observation.n == 144,]$sf +
-  scale_x_continuous() +
-  geom_label(
-    data = d.updates %>% filter(observation.n == 144),
-    aes(
-      x = PSE,
-      color = Condition.Exposure,
-      label = percent(proportion_of_idealized_PSE)),
-    y = .5)
-```
-
-
-```{r get-updates-nu-smaller-kappa}
-d.updates <-  
-  bind_rows(get_IBBU_updates(condition = 10, test = x, kappa = 10000),
-            get_IBBU_updates(condition = 20, test = x, kappa = 10000),
-            get_IBBU_updates(condition = 30, test = x, kappa = 10000),
-            get_IBBU_updates(condition = 40, test = x, kappa = 10000))
-
-tibble(VOT = seq(10, 90)) %>%
-  ggplot(aes(x = VOT)) +
-  d.updates[d.updates$observation.n == 144,]$sf +
-  scale_x_continuous() +
-  geom_label(
-    data = d.updates %>% filter(observation.n == 144),
-    aes(
-      x = PSE,
-      color = Condition.Exposure,
-      label = percent(proportion_of_idealized_PSE)),
-    y = .5)
-```
-
-```{r}
-m <- readRDS("../models/IBBU-Tan-Jaeger2022-Experiment2-scaled.RDS")
-summary(m)
-```
-
-## Centering cues relative to expecations [C-CuRE, @apfelbaum-mcmurray2015; @mcmurray-jongman2011]
-Similarly, existing models of perceptual normalization---an alternative, but mutually compatible, hypothesis---also predict proportional changes in PSE. <!-- TO DO: write these sections for SI. along a single continuum normalization shift of cue mean just shifts cat function. for multi-dimensional cues, the same is true under cue integration models (variance and thus weighting does not change; shift along each dimension follows same logic as for single cue). for multi-dimensional multivariate models with interacting cues viewed from the perspective of a single cue, shifts can *appear* non-proportional but the pattern observed in KJ16---non proportionality without changes in slopes---would seem to be impossible to create as long as the test stimuli form a line in the multidimensional cue space -->
-
-## Exemplar theory
-<!-- generally the most similar exemplars should dominate perception. So it's unclear why one wouldn't converge against the input -->
-
-# Materials {sec:stimulus-generation}
+# Additional information about Materials {sec:stimulus-generation}
+All stimuli are available as part of the OSF repository for this article.
 
 ## Recordings
 An L1-US English female talker originally from New Hampshire was recruited for recording of the stimuli. She was recorded at the Human Language Processing lab at the Brain & Cognitive Sciences Department, University of Rochester with the help of research assistant (also an L1-US English speaker). She was 23 years old at the time of recording and was judged by the research assistant to have a generic US American accent known as "general American".
 
-Four /d-t/ minimal pairs (dill-till, din-tin, dim-tim, dip-tip) were recorded together with 20 filler words. These fillers were made up of 10 minimal or near minimal pairs with different sounds at onset. The word pairs were separated into two lists so that they would appear in separate blocks during recording. Each critical pair was repeated 8 times while the filler pairs were repeated 5 times. Word presentation was delivered with PsychoPy [@peirce2007] and the presentation was controlled by the researcher from a computer located outside the recording room. The order of each block was randomised such that target words never appeared consecutively. The talker was instructed to speak clearly and confidently, and to maintain a consistent distance from the microphone.
+Four /d-t/ minimal pairs (dill-till, din-tin, dim-tim, dip-tip) were recorded together with 20 filler words. These fillers were made up of 10 minimal or near minimal pairs with different sounds at onset. The word pairs were separated into two lists so that they would appear in separate blocks during recording. Each critical pair was repeated 8 times while the filler pairs were repeated 5 times. Word presentation was delivered with PsychoPy [@peirce2007] and the presentation was controlled by the researcher from a computer located outside the recording room. The order of each block was randomized such that target words never appeared consecutively. The talker was instructed to speak clearly and confidently, and to maintain a consistent distance from the microphone.
 
 ## Annotation
-All critical pairs of the talker's recordings were annotated.
-Durational measurements of voicing lead, VOT, and vowel were taken in addition to the mean F0 of the first 25% of the vowel duration. Annotations were made with a combination of listening to the audio file and inspection of the waveform and spectrogram. The annotation boundaries were made according to the following principles:
+All critical pairs of the talker's recordings were annotated. Durational measurements of voicing lead, VOT, and vowel were taken in addition to the mean F0 of the first 25% of the vowel duration. Annotations were made with a combination of listening to the audio file and inspection of the waveform and spectrogram. The annotation boundaries were made according to the following principles:
 
 - pre-voicing (voicing during closure)
   -**start:** the first sign of periodicity in the waveform before closure release.
@@ -292,7 +60,7 @@ Durational measurements of voicing lead, VOT, and vowel were taken in addition t
   -the average pitch measurement estimated at the beginning of the vowel.
 
 ## Resynthesis
-The stimuli was created using the "progressive cutback and replacement method" by [@winn2020] implemented in Praat [@boersma2022praat]. This automates and greatly simplifies the process for generating highly natural sounding stimuli. Users of the script need only specify certain parameters to produce desired stimuli. Stimuli with pre-voicing were created separately from stimuli with positive VOT. This was because the script was not coded to automate the creation of tokens with pre-voicing that are natural sounding ^[it can however, produce pre-voicing sufficiently well for demonstration purposes, see video demo at https://www.youtube.com/watch?v=-QaQCsyKQyo]. As such, the pre-voicing stimuli were created by prepending pre-voicing generated from naturally produced tokens (described below) that were edited with a separate process.
+The stimuli was created using the "progressive cutback and replacement method" by [@winn2020] implemented in Praat [@boersma2022praat]. This automates and greatly simplifies the process for generating highly natural sounding stimuli. Users of the script need only specify certain parameters to produce desired stimuli. Stimuli with pre-voicing were created separately from stimuli with positive VOT. This was because the script was not coded to automate the creation of tokens with pre-voicing that are natural sounding ^[It can however, produce pre-voicing sufficiently well for demonstration purposes, see video demo at https://www.youtube.com/watch?v=-QaQCsyKQyo.] As such, the pre-voicing stimuli were created by prepending pre-voicing generated from naturally produced tokens (described below) that were edited with a separate process.
 
 ### Tokens with positive VOTs
 For each minimal pair a continuum of 31 tokens was generated between 0ms and 150ms with a step-size of 5ms. A token of the voiced category from each pair was selected to be the base sound file to make the continuum. All four minimal pair continua had an identical aspiration sound which was excised from one of the voiceless tokens produced by the talker.  
@@ -303,10 +71,10 @@ Lastly, the rate of increase for aspiration intensity was kept at the default se
 ### Token with pre-voicing ('negative VOTs')
 Pre-voicing in 5ms increments were generated from a a clear pre-voicing waveform excised from a pre-voiced token produced by the talker. To achieve a desired duration a duration factor was first computed and then converted with the "lengthen (overlap-add)" function in Praat. For example, if the desired amount of pre-voicing was 50ms then the duration factor would be 50ms/length of the original pre-voicing sample. Each pre-voicing step was then prepended to a token with 0ms VOT. Each of these 0ms tokens was generated with @winn2020 Praat script by manually entering the expected F0 value for a given pre-voicing duration based on the predictions of the linear model. No vowel-cut back was implemented for pre-voiced tokens.
 
-All the synthesised stimuli were subsequently annotated for pre-voicing, VOT, vowel duration and F0 at the first 5ms from vowel onset. This F0 measurement was made in order to align the data with the production database that we use for ideal observer analysis. Each item's F0 in relation to VOT is plotted in figure X.
+All the synthesised stimuli were subsequently annotated for pre-voicing, VOT, vowel duration and F0 at the first 5ms from vowel onset. This F0 measurement was made in order to align the data with the production database that we use for ideal observer analysis. Items' F0 in relation to VOT is plotted in Figure XXX. <!-- TO DO: fill in -->
 
 ```{r}
-# annotation information of synthesised stimuli
+# Annotation information of synthesised stimuli
 files <- list.files(path = "../materials/stimuli_AE/annotation_files/", pattern = "^d.*_stimuli_f0_measured.csv")
 
 file_list <- seq(1:length(files))
@@ -318,7 +86,7 @@ d.stimuli %<>% bind_rows() %>%
   mutate(VOT = as.numeric(gsub("VOT(.*)$", "\\1", VOT))) %>%
   arrange(filename, word, vowel, VOT, target_f0, f0_5ms_into_vowel, f0_10ms_into_vowel)
 
-# using lm() to obtain general linear function
+# Using lm() to obtain linear relation between VOT and f0
 talker_m <- lm(f0_5ms_into_vowel ~ 1 + VOT, data = d)
 
 d.stimuli %>%
@@ -338,10 +106,10 @@ d.stimuli %>%
 ```
 
 
-## Exclusions
+# Additional information on participant exclusions {sec:exclusions}
 We provide additional information on participants' performance during catch trials and on labelled trials (for which there is a clearly correct response). Both of these measures were used to exclude participants.
 
-### Performance on catch trials
+## Performance on catch trials
 
 (ref:plot-catch-trial-performance) Of the 122 participants, 1 committed more than 3 errors (<84% accuracy)
 
@@ -355,7 +123,7 @@ d %>%
   scale_y_continuous("Number of participants", breaks = seq(0, 120, 5))
 ```
 
-### Performance on labelled exposure trials
+## Performance on labelled exposure trials
 
 ```{r labeled-trial-performance-group, fig.width=6, fig.height=4, message=F}
 p.labelled <- d %>%
@@ -393,7 +161,6 @@ p.labelled | p.labelled.group +
   plot_layout(guides = "collect") & theme(legend.position = "top")
 ```
 
-
 ```{r fig,width=8, fig.height=5, fig.width=6}
 d %>%
   group_by(ParticipantID, Condition.Exposure, Block) %>%
@@ -413,13 +180,12 @@ d %>%
   facet_wrap( ~ Block )
 ```
 
-
 ```{r, fig.width=8, fig.height=3}
 d_for_analysis %>%
   group_by(ParticipantID, Block) %>%
   mutate(
     Response.log_RT = log10(ifelse(Response.RT <= 0, NA_real_, Response.RT)),
-    Response.log_RT.scaled = scale(Response.log_RT), 
+    Response.log_RT.scaled = scale(Response.log_RT),
     Response.log_RT.mean = mean(Response.log_RT, na.rm = T)) %>%
   ungroup() %>%
   mutate(across(c(ParticipantID, Condition.Exposure, Block), factor)) %>%
@@ -432,7 +198,6 @@ d_for_analysis %>%
   facet_grid(Condition.Exposure ~ Block, scales = "free_x", space = "free_x") +
   theme(legend.position = "none")
 ```
-
 
 ```{r, fig.width=8, fig.height=3}
 d %>%
@@ -454,8 +219,8 @@ d %>%
 ```
 
 
-## Analysis approach {sec:analysis-approach}
-We analyzed participants' categorisation responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric model [@prins2011]. The psychometric model is an extension of mixed-effects logistic regression that also takes into account attentional lapses.
+## Additional information about the Bayesian psychometric mixed-effects model {sec:analysis-approach}
+We analyzed participants' categorization responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric model [@prins2011]. The psychometric model is an extension of mixed-effects logistic regression that also takes into account attentional lapses.
 
 The mixed-effects psychometric model describes the probability of "t"-responses as a weighted mixture of a perceptual and a lapsing model. The perceptual model predicts responses on trials where participants pay attention and respond based on the stimulus. We implemented the perceptual model as used mixed-effects logistic regression, predicting "t"-responses from exposure condition (backward difference coded, comparing the +10ms against the +0ms shift condition, and the +40ms against the +10ms shift condition), test block (backward difference coded from the first to last test block), VOT (Gelman scaled), and their full factorial interaction. The model included by-participant random intercepts and slopes for all within-participant maniplations (block and VOT) and by-item random intercepts and slopes for all within-participant manipulations (exposure condition, block, VOT).
 
@@ -463,45 +228,64 @@ The lapsing model predicts participant responses that are made independent of th
 
 We fit the psychometric model using the package \texttt{brms} [@R-brms_a] in R [@R; @RStudio]. To faciltiate comparison of effect sizes across predictors, we standardized continuous predictors (VOT) by dividing through twice their standard deviation [@gelman2008]. Following previous work from our lab [@horberg2021; @xie2021], we used weakly regularizing priors to facilitate model convergence. For fixed effect parameters, we used Student priors centered around zero with a scale of 2.5 units [following @gelman-prior2008] and 3 degrees of freedom. For random effect standard deviations, we used a Cauchy prior with location 0 and scale 2, and for random effect correlations, we used an uninformative LKJ-Correlation prior with its only parameter set to 1, describing a uniform prior over correlation matrices [@Lewandowski2009]. Four chains with 2000 warm-up samples and 2000 posterior samples each were fit. No divergent transitions after warm-up were observed, and all $1 < \hat{R} < 1.01$.
 
+# Obtaining predictions of idealized listeners
+In the main text, we employ ideal observers [specifically, the ASP framework described in @xie2023] to relate our results to those expected from idealized listeners. This includes predictions based on a 'typical' listener's prior experience and predictions based on idealized learners for each exposure condition that have fully learned the exposure distributions. The former provides a baseline against which to compare listeners' behavior at the start of the experiment. The latter provides a baseline against which to compare changes in listeners' behavior as a function of exposure. In this section, we describe how we derived those predictions.
+
+## Prior expectations 
+<!-- TO DO: context + database intro + explanation -->
+The database contains 92 talkers (female = XXX, male = XXX; for details, see SI, \@ref(sec:VOT-production)).
+
+## Idealized learners that have fully learned the exposure distribution
+<!-- TO DO: explain how those were derived -->
+
+# Additional statistical comparisons referred to in the main text
+
+## Test blocks
+### Differences in block to block changes across conditions
+In the main text, we refer to differences in the rate of block to block changes across exposure conditions. These differences correspond to the interactions between exposure conditions and block in the psychometric mixed-effect model. These interactions are summarized in Table \@ref(tab:hypothesis-table-interactions)
+
 
 ### Table of interactions 
-```{r hypothesis-table-interactions, results='asis', fig.cap="TEMPORARY PLACEMENT OF THIS TABLE. TO BE MOVED TO SI WHEN DISCUSSION IS COMPLETE"}
-# hypotheses to answer question, "was the change incremental between blocks?"
-hyp_interactions <- c(
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 < 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 < 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 < 0",
-  "(mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1) < 0",
-  
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 > 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 > 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 > 0",
-  
-  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 < 0",
-  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 < 0",
-  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 < 0",
-  "(mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1) < 0",
-  
-  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 > 0",
-  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
-  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
-  
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 < 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 < 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 < 0",
-  "(mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 + 
-    mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 + 
+
+```{r hypothesis-table-interactions, results='asis'}
+hyp_interactions <-
+  hypothesis(
+    fit_test,
+    c(
+      "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 < 0",
+      "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 < 0",
+      "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 < 0",
+      "(mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1) < 0",
+
+      "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 > 0",
+      "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 > 0",
+      "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 > 0",
+
+      "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 < 0",
+      "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 < 0",
+      "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 < 0",
+      "(mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1) < 0",
+
+      "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 > 0",
+      "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
+      "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
+
+      "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 < 0",
+      "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 < 0",
+      "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 < 0",
+      "(mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 +
+    mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 +
     mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1) < 0",
-  
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 > 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + 
-   mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0")
 
-hyp_interactions <- hypothesis(fit_test, hyp_interactions, robust = T)
-hyp_interactions <- hyp_interactions$hypothesis %>% dplyr::select(-Star)
+    "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 > 0",
+    "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
+    "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 +
+   mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0"),
+   robust = T) %>%
+  .$hypothesis %>%
+  dplyr::select(-Star)
 
-table.interactions <- 
+table.interactions <-
   make_hyp_table(
     hyp_interactions,
     rep(c(
@@ -513,25 +297,88 @@ table.interactions <-
   "Block 4 to 5: decreased $\\Delta_{PSE}$",
   "Block 5 to 6: decreased $\\Delta_{PSE}$",
   "{\\em Block 4 to 6: decreased $\\Delta_{PSE}$}"), 3),
-    caption = "Was there incremental change from test block 1 to 4? Did these changes dissipate with repeated testing from block 4 to 6? This table summarizes the interactions between exposure condition and block, whether the differences between exposure conditions changed from test block to test block.") %>% 
+    caption = "Did the rate of block-to-block changes differ across exposure conditions? This table summarizes the interactions between exposure condition and block---specifically, whether the differences between exposure conditions changed from test block to test block.") %>%
   pack_rows("Difference in +10 vs. baseline", 1, 7) %>%
   pack_rows("Difference in +40 vs. +10", 8, 14) %>%
-  pack_rows("Difference in +40 vs. baseline", 15, 21) 
+  pack_rows("Difference in +40 vs. baseline", 15, 21)
 
 table.interactions
 
 rm(fit_test)
 ```
 
+## Exposure blocks
+This section reports the hypothesis tables for exposure blocks corresponding the simple effects of exposure condition and blocks (provided in the main text for test blocks), and the interaction between condition and block.
 
-# Generalized additive mixed-effects analysis
-The analyses presented in the main text assume that VOT has a linear effect on the log-odds of "t"-responses. We made this assumptions for the sake of simplicity, and in order to avoid over-fitting. However, there are reasons to expect that the effects of VOT are non-linear. Specifically, ideal observers with Gaussian categories along a single cue dimension (here: VOT) predict that the posterior log-odds of each category change linearly along that cue dimension if and only if the variance of both Gaussian categories is equal [for details, see @bicknell2018; @kleinschmidt-jaeger2015; @kronrod2016]. For US English /d/ and /t/, this is well-known *not* to be the case, with /t/ having larger variance than /d/ (see also Figure XXX in the main text). Under the assumption of Gaussian categories, ideal observer thus predict a quadratic effect along VOT---specifically, the log-odds of "t"-responses are predicted to increase more than linearly with increasing VOT between the two category means (since the /t/ category has larger variance). While Gaussian categories are a simplifying assumption for the sake of modeling, rather than a critical assumption of the ideal adaptor framework [cf. @kleinschmidt-jaeger2015, Appendix]^[For example, the assumption of Gaussian categories leads to implausible predictions for extreme VOT values that lie outside the range of the two category means. Specifically, for VOTs smaller than the category mean of /d/, "t"-responses are predicted to eventually increase with decreasing VOT values (as a consequence of the same quadratic trend mentioned above). Additionally, distribution of VOTs for the /d/ category tends to be noticeably positively-skewed and thus non-normal.], the predicted quadratic trend is also likely to emerge in exemplar models. <!-- TO DO: Check -->
+<!-- TO DO: add overall summary here, summarizing the most important parallels and differences to the results for test blocks. -->
+
+### Simple effects of exposure condition within each block
+<!-- TO DO -->
+
+### Simple effects of block within each exposure condition
+<!-- TO DO -->
+
+### Differences in block to block changes across conditions
+<!-- TO DO -->
+
+## Can assumptions of our analyses explain differences between exposure and test blocks?
+In the main text, we pointed the 'zigzag' pattern in Figure \@ref(fig:plot-fit-slope-PSE)C: the slopes of listeners' categorization functions were smaller during test than during exposure blocks (BF = XXX). <!-- TO DO: can we run a model that contains exposure and test block and runs: Response ~ Block.Type[effect coded] * VOT + Random effects and everything else identical to your main analysis? No exposure condition. The BF of the interaction term is the evidence we need. --> Here, we present auxiliary analyses that suggest that these differences are not due to biases in our analysis.
+
+### Effects of priors on the estimates for exposure and test blocks
+The psychometric mixed-effects analyses followed our previous work [e.g., @hoerberg-jaeger2022; @xie2021] and recommendations in the literature, and used weakly regularizing priors. This raises the question whether the fact that epxosure and test blocks differed in the amount of data they contained (24 unlabelled trials during each exposure block vs. 12 during test) can explain the 'zigzag' pattern evidence in Figure \@ref(fig:plot-fit-slope-PSE)C for slopes and, to a lesser extent, in Figure \@ref(fig:plot-fit-slope-PSE)D for PSEs.
+
+<!-- TO DO: more context needed -->
+
+```{r}
+d.intercept_estimates <-
+  full_join(
+    fit_test_nested %>% get_intercepts_and_slopes(),
+    fit_exposure_nested %>% get_intercepts_and_slopes() %>%
+      mutate(Intercept = Intercept + fixef(fit_exposure)[3] * ((VOT.mean_test - VOT.mean_exposure) / (2 * VOT.sd_exposure)))) %>%
+  group_by(Condition.Exposure, Block) %>%
+  summarise(
+    across(
+      c(Intercept, slope),
+      list(lower = ~ quantile(.x, probs = .025), median = median, upper = ~ quantile(.x, probs = .975))))
+
+
+p.intercept_1to7_adjusted <-
+d.intercept_estimates %>%   
+  ggplot(aes(
+    x = Block, y = Intercept_median,
+    ymin = Intercept_lower, ymax = Intercept_upper,
+    colour = Condition.Exposure, group = Condition.Exposure)) +
+  geom_rect(
+    data = tibble(
+      xmin = c(seq(0.55, 6.55, 2), seq(7.55, 8.55, 1)),
+      xmax = c(seq(1.45, 7.45, 2), seq(8.45, 9.45, 1))),
+    aes(xmin = xmin, xmax = xmax),
+    ymin = -Inf, ymax = Inf, fill = "grey", alpha = .1, inherit.aes = F) +
+  geom_point(position = position_dodge(.3), size = 1) +
+  geom_linerange(linewidth = .6, position = position_dodge(.3), alpha = .5) +
+  stat_summary(geom = "line", position = position_dodge(.3)) +
+  scale_x_discrete("Block", labels = c("1" = "Test 1", "2" = "Exposure 1", "3" = "Test 2", "4" = "Exposure 2", "5" = "Test 3", "6" = "Exposure 3", "7" = "Test 4", "8" = "Test 5", "9" = "Test 6")) +
+  scale_colour_manual("Condition",
+    labels = c("baseline", "+10ms", "+40ms", "prior"),
+    values = c(colours.condition, "darkgray"),
+    aesthetics = "color") +
+  theme(legend.position = "top",
+        axis.text.x = element_text(angle = 22.5, hjust = 1))
+p.intercept_1to7
+p.intercept_1to7_adjusted
+```
+
+
+### Effects of the linearity assumption
+The perceptual model of our psychometric mixed-effects analyses assumed linear effects of VOT on the log-odds of "t"-responses. We made this assumptions for the sake of simplicity, and in order to avoid over-fitting. However, there are reasons to expect that the effects of VOT are non-linear. Specifically, ideal observers with Gaussian categories along a single cue dimension (here: VOT) predict that the posterior log-odds of each category change linearly along that cue dimension if and only if the variance of both Gaussian categories is equal [for details, see @bicknell2018; @kleinschmidt-jaeger2015; @kronrod2016]. For US English /d/ and /t/, this is well-known *not* to be the case, with /t/ having larger variance than /d/ (see also Figure \@ref(fig:exposure-means-database-density) in the main text). Under the assumption of Gaussian categories, ideal observer thus predict a quadratic effect along VOT---specifically, the log-odds of "t"-responses are predicted to increase more than linearly with increasing VOT between the two category means (since the /t/ category has larger variance). 
+
+<!-- While Gaussian categories are a simplifying assumption for the sake of modeling, rather than a critical assumption of the ideal adaptor framework [cf. @kleinschmidt-jaeger2015, Appendix]^[For example, the assumption of Gaussian categories leads to implausible predictions for extreme VOT values that lie outside the range of the two category means. Specifically, for VOTs smaller than the category mean of /d/, "t"-responses are predicted to eventually increase with decreasing VOT values (as a consequence of the same quadratic trend mentioned above). Additionally, distribution of VOTs for the /d/ category tends to be noticeably positively-skewed and thus non-normal.], the predicted quadratic trend is also likely to emerge in exemplar models. -->
 
 While the linearity assumption made in our main analysis does not *necessarily* introduce statistical bias, it is possible that it does. We thus conducted additional analyses that relaxed the linearity assumption by modeling the effect of VOT as a non-parametric smooth. Since this analysis affords additional degrees of freedom, we reduced concerns about over-fitting by combining the (unlabeled) exposure and test data into a single analysis. Instead of modeling effects block by block, we decided to model the incremental and cumulative effects of exposure by including a non-linear effect of trial and its interaction with VOT in the analysis.
 
-In addition to replicating our analysis under relaxed assumptions about linearity, this auxliary analysis also sheds light on the causes for the 'zigzag' pattern in the intercept and slope estimates for exposure and test blocks that we reported in the main analysis.
+In addition to replicating our analysis under relaxed assumptions about linearity, this auxiliary analysis also sheds light on the causes for the 'zigzag' pattern in the intercept and slope estimates for exposure and test blocks that we reported in the main analysis.
 
-## Analysis approach
+### Analysis approach: Substituting the GLMM in our psychometric mixed-effects model with a GAMM
 Specifically, we use the same psychometric mixed-effects model as in the main analysis, except that we replaced the full factorial of VOT, block, and exposure condition in the perceptual model with a separate tensor smooth of VOT and trial for each of the three exposure conditions.^[`t2(VOT, Trial, by = Condition.Exposure, bs = "tp")`]. This makes this auxiliary analysis a mixed-effect mixture model, for which the mixture component that is the perceptual model is a generalized additive mixed-effect models (GAMM), rather than a generalized linear mixed-effects model. The analysis contained the same full random effect structure and priors as the psychometric model presented in the main text. Both VOT and trial were Gelman-scaled prior to the analysis.
 
 ```{r}
@@ -603,10 +450,10 @@ m <- brm(
     file = paste0("../models/GAMM-test+exposure-wRE.rds"))
 ```
 
-## Results
+### Results
 Figure \@ref(fig:GAMM-figure) shows the predicted log-odds of "t"-responses that result from the fitted GAMM.
 
-The GAMM results replicate the directional effects of exposure. For the baseline condition, the contour lines largely shift downwards with exposure. This means that the same VOT is more likely to be categorized as "t" with increasing exposure. For the +40 condition, the opposite trend is observed (and much more clearly), indicating that the same VOT is *less* likely to be categorized as "t" with increasing exposure. The +10 condition falls between the baseline and +40 condition.
+The GAMM results replicate the directional effects of exposure both within and across exposure conditions. For the baseline condition, the contour lines largely shift downwards with exposure. This means that the same VOT is more likely to be categorized as "t" with increasing exposure. For the +40 condition, the opposite trend is observed (and much more clearly), indicating that the same VOT is *less* likely to be categorized as "t" with increasing exposure. The +10 condition falls between the baseline and +40 condition.
 
 The GAMM results also confirm that the changes introduced by exposure are undone with repeated testing. This shows in the contour lines over trials XXX-XXX, which trend towards reverting the changes introduced by the preceding exposure. The trend shows most clearly for the baseline and +40 condition (in opposite directions since the exposure effects are in opposite directions for these two conditions).
 
@@ -635,6 +482,7 @@ p[[1]] +
   coord_cartesian(expand = F) +
   theme(legend.position = "top")
 ```
+
 
 # Comparing predictions of different adaptive mechanisms
 Use database from @chodroff-wilson2018 as a starting point, and then expose the three different adaptive mechanisms introduced in @xie2023 to the distributions from the experiment.
@@ -1290,21 +1138,266 @@ d.pars %>%
   compare_predicted_and_actual()
 ```
 
-# Obtaining estimates of listeners prior expectations
 
-The database contains 92 talkers (female = XXX, male = XXX; for details, see SI, \@ref(sec:VOT-production)).
+
+
+
+
+
+# WHAT OF THE REST SHOULD BE KEPT?
+
+# Predictions of existing models of adaptive speech perception {sec:proof}
+We show that two of the most influential approaches to adaptive speech perception do not predict the sublinear (less than proportional) shifts in categorisation functions observed both in the present study and in in previous work [@kleinschmidt-jaeger2016; @kleinschmidt2020]. We focus on these two models since they are the only widely-used accounts of adaptive speech perception that are (1) not limited to specific types of contrasts (unlike, e.g., vowel normalization accounts) and (2) sufficiently specific to make concrete predictions [for review of existing models, see @xie2023]. We only briefly discuss why a third type of account---exemplar models of speech perception---*likely* would also fail to predict the sublinear effects.
+
+We emphasize that our discussion deliberately focuses on *models*, not theories. The finding of sublinear effects of exposure can be accommodated in all three theories that underlie the three models discussed here (Bayesian inference in the ideal adaptor framework, similarity-based inference in exemplar theory, or normalization relative to expectations). Yet, the fact that none of the existing *models* predicts this effect highlights that this property of adaptive speech perception was only recently discovered, and is as-of-yet not well understood.
+
+## Incremental Bayesian belief-updating [@kleinschmidt-jaeger2011, @kleinschmidt-jaeger2012, @kleinschmidt-jaeger 2015, @kleinschmidt-jaeger2016; @kleinschmidt2020]
+The only distributional learning model that has been more repeatedly tested against adaptive speech perception---incremental Bayesian belief-updating [@kleinschmidt-jaeger2011]---predicts proportional, rather than sublinear, shifts. This model had previously been found to closely predict the cumulative effects of exposure in perceptual recalibration to audio-visually [@kleinschmidt2011-jaeger; @kleinschmidt-jaeger2012] or lexically labeled speech [@cummings-theodore2023], as well as the type of exposure to unlabelled minimal pair words employed by Kleinschmidt and Jaeger [@theodore-monto2019]. However, all of these studies employed comparatively small changes in cue distributions, and lacked the design necessary to detect deviation from proportionality (we return to this point below). The findings presented in @kleinschmidt-jaeger2016 would seem to reject this specific distributional learning model [though not necessarily the theory it is derived from, @kleinschmidt-jaeger2015; for discussion of the relation between theory and model, see also @kleinschmidt2020]  <!-- TO DO: make sure we do -->
+
+```{r}
+get_IBBU_updates <- function(
+    prior = NULL,
+    exposure = NULL,
+    test = NULL,
+    condition = NULL,
+    cues = c("VOT", "f0_Mel"),
+    kappa = 72, nu = 72,
+    updates_to_keep = c(0, 48, 96, 144),
+    seed = 1234
+) {
+  set.seed(seed)
+  Sigma_noise <- diag(c(80, 878)[1:length(cues)])
+  dimnames(Sigma_noise) <- list(cues, cues)
+
+  if (is.null(prior)) {
+    prior <- d.chodroff_wilson %>%
+      make_NIW_ideal_adaptor_from_data(
+        cues = cues, kappa = kappa, nu = nu, Sigma_noise = Sigma_noise)
+  }
+
+  if (is.null(exposure)) {
+    message("When exposure is NULL, condition is interpreted as the VOT shift.")
+    exposure <-
+      lapply(
+        X = as.list(1:3),
+        FUN = function(x) d.chodroff_wilson %>%
+          # Sample exposure from VOT distribution regardless of which cues are used
+          # for belief-updating, since that's what we did in the experiment.
+          make_MVG_ideal_observer_from_data(
+            cues = "VOT", Sigma_noise = matrix(80, dimnames = list("VOT", "VOT"))) %>%
+          sample_MVG_data_from_model(Ns = 24, randomize.order = T)) %>%
+      reduce(rbind) %>%
+      mutate(
+        Trial = 1:144,
+        Condition.Exposure = paste0("TrueShift", .env$condition),
+        VOT = VOT + as.numeric(.env$condition),
+        f0 = predict_f0(VOT, Mel = F),
+        f0_Mel = predict_f0(VOT, Mel = T)) %>%
+      relocate(Condition.Exposure, Trial, category, VOT, f0)
+  }
+
+  idealized_ios <-
+    make_VOT_IOs_from_exposure(exposure) %>%
+    get_logistic_parameters_from_model(
+    model = ., x = map(test, ~ .x[1]),
+    model_col = "io",
+    groups = "Condition.Exposure")
+
+  update_NIW_ideal_adaptor_incrementally(
+    prior = prior,
+    exposure = exposure,
+    exposure.order = "Trial",
+    noise_treatment = "no_noise",
+    lapse_treatment = "no_lapses",
+    method = "label-certain") %>%
+    filter(observation.n %in% updates_to_keep) %>%
+    nest(ia = -observation.n) %>%
+    mutate(
+      Condition.Exposure = unique(exposure$Condition.Exposure),
+      observation.bin = as.numeric(factor(observation.n, levels = sort(observation.n))),
+      observation.alpha = observation.bin / max(observation.bin),
+      cf = map(ia,
+               ~ get_categorization_function_from_NIW_ideal_adaptor(.x, noise_treatment = "no_noise")),
+      sf = map2(cf, observation.alpha,
+                ~ stat_function(
+                  fun = function(x) {
+                    as.numeric(.x(
+                      map(x, function(y) c(y, predict_f0(y, Mel = T))),
+                      target_category = 2)) },
+                  alpha = .y,
+                  color = if (condition %in% c("Shift0", "Shift10", "Shift40")) colours.condition[condition] else "black"))) %>%
+    select(-c(observation.bin, observation.alpha)) %>%
+    relocate(Condition.Exposure, observation.n, ia, cf, sf) %>%
+    # Convert updated beliefs into estimated PSE and slope
+    get_logistic_parameters_from_model(
+      model = ., x = test, model_col = "ia",
+      groups = c("Condition.Exposure", "observation.n", "cf", "sf")) %>%
+    # Join in information about idealized prior and posterior
+    # (the latter based on ideal observer that has fully learned the exposure distribution).
+    # Then calculate for each update step the proportion of updating relative to those
+    # idealized priors and posteriors.
+    left_join(
+      idealized_ios %>%
+        select(Condition.Exposure, slope_scaled, PSE) %>%
+        rename(idealized_posterior_slope_scaled = slope_scaled, idealized_posterior_PSE = PSE)) %>%
+    cross_join(
+      idealized_ios %>%
+        ungroup() %>%
+        filter(Condition.Exposure == "prior") %>%
+        select(slope_scaled, PSE) %>%
+        rename(idealized_prior_slope_scaled = slope_scaled, idealized_prior_PSE = PSE)) %>%
+    mutate(
+      proportion_of_idealized_PSE = (PSE - idealized_prior_PSE) / (idealized_posterior_PSE - idealized_prior_PSE),
+      proportion_of_idealized_slope_scaled = (slope_scaled - idealized_prior_slope_scaled) / (idealized_posterior_slope_scaled - idealized_prior_slope_scaled))
+}
+
+get_IBBU_updates_for_experiment <- function(
+    condition,
+    test = NULL,
+    cues = c("VOT", "f0_Mel"),
+    kappa = 72, nu = 72
+) {
+  exposure <-
+    d_for_analysis %>%
+    ungroup() %>%
+    filter(
+      Condition.Exposure == condition,
+      Phase == "exposure") %>%
+    filter(ParticipantID == first(ParticipantID)) %>%
+    mutate(
+      category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")) %>%
+    rename(
+      VOT = Item.VOT,
+      f0_Mel = Item.f0_Mel)
+
+  get_IBBU_updates(
+    exposure = exposure,
+    test = test,
+    condition = condition,
+    cues = cues, kappa = kappa, nu = nu)
+}
+
+x <-
+  d_for_analysis %>%
+  ungroup() %>%
+  filter(Phase == "test") %>%
+  distinct(Item.VOT, Item.f0_Mel) %>%
+  arrange(Item.VOT) %>%
+  mutate(x = map2(Item.VOT, Item.f0_Mel, ~ c(.x, .y))) %>%
+  pull(x)
+
+# Plot updates for our three exposure condition
+d.updates <-  
+  bind_rows(get_IBBU_updates_for_experiment("Shift0", test = x),
+            get_IBBU_updates_for_experiment("Shift10", test = x),
+            get_IBBU_updates_for_experiment("Shift40", test = x))
+
+# d.exposure %>%
+#   distinct(VOT) %>%
+#   ggplot(aes(x = VOT)) +
+#   d.updates$sf +
+#   scale_x_continuous(limits = c(10, 90)) +
+#   geom_label(
+#     data = d.updates %>% filter(observation.n == 144),
+#     aes(
+#       x = PSE,
+#       color = Condition.Exposure,
+#       label = percent(proportion_of_idealized_PSE)),x
+
+#     y = .5)
+```
+
+
+
+
+```{r get-updates-nu-equal-kappa}
+x <-
+  tibble(VOT = seq(0, 100)) %>%
+  mutate(x = map(VOT, ~ c(.x, predict_f0(.x, Mel = T)))) %>%
+  pull(x)
+
+# Plot updates for true rightward shifts of various magnitudes
+d.updates <-  
+  bind_rows(get_IBBU_updates(condition = 10, test = x),
+            get_IBBU_updates(condition = 20, test = x),
+            get_IBBU_updates(condition = 30, test = x),
+            get_IBBU_updates(condition = 40, test = x))
+
+tibble(VOT = seq(10, 90)) %>%
+  ggplot(aes(x = VOT)) +
+  d.updates[d.updates$observation.n == 144,]$sf +
+  scale_x_continuous() +
+  geom_label(
+    data = d.updates %>% filter(observation.n == 144),
+    aes(
+      x = PSE,
+      color = Condition.Exposure,
+      label = percent(proportion_of_idealized_PSE)),
+    y = .5)
+```
+
+```{r get-updates-nu-larger-kappa}
+d.updates <-  
+  bind_rows(get_IBBU_updates(condition = 10, test = x, nu = 10000),
+            get_IBBU_updates(condition = 20, test = x, nu = 10000),
+            get_IBBU_updates(condition = 30, test = x, nu = 10000),
+            get_IBBU_updates(condition = 40, test = x, nu = 10000))
+
+tibble(VOT = seq(10, 90)) %>%
+  ggplot(aes(x = VOT)) +
+  d.updates[d.updates$observation.n == 144,]$sf +
+  scale_x_continuous() +
+  geom_label(
+    data = d.updates %>% filter(observation.n == 144),
+    aes(
+      x = PSE,
+      color = Condition.Exposure,
+      label = percent(proportion_of_idealized_PSE)),
+    y = .5)
+```
+
+
+```{r get-updates-nu-smaller-kappa}
+d.updates <-  
+  bind_rows(get_IBBU_updates(condition = 10, test = x, kappa = 10000),
+            get_IBBU_updates(condition = 20, test = x, kappa = 10000),
+            get_IBBU_updates(condition = 30, test = x, kappa = 10000),
+            get_IBBU_updates(condition = 40, test = x, kappa = 10000))
+
+tibble(VOT = seq(10, 90)) %>%
+  ggplot(aes(x = VOT)) +
+  d.updates[d.updates$observation.n == 144,]$sf +
+  scale_x_continuous() +
+  geom_label(
+    data = d.updates %>% filter(observation.n == 144),
+    aes(
+      x = PSE,
+      color = Condition.Exposure,
+      label = percent(proportion_of_idealized_PSE)),
+    y = .5)
+```
+
+```{r}
+m <- readRDS("../models/IBBU-Tan-Jaeger2022-Experiment2-scaled.RDS")
+summary(m)
+```
+
+## Centering cues relative to expecations [C-CuRE, @apfelbaum-mcmurray2015; @mcmurray-jongman2011]
+Similarly, existing models of perceptual normalization---an alternative, but mutually compatible, hypothesis---also predict proportional changes in PSE. <!-- TO DO: write these sections for SI. along a single continuum normalization shift of cue mean just shifts cat function. for multi-dimensional cues, the same is true under cue integration models (variance and thus weighting does not change; shift along each dimension follows same logic as for single cue). for multi-dimensional multivariate models with interacting cues viewed from the perspective of a single cue, shifts can *appear* non-proportional but the pattern observed in KJ16---non proportionality without changes in slopes---would seem to be impossible to create as long as the test stimuli form a line in the multidimensional cue space -->
+
+## Exemplar theory
+<!-- generally the most similar exemplars should dominate perception. So it's unclear why one wouldn't converge against the input -->
+
 
 # Norming experiment: Estimating listener's expectations prior to informative exposure {sec:norming-experiment}
-The purpose of the norming experiment was to validate our experiment methodology. We test basic assumptions about the paradigm and stimuli we employ in this study. We obtain estimates of the category boundary between /d/ and /t/ as perceived by *the type of listeners we seek to recruit for the main experiment*. 
+The purpose of the norming experiment was to validate our experiment methodology. We test basic assumptions about the paradigm and stimuli we employ in this study. We obtain estimates of the category boundary between /d/ and /t/ as perceived by *the type of listeners we seek to recruit for the main experiment*.
 
 ## Methods
 ### Participants
 Participants were recruited over Amazon's Mechanical Turk platform, and paid $2.50 each (for a targeted remuneration of \$6/hour). The experiment was only visible to Mechanical Turk participants who (1) had an IP address in the United States, (2) had an approval rating of 95% based on at least 50 previous assignments, and (3) had not previously participated in any experiment on stop voicing from our lab. 24 L1 US English listeners (female = 9; mean age = 36.2 years; SD age = 9.2 years) completed the experiment. To be eligible, participants had to confirm that they (1) spent at least the first 10 years of their life in the US speaking only English, (2) were in a quiet place, and (3) wore in-ear or over-the-ears headphones that cost at least \$15.
 
 ### Materials
-We created four VOT continua ranging from -100ms VOT to +130ms VOT in 5ms steps for each of the minimal pair words, "dill-till", "dip-tip", "din-tin", and "dim-Tim". The synthesis of these continua followed the procedure described in (SI:sec). We selected 24 steps ranging from (-100, -50, -10, 5  `r paste0(seq(15, 90, 5), collapse = ", ")`, `r paste0(seq(100, 130, 10), collapse = ", ")`) from each continua. VOT tokens in the lower and upper ends were distributed over larger increments because stimuli in those ranges were expected to elicit floor and ceiling effects, respectively. 
-
- All stimuli are available as part of the OSF repository for this article.
+All stimuli are available as part of the OSF repository for this article. We created four VOT continua ranging from -100ms VOT to +130ms VOT in 5ms steps for each of the minimal pair words, "dill-till", "dip-tip", "din-tin", and "dim-Tim". The synthesis of these continua followed the procedure described in (SI:sec). We selected 24 steps ranging from (-100, -50, -10, 5  `r paste0(seq(15, 90, 5), collapse = ", ")`, `r paste0(seq(100, 130, 10), collapse = ", ")`) from each continua. VOT tokens in the lower and upper ends were distributed over larger increments because stimuli in those ranges were expected to elicit floor and ceiling effects, respectively.
 
 In addition to the critical minimal pair continua we also recorded three words that did not did not contain any stop consonant sounds ("flare", "share", and "rare"). These word recordings were used as catch trials. Stimulus intensity was set to 70 dB sound pressure level for all recordings.
 
@@ -1314,7 +1407,6 @@ The code for the experiment is available as part of the OSF repository for this 
 On the next page, participants were informed about the task for the remainder of the experiment. They were informed that they would hear a female talker speak a single word on each trial, and had to select which word they heard. Participants were instructed to listen carefully and answer as quickly and as accurately as possible. They were also alerted to the fact that the recordings were subtly different and therefore may sound repetitive. This was done to encourage their full attention.
 
 Each trial started with a dark-shaded green fixation dot being displayed. At 500ms from trial onset, two minimal pair words appeared on the screen, as shown in Figure \@ref(fig:exp1-example-trial). At 1000ms from trial onset, the fixation dot would turn bright green and an audio recording from the matching minimal pair continuum started playing. Participants were required to click on the word they heard. For each participant, /d/-initial words were either always displayed on the left side or always displayed on the right side. Across participants, this ordering was counter-balanced. After participants clicked on the word, the next trial began.
-
 
 Participants heard 192 target trials (four minimal pair continua, each with 24 VOT steps, each heard twice). In addition, participants heard 12 catch trials. On catch trials, participant saw two written catch stimuli on the screen (e.g., "flare" and "rare"), and heard one of them (e.g. "rare"). Since these recordings were easily distinguishable, they served as a check on participant attention throughout the experiment.
 
@@ -1637,49 +1729,6 @@ There was no convincing evidence of a main effect of trial ($\hat{\beta} =$ `r g
 Finally to accomplish the first goal of experiment 1, we look at the interaction between VOT and trial. There was weak evidence that the effect of VOT decreased across trials ($\hat{\beta} =$ `r get_CI(fit, "mu2_sVOT:sTrial", "mu2_sVOT:sTrial < 0")`). The direction of this change---towards more shallow VOT slopes as the experiment progressed---makes sense since the test stimuli were not informative about the talker's pronunciation. Similar changes throughout prolonged testing have been reported in previous work. [@liu-jaeger2018; @liu-jaeger2019; @REFS].
 
 Overall, there was little evidence that participants substantially changed their categorisation behaviour as the experiment progressed. Still, to err on the cautious side, Experiment 2 employs shorter test phases.
-
-
-
-## Plotting intercept estimates of exposure and test data
-
-```{r}
-d.intercept_estimates <-
-  full_join(
-    fit_test_nested %>% get_intercepts_and_slopes(),
-    fit_exposure_nested %>% get_intercepts_and_slopes() %>%
-      mutate(Intercept = Intercept + fixef(fit_exposure)[3] * ((VOT.mean_test - VOT.mean_exposure) / (2 * VOT.sd_exposure)))) %>%
-  group_by(Condition.Exposure, Block) %>%
-  summarise(
-    across(
-      c(Intercept, slope),
-      list(lower = ~ quantile(.x, probs = .025), median = median, upper = ~ quantile(.x, probs = .975))))
-
-
-p.intercept_1to7_adjusted <-
-d.intercept_estimates %>%   
-  ggplot(aes(
-    x = Block, y = Intercept_median,
-    ymin = Intercept_lower, ymax = Intercept_upper,
-    colour = Condition.Exposure, group = Condition.Exposure)) +
-  geom_rect(
-    data = tibble(
-      xmin = c(seq(0.55, 6.55, 2), seq(7.55, 8.55, 1)),
-      xmax = c(seq(1.45, 7.45, 2), seq(8.45, 9.45, 1))),
-    aes(xmin = xmin, xmax = xmax),
-    ymin = -Inf, ymax = Inf, fill = "grey", alpha = .1, inherit.aes = F) +
-  geom_point(position = position_dodge(.3), size = 1) +
-  geom_linerange(linewidth = .6, position = position_dodge(.3), alpha = .5) +
-  stat_summary(geom = "line", position = position_dodge(.3)) +
-  scale_x_discrete("Block", labels = c("1" = "Test 1", "2" = "Exposure 1", "3" = "Test 2", "4" = "Exposure 2", "5" = "Test 3", "6" = "Exposure 3", "7" = "Test 4", "8" = "Test 5", "9" = "Test 6")) +
-  scale_colour_manual("Condition",
-    labels = c("baseline", "+10ms", "+40ms", "prior"),
-    values = c(colours.condition, "darkgray"),
-    aesthetics = "color") +
-  theme(legend.position = "top",
-        axis.text.x = element_text(angle = 22.5, hjust = 1))
-p.intercept_1to7
-p.intercept_1to7_adjusted
-```
 
 
 
