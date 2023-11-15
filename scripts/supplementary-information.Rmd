@@ -465,7 +465,7 @@ We fit the psychometric model using the package \texttt{brms} [@R-brms_a] in R [
 
 
 ### Table of interactions 
-```{r hypothesis-table-interactions, results='asis'}
+```{r hypothesis-table-interactions, results='asis', fig.cap="TEMPORARY PLACEMENT OF THIS TABLE. TO BE MOVED TO SI WHEN DISCUSSION IS COMPLETE"}
 # hypotheses to answer question, "was the change incremental between blocks?"
 hyp_interactions <- c(
   "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 < 0",
@@ -519,6 +519,8 @@ table.interactions <-
   pack_rows("Difference in +40 vs. baseline", 15, 21) 
 
 table.interactions
+
+rm(fit_test)
 ```
 
 

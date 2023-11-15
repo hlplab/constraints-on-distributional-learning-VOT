@@ -574,68 +574,6 @@ rm(fit_test.simple_effects_block)
 ```
 
 
-```{r hypothesis-table-interactions, results='asis', fig.cap="TEMPORARY PLACEMENT OF THIS TABLE. TO BE MOVED TO SI WHEN DISCUSSION IS COMPLETE"}
-# hypotheses to answer question, "was the change incremental between blocks?"
-hyp_interactions <- c(
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 < 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 < 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 < 0",
-  "(mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1) < 0",
-  
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 > 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 > 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 > 0",
-  
-  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 < 0",
-  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 < 0",
-  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 < 0",
-  "(mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1) < 0",
-  
-  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 > 0",
-  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
-  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
-  
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 < 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 < 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 < 0",
-  "(mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 + 
-    mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 + 
-    mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1) < 0",
-  
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 > 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
-  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + 
-   mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0")
-
-hyp_interactions <- hypothesis(fit_test, hyp_interactions, robust = T)
-hyp_interactions <- hyp_interactions$hypothesis %>% dplyr::select(-Star)
-
-table.interactions <- 
-  make_hyp_table(
-    hyp_interactions,
-    rep(c(
-  # Comparing differences in +10 vs. baseline between blocks
-  "Block 1 to 2: increased $\\Delta_{PSE}$",
-  "Block 2 to 3: increased $\\Delta_{PSE}$",
-  "Block 3 to 4: increased $\\Delta_{PSE}$",
-  "{\\em Block 1 to 4: increased $\\Delta_{PSE}$}",
-  "Block 4 to 5: decreased $\\Delta_{PSE}$",
-  "Block 5 to 6: decreased $\\Delta_{PSE}$",
-  "{\\em Block 4 to 6: decreased $\\Delta_{PSE}$}"), 3),
-    caption = "Was there incremental change from test block 1 to 4? Did these changes dissipate with repeated testing from block 4 to 6? This table summarizes the interactions between exposure condition and block, whether the differences between exposure conditions changed from test block to test block.") %>% 
-  pack_rows("Difference in +10 vs. baseline", 1, 7) %>%
-  pack_rows("Difference in +40 vs. +10", 8, 14) %>%
-  pack_rows("Difference in +40 vs. baseline", 15, 21) 
-
-table.interactions
-
-rm(fit_test)
-```
-
-
-
-
-
 
 Second, while the PSEs for the +40 and +10 conditions were shifted rightwards compared to the baseline condition, both the +10 and the baseline condition seem to shift *left*wards relative to their pre-exposure starting point in Test 1. This is supported by Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-effects-block). The evidence for the leftward shifts is quite weak for the +10 condition (BF = 3.5 for changes from Test 1 to 4), for which the PSE changes comparatively little across tests, but it is stronger for the baseline condition (BF = 7.6). In contrast, the +40 condition is clearly shifted rightwards relative to pre-exposure (BF = 45.2). To understand this pattern, it is helpful to relate the three exposure conditions to the distribution of VOT in listeners' prior experience. Figure \@ref(fig:exposure-means-database-density) shows the category means of our exposure conditions relative to the distribution of VOT by talkers of L1-US English [based on @chodroff-wilson2018]. This comparison offers an explanation as to why the baseline condition (and to some extent the +10 condition) shift leftwards with increasing exposure, whereas the +40 condition shifts rightwards: relative to listeners' prior experience, only the +40 condition presented larger-than-expected category means, whereas the baseline condition and, to some extent, the +10 condition presented lower-than-expected category means. That is, once we take into account how our exposure conditions relate to listeners' prior experience, both the direction of changes from Test 1 to 4 *within* each exposure condition (Table \@ref(tab:hypothesis-table-simple-effects-block)), and the direction of differences *between* exposure conditions receive an explanation (Table \@ref(tab:hypothesis-table-simple-effects-condition)).
 
