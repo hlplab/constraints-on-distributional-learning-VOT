@@ -12,7 +12,14 @@ if (!exists("PREAMBLE_LOADED")) source("preamble.R")
 
 Both the main text and these supplementary information (SI) are derived from the same R markdown document available via [OSF](). It is best viewed using Acrobat Reader.
 
-<!-- TO DO: add TOC HERE -->
+\newcommand{\changelocaltocdepth}[1]{%
+  \addtocontents{toc}{\protect\setcounter{tocdepth}{#1}}%
+  \setcounter{tocdepth}{#1}%
+}
+
+\tableofcontents
+\setcounter{tocdepth}{-10}
+\changelocaltocdepth{-10}
 
 # Required software {#sec:software}
 The document was compiled using \texttt{knitr} [@xie2021] in RStudio with R:
