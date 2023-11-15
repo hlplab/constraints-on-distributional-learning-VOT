@@ -394,20 +394,6 @@ p.labelled | p.labelled.group +
 ```
 
 
-```{r, message=FALSE, fig.width=6, fig.height=5}
-d_for_analysis %>%
-  filter(Is.CatchTrial == FALSE & Phase == "exposure") %>%
-  mutate(Item.Labeled = factor(ifelse(Item.Labeled == TRUE, "labeled", "unlabeled"))) %>%
-  summarise(Condition.Exposure, Block, Item.Labeled, Response.Correct) %>%
-  ggplot(aes(x = Response.Correct, fill = Item.Labeled)) +
-  geom_bar(position = position_dodge2(width = .5, preserve = "single"), width = .5) +
-  scale_x_discrete("Response", labels = c("incorrect", "correct")) +
-  scale_colour_manual("Labelling", aesthetics = c("colour", "fill"), breaks = c("labeled", "unlabeled"), values = c("#f6546a", "#00ced1")) +
-  theme(legend.position = "top") +
-  facet_grid(Condition.Exposure ~ Block)
-```
-
-
 ```{r fig,width=8, fig.height=5, fig.width=6}
 d %>%
   group_by(ParticipantID, Condition.Exposure, Block) %>%
@@ -429,16 +415,11 @@ d %>%
 
 
 ```{r, fig.width=8, fig.height=3}
-d %>%
-  filter(
-    Is.CatchTrial == FALSE &
-    Exclude_participant.due_to_catch_trials == FALSE &
-    Exclude_participant.due_to_labeled_trials == FALSE &
-    Exclude_participant.due_to_VOT_slope == FALSE) %>%
+d_for_analysis %>%
   group_by(ParticipantID, Block) %>%
   mutate(
     Response.log_RT = log10(ifelse(Response.RT <= 0, NA_real_, Response.RT)),
-    Response.log_RT.scaled = scale(Response.log_RT), # deducts each value with subject's own mean, divide by own SD
+    Response.log_RT.scaled = scale(Response.log_RT), 
     Response.log_RT.mean = mean(Response.log_RT, na.rm = T)) %>%
   ungroup() %>%
   mutate(across(c(ParticipantID, Condition.Exposure, Block), factor)) %>%
@@ -520,9 +501,10 @@ hyp_interactions <- c(
 hyp_interactions <- hypothesis(fit_test, hyp_interactions, robust = T)
 hyp_interactions <- hyp_interactions$hypothesis %>% dplyr::select(-Star)
 
-# translate the hypotheses above into intelligible statements
-hyp_interactions_readable <- 
-  tibble(Hypothesis_readable = rep(c(
+table.interactions <- 
+  make_hyp_table(
+    hyp_interactions,
+    rep(c(
   # Comparing differences in +10 vs. baseline between blocks
   "Block 1 to 2: increased $\\Delta_{PSE}$",
   "Block 2 to 3: increased $\\Delta_{PSE}$",
@@ -530,12 +512,7 @@ hyp_interactions_readable <-
   "{\\em Block 1 to 4: increased $\\Delta_{PSE}$}",
   "Block 4 to 5: decreased $\\Delta_{PSE}$",
   "Block 5 to 6: decreased $\\Delta_{PSE}$",
-  "{\\em Block 4 to 6: decreased $\\Delta_{PSE}$}"), 3))
-
-table.interactions <- 
-  make_hyp_table(
-    hyp_interactions_readable,
-    hyp_interactions,
+  "{\\em Block 4 to 6: decreased $\\Delta_{PSE}$}"), 3),
     caption = "Was there incremental change from test block 1 to 4? Did these changes dissipate with repeated testing from block 4 to 6? This table summarizes the interactions between exposure condition and block, whether the differences between exposure conditions changed from test block to test block.") %>% 
   pack_rows("Difference in +10 vs. baseline", 1, 7) %>%
   pack_rows("Difference in +40 vs. +10", 8, 14) %>%
