@@ -2,7 +2,7 @@
 if (!exists("PREAMBLE_LOADED")) source("preamble.R")
 ```
 
-<!-- Do NOT knit this document. It is part of a larger document. Instead knit the main document (my-apa-formatted-article) 
+<!-- Do NOT knit this document. It is part of a larger document. Instead knit the main document (my-apa-formatted-article)
      If you want to separate the SI from the rest of the paper, we recommend you do so AFTER knitting them into a single PDF.
      This will make sure that all references to sections, figures, tables, etc. are working as intended. You can easily separate
      the PDF into two parts, using e.g., Acrobat PDF viewer. //-->
@@ -10,7 +10,7 @@ if (!exists("PREAMBLE_LOADED")) source("preamble.R")
 # Supplementary information {-}
 \setcounter{section}{0}
 
-Both the main text and these supplementary information (SI) are derived from the same R markdown document available via [OSF](). It is best viewed using Acrobat Reader. 
+Both the main text and these supplementary information (SI) are derived from the same R markdown document available via [OSF](). It is best viewed using Acrobat Reader.
 
 <!-- TO DO: add TOC HERE -->
 
@@ -27,7 +27,7 @@ We used the following R packages to create this document: `r cite_r("latex-stuff
 
 
 # Additional information about Materials {sec:stimulus-generation}
-All stimuli are available as part of the OSF repository for this article. 
+All stimuli are available as part of the OSF repository for this article.
 
 ## Recordings
 An L1-US English female talker originally from New Hampshire was recruited for recording of the stimuli. She was recorded at the Human Language Processing lab at the Brain & Cognitive Sciences Department, University of Rochester with the help of research assistant (also an L1-US English speaker). She was 23 years old at the time of recording and was judged by the research assistant to have a generic US American accent known as "general American".
@@ -154,19 +154,6 @@ p.labelled | p.labelled.group +
   plot_layout(guides = "collect") & theme(legend.position = "top")
 ```
 
-```{r, message=FALSE, fig.width=6, fig.height=5}
-d_for_analysis %>%
-  filter(Is.CatchTrial == FALSE & Phase == "exposure") %>%
-  mutate(Item.Labeled = factor(ifelse(Item.Labeled == TRUE, "labeled", "unlabeled"))) %>%
-  summarise(Condition.Exposure, Block, Item.Labeled, Response.Correct) %>%
-  ggplot(aes(x = Response.Correct, fill = Item.Labeled)) +
-  geom_bar(position = position_dodge2(width = .5, preserve = "single"), width = .5) +
-  scale_x_discrete("Response", labels = c("incorrect", "correct")) +
-  scale_colour_manual("Labelling", aesthetics = c("colour", "fill"), breaks = c("labeled", "unlabeled"), values = c("#f6546a", "#00ced1")) +
-  theme(legend.position = "top") +
-  facet_grid(Condition.Exposure ~ Block)
-```
-
 ```{r fig,width=8, fig.height=5, fig.width=6}
 d %>%
   group_by(ParticipantID, Condition.Exposure, Block) %>%
@@ -191,7 +178,7 @@ d_for_analysis %>%
   group_by(ParticipantID, Block) %>%
   mutate(
     Response.log_RT = log10(ifelse(Response.RT <= 0, NA_real_, Response.RT)),
-    Response.log_RT.scaled = scale(Response.log_RT), 
+    Response.log_RT.scaled = scale(Response.log_RT),
     Response.log_RT.mean = mean(Response.log_RT, na.rm = T)) %>%
   ungroup() %>%
   mutate(across(c(ParticipantID, Condition.Exposure, Block), factor)) %>%
@@ -240,43 +227,43 @@ We fit the psychometric model using the package \texttt{brms} [@R-brms_a] in R [
 In the main text, we refer to differences in the rate of block to block changes across exposure conditions. These differences correspond to the interactions between exposure conditions and block in the psychometric mixed-effect model. These interactions are summarized in Table \@ref(tab:hypothesis-table-interactions)
 
 ```{r hypothesis-table-interactions, results='asis'}
-hyp_interactions <- 
+hyp_interactions <-
   hypothesis(
     c(
       "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 < 0",
       "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 < 0",
       "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 < 0",
       "(mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1) < 0",
-      
+
       "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 > 0",
       "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 > 0",
       "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 > 0",
-      
+
       "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 < 0",
       "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 < 0",
       "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 < 0",
       "(mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1) < 0",
-      
+
       "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 > 0",
       "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
       "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
-      
+
       "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 < 0",
       "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 < 0",
       "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 < 0",
-      "(mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 + 
-    mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 + 
+      "(mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 +
+    mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 +
     mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1) < 0",
-    
+
     "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 > 0",
     "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
-    "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + 
+    "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 +
    mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0"),
    robust = T) %>%
-  .$hypothesis %>% 
+  .$hypothesis %>%
   dplyr::select(-Star)
 
-table.interactions <- 
+table.interactions <-
   make_hyp_table(
     hyp_interactions,
     rep(c(
@@ -288,10 +275,10 @@ table.interactions <-
   "Block 4 to 5: decreased $\\Delta_{PSE}$",
   "Block 5 to 6: decreased $\\Delta_{PSE}$",
   "{\\em Block 4 to 6: decreased $\\Delta_{PSE}$}"), 3),
-    caption = "Was there incremental change from test block 1 to 4? Did these changes dissipate with repeated testing from block 4 to 6? This table summarizes the interactions between exposure condition and block, whether the differences between exposure conditions changed from test block to test block.") %>% 
+    caption = "Was there incremental change from test block 1 to 4? Did these changes dissipate with repeated testing from block 4 to 6? This table summarizes the interactions between exposure condition and block, whether the differences between exposure conditions changed from test block to test block.") %>%
   pack_rows("Difference in +10 vs. baseline", 1, 7) %>%
   pack_rows("Difference in +40 vs. +10", 8, 14) %>%
-  pack_rows("Difference in +40 vs. baseline", 15, 21) 
+  pack_rows("Difference in +40 vs. baseline", 15, 21)
 
 table.interactions
 ```
@@ -1068,14 +1055,14 @@ d.pars %>%
 The database contains 92 talkers (female = XXX, male = XXX; for details, see SI, \@ref(sec:VOT-production)).
 
 # Norming experiment: Estimating listener's expectations prior to informative exposure {sec:norming-experiment}
-The purpose of the norming experiment was to validate our experiment methodology. We test basic assumptions about the paradigm and stimuli we employ in this study. We obtain estimates of the category boundary between /d/ and /t/ as perceived by *the type of listeners we seek to recruit for the main experiment*. 
+The purpose of the norming experiment was to validate our experiment methodology. We test basic assumptions about the paradigm and stimuli we employ in this study. We obtain estimates of the category boundary between /d/ and /t/ as perceived by *the type of listeners we seek to recruit for the main experiment*.
 
 ## Methods
 ### Participants
 Participants were recruited over Amazon's Mechanical Turk platform, and paid $2.50 each (for a targeted remuneration of \$6/hour). The experiment was only visible to Mechanical Turk participants who (1) had an IP address in the United States, (2) had an approval rating of 95% based on at least 50 previous assignments, and (3) had not previously participated in any experiment on stop voicing from our lab. 24 L1 US English listeners (female = 9; mean age = 36.2 years; SD age = 9.2 years) completed the experiment. To be eligible, participants had to confirm that they (1) spent at least the first 10 years of their life in the US speaking only English, (2) were in a quiet place, and (3) wore in-ear or over-the-ears headphones that cost at least \$15.
 
 ### Materials
-All stimuli are available as part of the OSF repository for this article. We created four VOT continua ranging from -100ms VOT to +130ms VOT in 5ms steps for each of the minimal pair words, "dill-till", "dip-tip", "din-tin", and "dim-Tim". The synthesis of these continua followed the procedure described in (SI:sec). We selected 24 steps ranging from (-100, -50, -10, 5  `r paste0(seq(15, 90, 5), collapse = ", ")`, `r paste0(seq(100, 130, 10), collapse = ", ")`) from each continua. VOT tokens in the lower and upper ends were distributed over larger increments because stimuli in those ranges were expected to elicit floor and ceiling effects, respectively. 
+All stimuli are available as part of the OSF repository for this article. We created four VOT continua ranging from -100ms VOT to +130ms VOT in 5ms steps for each of the minimal pair words, "dill-till", "dip-tip", "din-tin", and "dim-Tim". The synthesis of these continua followed the procedure described in (SI:sec). We selected 24 steps ranging from (-100, -50, -10, 5  `r paste0(seq(15, 90, 5), collapse = ", ")`, `r paste0(seq(100, 130, 10), collapse = ", ")`) from each continua. VOT tokens in the lower and upper ends were distributed over larger increments because stimuli in those ranges were expected to elicit floor and ceiling effects, respectively.
 
 In addition to the critical minimal pair continua we also recorded three words that did not did not contain any stop consonant sounds ("flare", "share", and "rare"). These word recordings were used as catch trials. Stimulus intensity was set to 70 dB sound pressure level for all recordings.
 
