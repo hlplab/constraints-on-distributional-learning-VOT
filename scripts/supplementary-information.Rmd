@@ -241,11 +241,11 @@ The database contains 92 talkers (female = XXX, male = XXX; for details, see SI,
 # Additional statistical comparisons referred to in the main text
 
 ## Test blocks
-### Differences in block to block changes across conditions
-In the main text, we refer to differences in the rate of block to block changes across exposure conditions. These differences correspond to the interactions between exposure conditions and block in the psychometric mixed-effect model. These interactions are summarized in Table \@ref(tab:hypothesis-table-interactions)
+### Differences in block-to block *PSE* changes across conditions
+In the main text, we refer to differences in the rate of block to block changes across exposure conditions. These differences correspond to the interactions between exposure conditions and block in the psychometric mixed-effect model. These interactions are summarized in Table \@ref(tab:hypothesis-table-interaction-condition-block)
 
-```{r hypothesis-table-interactions, results='asis'}
-hyp_interactions <-
+```{r hypothesis-table-interaction-condition-block, results='asis'}
+hyp_interaction.condition_block <-
   hypothesis(
     c(
       "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 < 0",
@@ -281,9 +281,9 @@ hyp_interactions <-
   .$hypothesis %>%
   dplyr::select(-Star)
 
-table.interactions <-
+table.interaction.condition_block <-
   make_hyp_table(
-    hyp_interactions,
+    hyp_interaction.condition_block,
     rep(c(
   # Comparing differences in +10 vs. baseline between blocks
   "Block 1 to 2: increased $\\Delta_{PSE}$",
@@ -298,10 +298,18 @@ table.interactions <-
   pack_rows("Difference in +40 vs. +10", 8, 14) %>%
   pack_rows("Difference in +40 vs. baseline", 15, 21)
 
-table.interactions
+table.interaction.condition_block
 ```
 
-## Exposure blocks
+### Differences in block-to block *slope* changes across conditions
+
+```{r hypothesis-table-interaction-condition-block-VOT, results='asis'}
+# FILL IN
+
+table.interactions.condition_block_VOT
+```
+
+## Exposure blocks {sec:SI-analysis-exposure-blocks}
 This section reports the hypothesis tables for exposure blocks corresponding the simple effects of exposure condition and blocks (provided in the main text for test blocks), and the interaction between condition and block.
 
 <!-- TO DO: add overall summary here, summarizing the most important parallels and differences to the results for test blocks. -->
@@ -312,10 +320,14 @@ This section reports the hypothesis tables for exposure blocks corresponding the
 ### Simple effects of block within each exposure condition
 <!-- TO DO -->
 
-### Differences in block to block changes across conditions
+### Differences in block-to block *PSE* changes across conditions
 <!-- TO DO -->
 
-## Can assumptions of our analyses explain differences between exposure and test blocks? {sec:exposure-test-zigzag}
+### Differences in block-to block *slope* changes across conditions
+<!-- TO DO -->
+
+
+## Can assumptions of our analyses explain differences between exposure and test blocks? {sec:SI-exposure-test-zigzag}
 In the main text, we pointed the 'zigzag' pattern in Figure \@ref(fig:plot-fit-slope-PSE)C: the slopes of listeners' categorization functions were smaller during test than during exposure blocks (BF = XXX). <!-- TO DO: can we run a model that contains exposure and test block and runs: Response ~ Block.Type[effect coded] * VOT + Random effects and everything else identical to your main analysis? No exposure condition. The BF of the interaction term is the evidence we need. --> Here, we present auxiliary analyses that suggest that these differences are not due to biases in our analysis.
 
 ### Effects of priors on the estimates for exposure and test blocks
