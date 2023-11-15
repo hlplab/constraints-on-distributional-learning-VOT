@@ -45,7 +45,7 @@ The psychometric models for exposure and test blocks each regressed participants
 
 We begin by presenting the overall effects, averaging across all test blocks. This part of our analysis resembles previous work, which analyzed the *average* effect of exposure across the entire experiment ['batch tests', e.g., @clayards2008; @kleinschmidt-jaeger2016; @nixon2016; @theodore-monto2019]. <!-- Unlike those previous studies, however, we compare responses over test trials that are physically identical across conditions and placed throughout the experiment. This reduces the risk that assumptions baked into the analysis approach (e.g., linearity along the acoustic-phonetic continuum) bias the results. --> Then we the address the questions about incremental adaptation that motivated our experiment---testing the predictions described in the introduction. 
 
-```{r fit-nested-models-for-intercepts-slopes-plot}
+```{r fit-nested-models-for-intercepts-slopes-plot, message=FALSE}
 # Refit the same model, formulated as nesting intercepts and slopes within each unique combination of
 # exposure condition and block. This makes it easier to extract the intercept, slope, and PSE for the
 # large result figure (Panels C and D).
@@ -388,7 +388,7 @@ This conceptually replicates previous findings that exposure to changed VOT dist
 Following that, we analyze the effects of testing and, in particular, repeated testing during Tests 4-6. Though research typically interprets tests as passive windows into the effects of exposure, test stimuli *also* constitute part of the exposure input listeners' receive. As we discuss below, this has both methodological and theoretical consequences.
 
 ```{r}
-rm(fit_test, fit_test_nested, fit_exposure, fit_exposure_nested, cond_fit_test_exposure)
+rm(fit_test_nested, fit_exposure, fit_exposure_nested, cond_fit_test_exposure)
 ```
 
 ## How quickly does exposure affect listeners' categorization responses? (comparing exposure conditions within each block)
@@ -488,8 +488,7 @@ my_priors <- c(
   set_prior("student_t(3, 0, 15)", dpar = "mu2", coef = "Condition.ExposureShift10:VOT_gs"),
   set_prior("student_t(3, 0, 15)", dpar = "mu2", coef = "Condition.ExposureShift40:VOT_gs"),
   prior(cauchy(0, 2.5), class = "sd", dpar = "mu2"),
-  prior(lkj(1), class = "cor")
-)
+  prior(lkj(1), class = "cor"))
 
 fit_test.simple_effects_block <- 
   brm(
@@ -574,6 +573,70 @@ make_hyp_table(
 
 rm(fit_test.simple_effects_block)
 ```
+
+
+```{r hypothesis-table-interactions, results='asis', fig.cap="TEMPORARY PLACEMENT OF THIS TABLE. TO BE MOVED TO SI WHEN DISCUSSION IS COMPLETE"}
+# hypotheses to answer question, "was the change incremental between blocks?"
+hyp_interactions <- c(
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 < 0",
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 < 0",
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 < 0",
+  "(mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1) < 0",
+  
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 > 0",
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 > 0",
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 > 0",
+  
+  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 < 0",
+  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 < 0",
+  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 < 0",
+  "(mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1) < 0",
+  
+  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 > 0",
+  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
+  "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
+  
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 < 0",
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 < 0",
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 < 0",
+  "(mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 + 
+    mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 + 
+    mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1) < 0",
+  
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 > 0",
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
+  "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + 
+   mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0")
+
+hyp_interactions <- hypothesis(fit_test, hyp_interactions, robust = T)
+hyp_interactions <- hyp_interactions$hypothesis %>% dplyr::select(-Star)
+
+table.interactions <- 
+  make_hyp_table(
+    hyp_interactions,
+    rep(c(
+  # Comparing differences in +10 vs. baseline between blocks
+  "Block 1 to 2: increased $\\Delta_{PSE}$",
+  "Block 2 to 3: increased $\\Delta_{PSE}$",
+  "Block 3 to 4: increased $\\Delta_{PSE}$",
+  "{\\em Block 1 to 4: increased $\\Delta_{PSE}$}",
+  "Block 4 to 5: decreased $\\Delta_{PSE}$",
+  "Block 5 to 6: decreased $\\Delta_{PSE}$",
+  "{\\em Block 4 to 6: decreased $\\Delta_{PSE}$}"), 3),
+    caption = "Was there incremental change from test block 1 to 4? Did these changes dissipate with repeated testing from block 4 to 6? This table summarizes the interactions between exposure condition and block, whether the differences between exposure conditions changed from test block to test block.") %>% 
+  pack_rows("Difference in +10 vs. baseline", 1, 7) %>%
+  pack_rows("Difference in +40 vs. +10", 8, 14) %>%
+  pack_rows("Difference in +40 vs. baseline", 15, 21) 
+
+table.interactions
+
+rm(fit_test)
+```
+
+
+
+
+
 
 Second, while the PSEs for the +40 and +10 conditions were shifted rightwards compared to the baseline condition, both the +10 and the baseline condition seem to shift *left*wards relative to their pre-exposure starting point in Test 1. This is supported by Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-effects-block). The evidence for the leftward shifts is quite weak for the +10 condition (BF = 3.5 for changes from Test 1 to 4), for which the PSE changes comparatively little across tests, but it is stronger for the baseline condition (BF = 7.6). In contrast, the +40 condition is clearly shifted rightwards relative to pre-exposure (BF = 45.2). To understand this pattern, it is helpful to relate the three exposure conditions to the distribution of VOT in listeners' prior experience. Figure \@ref(fig:exposure-means-database-density) shows the category means of our exposure conditions relative to the distribution of VOT by talkers of L1-US English [based on @chodroff-wilson2018]. This comparison offers an explanation as to why the baseline condition (and to some extent the +10 condition) shift leftwards with increasing exposure, whereas the +40 condition shifts rightwards: relative to listeners' prior experience, only the +40 condition presented larger-than-expected category means, whereas the baseline condition and, to some extent, the +10 condition presented lower-than-expected category means. That is, once we take into account how our exposure conditions relate to listeners' prior experience, both the direction of changes from Test 1 to 4 *within* each exposure condition (Table \@ref(tab:hypothesis-table-simple-effects-block)), and the direction of differences *between* exposure conditions receive an explanation (Table \@ref(tab:hypothesis-table-simple-effects-condition)).
 
@@ -693,7 +756,7 @@ Fourth, Panel D also begins to illuminate the reasons for the non-monotonic deve
 Figure \@ref(fig:plot-fit-slope-PSE)C-D also compare participants' responses against those of an idealized learner that has fully learned the exposure distributions. Specifically, we fit Bayesian ideal observers against the labeled VOT distributions of each exposure condition. Following @xie2023, we included perceptual noise in the ideal observer [estimated for VOT in @kronrod2016]. The dashed lines represent the slopes and PSEs, respectively, that are expected from these models (for details, see SI \@ref(sec:SI-bias-correction)).<!-- TO DO: that section should explain the general approach and also contain the bias corrected estimates. -->
 This makes it possible to assess whether---or how much---listeners have converged against the exposure distributions. We make two observations. 
 
-First, the slopes of listeners' categorization functions in Panel C approximate those predicted by the idealized learner models: many of the 95% CIs overlap with the dashed lines.^[Without the inclusion of perceptual noise, ideal observers predict much steeper categorization functions [see also @feldman2009; @kronrod2016]. This offers a potential explanation for the mismatch between the ideal observer predictions and human categorization responses when perceptual noise is not considered [@clayards2008].] 
+First, the slopes of listeners' categorization functions in Panel C approximate those predicted by the idealized learner models: many of the 95% CIs overlap with the dashed lines.^[Without the inclusion of perceptual noise, ideal observers predict much steeper categorization functions [see also @feldman2009; @kronrod2016]. This offers a potential explanation for the mismatch between the ideal observer predictions and human categorization responses when perceptual noise is not considered [@clayards2008].]  <!-- TO DO: to finalize this section, we need to decide on which prior to use. -->
 
 Second, Panel D suggests that listeners did *not* converge against the exposure distributions. The percentage labels in Panel D quantify the degree to which listeners adapted their PSE towards the statistics of the exposure condition: 0% would correspond to no change relative to the listeners' PSE in Test 1, and 100% would correspond to complete convergence against the PSE predicted for an idealized learner. This highlights a striking asymmetry between the condition resulting in rightward shifts of the categorization function (+40), and the conditions resulting in leftward shifts (baseline and +10). On the one hand, the predicted PSEs of an idealized learner for the +40 and baseline conditions are shifted approximately by about the same amount relative to listeners' pre-exposure PSE in Test 1. However, the degree to which listeners converged against these predicted PSEs differed substantially between the two conditions, with cumulative adaptation proceeding almost twice as far in the rightward-shifted +40 condition (in Test 4: `r d.true_shift %>% filter(Condition.Exposure == "Shift40" & Block == 7) %>% summarise(proportion_shift = percent(proportion_shift)) %>% pull()` towards idealized PSE) compared to the leftward-shifted baseline condition (`r d.true_shift %>% filter(Condition.Exposure == "Shift0" & Block == 7) %>% summarise(proportion_shift = percent(proportion_shift)) %>% pull()`). Comparing within just the leftward-shifted conditions, we find that relative shift is smaller for the baseline condition, compared to the +10 condition (`r d.true_shift %>% filter(Condition.Exposure == "Shift10" & Block == 7) %>% summarise(proportion_shift = percent(proportion_shift)) %>% pull()`). 
 
@@ -735,10 +798,10 @@ d.test_surprisal %<>%
   summarise(surprisal = mean(surprisal))
 ```
 
-Finally, we briefly summarize the effects of testing. Some models of adaptive perception predict that exposure to uniformly distributed test tokens will reduce the effect of preceding exposure [@kleinschmidt-jaeger2015; for relevant discussion, see also @lancia-winter2013]. In line with these theories, there is evidence that the effects of exposure reduced from Test 4 to Test 6 (see Tables \@ref(tab:hypothesis-table-simple-effects-condition) and \@ref(tab:hypothesis-table-simple-effects-block)). In Table \@ref(tab:hypothesis-table-simple-effects-block), this is evident in a reversal of the direction of the block-to-block changes for Tests 5-6, compared to Tests 1-4. For the +40 exposure condition, these block to block changes went from rightward shifts in Tests 1-4 to leftward shifts in Tests 5-6 (BF = 10.4). For the baseline condition, block to block changes went from leftward to rightward shifts (BF = 7.3). The only exposure condition for which no clear reversal was observed is the +10 condition (BF = 1.3). Two factors are likely to have contributed to this. First, this condition exhibited the smallest exposure effects, limiting the power to detect a reversal in that effect. Second, the +10 condition is also the condition, for which the marginal distribution of VOT during test blocks (mean = 35.8 ms, SD = 22.2 ms) most closely resembled the distribution during exposure (mean = 36.5, SD = 25.9), compared to the baseline (mean = 26.5 ms) or +40 condition (mean = 66.5 ms; SDs were identical across conditions).^[This does not entail that test trials were more expected in the +10 condition, so that listeners experienced smaller prediction errors. For example, for an ideal observer that has fully learned the exposure distribution (cf. dashed lines in Figure \@ref(fig:plot-fit-slope-PSE))C-D), test stimuli conveyed about the same amount of surprisal in the baseline and +10 conditions (mean surprisal = `r d.test_surprisal %>% filter(Condition.Exposure == "Shift10") %>% pull(surprisal) %>% round(., 1)` bits), compared to much larger surprisal in the + 40 condition (`r d.test_surprisal %>% filter(Condition.Exposure == "Shift40") %>% pull(surprisal) %>% round(., 1)` bits).]
+Finally, we briefly summarize the effects of testing. Some models of adaptive perception predict that exposure to uniformly distributed test tokens will reduce the effect of preceding exposure [@kleinschmidt-jaeger2015; for relevant discussion, see also @lancia-winter2013]. In line with these theories, there is evidence that the effects of exposure reduced from Test 4 to Test 6 (see Tables \@ref(tab:hypothesis-table-simple-effects-condition) and \@ref(tab:hypothesis-table-simple-effects-block)). In Table \@ref(tab:hypothesis-table-simple-effects-block), this is evident in a reversal of the direction of the block-to-block changes for Tests 5-6, compared to Tests 1-4. For the +40 exposure condition, these block to block changes went from rightward shifts in Tests 1-4 to leftward shifts in Tests 5-6 (BF = 10.4). For the baseline condition, block to block changes went from leftward to rightward shifts (BF = 7.3). The only exposure condition for which no clear reversal was observed is the +10 condition (BF = 1.3). Two factors likely contributed to this. First, this condition exhibited the smallest exposure effects, limiting the power to detect a reversal of those effects. Second, the +10 condition is also the condition, for which the marginal distribution of VOT during test blocks (mean = 35.8 ms, SD = 22.2 ms) most closely resembled the distribution during exposure (mean = 36.5, SD = 25.9), compared to the baseline (mean = 26.5 ms) or +40 condition (mean = 66.5 ms; exposure SDs were identical across conditions).^[This does not entail that test trials were more expected in the +10 condition, so that listeners experienced smaller prediction errors. For example, for an ideal observer that has *fully* learned the exposure distribution (cf. dashed lines in Figure \@ref(fig:plot-fit-slope-PSE)C-D), test stimuli conveyed about the same amount of surprisal in the baseline and +10 conditions (mean surprisal = `r d.test_surprisal %>% filter(Condition.Exposure == "Shift10") %>% pull(surprisal) %>% round(., 1)` bits), compared to larger surprisal in the + 40 condition (`r d.test_surprisal %>% filter(Condition.Exposure == "Shift40") %>% pull(surprisal) %>% round(., 1)` bits).]
 
 As a consequence of repeated testing, exposure effects were substantially smaller in Test 6 than in Test 4 (see Table \@ref(tab:hypothesis-table-simple-effects-condition): while the effects of the +40 condition relative to the other two exposure conditions were still credible even in Test 6 (BFs > 24), this was no longer the case for the effect of the +10 condition relative to the baseline condition (BF = 1.6). This pattern of results replicates previous findings from LGPL [@cummings-theodore2023; @liu-jaeger2018; @liu-jaeger2019; @tzeng2021], and extends them to distributional learning paradigms [see also @kleinschmidt2020]. One important methodological consequence is that longer test phases do not necessarily increase the statistical power to detect effects of adaptation [unless analyses take the effects of repeated testing into account, as in the approach developed in @liu-jaeger2018]. Analyses that average across all test tokens---as remains the norm---are bound to systematically underestimate the adaptivity of human speech perception.<!-- ^[@kraljic-samuel2006 is sometimes cited as finding LGPL exposure effects even after 480 test trials over a uniform test continuum. This is, however, misleading. Kraljic and Samuel used four *different* uniform test continua over two different phonetic contrasts (/b/-/p/ and /d/-/t/). Each test session consisted of 10 randomized repetitions of 6 test trials. Kraljic and Samuel never tested (or made any claims about) whether exposure effects were still detectable during the 10th repetition. Rather they report *average* effects across the 10 repetitions (like other LGPL studies), which is perfectly compatible with the hypothesis that repeated testing reduces the effects of exposure [see @liu-jaeger2018].] -->
 
-Indeed, there is some evidence that even 12 test trials---directly following 24 labeled and 24 unlabeled exposure inputs---were sufficient to affect listeners' perception. Consider the 'zigzag' pattern in Figure \@ref(fig:plot-fit-slope-PSE))C: the slopes of listeners' categorization functions were smaller during test than during exposure blocks (BF = XXX). <!-- TO DO: can we run a model that contains exposure and test block and runs: Response ~ Block.Type[effect coded] * VOT + Random effects and everything else identical to your main analysis? No exposure condition. The BF of the interaction term is the evidence we need. --> Analyses presented in the SI (\@ref(sec:XXX)) suggest that these differences are not due to biases in our analysis (such as the linearity assumption for VOT, or the effects of weakly regularizing prior given differences in the amount of data for exposure and test blocks). Whatever the reasons for these differences, they highlight that even short tests can affect listeners' responses.
+Indeed, there is some evidence that even 12 test trials---directly following 24 labeled and 24 unlabeled exposure inputs---were sufficient to affect listeners' perception. Consider the 'zigzag' pattern in Figure \@ref(fig:plot-fit-slope-PSE)C: the slopes of listeners' categorization functions were smaller during test than during exposure blocks (BF = XXX). <!-- TO DO: can we run a model that contains exposure and test block and runs: Response ~ Block.Type[effect coded] * VOT + Random effects and everything else identical to your main analysis? No exposure condition. The BF of the interaction term is the evidence we need. --> Analyses presented in the SI (\@ref(sec:XXX)) suggest that these differences are not due to biases in our analysis (such as the linearity assumption for VOT, or the effects of weakly regularizing prior given differences in the amount of data for exposure and test blocks). Whatever the reasons for these differences, they highlight that even short tests can affect listeners' responses.
 
 

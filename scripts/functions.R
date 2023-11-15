@@ -875,7 +875,7 @@ prepVars <- function(d, test_mean = NULL, levels.Condition = NULL, contrast_type
 
   message("VOT mean:", signif(mean(d$Item.VOT, na.rm = T)))
   message("VOT sd:", signif(sd(d$Item.VOT, na.rm = T)))
-  print(paste("VOT test mean:", test_mean))
+  message(paste("VOT test mean:", test_mean))
 
   d %<>%
     ungroup() %>%
