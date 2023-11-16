@@ -231,7 +231,7 @@ d.true_shift <-
 # Compute distribution of talker-specific PSEs from Chodroff & Wilson (2018) corpus
 d.talkerPSEs <- 
   get_IO_categorization(
-    data = d.chodroff_wilson,
+    data = d.chodroff_isolated,
     cues = c("VOT"),
     groups = c("Talker", "gender"),
     with_noise = TRUE,

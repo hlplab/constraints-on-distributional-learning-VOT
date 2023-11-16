@@ -131,6 +131,7 @@ d.chodroff_isolated <-
     f0 = map_dbl(f0, ~ (.x[!is.na(.x)])[1]),
     f0_Mel = normMel(f0),
     VOT = VOT * 1000,
+    vowel_duration = vowel_duration * 1000,
     Talker = gsub("(\\.*)_edited$", "\\1", file),
     category = paste0("/", tolower(category), "/")) %>% 
   left_join(d.chodroff_gender %>% 
