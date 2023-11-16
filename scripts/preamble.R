@@ -110,6 +110,51 @@ d.chodroff_wilson <-
     c("VOT", "f0", "f0_Mel", "f0_semitones"),
     function(x) apply_ccure(x, data = .)))
 
-message("Imported phonetic data from Chodroff & Wilson (2018). After applying exlcusion criteria, this data contains ", n_distinct(d.chodroff_wilson$Talker), " talkers")
+message("Imported phonetic data from Chodroff & Wilson (2018). After applying exclusion criteria, this data contains ", n_distinct(d.chodroff_wilson$Talker), " talkers")
+
+
+# Get production data for the prior -- this is from the isolated speech corpus
+# this may need tidying up later
+
+# read in the talker by gender data
+d.chodroff_gender <- read_delim(file = "../data/engCVC_gender.csv")
+# read in the cue analysis data
+d.chodroff_isolated <- 
+  read_tsv("../data/cueAnalysis_engCVC.txt", col_names = c("file", "category","start","end","interval_number_textgrid","VOT","following_sonorant","Word_duration","Word", "vowel_duration","f0_1","f0_2","f0_3","f0_4","f0_5","f0_6","f0_7","f0_8","f0_9","f0_10")) %>% 
+  filter(following_sonorant != "L",
+         !Word %in% c("AGAIN", "xxxGOOT", "POAT0"),
+         category %in% c("D", "T")) %>%
+  mutate(
+    across(c(11:20), function (x) na_if(x, "--undefined--")),
+    f0 = pmap(.l = list(f0_1, f0_2, f0_3, f0_4, f0_5, f0_6, f0_7, f0_8, f0_9, f0_10), 
+              ~ as.numeric(c(..1, ..2, ..3, ..4, ..5, ..6, ..7, ..8, ..9, ..10))),
+    f0 = map_dbl(f0, ~ (.x[!is.na(.x)])[1]),
+    f0_Mel = normMel(f0),
+    VOT = VOT * 1000,
+    Talker = gsub("(\\.*)_edited$", "\\1", file),
+    category = paste0("/", tolower(category), "/")) %>% 
+  left_join(d.chodroff_gender %>% 
+              rename(Talker = subj) %>% 
+              filter(!is.na(gender))) %>% 
+  rename(Vowel = following_sonorant) %>% 
+  select(Talker, gender, start, end, Word, category, Word_duration, VOT, vowel_duration, f0, f0_Mel) %>% 
+  na.omit() %>% 
+  filter(gender == "female") %>% 
+  group_by(Talker, category) %>%
+  mutate(n_per_category = n()) %>%
+  group_by(Talker) %>%
+  mutate(
+    n_min_per_category = min(n_per_category),
+    n_category = n_distinct(category)) %>%
+  # Select talkers that have both /d/ and /t/ observations
+  filter(n_category == 2) %>%
+  group_by(Talker, category) %>%
+  sample_n(size = first(n_min_per_category)) %>%
+  ungroup() %>%
+  mutate(
+    across(c(Talker, category, gender), factor),
+    across(c("VOT", "f0", "f0_Mel"), function(x) apply_ccure(x, data = .)))
+  
+
 
 PREAMBLE_LOADED <- TRUE
