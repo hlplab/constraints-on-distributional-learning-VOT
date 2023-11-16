@@ -141,7 +141,7 @@ d.chodroff_isolated <-
   rename(Vowel = following_sonorant) %>% 
   select(Talker, gender, start, end, Word, category, Word_duration, VOT, vowel_duration, f0, f0_Mel) %>% 
   na.omit() %>% 
-  filter(gender == "female") %>% 
+  filter(gender == "female", vowel_duration <= 450) %>% 
   group_by(Talker, category) %>%
   mutate(n_per_category = n()) %>%
   group_by(Talker) %>%
