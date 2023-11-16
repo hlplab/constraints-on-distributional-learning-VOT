@@ -285,13 +285,13 @@ prep_predictors_for_CCuRE <- function(data, newdata = NULL){
   } else {
     data %>%
       ungroup() %>%
-      mutate(across(c(vowel_duration), ~ (.x - mean(.x)) / sd(.x)))
+      mutate(across(vowel_duration, ~ (.x - mean(.x)) / sd(.x)))
   }
 }
 
 get_CCuRE_model <- function(data, tidy_result = TRUE, cue = "VOT") {
   f <- formula(paste(cue, "~ 1 + vowel_duration + (1 | Talker)"))
-  m <- lme4::lmer(f, data =  prep_predictors_for_CCuRE(data))
+  m <- lme4::lmer(f, data = prep_predictors_for_CCuRE(data))
   return(if (tidy_result) tidy(m, effects = "fixed") else m)
 }
 
