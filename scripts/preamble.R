@@ -155,7 +155,7 @@ d.chodroff_isolated <-
   ungroup() %>%
   mutate(
     across(c(Talker, category, gender), factor),
-    across(c("VOT", "f0", "f0_Mel"), function(x) apply_ccure(x, data = .)))
+    across(c("VOT", "f0", "f0_Mel"), function(x) apply_ccure(x, data = .), .names = "{.col}_CCuRE"))
 
 
 
