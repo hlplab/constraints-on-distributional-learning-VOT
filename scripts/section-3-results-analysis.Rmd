@@ -8,7 +8,7 @@ if (!exists("PREAMBLE_LOADED")) source("preamble.R")
 # Storing some information about the data set submitted for analysis
 # (to facilitate unscaling predictions back into the original scales for plotting)
 d.mean_sd_scaling <-
-  d_for_analysis %>%
+  d.for_analysis %>%
   group_by(Phase) %>%
   filter(Item.Labeled == FALSE) %>%
   summarise(across(Item.VOT, list(mean = mean, sd = sd)))
@@ -24,7 +24,7 @@ contrast_type <- "difference"
 # Fit exposure and test psychometric mixed-effects models
 fit_test <-
   fit_model(
-    data = d_for_analysis,
+    data = d.for_analysis,
     phase = "test",
     formulation = "standard",
     priorSD = 15, 
@@ -32,7 +32,7 @@ fit_test <-
 
 fit_exposure <-
   fit_model(
-    data = d_for_analysis,
+    data = d.for_analysis,
     phase = "exposure",
     formulation = "standard",
     priorSD = 15, 
@@ -51,7 +51,7 @@ We begin by presenting the overall effects, averaging across all test blocks. Th
 # large result figure (Panels C and D).
 fit_test_nested <-
   fit_model(
-    data = d_for_analysis,
+    data = d.for_analysis,
     phase = "test",
     formulation = "nested_slope",
     priorSD = 15, 
@@ -59,7 +59,7 @@ fit_test_nested <-
 
 fit_exposure_nested <-
   fit_model(
-    data = d_for_analysis,
+    data = d.for_analysis,
     phase = "exposure",
     formulation = "nested_slope",
     priorSD = 15, 
@@ -91,7 +91,7 @@ d.estimates <-
 # (estimated in Kronrod et al., 2016) to make their perception more human-like.
 io <-    
   make_VOT_IOs_from_exposure(
-    d_for_analysis %>% 
+    d.for_analysis %>% 
       filter(Phase == "exposure") %>% 
       group_by(ParticipantID, Condition.Exposure) %>% 
       nest(data = -c(ParticipantID, Condition.Exposure)) %>% 
@@ -134,7 +134,7 @@ d.io.categorization <-
     # Assess the ideal observers at the exact same locations used during test blocks
     get_logistic_parameters_from_model(
       model = io, 
-      x = d_for_analysis %>%  
+      x = d.for_analysis %>%  
         filter(Phase == "test") %>%
         distinct(Condition.Exposure, Item.VOT) %>%
         rename(x = Item.VOT), 
@@ -147,7 +147,7 @@ d.io.categorization <-
     # we assess participants' behavior on.
     get_logistic_parameters_from_model(
       io, 
-      d_for_analysis %>%  
+      d.for_analysis %>%  
         filter(Phase == "exposure", Item.Labeled == F) %>%
         group_by(Condition.Exposure) %>%
         # Since blocks differ in which VOTs are unlabeled, we include all blocks
@@ -297,10 +297,10 @@ p.estimates_1to7 <-
 cond_fit_test_exposure <-
   tibble(
     full_join(
-      get_conditional_effects(fit_exposure, d_for_analysis, "exposure") %>%
+      get_conditional_effects(fit_exposure, d.for_analysis, "exposure") %>%
         .[[1]] %>%
         mutate(Item.VOT = descale(VOT_gs, VOT.mean_test, VOT.sd_exposure)),
-      get_conditional_effects(fit_test, d_for_analysis, "test") %>%
+      get_conditional_effects(fit_test, d.for_analysis, "test") %>%
         .[[1]] %>%
         mutate(Item.VOT = descale(VOT_gs, VOT.mean_test, VOT.sd_test)))) %>%
   arrange(as.numeric(as.character(Block))) %>%
@@ -333,7 +333,7 @@ p.fit_1to7 <- cond_fit_test_exposure %>%
         fill = Block.colour), show.legend = F) +
   scale_fill_manual(values = c("grey" = "grey", "white" = "white")) +
   new_scale_fill() +
-  geom_linefit(data = d_for_analysis %>%
+  geom_linefit(data = d.for_analysis %>%
       group_by(Phase, Condition.Exposure, Block.plot_label) %>%
       filter(Block %in% c(1:7), Item.Labeled == FALSE),
       x = Item.VOT,
@@ -346,7 +346,7 @@ p.fit_1to7 <- cond_fit_test_exposure %>%
 p.fit_7to9 <- cond_fit_test_exposure %>%
   filter(Block %in% c(7:9)) %>%
   ggplot() +
-  geom_linefit(data = d_for_analysis %>%
+  geom_linefit(data = d.for_analysis %>%
       group_by(Condition.Exposure, Block) %>%
       filter(Block %in% c(7:9)),
       x = Item.VOT,
@@ -420,7 +420,7 @@ fit_test.simple_effects_condition <-
       (0 + Block / VOT_gs | ParticipantID) +
       (0 + Block / (Condition.Exposure * VOT_gs) | Item.MinimalPair),
     theta1 ~ 1),
-    data = d_for_analysis %>%
+    data = d.for_analysis %>%
       filter(Phase == "test") %>%
       prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
     priors = my_priors,
@@ -499,7 +499,7 @@ fit_test.simple_effects_block <-
       (0 + Block * VOT_gs | ParticipantID) + 
       (0 + Condition.Exposure/(Block * VOT_gs) | Item.MinimalPair),
     theta1 ~ 1),
-    data = d_for_analysis %>%
+    data = d.for_analysis %>%
       filter(Phase == "test") %>%
       prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
     priors = my_priors,
@@ -582,18 +582,18 @@ Second, while the PSEs for the +40 and +10 conditions were shifted rightwards co
 
 ```{r centering}
 # center exposure cues to speech corpus means
-d_for_analysis %<>%
+d.for_analysis %<>%
   ungroup() %>% 
   mutate(
     VOT.CCuRE = remove_speechrate_effect_from_cue(
       data = d.chodroff_isolated, 
-      newdata = d_for_analysis %>% 
+      newdata = d.for_analysis %>% 
         ungroup() %>% 
         mutate(VOT = Item.VOT, Talker = "new"),
       cue = "VOT"),
     f0_Mel.CCuRE = remove_speechrate_effect_from_cue(
       data = d.chodroff_isolated, 
-      newdata = d_for_analysis %>% 
+      newdata = d.for_analysis %>% 
         ungroup() %>% 
         mutate(f0_Mel = Item.f0_Mel, Talker = "new"),
       cue = "f0_Mel"),
@@ -647,7 +647,7 @@ p.density <- d.chodroff_isolated %>%
   #plot centered means
   new_scale_color() +
   geom_point(
-    data = d_for_analysis %>%
+    data = d.for_analysis %>%
       filter(Phase == "exposure") %>%
       group_by(Condition.Exposure, category) %>%
       summarise(across(c(VOT.CCuRE, f0_Mel.CCuRE), mean)),
@@ -690,7 +690,7 @@ Second, Panel D suggests that listeners did *not* converge against the exposure 
 
 ```{r calculate-test-surprisal}
 d.test_surprisal <-
-  d_for_analysis %>% 
+  d.for_analysis %>% 
   filter(Phase == "test") %>% 
   distinct(Item.VOT) %>%
   cross_join(io) %>%

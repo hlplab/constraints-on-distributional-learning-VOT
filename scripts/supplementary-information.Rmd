@@ -181,7 +181,7 @@ d %>%
 ```
 
 ```{r, fig.width=8, fig.height=3}
-d_for_analysis %>%
+d.for_analysis %>%
   group_by(ParticipantID, Block) %>%
   mutate(
     Response.log_RT = log10(ifelse(Response.RT <= 0, NA_real_, Response.RT)),
@@ -393,14 +393,14 @@ Specifically, we use the same psychometric mixed-effects model as in the main an
 
 ```{r}
 VOT.mean_test <-
-    d_for_analysis %>%
+    d.for_analysis %>%
     filter(Phase == "test") %>%
     ungroup() %>%
     summarise(mean = mean(Item.VOT, na.rm = T)) %>%
     pull(mean)
 
 d.GAMM <-
-  d_for_analysis %>%
+  d.for_analysis %>%
   # Get Gelman-scaled trial ID across blocks
   # (do so before filtering, so that trial roughly corresponds to amount of evidence)
   arrange(ParticipantID, Block, Trial) %>%
@@ -587,7 +587,7 @@ m_IA.VOT_f0 <-
 # This data frame will be used for adaptive changes in normalization and category
 # representations.
 d_for_ASP <-
-  d_for_analysis %>%
+  d.for_analysis %>%
   ungroup() %>%
   # Exclude catch trials and the final two test blocks since we expect unlearning during those blocks
   # (which is not modeled)
@@ -1268,7 +1268,7 @@ get_IBBU_updates_for_experiment <- function(
     kappa = 72, nu = 72
 ) {
   exposure <-
-    d_for_analysis %>%
+    d.for_analysis %>%
     ungroup() %>%
     filter(
       Condition.Exposure == condition,
@@ -1288,7 +1288,7 @@ get_IBBU_updates_for_experiment <- function(
 }
 
 x <-
-  d_for_analysis %>%
+  d.for_analysis %>%
   ungroup() %>%
   filter(Phase == "test") %>%
   distinct(Item.VOT, Item.f0_Mel) %>%

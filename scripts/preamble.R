@@ -120,7 +120,7 @@ message("Imported phonetic data from Chodroff & Wilson (2018). After applying ex
 d.chodroff_gender <- read_delim(file = "../data/engCVC_gender.csv")
 # read in the cue analysis data
 d.chodroff_isolated <- 
-  read_tsv("../data/cueAnalysis_engCVC.txt", col_names = c("file", "category","start","end","trial","VOT","following_sonorant", "vowel_duration","Word","Word_duration","f0_1","f0_2","f0_3","f0_4","f0_5","f0_6","f0_7","f0_8","f0_9","f0_10")) %>% 
+  read_tsv("../data/cueAnalysis_engCVC.txt", col_names = c("file", "category","segment_start","segment_end","interval_number_TextGrid","VOT","following_sonorant", "vowel_duration","Word","Word_duration","f0_1","f0_2","f0_3","f0_4","f0_5","f0_6","f0_7","f0_8","f0_9","f0_10")) %>% 
   filter(following_sonorant != "L",
          !Word %in% c("AGAIN", "xxxGOOT", "POAT0"),
          category %in% c("D", "T")) %>%
