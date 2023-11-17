@@ -589,11 +589,13 @@ d.for_analysis %<>%
       data = d.chodroff_isolated, 
       newdata = d.for_analysis %>% 
         ungroup() %>% 
-        mutate(VOT = Item.VOT, Talker = "new"),
+        mutate(VOT = Item.VOT, Talker = "new",
+               vowel_duration = Item.Vowel_duration),
       cue = "VOT"),
     f0_Mel.CCuRE = remove_speechrate_effect_from_cue(
       data = d.chodroff_isolated, 
       newdata = d.for_analysis %>% 
+        mutate(vowel_duration = Item.Vowel_duration) %>% 
         ungroup() %>% 
         mutate(f0_Mel = Item.f0_Mel, Talker = "new"),
       cue = "f0_Mel"),

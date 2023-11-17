@@ -139,7 +139,7 @@ d.chodroff_isolated <-
               rename(Talker = subj) %>% 
               filter(!is.na(gender))) %>% 
   rename(Vowel = following_sonorant) %>% 
-  select(Talker, gender, start, end, Word, category, Word_duration, VOT, vowel_duration, f0, f0_Mel) %>% 
+  select(Talker, gender, segment_start, segment_end, Word, category, Word_duration, VOT, vowel_duration, f0, f0_Mel) %>% 
   na.omit() %>% 
   filter(gender == "female", vowel_duration <= 450) %>% 
   group_by(Talker, category) %>%
@@ -155,7 +155,7 @@ d.chodroff_isolated <-
   ungroup() %>%
   mutate(
     across(c(Talker, category, gender), factor),
-    across(c("VOT", "f0", "f0_Mel"), function(x) apply_ccure(x, data = .), .names = "{.col}_CCuRE"))
+    across(c("VOT", "f0", "f0_Mel"), function(x) apply_ccure(x, data = .), .names = "{.col}.CCuRE"))
 
 
 
