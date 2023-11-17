@@ -73,6 +73,10 @@ d.estimates <-
     fit_exposure_nested %>% get_intercepts_and_slopes()) %>%
   mutate(
     Block = factor(Block),
+    # Adding unscaled slope here to have a more intuitive scale on which to compare VOT slopes 
+    # It is also one way to put the slopes for both exposure and test on the same scale (since 
+    # the SDs for exposure and test differ). 
+    slope_unscaled = slope / (2 * ifelse(Block %in% c(2, 4, 6), VOT.sd_exposure, VOT.sd_test)),
     PSE = ifelse(
       Block %in% c(2, 4, 6),
       descale(-Intercept/slope, VOT.mean_test, VOT.sd_exposure),
@@ -80,7 +84,7 @@ d.estimates <-
   group_by(Condition.Exposure, Block) %>%
   summarise(
     across(
-      c(Intercept, slope, PSE),
+      c(Intercept, slope, slope_unscaled, PSE),
       list(lower = ~ quantile(.x, probs = .025), median = median, upper = ~ quantile(.x, probs = .975)))) 
 ```
 
@@ -107,18 +111,26 @@ io <-
       # who has fully learned the exposure distributions.
       slice_sample(n = 1) %>% 
       unnest(data) %>% 
-      mutate(category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")) %>% 
-      rename(VOT = Item.VOT, f0 = Item.f0_Mel)) %>%
+      mutate(category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))) %>%
   # Add prior based on Chodroff & Wilson (2018). Note that this database has substantially higher 
   # VOT variance than our exposure conditions, which we based on estimates from Kronrod et al. 
   # (2016).
   bind_rows(
-    d.chodroff_isolated %>%
+    d.chodroff_wilson.isolated %>%
       make_MVG_ideal_observer_from_data(
         cues = c("VOT"),
         Sigma_noise = matrix(80, dimnames = list("VOT", "VOT"))) %>%
       mutate(Condition.Exposure = "prior") %>%
       nest(io = -c(Condition.Exposure)))
+
+# Alternative model for prior that uses all three cues
+    # d.chodroff_wilson.isolated %>%
+    #   make_MVG_ideal_observer_from_data(
+    #     cues = c("VOT", "f0_Mel", "vowel_duration"),
+    #     Sigma_noise = matrix(c(80, 0, 0, 0, ENTER_MEL_NOISE, 0, 0, 0, 80), nrow = 3, dimnames = list(c("VOT", "f0_Mel", "vowel_duration"), c("VOT", "f0_Mel", "vowel_duration")))) %>%
+    #   mutate(Condition.Exposure = "prior") %>%
+    #   nest(io = -c(Condition.Exposure))
+
 
 # Get logistic parameter estimates for a simulated ideal observer listener. Do so for both 
 # exposure and test. Even though this turned out to be overkill, we did it because it was 
@@ -159,7 +171,7 @@ d.io.categorization <-
       groups = "Condition.Exposure") %>% 
       mutate(Phase = "exposure") %>% 
       crossing(Block = c(2, 4, 6))) %>%
-  select(Condition.Exposure, Phase, Block, intercept_scaled, slope_scaled, PSE) %>% 
+  select(Condition.Exposure, Phase, Block, intercept_unscaled, slope_unscaled, intercept_scaled, slope_scaled, PSE) %>% 
   mutate(across(c(Phase, Condition.Exposure, Block), factor)) 
 ```
 
@@ -192,6 +204,8 @@ p.intercept_1to7 <-
   p.across_blocks +  
   geom_step(
     data = d.io.categorization,
+    # Using scaled intercept (which is keeping the location at which the intercept is evaluated constant 
+    # across exposure and test: it's always the mean VOT of test)
     aes(x = Block, y = intercept_scaled, colour = Condition.Exposure, group = Condition.Exposure),
     linetype = 2, 
     linewidth = .7, 
@@ -201,11 +215,23 @@ p.intercept_1to7 <-
   scale_y_continuous("Intercept")
 
 p.slope_1to7 <-
+  # Plotting participants' and ideal observers' slopes. We're transforming both types of slopes back 
+  # into the unit ms VOT. This makes sure that the different slopes are actually comparable across 
+  # exposure and test blocks (participants) and ideal observers, each of which (might) have different
+  # SDs that were used during the calculation of the scaled slopes. 
+  # 
+  # (scaled slopes are good for *effect size* comparison but---perhaps confusingly---that's not the 
+  # same as making sure that the effects are actually expressed in the same units.)
   p.across_blocks +  
-  aes(y = slope_median, ymin = slope_lower, ymax = slope_upper) +
+  # Using UNscaled slope because slopes are comparable across scales anyway and this is more intuitive
+  # (remove _unscaled to switch to slopes over Gelman-scaled VOT)
+  aes(y = slope_unscaled_median, ymin = slope_unscaled_lower, ymax = slope_unscaled_upper) +
+  # These are the slopes of the ideal observers
   geom_step(
     data = d.io.categorization,
-    aes(x = Block, y = slope_scaled, color = Condition.Exposure, group = Condition.Exposure),
+    # Using UNscaled slope because slopes are comparable across scales anyway and this is more intuitive
+    # (substitute _unscaled to _scaled to switch to slopes over Gelman-scaled VOT)
+    aes(x = Block, y = slope_unscaled, color = Condition.Exposure, group = Condition.Exposure),
     linetype = 2, linewidth = .9, alpha = 0.5,
     direction = "mid",
     inherit.aes = F) +
@@ -231,7 +257,7 @@ d.true_shift <-
 # Compute distribution of talker-specific PSEs from Chodroff & Wilson (2018) corpus
 d.talkerPSEs <- 
   get_IO_categorization(
-    data = d.chodroff_isolated,
+    data = d.chodroff_wilson.isolated,
     cues = c("VOT"),
     groups = c("Talker", "gender"),
     with_noise = TRUE,
@@ -318,12 +344,14 @@ cond_fit_test_exposure <-
       Block == 6 ~ "Exposure 3")),
     Block.plot_label = fct_relevel(Block.plot_label, c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3",  "Test 4", "Test 5", "Test 6")))
 
-label_colour <- tibble(
-  Block.plot_label = c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3", "Test 4"),
-  Block.colour = c("grey", "white", "grey", "white", "grey", "white", "grey")) %>%
+label_colour <- 
+  tibble(
+    Block.plot_label = c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3", "Test 4"),
+    Block.colour = c("grey", "white", "grey", "white", "grey", "white", "grey")) %>%
   mutate(Block.plot_label = factor(Block.plot_label, levels = Block.plot_label, ordered = T))
 
-p.fit_1to7 <- cond_fit_test_exposure %>%
+p.fit_1to7 <- 
+  cond_fit_test_exposure %>%
   filter(Block %in% c(1:7))  %>%
   ggplot() +
   geom_rect(
@@ -343,7 +371,8 @@ p.fit_1to7 <- cond_fit_test_exposure %>%
       legend.justification = "right") +
   coord_cartesian(clip = "off", ylim = c(0, 1))
 
-p.fit_7to9 <- cond_fit_test_exposure %>%
+p.fit_7to9 <- 
+  cond_fit_test_exposure %>%
   filter(Block %in% c(7:9)) %>%
   ggplot() +
   geom_linefit(data = d.for_analysis %>%
@@ -580,41 +609,18 @@ Second, while the PSEs for the +40 and +10 conditions were shifted rightwards co
 
 (ref:exposure-means-database-density) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for `r nrow(d.chodroff_wilson)` word-initial /d/ and /t/ productions in L1-US English [based on `r length(unique(d.chodroff_wilson$Talker))` female talkers in @chodroff-wilson2018, for details, see SI \@ref(sec:SI-phonetic-data)]. The outermost contour of each category shows the 95% density quantile. Points show the category means of the exposure condition.
 
-```{r centering}
-# center exposure cues to speech corpus means
-d.for_analysis %<>%
-  ungroup() %>% 
-  mutate(
-    VOT.CCuRE = remove_speechrate_effect_from_cue(
-      data = d.chodroff_isolated, 
-      newdata = d.for_analysis %>% 
-        ungroup() %>% 
-        mutate(VOT = Item.VOT, Talker = "new",
-               vowel_duration = Item.Vowel_duration),
-      cue = "VOT"),
-    f0_Mel.CCuRE = remove_speechrate_effect_from_cue(
-      data = d.chodroff_isolated, 
-      newdata = d.for_analysis %>% 
-        mutate(vowel_duration = Item.Vowel_duration) %>% 
-        ungroup() %>% 
-        mutate(f0_Mel = Item.f0_Mel, Talker = "new"),
-      cue = "f0_Mel"),
-    category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))) 
-```
-
-
 ```{r prepare-quantile-plot}
 # specify quantiles for density plots
 quantile_levels <- c(.05, .25, .5, .75, .95)
 d_breaks <- 
   density_quantiles(
-    x = d.chodroff_isolated %>% filter(category == "/d/") %>% pull(VOT),
-    y = d.chodroff_isolated %>% filter(category == "/d/") %>% pull(f0_Mel),
+    x = d.chodroff_wilson.isolated %>% filter(category == "/d/") %>% pull(VOT),
+    y = d.chodroff_wilson.isolated %>% filter(category == "/d/") %>% pull(f0_Mel),
     quantiles = quantile_levels)
 t_breaks <- 
   density_quantiles(
-    x = d.chodroff_isolated %>% filter(category == "/t/") %>% pull(VOT),
-    y = d.chodroff_isolated %>% filter(category == "/t/") %>% pull(f0_Mel),
+    x = d.chodroff_wilson.isolated %>% filter(category == "/t/") %>% pull(VOT),
+    y = d.chodroff_wilson.isolated %>% filter(category == "/t/") %>% pull(f0_Mel),
     quantiles = quantile_levels)
 
 # matching breaks in each category to corresponding quantile
@@ -624,7 +630,7 @@ names(d_quantile) <- d_breaks
 names(t_quantile) <- t_breaks
 quantile_breaks <- tibble(quantile_levels, d_breaks, t_breaks)
 
-p.density <- d.chodroff_isolated %>%
+p.density <- d.chodroff_wilson.isolated %>%
   ggplot(aes(x = VOT, y = f0_Mel, linetype = category, group = category)) +
   geom_density2d(
     data = . %>% filter(category == "/d/"),

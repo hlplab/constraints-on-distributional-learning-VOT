@@ -86,7 +86,7 @@ get_ChodroffWilson_data <- function(
   require(diptest)
 
   # Standardizing variable names and values to confirm to what we usually use.
-  d.chodroff_wilson <-
+  d <-
     read_csv(database_filename, show_col_types = FALSE) %>%
     rename(
       category = stop, VOT = vot, f0 = usef0, Talker = subj, Word = word, Trial = trial,
@@ -119,7 +119,7 @@ get_ChodroffWilson_data <- function(
       spectral_M1, spectral_M2, spectral_M3, spectral_M4, vowel_duration,
       word_duration, speech_rate)
 
-  d.chodroff_wilson %<>%
+  d %<>%
     # Filter VOT and f0 for absolute values to deal with outliers
     filter(
       between(VOT, min(limits.VOT), max(limits.VOT)),
@@ -131,7 +131,7 @@ get_ChodroffWilson_data <- function(
   # Identify and remove talkers with bimodal f0 distributions
   # (indicating pitch halving/doubling)
   suppressWarnings(
-    d.chodroff_wilson %<>%
+    d %<>%
       group_by(Talker) %>%
       mutate(f0_Mel = phonR::normMel(f0)) %>%
       group_by(Talker, category) %>%
@@ -141,7 +141,7 @@ get_ChodroffWilson_data <- function(
       droplevels())
 
   # Keep only talkers with at least n.min observations for each stop
-  d.chodroff_wilson %<>%
+  d %<>%
     group_by(Talker, category) %>%
     mutate(n_per_category = length(category)) %>%
     group_by(Talker) %>%
@@ -150,10 +150,12 @@ get_ChodroffWilson_data <- function(
     filter(n_per_category > min.n_per_talker_and_category)
 
   # Get Mel and Semitones, then C-CuRE
-  d.chodroff_wilson %<>%
+  d %<>%
     group_by(Talker) %>%
     mutate(f0_semitones = 12 * log(f0 / mean(f0)) / log(2)) %>%
     ungroup()
+
+  return(d)
 }
 
 
@@ -162,8 +164,9 @@ get_ChodroffWilson_data <- function(
 get_intercepts_and_slopes <-
   . %>%
   gather_draws(`b_mu2_IpasteCondition.ExposureBlocksepEQ.*`, regex = TRUE, ndraws = 8000) %>%
-  mutate(.variable = gsub("b_mu2_IpasteCondition.ExposureBlocksepEQxShift(\\d{1,2})x(\\d{1}.*$)", "Shift\\1.\\2", .variable),
-         term = ifelse(str_detect(.variable, "VOT_gs"), "slope", "Intercept")) %>%
+  mutate(
+    .variable = gsub("b_mu2_IpasteCondition.ExposureBlocksepEQxShift(\\d{1,2})x(\\d{1}.*$)", "Shift\\1.\\2", .variable),
+    term = ifelse(str_detect(.variable, "VOT_gs"), "slope", "Intercept")) %>%
   separate(col = .variable, into = c("Condition.Exposure", "Block"), sep = "\\.") %>%
   mutate(Block = ifelse(str_detect(Block, "VOT"), str_replace(Block, "(\\d{1}):VOT_gs", "\\1"), Block)) %>%
   pivot_wider(names_from = term, values_from = ".value") %>%
@@ -276,38 +279,49 @@ make_hyp_table <- function(hypothesis, hypothesis_names, caption, col1_width = "
 # if there is newdata return the newdata scaled by the old data
 # if there is no newdata return data scaled by itself
 prep_predictors_for_CCuRE <- function(data, newdata = NULL){
+  # if(!is.null(newdata)) {
+  #   mean.vowel_duration = mean(data$vowel_duration)
+  #   sd.vowel_duration = sd(data$vowel_duration)
+  #
+  #   newdata %>%
+  #     mutate(vowel_duration = (vowel_duration - mean.vowel_duration) / sd.vowel_duration)
+  # } else {
+  #   data %>%
+  #     ungroup() %>%
+  #     mutate(across(vowel_duration, ~ (.x - mean(.x)) / sd(.x)))
+  # }
   if(!is.null(newdata)) {
-    mean.vowel_duration = mean(data$vowel_duration)
-    sd.vowel_duration = sd(data$vowel_duration)
-
-    newdata %>%
-      mutate(vowel_duration = (vowel_duration - mean.vowel_duration) / sd.vowel_duration)
+    newdata
   } else {
-    data %>%
-      ungroup() %>%
-      mutate(across(vowel_duration, ~ (.x - mean(.x)) / sd(.x)))
+    data
   }
 }
 
-get_CCuRE_model <- function(data, tidy_result = TRUE, cue = "VOT") {
-  f <- formula(paste(cue, "~ 1 + (1 | Talker)"))
-  m <- lme4::lmer(f, data = prep_predictors_for_CCuRE(data))
-  return(if (tidy_result) tidy(m, effects = "fixed") else m)
+get_CCuRE_model <- function(data, cue = "VOT") {
+  if (length(unique(data$Talker)) > 1)
+    lme4::lmer(formula(paste(cue, "~ 1 + (1 | Talker)")), data = data) else
+      lm(formula(paste(cue, "~ 1")), data = data)
 }
 
+# Normalize cue in newdata based on cue in data
+apply_ccure <- function(data, newdata = NULL, cue) {
+  m.to_normalize_from <-
+    get_CCuRE_model(
+      data = data,
+      cue = cue)
 
-apply_ccure <- function(x, data) {
-  m <- get_CCuRE_model(
-    data = data %>% mutate(current_outcome = .env$x),
-    cue = "current_outcome",
-    tidy_result = F)
-  # Get residuals (remove predicted/expected cue value--including expectations
-  # about the talker---from each token's actual cue value) and then add the
-  # overall cue mean back (this latter step is done for visualization purposes,
-  # so that the C-CuREd cues can still be expressed in the familiar cue space;
-  # the intercept is that predicted mean since get_CCuRE_model calls prep_predictors_for_CCuRE,
-  # which centers and scales all predictors.
-  x - predict(m) + fixef(m)[1]
+  allow_new_levels <- !is.null(newdata)
+  # If no newdata was provided, use the data as newdata
+  if (is.null(newdata)) newdata <- data else if (!("Talker" %in% names(newdata))) newdata$Talker <- "CONSTANT"
+  m.to_normalize <-
+      get_CCuRE_model(
+        data = newdata,
+        cue = cue)
+
+  # Remove expected cue value of newdata and then add intercept of data
+  newdata[[cue]] -
+    predict(m.to_normalize, newdata = newdata, allow.new.levels = allow_new_levels) +
+    fixef(m.to_normalize_from)[1]
 }
 
 # if there is newdata CCuRE the newdata by the old data and return newdata
