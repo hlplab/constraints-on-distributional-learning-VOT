@@ -17,6 +17,7 @@ VOT.mean_exposure <- (d.mean_sd_scaling %>% pull(Item.VOT_mean))[1]
 VOT.sd_exposure <- (d.mean_sd_scaling %>% pull(Item.VOT_sd))[1]
 VOT.mean_test <- (d.mean_sd_scaling %>% pull(Item.VOT_mean))[2]
 VOT.sd_test <- (d.mean_sd_scaling %>% pull(Item.VOT_sd))[2]
+rm(d.mean_sd_scaling)
 
 levels_Condition.Exposure = c("Shift0", "Shift10", "Shift40")
 contrast_type <- "difference"
@@ -77,10 +78,11 @@ d.estimates <-
     # It is also one way to put the slopes for both exposure and test on the same scale (since 
     # the SDs for exposure and test differ). 
     slope_unscaled = slope / (2 * ifelse(Block %in% c(2, 4, 6), VOT.sd_exposure, VOT.sd_test)),
-    PSE = ifelse(
-      Block %in% c(2, 4, 6),
-      descale(-Intercept/slope, VOT.mean_test, VOT.sd_exposure),
-      descale(-Intercept/slope, VOT.mean_test, VOT.sd_test))) %>% 
+    PSE = 
+      descale(
+        -Intercept/slope, 
+        VOT.mean_test, 
+        ifelse(Block %in% c(2, 4, 6), VOT.sd_exposure, VOT.sd_test))) %>% 
   group_by(Condition.Exposure, Block) %>%
   summarise(
     across(

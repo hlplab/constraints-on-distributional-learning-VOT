@@ -5,8 +5,7 @@ logit_to_prob <- function(model, term, index = 1) {
 
 # function to transform Gelman-scaled values back
 descale <- function(x, mean, sd) {
-  x_0 = (x * 2 * sd) + mean
-  return(x_0)
+  (x * 2 * sd) + mean
 }
 
 
