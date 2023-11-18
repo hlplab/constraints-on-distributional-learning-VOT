@@ -4,7 +4,10 @@
 
 ## Highest priority
  * MARYANN
-  * edit Analysis Approach section in the SI
+  * There is something wrong with the coding of race. see my earlier comment over slack. Or is it really the case that over 80 people declined to comment?
+  * create a script that joins the gender etc. data from chodroff and makes a new CSV file that's more similar to the one we use for connected speech. the present project should import that more standardized file. 
+    * I would not exclude gender = NA at that point. Rather hand those NAs through and then exclude when we subset to female talkers.
+  
   * TIME TO STOP MESSY CODING. Let's have a zero-tolerance policy for that from now on in the main working branch (i.e., you can do what you'd like in branches that aren't the main branch, but you canNOT merge without cleaning up first). It is a real time-sink for everyone else and makes it near impossible for me to effectively help. 
      * on the main working branch, functions should be in functions.R, in a clearly named section (see existing examples).
   * Input data file:
@@ -13,14 +16,17 @@
       * Also if you have to consistently rename levels for plotting, please just changed them once in the script that creates the file. E.g., there's various places in which you deal with formatting the conditions and various names floating around (Shift0, 10, etc.; +0, +10, etc.; baseline, + 10 etc.). Pick one, do it at the top of the pipeline (i.e., in the input script). This will reduce the potential for error in your own coding, make your code in the main paper shorter, and it'll be much easier to read for others trying to follow your code (including me).
       * Remove all data formatting code from the paper Rmd. There should only be a single load line.
       * I've moved the code loading the chodroff data into the new pre-amble.R file. Consider doing the same for the experiment data. That way the data that we need throughout are available throughout.
+   * Set local constants at top of chunk. e.g., Don't have stuff like empirical_means <- c(17, 62) in the middle of a chunk. 
+  
+
+## Medium priority
+
+ * MARYANN
+  * edit Analysis Approach section in the SI
   * Clean up functions.R file:
     * PLEASE DO GET RID OF UNUSED FUNCTIONS. Search files for each function (cmd + shift + f). If it does not exist, remove it from functions.R
     * Use clearer function names. It often happens as a project develops that functions become ambiguous in their name. E.g., you have several functions that do similar things (like getting or plotting CIs from psychometric or IO models). Extend their names to be clear: e.g., compare get_CI to get_CI_from_ideal_observer; or make_CI to print_CI; or add_PSE_perception_median to add_PSE_median_to_plot (note how I also removed redundancy since PSEs are always about perception); etc. Rename the functions and use CMD + SHIFT + F to search and replace all mentions of those functions across all files. 
     * Organize functions into sections with headings in functions.R
-  * Try to set local constants at top of chunk. e.g., Don't have stuff like empirical_means <- c(17, 62) in the middle of a chunk. 
-  
-
-## Medium priority
 
 
 ### Lower Priority

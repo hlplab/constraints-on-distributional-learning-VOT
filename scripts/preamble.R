@@ -83,35 +83,7 @@ d.chodroff_wilson.connected <-
     min.n_per_talker_and_category = 10,
     limits.VOT = c(-Inf, Inf),
     limits.f0 = c(-Inf, Inf),
-    max.p_for_multimodality = .1) %>%
-  # Only use female talkers
-  # (TO DO: revisit whether this makes a difference)
-  filter(gender == "female") %>%
-  # Subsample talkers to talkers that have both categories, and subsample
-  # tokens, so as to make the data of each talker balanced with regard to
-  # the number of tokens per categories)
-  group_by(Talker, category) %>%
-  mutate(n.for_category_and_talker = n()) %>%
-  group_by(Talker) %>%
-  mutate(
-    n_min.for_category_and_talker = min(n.for_category_and_talker),
-    n_category.for_category_and_talker = n_distinct(category)) %>%
-  # Select talkers that have both /d/ and /t/ observations
-  filter(n_category.for_category_and_talker == 2) %>%
-  group_by(Talker, category) %>%
-  sample_n(size = first(n_min.for_category_and_talker)) %>%
-  ungroup()
-
-d.chodroff_wilson.connected %<>%
-  mutate(
-    across(c(Talker, category, gender), factor),
-    across(
-      c("VOT", "f0", "f0_Mel", "f0_semitones", "vowel_duration"),
-      function(x) apply_ccure(data = ., cue = substitute(x))))
-
-message("Imported phonetic data from Chodroff & Wilson (2018). After applying exclusion criteria, this data contains ",
-        n_distinct(d.chodroff_wilson.connected$Talker), " talkers")
-
+    max.p_for_multimodality = .1)
 
 # Get production data for the prior -- this is from the isolated speech corpus
 # this may need tidying up later
@@ -133,38 +105,78 @@ d.chodroff_wilson.isolated <-
     Talker = gsub("(\\.*)_edited$", "\\1", file),
     category = paste0("/", tolower(category), "/")) %>%
   left_join(
-    # read in the talker by gender data
+    # Read in the talker by gender data
     read_delim(
       file = "../data/engCVC_gender.csv") %>%
       rename(Talker = subj) %>%
       filter(!is.na(gender))) %>%
   rename(Vowel = following_sonorant) %>%
-  select(Talker, gender, segment_start, segment_end, Word, category, Word_duration, VOT, vowel_duration, f0, f0_Mel) %>%
-  na.omit() %>%
-  filter(gender == "female", vowel_duration <= 450) %>%
-  group_by(Talker, category) %>%
+  select(Talker, gender, segment_start, segment_end, Word, category, Word_duration, VOT, vowel_duration, f0_Mel) %>%
+  na.omit()
+
+d.chodroff_wilson <-
+  bind_rows(
+    d.chodroff_wilson.connected %>% mutate(speechstyle = "connected"),
+    d.chodroff_wilson.isolated %>% mutate(speechstyle = "isolated")) %>%
+  mutate(across(c(speechstyle, Talker, category, gender), factor))
+
+# This dataframe is used whenever we reference overall stats from Chodroff & Wilson,
+# prior to excluding any talkers, or subsetting the data. Not all of the quantities
+# were reported in the paper.
+d.chodroff_wilson.talker_stats <-
+  d.chodroff_wilson %>%
+  group_by(speechstyle, Talker, category) %>%
+  summarise(
+    across(
+      c("VOT", "f0_Mel", "vowel_duration"),
+      list(mean = mean, sd = sd, var = var))) %>%
+  group_by(speechstyle, category) %>%
+  summarise(
+    across(
+      ends_with(c("_mean", "_sd", "_var")),
+      list(mean = mean, sd = sd, var = var)))
+
+# SUBSET TO DATA THAT WE USE TO CREATE PRIORS FOR THE PRESENT PROJECT
+d.chodroff_wilson %<>%
+  # Subset to female talkers and exclude distributional outliers
+  filter(gender == "female", if_all(c("VOT", "f0_Mel", "vowel_duration"), ~ abs(scale(.x)) < 3.5)) %>%
+  group_by(speechstyle, Talker, category) %>%
+  # Subset the data to be balanced, so that each talker provides an equal number of
+  # /d/ and /t/ tokens, the maximal number of tokens possible for that talker. This
+  # is done in order to make sure that normalization (if applied) doesn't introduce
+  # indirect information about category identity.
   mutate(n.for_category_and_talker = n()) %>%
-  group_by(Talker) %>%
+  group_by(speechstyle, Talker) %>%
   mutate(
     n_min.for_category_and_talker = min(n.for_category_and_talker),
     n_category.for_category_and_talker = n_distinct(category)) %>%
   # Select talkers that have both /d/ and /t/ observations
   filter(n_category.for_category_and_talker == 2) %>%
-  group_by(Talker, category) %>%
+  group_by(speechstyle, Talker, category) %>%
   sample_n(size = first(n_min.for_category_and_talker)) %>%
   ungroup()
 
-d.chodroff_wilson.isolated %<>%
+d.chodroff_wilson.connected <-
+  d.chodroff_wilson %>%
+  filter(speechstyle == "connected") %>%
   mutate(
-    across(c(Talker, category, gender), factor),
     across(
-      c("VOT", "f0", "f0_Mel", "vowel_duration"),
+      c("VOT", "f0_Mel", "vowel_duration"),
       function(x) apply_ccure(data = ., cue = substitute(x))))
+
+d.chodroff_wilson.isolated <-
+  d.chodroff_wilson %>%
+  filter(speechstyle == "isolated") %>%
+  mutate(
+    across(
+      c("VOT", "f0_Mel", "vowel_duration"),
+      function(x) apply_ccure(data = ., cue = substitute(x)))) %>%
+  ungroup()
 
 d.chodroff_wilson <-
   bind_rows(
-    d.chodroff_wilson.connected %>% mutate(speechstyle = "connected"),
-    d.chodroff_wilson.isolated %>% mutate(speechstyle = "isolated"))
+    d.chodroff_wilson.connected,
+    d.chodroff_wilson.isolated)
 
 PREAMBLE_LOADED <- TRUE
 
