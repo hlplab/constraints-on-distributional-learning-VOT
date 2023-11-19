@@ -232,6 +232,114 @@ We fit the psychometric model using the package \texttt{brms} [@R-brms_a] in R [
 In the main text, we employ ideal observers [specifically, the ASP framework described in @xie2023] to relate our results to those expected from idealized listeners. This includes predictions based on a 'typical' listener's prior experience and predictions based on idealized learners for each exposure condition that have fully learned the exposure distributions. The former provides a baseline against which to compare listeners' behavior at the start of the experiment. The latter provides a baseline against which to compare changes in listeners' behavior as a function of exposure. In this section, we describe how we derived those predictions.
 
 ## Prior expectations 
+We follow other work in deriving estimates of listeners' prior expectations about the realization of phonetic categories from a linguistic database [e.g., @feldman2009; @kronrod2016; @norris-mcqueen2008; @persson-jaeger2023; @tan2021; for a helpful review, see @schertz-clare2020]. Such estimates are only as good as the assumptions that they are based on. One important pre-requisite for a reasonable estimate is that the phonetic database employed to estimate listeners' prior experience sufficiently closely approximates the type of input a typical adult listener of the language would have previously experienced. Here, we considered two databases to approximate listeners' prior expectations about the phonetic realization of /d/ and /t/ by a female L1 talkers of US English (as the one employed in our experiment). The two databases contain productions of word-initial /d/ and /t/ in isolated word productions and in connected read speech, respectively [@chodroff-wilson2017], and available by Eleanor Chodroff on OSF at XXX.^[We thank Eleanor Chodroff for making these data available, and for prompt and helpful responses to our questions about the data.] <!-- TO DO: fill in --> The subsets of the data employed in the present study---described in more detail below---are available via the OSF for our project. 
+
+Committing to a database is, however, not a *sufficient* assumption. Estimates of listeners' prior expectations also depend strongly on assumptions about how listeners represent the mapping from phonetic cues to phonetic categories. For example, previous work has often derived estimates under the implicit assumption that listener learn and maintain a *single* representation for each phonetic category across talkers. This assumption typically has taken one of two forms. One approach is to entirely ignore talker identity during the estimation of phonetic categories. This is illustrated in Figure XXXA, <!-- TO DO: fill in --> which shows the distribution of /d/ and /t/ over VOT, f0, and vowel duration in isolated (top) and connected (bottom) speech. Ellipses indicate the phonetic category representations that would be estimated from these data. <!-- TO DO: make 3d plot, f0 is mel; use color for /d/ vs. /t/; fat point for mean, transparent ellipses for 95% multivariate gaussian. Caption should say this. Figure has multiple cols A, B --> Another approach is to first normalize each cue within each talker---e.g., by subtracting the talker's cue mean from each token [e.g., @cole2010; @mcmurray-jongman2011; for review, see @apfelbaum-mcmurray2015; @weatherholtz-jaeger0216]. Phonetic categories are then estimated over these normalized cues. The resulting representations are shown in Figure XXXB. <!-- TO DO: add to caption that we added the mean of talker means to each token, so as to keep tokens in the familiar phonetic space [following, @xie2023]. -->
+
+The two approaches have different trade-offs. When cues are not talker-normalized, the resulting category representations inherit not only within-category variability but also variability across talker, over-estimating the actual category covariances for any given talker. Normalizing cues addresses this problem. It does, however, remove potentially useful information about the correlation between cues from the signal: compared to unnormalized cues in Panel A, the talker-normalized cues in Panel B contain less information about the covariance of VOT, f0, and vowel duration. 
+
+The two approaches also have potentially important shortcomings. Specifically, neither approach is well-suited if the correlation between cues *within* talkers differs from the correlation between talker means of those cues. The /d/ and /t/ categories in Panel A conflate the two source of covariance; the categories in Panel B completely removed any information about covariance in talker means. This is problematic, as there is strong evidence that such correlations exists [@chodroff-wilson2017; @chodroff-wilson2019; @REF-OTHERS], and that listeners have strong expectations about, at least some types of, correlations between talker means [@idemaru-holt2011; @idemure-holt2020; @schertz; @OTHERs].^[Additionally, the category means for /d/ and /t/ (solid points) for unormalized cues are the simply the weighted average of the talkers available in the data. If talkers contribute different amounts of data to the database, this means that the category means might disproportionately depend on a subset of the data.]. This issue is illustrated in Figure XXX, which shows that correlation between phonetic cues *within* talkers (Panel A) and the correlations of talker means of the phonetic cues *across* talkers (Panel B).<!-- TO DO: add figure. think about visualization -->  XXX <!-- TO DO: add description . NOTE that even when those two types of correlations are similar, one would have to somehow USE that knowledge when generalizing prior expectations to a new talker. --> For the same reasons, neither of the two approaches considered above captures correlations between talkers' category means and category (co)variances. Both approaches would, for example, miss if category variance generally increases for larger category means (or vice versa).
+
+### DMMM: A distributional multivariate mixed-effects model 
+Here we use a distributional multivariate mixed-effects model (DMMM) to fit the data from both isolated and connected speech, separately for /d/ and /t/. The model fits not only the mean but higher-level statistical moments of the *distribution* of cues for each category. Specifically, we assume /d/ and /t/ categories that are normally distributed with unknown mean and variance but also can exhibit unknown skew. The ability to model skew should help to fit distributions along cues with soft or hard bounds, such VOT [especially, if 'negative VOTs' are considered the combination of a VOT of 0 and the presence of a second cue, pre-voicing, @REFS]. 
+
+The model is multivariate because we fit the data simultaneously to all three cues (VOT, f0, and vowel duration). This allows us to capture correlations between these cues, as well as correlations between any of the parameters of the talker-specific cue distributions for each category (e.g., the category means and variances).^[Since we fit separate models to each category, our implementation only captures such cross-talker correlations *within* each category, but not those that are known to exist *across* categories [@REF]. We made this decision since current implementations of DMMMs assume that residual (population-level) correlations between cues are identical across the data. As Figure XXX above shows, <!-- TO DO: figure that shows pairwise cue correlations --> this is clearly not the case for the, for instance, the correlation between VOT and vowel duration across /d/ and /t/.]
+
+Finally, the model is a multilevel or mixed-effects model since we recognize the hierarchical grouping structure of the data (talkers).
+
+```{r DMMM-setup}
+my.priors.DMMM <-
+  c(
+# Uncomment if we'd like to include speechstyle as a predictor, or if we'd like to fit 
+# the data from both categories in one model (in which case, we'd need to add category
+# as predictor)
+    prior(student_t(3, 0, 2.5), class = b), 
+    prior(cauchy(0, 2.5), class = sd, resp = VOTgs),
+    prior(cauchy(0, 2.5), class = sd, resp = f0Melgs),
+    prior(cauchy(0, 2.5), class = sd, resp = voweldurationgs))
+
+# TO DO: consider using a gaussian after all. 
+# formula + set_rescor(rescor = TRUE) is only implemented for gaussian and student models
+# 
+# holding grouping index p constant across mu, sigma, alpha allows us to fit correlations 
+# across statistical moments (mu, log sigma, and skew). Fitting across both categories 
+# allows us to do so across categories.
+bf_VOT <- 
+  bf(VOT_gs ~ 0 + category + (0 + category | p | Talker)) + 
+  lf(sigma ~ 0 + category + (0 + category | p | Talker)) +
+  lf(alpha ~ 0 + category + (0 + category | p | Talker)) + 
+  brmsfamily(
+    "skew_normal", 
+    link = "identity", 
+    link_sigma = "log",
+    link_alpha = "identity")
+
+bf_f0 <-  
+  bf(f0_Mel_gs ~ 0 + category + (0 + category | p | Talker)) + 
+  lf(sigma ~ 0 + category + (0 + category | p | Talker)) +
+  brmsfamily(
+    "gaussian", 
+    link = "identity", 
+    link_sigma = "log")
+
+bf_vowel_duration <-  
+  bf(vowel_duration_gs ~ 0 + category + (0 + category | p | Talker)) + 
+  lf(sigma ~ 0 + category + (0 + category | p | Talker)) +
+  lf(alpha ~ 0 + category + (0 + category | p | Talker)) + 
+  brmsfamily(
+    "skew_normal", 
+    link = "identity", 
+    link_sigma = "log",
+    link_alpha = "identity")
+
+get_prior(
+  formula = bf_VOT + bf_f0 + bf_vowel_duration, 
+  d.chodroff_wilson %>% 
+    mutate(
+      across(
+        c(VOT, f0_Mel, vowel_duration), 
+        list(gs = ~ (.x - mean(.x)) / (2 * sd(.x))))))
+
+# TO DO: consider using *all* talkers here
+# TO DO: first remove pitch-halving instances form f0 data!
+DMMM <-
+  brm(
+  formula = bf_VOT + bf_f0 + bf_vowel_duration + set_rescor(rescor = FALSE),
+  data = 
+    d.chodroff_wilson %>% 
+    mutate(
+      across(
+        c(VOT, f0_Mel, vowel_duration), 
+        list(gs = ~ (.x - mean(.x)) / (2 * sd(.x))))),
+  prior = my.priors.DMMM,
+  chains = 4,
+  cores = 4,
+  warmup = 1500,
+  iter = 3000,
+  thin = 1, 
+  threads = threading(threads = 2),
+  control = list(adapt_delta = .85),
+  save_model = "../models/DMMM.stan")
+#   file = "../models/DMMM")
+```
+
+```{r checking-posterior-predictive}
+pp_check(DMMM.d, resp = "VOTgs")
+pp_check(DMMM.d, resp = "f0Melgs")
+pp_check(DMMM.d, resp = "voweldurationgs")
+```
+
+advantages for regression-based approach fitting categories
+- understands structure of data; doesn't assume balanced data
+- weights talkers with less data appropriate.
+- considers cues relative to the category the come from
+- can model correlation of category means across cues and talkers, while modeling correlation within categories separately (and separately for each category, if fit separately to each category)
+- can model correlation of category variances across cues and talkers
+- can generate hypotheses about new talkers 
+
+
+
+### Phonetic database [@chodroff-wilson2017]
 <!-- TO DO: context + database intro + explanation -->
 The database contains 92 talkers (female = XXX, male = XXX; for details, see SI, \@ref(sec:VOT-production)).
 
