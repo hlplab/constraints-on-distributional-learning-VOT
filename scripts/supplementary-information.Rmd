@@ -272,6 +272,15 @@ The model is multivariate because we fit the data simultaneously to all three cu
 Finally, the model is a multilevel or mixed-effects model since we recognize the hierarchical grouping structure of the data (talkers).
 
 ```{r DMMM-setup}
+d.chodroff_wilson.for_analysis <-
+  d.chodroff_wilson %>% 
+    # Remove pitch-halving
+    filter(f0_Mel > 201) %>%
+    mutate(
+      across(
+        c(VOT, f0_Mel, vowel_duration), 
+        list(gs = ~ (.x - mean(.x)) / (2 * sd(.x)))))
+
 my.priors.DMMM <-
   c(
 # Uncomment if we'd like to include speechstyle as a predictor, or if we'd like to fit 
@@ -298,18 +307,22 @@ bf_VOT <-
     link_sigma = "log",
     link_alpha = "identity")
 
+# Recognizing that f0 was censored at lower end
+min(d.chodroff_wilson.for_analysis$f0_Mel_gs) 
 bf_f0 <-  
-  bf(f0_Mel_gs | trunc(lb = 200) ~ 0 + category + (0 + category | p | Talker)) + 
-  lf(sigma  | trunc(lb = 200) ~ 0 + category + (0 + category | p | Talker)) +
+  bf(f0_Mel_gs | trunc(lb = -1.4) ~ 0 + category + (0 + category | p | Talker)) + 
+  lf(sigma  | trunc(lb = -1.4) ~ 0 + category + (0 + category | p | Talker)) +
   brmsfamily(
     "gaussian", 
     link = "identity", 
     link_sigma = "log")
 
+# Recognizing that vowel duration was censored at upper end
+ub_vowel_duration <- max(d.chodroff_wilson.for_analysis$vowel_duration_gs) 
 bf_vowel_duration <-  
-  bf(vowel_duration_gs ~ 0 + category + (0 + category | p | Talker)) + 
-  lf(sigma ~ 0 + category + (0 + category | p | Talker)) +
-  lf(alpha ~ 0 + category + (0 + category | p | Talker)) + 
+  bf(vowel_duration_gs | trunc(ub = 1.9) ~ 0 + category + (0 + category | p | Talker)) + 
+  lf(sigma| trunc(ub = 1.9) ~ 0 + category + (0 + category | p | Talker)) +
+  lf(alpha | trunc(ub = 1.9) ~ 0 + category + (0 + category | p | Talker)) + 
   brmsfamily(
     "skew_normal", 
     link = "identity", 
@@ -320,14 +333,7 @@ bf_vowel_duration <-
 DMMM <-
   brm(
   formula = bf_VOT + bf_f0 + bf_vowel_duration + set_rescor(rescor = FALSE),
-  data = 
-    d.chodroff_wilson %>% 
-    # Remove pitch-halving
-    filter(f0_Mel > 200) %>%
-    mutate(
-      across(
-        c(VOT, f0_Mel, vowel_duration), 
-        list(gs = ~ (.x - mean(.x)) / (2 * sd(.x))))),
+  data = d.chodroff_wilson.for_analysis,
   prior = my.priors.DMMM,
   chains = 4,
   cores = 4,
@@ -335,17 +341,18 @@ DMMM <-
   iter = 4000,
   thin = 1, 
   threads = threading(threads = 2),
+  backend = "cmdstanr",
   control = list(adapt_delta = .9, max_treedepth = 15),
   save_model = "../models/DMMM.stan")
 #   file = "../models/DMMM")
  
-saveRDS(DMMM, file = "../models/DMMM-attempt1")
+saveRDS(DMMM, file = "../models/DMMM-attempt2")
 ```
 
 ```{r checking-posterior-predictive}
-pp_check(DMMM.d, resp = "VOTgs")
-pp_check(DMMM.d, resp = "f0Melgs")
-pp_check(DMMM.d, resp = "voweldurationgs")
+pp_check(DMMM, resp = "VOTgs")
+pp_check(DMMM, resp = "f0Melgs")
+pp_check(DMMM, resp = "voweldurationgs")
 ```
 
 advantages for regression-based approach fitting categories
