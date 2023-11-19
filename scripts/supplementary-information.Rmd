@@ -232,6 +232,113 @@ We fit the psychometric model using the package \texttt{brms} [@R-brms_a] in R [
 In the main text, we employ ideal observers [specifically, the ASP framework described in @xie2023] to relate our results to those expected from idealized listeners. This includes predictions based on a 'typical' listener's prior experience and predictions based on idealized learners for each exposure condition that have fully learned the exposure distributions. The former provides a baseline against which to compare listeners' behavior at the start of the experiment. The latter provides a baseline against which to compare changes in listeners' behavior as a function of exposure. In this section, we describe how we derived those predictions.
 
 ## Prior expectations 
+
+```{r TEMPORARILY-REIMPORTING-CHODROFF-WILSON-DATA-WITHOUT-EXLCUSION-OR-NORMALIZATION}
+# TO DO: this should later be integrated with overall import
+d.chodroff_wilson.connected <-
+  get_ChodroffWilson_data(
+    database_filename = "../data/chodroff_wilson_mixer6_non-missing_vot_cog_f0.csv",
+    categories = c("/d/", "/t/"),
+    min.n_per_talker_and_category = 1,
+    limits.VOT = c(-Inf, Inf),
+    limits.f0 = c(-Inf, Inf),
+    max.p_for_multimodality = 0)
+
+# Get production data for the prior -- this is from the isolated speech corpus
+# this may need tidying up later
+d.chodroff_wilson.isolated <-
+  read_tsv(
+    "../data/cueAnalysis_engCVC.txt",
+    col_names = c("file", "category","segment_start","segment_end","interval_number_TextGrid","VOT","following_sonorant", "vowel_duration","Word","Word_duration","f0_1","f0_2","f0_3","f0_4","f0_5","f0_6","f0_7","f0_8","f0_9","f0_10")) %>%
+  filter(
+    following_sonorant != "L",
+    !Word %in% c("AGAIN", "xxxGOOT", "POAT0"),
+    category %in% c("D", "T")) %>%
+  mutate(
+    across(c(11:20), function (x) na_if(x, "--undefined--")),
+    f0 = pmap(.l = list(f0_1, f0_2, f0_3, f0_4, f0_5, f0_6, f0_7, f0_8, f0_9, f0_10),
+              ~ as.numeric(c(..1, ..2, ..3, ..4, ..5, ..6, ..7, ..8, ..9, ..10))),
+    f0 = map_dbl(f0, ~ (.x[!is.na(.x)])[1]),
+    f0_Mel = normMel(f0),
+    across(c(Word_duration, VOT, vowel_duration), ~ .x * 1000),
+    Talker = gsub("(\\.*)_edited$", "\\1", file),
+    category = paste0("/", tolower(category), "/")) %>%
+  left_join(
+    # Read in the talker by gender data
+    read_delim(
+      file = "../data/engCVC_gender.csv") %>%
+      rename(Talker = subj) %>%
+      filter(!is.na(gender))) %>%
+  rename(Vowel = following_sonorant) %>%
+  select(Talker, gender, segment_start, segment_end, Word, category, Word_duration, VOT, vowel_duration, f0_Mel) %>%
+  na.omit()
+
+d.chodroff_wilson <-
+  bind_rows(
+    d.chodroff_wilson.connected %>% mutate(speechstyle = "connected"),
+    d.chodroff_wilson.isolated %>% mutate(speechstyle = "isolated")) %>%
+  mutate(across(c(speechstyle, Talker, category, gender), factor))
+
+# This dataframe is used whenever we reference overall stats from Chodroff & Wilson,
+# prior to excluding any talkers, or subsetting the data. Not all of the quantities
+# were reported in the paper.
+d.chodroff_wilson.talker_stats <-
+  d.chodroff_wilson %>%
+  group_by(speechstyle, Talker, category) %>%
+  summarise(
+    across(
+      c("VOT", "f0_Mel", "vowel_duration"),
+      list(mean = mean, sd = sd, var = var))) %>%
+  group_by(speechstyle, category) %>%
+  summarise(
+    across(
+      ends_with(c("_mean", "_sd", "_var")),
+      list(mean = mean, sd = sd, var = var)))
+
+# SUBSET TO DATA THAT WE USE TO CREATE PRIORS FOR THE PRESENT PROJECT
+d.chodroff_wilson %<>%
+  # Subset to female talkers and exclude distributional outliers
+  filter(gender == "female", if_all(c("VOT", "f0_Mel", "vowel_duration"), ~ abs(scale(.x)) < 3.5)) %>%
+  group_by(speechstyle, Talker, category) %>%
+  # Subset the data to be balanced, so that each talker provides an equal number of
+  # /d/ and /t/ tokens, the maximal number of tokens possible for that talker. This
+  # is done in order to make sure that normalization (if applied) doesn't introduce
+  # indirect information about category identity.
+  mutate(n.for_category_and_talker = n()) %>%
+  group_by(speechstyle, Talker) %>%
+  mutate(
+    n_min.for_category_and_talker = min(n.for_category_and_talker),
+    n_category.for_category_and_talker = n_distinct(category)) %>%
+  # Select talkers that have both /d/ and /t/ observations
+  filter(n_category.for_category_and_talker == 2) %>%
+  group_by(speechstyle, Talker, category) %>%
+  sample_n(size = first(n_min.for_category_and_talker)) %>%
+  ungroup()
+
+d.chodroff_wilson.connected <-
+  d.chodroff_wilson %>%
+  filter(speechstyle == "connected") %>%
+  # mutate(
+  #   across(
+  #     c("VOT", "f0_Mel", "vowel_duration"),
+  #     function(x) apply_ccure(data = ., cue = substitute(x)))) %>%
+  ungroup()
+
+d.chodroff_wilson.isolated <-
+  d.chodroff_wilson %>%
+  filter(speechstyle == "isolated") %>%
+  # mutate(
+  #   across(
+  #     c("VOT", "f0_Mel", "vowel_duration"),
+  #     function(x) apply_ccure(data = ., cue = substitute(x)))) %>%
+  ungroup()
+
+d.chodroff_wilson <-
+  bind_rows(
+    d.chodroff_wilson.connected,
+    d.chodroff_wilson.isolated)
+```
+
 We follow other work in deriving estimates of listeners' prior expectations about the realization of phonetic categories from a linguistic database [e.g., @feldman2009; @kronrod2016; @norris-mcqueen2008; @persson-jaeger2023; @tan2021; for a helpful review, see @schertz-clare2020]. Such estimates are only as good as the assumptions that they are based on. One important pre-requisite for a reasonable estimate is that the phonetic database employed to estimate listeners' prior experience sufficiently closely approximates the type of input a typical adult listener of the language would have previously experienced. Here, we considered two databases to approximate listeners' prior expectations about the phonetic realization of /d/ and /t/ by a female L1 talkers of US English (as the one employed in our experiment). The two databases contain productions of word-initial /d/ and /t/ in isolated word productions and in connected read speech, respectively [@chodroff-wilson2017], and available by Eleanor Chodroff on OSF at XXX.^[We thank Eleanor Chodroff for making these data available, and for prompt and helpful responses to our questions about the data.] <!-- TO DO: fill in --> The subsets of the data employed in the present study---described in more detail below---are available via the OSF for our project. 
 
 Committing to a database is, however, not a *sufficient* assumption. Estimates of listeners' prior expectations also depend strongly on assumptions about how listeners represent the mapping from phonetic cues to phonetic categories. For example, previous work has often derived estimates under the implicit assumption that listener learn and maintain a *single* representation for each phonetic category across talkers. This assumption typically has taken one of two forms. One approach is to entirely ignore talker identity during the estimation of phonetic categories. This is illustrated in Figure XXXA, <!-- TO DO: fill in --> which shows the distribution of /d/ and /t/ over VOT, f0, and vowel duration in isolated (top) and connected (bottom) speech. Ellipses indicate the phonetic category representations that would be estimated from these data. <!-- TO DO: make 3d plot, f0 is mel; use color for /d/ vs. /t/; fat point for mean, transparent ellipses for 95% multivariate gaussian. Caption should say this. Figure has multiple cols A, B --> Another approach is to first normalize each cue within each talker---e.g., by subtracting the talker's cue mean from each token [e.g., @cole2010; @mcmurray-jongman2011; for review, see @apfelbaum-mcmurray2015; @weatherholtz-jaeger0216]. Phonetic categories are then estimated over these normalized cues. The resulting representations are shown in Figure XXXB. <!-- TO DO: add to caption that we added the mean of talker means to each token, so as to keep tokens in the familiar phonetic space [following, @xie2023]. -->
@@ -247,6 +354,11 @@ d.chodroff_wilson %>%
   ggplot(aes(x = .panel_x, y = .panel_y, color = category, fill = category)) +
   geom_autopoint(aes(shape = speechstyle), alpha = .1) +
   geom_autodensity(aes(linetype = speechstyle), position = "identity", alpha = .5) +
+  stat_ellipse(
+    aes(
+      linetype = speechstyle, 
+      group = interaction(Talker, category)),
+    alpha = .1) +
   stat_ellipse(aes(linetype = speechstyle)) +
   geom_autopoint(
     data = d.for_analysis %>% 
@@ -260,8 +372,8 @@ d.chodroff_wilson %>%
       filter(Phase == "test") %>% 
       mutate(category = "test"), 
     color = "gray", alpha = .5, size = 1, inherit.aes = F) +
-  facet_matrix(vars(c(VOT, f0_Mel, vowel_duration)), layer.lower = c(1, 4:5), layer.diag = 2,
-               layer.upper = c(3, 4:5))
+  facet_matrix(vars(c(VOT, f0_Mel, vowel_duration)), layer.lower = c(1, 5:6), layer.diag = 2,
+               layer.upper = c(3:6))
 ```
 
 ### DMMM: A distributional multivariate mixed-effects model 
@@ -343,9 +455,14 @@ saveRDS(DMMM, file = "../models/DMMM-attempt1")
 ```
 
 ```{r checking-posterior-predictive}
-pp_check(DMMM.d, resp = "VOTgs")
-pp_check(DMMM.d, resp = "f0Melgs")
-pp_check(DMMM.d, resp = "voweldurationgs")
+pp_check(DMMM, resp = "VOTgs")
+pp_check(DMMM, resp = "f0Melgs")
+pp_check(DMMM, resp = "voweldurationgs")
+```
+
+```{r draw-samples-from-DMMM}
+DMMM %>%
+  sprea
 ```
 
 advantages for regression-based approach fitting categories

@@ -26,9 +26,10 @@ library(patchwork)          # plot layouts
 library(magick)
 library(webshot)
 library(ggstance)
-library(ggtext)            # make geom textboxes
-library(ggnewscale)        # extra colour scale in ggplots
-library(kableExtra)        # for formatting tables
+library(ggforce)            # facet_matrix for pairwaise correlation plots
+library(ggtext)             # make geom textboxes
+library(ggnewscale)         # extra colour scale in ggplots
+library(kableExtra)         # for formatting tables
 
 library(linguisticsdown)    # IPA symbols
 library(latexdiffr)         # track changes
@@ -162,7 +163,8 @@ d.chodroff_wilson.connected <-
   mutate(
     across(
       c("VOT", "f0_Mel", "vowel_duration"),
-      function(x) apply_ccure(data = ., cue = substitute(x))))
+      function(x) apply_ccure(data = ., cue = substitute(x)))) %>%
+  ungroup()
 
 d.chodroff_wilson.isolated <-
   d.chodroff_wilson %>%
