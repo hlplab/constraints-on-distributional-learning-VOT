@@ -236,9 +236,33 @@ We follow other work in deriving estimates of listeners' prior expectations abou
 
 Committing to a database is, however, not a *sufficient* assumption. Estimates of listeners' prior expectations also depend strongly on assumptions about how listeners represent the mapping from phonetic cues to phonetic categories. For example, previous work has often derived estimates under the implicit assumption that listener learn and maintain a *single* representation for each phonetic category across talkers. This assumption typically has taken one of two forms. One approach is to entirely ignore talker identity during the estimation of phonetic categories. This is illustrated in Figure XXXA, <!-- TO DO: fill in --> which shows the distribution of /d/ and /t/ over VOT, f0, and vowel duration in isolated (top) and connected (bottom) speech. Ellipses indicate the phonetic category representations that would be estimated from these data. <!-- TO DO: make 3d plot, f0 is mel; use color for /d/ vs. /t/; fat point for mean, transparent ellipses for 95% multivariate gaussian. Caption should say this. Figure has multiple cols A, B --> Another approach is to first normalize each cue within each talker---e.g., by subtracting the talker's cue mean from each token [e.g., @cole2010; @mcmurray-jongman2011; for review, see @apfelbaum-mcmurray2015; @weatherholtz-jaeger0216]. Phonetic categories are then estimated over these normalized cues. The resulting representations are shown in Figure XXXB. <!-- TO DO: add to caption that we added the mean of talker means to each token, so as to keep tokens in the familiar phonetic space [following, @xie2023]. -->
 
-The two approaches have different trade-offs. When cues are not talker-normalized, the resulting category representations inherit not only within-category variability but also variability across talker, over-estimating the actual category covariances for any given talker. Normalizing cues addresses this problem. It does, however, remove potentially useful information about the correlation between cues from the signal: compared to unnormalized cues in Panel A, the talker-normalized cues in Panel B contain less information about the covariance of VOT, f0, and vowel duration. 
+The two approaches have different trade-offs. When cues are not talker-normalized, the resulting category representations inherit not only within-category variability but also variability across talker, over-estimating the actual category covariances for any given talker. Normalizing cues addresses this problem. It does, however, remove potentially useful information about the correlation between cues from the signal: compared to unnormalized cues in Panel A, the talker-normalized cues in Panel B contain less information about the covariance of VOT, f0, and vowel duration.
 
-The two approaches also have potentially important shortcomings. Specifically, neither approach is well-suited if the correlation between cues *within* talkers differs from the correlation between talker means of those cues. The /d/ and /t/ categories in Panel A conflate the two source of covariance; the categories in Panel B completely removed any information about covariance in talker means. This is problematic, as there is strong evidence that such correlations exists [@chodroff-wilson2017; @chodroff-wilson2019; @REF-OTHERS], and that listeners have strong expectations about, at least some types of, correlations between talker means [@idemaru-holt2011; @idemure-holt2020; @schertz; @OTHERs].^[Additionally, the category means for /d/ and /t/ (solid points) for unormalized cues are the simply the weighted average of the talkers available in the data. If talkers contribute different amounts of data to the database, this means that the category means might disproportionately depend on a subset of the data.]. This issue is illustrated in Figure XXX, which shows that correlation between phonetic cues *within* talkers (Panel A) and the correlations of talker means of the phonetic cues *across* talkers (Panel B).<!-- TO DO: add figure. think about visualization -->  XXX <!-- TO DO: add description . NOTE that even when those two types of correlations are similar, one would have to somehow USE that knowledge when generalizing prior expectations to a new talker. --> For the same reasons, neither of the two approaches considered above captures correlations between talkers' category means and category (co)variances. Both approaches would, for example, miss if category variance generally increases for larger category means (or vice versa).
+The two approaches also share potentially important shortcomings. Specifically, neither approach is well-suited if the correlation between cues *within* talkers differs from the correlation between talker means of those cues. The /d/ and /t/ categories in Panel A conflate the two source of covariance; the categories in Panel B completely removed any information about covariance in talker means. This is problematic, as there is strong evidence that such correlations exists [@chodroff-wilson2017; @chodroff-wilson2019; @REF-OTHERS], and that listeners have strong expectations about, at least some types of, correlations between talker means [@idemaru-holt2011; @idemure-holt2020; @schertz; @OTHERs].^[Additionally, the category means for /d/ and /t/ (solid points) for unormalized cues are the simply the weighted average of the talkers available in the data. If talkers contribute different amounts of data to the database, this means that the category means might disproportionately depend on a subset of the data.]. This issue is illustrated in Figure XXX, which shows that correlation between phonetic cues *within* talkers (Panel A) and the correlations of talker means of the phonetic cues *across* talkers (Panel B).<!-- TO DO: add figure. think about visualization -->  XXX <!-- TO DO: add description . NOTE that even when those two types of correlations are similar, one would have to somehow USE that knowledge when generalizing prior expectations to a new talker. --> For the same reasons, neither of the two approaches considered above captures correlations between talkers' category means and category (co)variances. Both approaches would, for example, miss if category variance generally increases for larger category means (or vice versa).
+
+```{r}
+d.chodroff_wilson %>%
+  group_by(speechstyle, category) %>%
+  filter(if_all(c(VOT, f0_Mel, vowel_duration), ~ abs(scale(.x)[,1]) < 3.5)) %>%
+  ggplot(aes(x = .panel_x, y = .panel_y, color = category, fill = category)) +
+  geom_autopoint(aes(shape = speechstyle), alpha = .1) +
+  geom_autodensity(aes(linetype = speechstyle), position = "identity", alpha = .5) +
+  stat_ellipse(aes(linetype = speechstyle)) +
+  geom_autopoint(
+    data = d.for_analysis %>% 
+      filter(Phase == "test") %>% 
+      mutate(category = "test"), 
+    color = "black", alpha = .5, size = 1, inherit.aes = F) +
+  geom_autopoint(
+    data = d.for_analysis %>% 
+      select(-c(VOT, f0_Mel, vowel_duration)) %>%
+      rename(VOT = VOT.CCuRE, f0_Mel = f0_Mel.CCuRE, vowel_duration = vowel_duration.CCuRE) %>%
+      filter(Phase == "test") %>% 
+      mutate(category = "test"), 
+    color = "gray", alpha = .5, size = 1, inherit.aes = F) +
+  facet_matrix(vars(c(VOT, f0_Mel, vowel_duration)), layer.lower = c(1, 4:5), layer.diag = 2,
+               layer.upper = c(3, 4:5))
+```
 
 ### DMMM: A distributional multivariate mixed-effects model 
 Here we use a distributional multivariate mixed-effects model (DMMM) to fit the data from both isolated and connected speech, separately for /d/ and /t/. The model fits not only the mean but higher-level statistical moments of the *distribution* of cues for each category. Specifically, we assume /d/ and /t/ categories that are normally distributed with unknown mean and variance but also can exhibit unknown skew. The ability to model skew should help to fit distributions along cues with soft or hard bounds, such VOT [especially, if 'negative VOTs' are considered the combination of a VOT of 0 and the presence of a second cue, pre-voicing, @REFS]. 
@@ -275,8 +299,8 @@ bf_VOT <-
     link_alpha = "identity")
 
 bf_f0 <-  
-  bf(f0_Mel_gs ~ 0 + category + (0 + category | p | Talker)) + 
-  lf(sigma ~ 0 + category + (0 + category | p | Talker)) +
+  bf(f0_Mel_gs | trunc(lb = 200) ~ 0 + category + (0 + category | p | Talker)) + 
+  lf(sigma  | trunc(lb = 200) ~ 0 + category + (0 + category | p | Talker)) +
   brmsfamily(
     "gaussian", 
     link = "identity", 
@@ -292,21 +316,14 @@ bf_vowel_duration <-
     link_sigma = "log",
     link_alpha = "identity")
 
-get_prior(
-  formula = bf_VOT + bf_f0 + bf_vowel_duration, 
-  d.chodroff_wilson %>% 
-    mutate(
-      across(
-        c(VOT, f0_Mel, vowel_duration), 
-        list(gs = ~ (.x - mean(.x)) / (2 * sd(.x))))))
-
 # TO DO: consider using *all* talkers here
-# TO DO: first remove pitch-halving instances form f0 data!
 DMMM <-
   brm(
   formula = bf_VOT + bf_f0 + bf_vowel_duration + set_rescor(rescor = FALSE),
   data = 
     d.chodroff_wilson %>% 
+    # Remove pitch-halving
+    filter(f0_Mel > 200) %>%
     mutate(
       across(
         c(VOT, f0_Mel, vowel_duration), 
@@ -315,12 +332,14 @@ DMMM <-
   chains = 4,
   cores = 4,
   warmup = 1500,
-  iter = 3000,
+  iter = 4000,
   thin = 1, 
   threads = threading(threads = 2),
-  control = list(adapt_delta = .85),
+  control = list(adapt_delta = .9, max_treedepth = 15),
   save_model = "../models/DMMM.stan")
 #   file = "../models/DMMM")
+ 
+saveRDS(DMMM, file = "../models/DMMM-attempt1")
 ```
 
 ```{r checking-posterior-predictive}
