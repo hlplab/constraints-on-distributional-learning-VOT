@@ -298,7 +298,10 @@ d.chodroff_wilson.talker_stats <-
 # SUBSET TO DATA THAT WE USE TO CREATE PRIORS FOR THE PRESENT PROJECT
 d.chodroff_wilson %<>%
   # Subset to female talkers and exclude distributional outliers
-  filter(gender == "female", if_all(c("VOT", "f0_Mel", "vowel_duration"), ~ abs(scale(.x)) < 3.5)) %>%
+  filter(
+    gender == "female", 
+    # if_all(c("VOT", "f0_Mel", "vowel_duration"), ~ abs(scale(.x)) < 3.5)
+  ) %>%
   group_by(speechstyle, Talker, category) %>%
   # Subset the data to be balanced, so that each talker provides an equal number of
   # /d/ and /t/ tokens, the maximal number of tokens possible for that talker. This
@@ -350,7 +353,6 @@ The two approaches also share potentially important shortcomings. Specifically, 
 ```{r}
 d.chodroff_wilson %>%
   group_by(speechstyle, category) %>%
-  filter(if_all(c(VOT, f0_Mel, vowel_duration), ~ abs(scale(.x)[,1]) < 3.5)) %>%
   ggplot(aes(x = .panel_x, y = .panel_y, color = category, fill = category)) +
   geom_autopoint(aes(shape = speechstyle), alpha = .1) +
   geom_autodensity(aes(linetype = speechstyle), position = "identity", alpha = .5) +
@@ -386,12 +388,14 @@ Finally, the model is a multilevel or mixed-effects model since we recognize the
 ```{r DMMM-setup}
 d.chodroff_wilson.for_analysis <-
   d.chodroff_wilson %>%
-    # Remove pitch-halving
-    filter(f0_Mel > 201) %>%
+    # Remove pitch-halving and extreme vowel duration outlier
+    # (vowel duration is also truncated at > 30ms because of the automatic alignment that
+    # was used by Chodroff and Wilson to get those measures)
+    filter(f0_Mel > 201, vowel_duration < 450) %>%
     mutate(
       across(
         c(VOT, f0_Mel, vowel_duration),
-        list(gs = ~ (.x - mean(.x)) / (2 * sd(.x)))))
+        ~ (.x - mean(.x)) / (2 * sd(.x))))
 
 my.priors.DMMM <-
   c(
@@ -399,9 +403,12 @@ my.priors.DMMM <-
 # the data from both categories in one model (in which case, we'd need to add category
 # as predictor)
     prior(student_t(3, 0, 2.5), class = b),
-    prior(cauchy(0, 2.5), class = sd, resp = VOTgs),
-    prior(cauchy(0, 2.5), class = sd, resp = f0Melgs),
-    prior(cauchy(0, 2.5), class = sd, resp = voweldurationgs))
+    prior(student_t(3, 0, 2.5), class = b, resp = VOT),
+    prior(student_t(3, 0, 2.5), class = b, resp = f0Mel),
+    prior(student_t(3, 0, 2.5), class = b, resp = vowelduration),
+    prior(cauchy(0, 2.5), class = sd, resp = VOT),
+    prior(cauchy(0, 2.5), class = sd, resp = f0Mel),
+    prior(cauchy(0, 2.5), class = sd, resp = vowelduration))
 
 # TO DO: consider using a gaussian after all.
 # formula + set_rescor(rescor = TRUE) is only implemented for gaussian and student models
@@ -410,9 +417,9 @@ my.priors.DMMM <-
 # across statistical moments (mu, log sigma, and skew). Fitting across both categories
 # allows us to do so across categories.
 bf_VOT <-
-  bf(VOT_gs ~ 0 + category + (0 + category | p | Talker)) +
-  lf(sigma ~ 0 + category + (0 + category | p | Talker)) +
-  lf(alpha ~ 0 + category + (0 + category | p | Talker)) +
+  bf(VOT ~ 1 + category + (1 + category | p | Talker)) +
+  lf(sigma ~ 1 + category + (1 + category | p | Talker)) +
+  lf(alpha ~ 1 + category + (1 + category | p | Talker)) +
   brmsfamily(
     "skew_normal",
     link = "identity",
@@ -420,28 +427,33 @@ bf_VOT <-
     link_alpha = "identity")
 
 # Recognizing that f0 was censored at lower end
-min(d.chodroff_wilson.for_analysis$f0_Mel_gs)
+# Recognizing that vowel duration was censored at lower and upper end
+bounds <- list()
+bounds[["f0_Mel"]] <- range(d.chodroff_wilson.for_analysis$f0_Mel)
+bounds[["vowel_duration"]] <- range(d.chodroff_wilson.for_analysis$vowel_duration)
+
 bf_f0 <-  
-  bf(f0_Mel_gs | trunc(lb = -1.4) ~ 0 + category + (0 + category | p | Talker)) +
-  lf(sigma  | trunc(lb = -1.4) ~ 0 + category + (0 + category | p | Talker)) +
+  bf(paste0("f0_Mel | trunc(lb = ", bounds[["f0_Mel"]][1], ") ~ 1 + category + (1 + category | p | Talker)")) +
+  lf(sigma ~ 1 + category + (1 + category | p | Talker)) +
   brmsfamily(
     "gaussian",
     link = "identity",
     link_sigma = "log")
 
-# Recognizing that vowel duration was censored at upper end
-ub_vowel_duration <- max(d.chodroff_wilson.for_analysis$vowel_duration_gs)
 bf_vowel_duration <-  
-  bf(vowel_duration_gs | trunc(ub = 1.9) ~ 0 + category + (0 + category | p | Talker)) +
-  lf(sigma| trunc(ub = 1.9) ~ 0 + category + (0 + category | p | Talker)) +
-  lf(alpha | trunc(ub = 1.9) ~ 0 + category + (0 + category | p | Talker)) +
+  bf(paste0("vowel_duration | trunc(lb = ", bounds[["vowel_duration"]][1], ", ub = ", bounds[["vowel_duration"]][2], ") ~ 1 + category + (1 + category | p | Talker)")) +
+  lf(sigma ~ 1 + category + (1 + category | p | Talker)) +
+  lf(alpha ~ 1 + category + (1 + category | p | Talker)) +
   brmsfamily(
     "skew_normal",
     link = "identity",
     link_sigma = "log",
     link_alpha = "identity")
 
-# TO DO: consider using *all* talkers here
+# TO DO: consider using *all* talkers here (currently subset to female talkers)
+# (inclusion of male talkers would require taking care of pitch-halving separately 
+# for both sexes, and it probably would require including talker sex in the f0 model)
+contrasts(d.chodroff_wilson.for_analysis$category) <- cbind("D" = c(-1, 1))
 DMMM <-
   brm(
   formula = bf_VOT + bf_f0 + bf_vowel_duration + set_rescor(rescor = FALSE),
@@ -456,9 +468,8 @@ DMMM <-
   backend = "cmdstanr",
   control = list(adapt_delta = .9, max_treedepth = 15),
   save_model = "../models/DMMM.stan")
-#   file = "../models/DMMM")
 
-saveRDS(DMMM, file = "../models/DMMM-attempt2")
+saveRDS(DMMM, file = "../models/DMMM-attempt2.rds")
 ```
 
 ```{r checking-posterior-predictive}
