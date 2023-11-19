@@ -235,6 +235,7 @@ In the main text, we employ ideal observers [specifically, the ASP framework des
 
 ```{r TEMPORARILY-REIMPORTING-CHODROFF-WILSON-DATA-WITHOUT-EXLCUSION-OR-NORMALIZATION}
 # TO DO: this should later be integrated with overall import
+# THIS IS CURRENTLY STILL A MESS. REORGANIZE THE IMPORT FROM THE START
 d.chodroff_wilson.connected <-
   get_ChodroffWilson_data(
     database_filename = "../data/chodroff_wilson_mixer6_non-missing_vot_cog_f0.csv",
@@ -279,26 +280,13 @@ d.chodroff_wilson <-
     d.chodroff_wilson.isolated %>% mutate(speechstyle = "isolated")) %>%
   mutate(across(c(speechstyle, Talker, category, gender), factor))
 
-# This dataframe is used whenever we reference overall stats from Chodroff & Wilson,
-# prior to excluding any talkers, or subsetting the data. Not all of the quantities
-# were reported in the paper.
-d.chodroff_wilson.talker_stats <-
-  d.chodroff_wilson %>%
-  group_by(speechstyle, Talker, category) %>%
-  summarise(
-    across(
-      c("VOT", "f0_Mel", "vowel_duration"),
-      list(mean = mean, sd = sd, var = var))) %>%
-  group_by(speechstyle, category) %>%
-  summarise(
-    across(
-      ends_with(c("_mean", "_sd", "_var")),
-      list(mean = mean, sd = sd, var = var)))
-
 # SUBSET TO DATA THAT WE USE TO CREATE PRIORS FOR THE PRESENT PROJECT
 d.chodroff_wilson %<>%
   # Subset to female talkers and exclude distributional outliers
-  filter(gender == "female", if_all(c("VOT", "f0_Mel", "vowel_duration"), ~ abs(scale(.x)) < 3.5)) %>%
+  filter(
+    gender == "female", 
+    if_all(c("VOT", "f0_Mel", "vowel_duration"), ~ abs(scale(.x)) < 3.5)
+  ) %>%
   group_by(speechstyle, Talker, category) %>%
   # Subset the data to be balanced, so that each talker provides an equal number of
   # /d/ and /t/ tokens, the maximal number of tokens possible for that talker. This
@@ -309,34 +297,14 @@ d.chodroff_wilson %<>%
   mutate(
     n_min.for_category_and_talker = min(n.for_category_and_talker),
     n_category.for_category_and_talker = n_distinct(category)) %>%
-  # Select talkers that have both /d/ and /t/ observations
-  filter(n_category.for_category_and_talker == 2) %>%
+  # Select talkers that have both /d/ and /t/ observations with at least 5 observations
+  # each
+  filter(
+    n_min.for_category_and_talker >= 5,
+    n_category.for_category_and_talker == 2) %>%
   group_by(speechstyle, Talker, category) %>%
   sample_n(size = first(n_min.for_category_and_talker)) %>%
   ungroup()
-
-d.chodroff_wilson.connected <-
-  d.chodroff_wilson %>%
-  filter(speechstyle == "connected") %>%
-  # mutate(
-  #   across(
-  #     c("VOT", "f0_Mel", "vowel_duration"),
-  #     function(x) apply_ccure(data = ., cue = substitute(x)))) %>%
-  ungroup()
-
-d.chodroff_wilson.isolated <-
-  d.chodroff_wilson %>%
-  filter(speechstyle == "isolated") %>%
-  # mutate(
-  #   across(
-  #     c("VOT", "f0_Mel", "vowel_duration"),
-  #     function(x) apply_ccure(data = ., cue = substitute(x)))) %>%
-  ungroup()
-
-d.chodroff_wilson <-
-  bind_rows(
-    d.chodroff_wilson.connected,
-    d.chodroff_wilson.isolated)
 ```
 
 We follow other work in deriving estimates of listeners' prior expectations about the realization of phonetic categories from a linguistic database [e.g., @feldman2009; @kronrod2016; @norris-mcqueen2008; @persson-jaeger2023; @tan2021; for a helpful review, see @schertz-clare2020]. Such estimates are only as good as the assumptions that they are based on. One important pre-requisite for a reasonable estimate is that the phonetic database employed to estimate listeners' prior experience sufficiently closely approximates the type of input a typical adult listener of the language would have previously experienced. Here, we considered two databases to approximate listeners' prior expectations about the phonetic realization of /d/ and /t/ by a female L1 talkers of US English (as the one employed in our experiment). The two databases contain productions of word-initial /d/ and /t/ in isolated word productions and in connected read speech, respectively [@chodroff-wilson2017], and available by Eleanor Chodroff on OSF at XXX.^[We thank Eleanor Chodroff for making these data available, and for prompt and helpful responses to our questions about the data.] <!-- TO DO: fill in --> The subsets of the data employed in the present study---described in more detail below---are available via the OSF for our project. 
