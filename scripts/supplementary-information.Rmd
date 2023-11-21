@@ -249,7 +249,7 @@ d.chodroff_wilson.connected <-
 d.chodroff_wilson.isolated <-
   read_tsv(
     "../data/cueAnalysis_engCVC.txt",
-    col_names = c("file", "category","segment_start","segment_end","interval_number_TextGrid","VOT","following_sonorant", "vowel_duration","Word","Word_duration","f0_1","f0_2","f0_3","f0_4","f0_5","f0_6","f0_7","f0_8","f0_9","f0_10")) %>%
+    col_names = c("file", "category","segment_start","segment_end","interval_number_TextGrid","VOT","following_sonorant", "vowel_duration","Word","word_duration","f0_1","f0_2","f0_3","f0_4","f0_5","f0_6","f0_7","f0_8","f0_9","f0_10")) %>%
   filter(
     following_sonorant != "L",
     !Word %in% c("AGAIN", "xxxGOOT", "POAT0"),
@@ -260,7 +260,7 @@ d.chodroff_wilson.isolated <-
               ~ as.numeric(c(..1, ..2, ..3, ..4, ..5, ..6, ..7, ..8, ..9, ..10))),
     f0 = map_dbl(f0, ~ (.x[!is.na(.x)])[1]),
     f0_Mel = normMel(f0),
-    across(c(Word_duration, VOT, vowel_duration), ~ .x * 1000),
+    across(c(word_duration, VOT, vowel_duration), ~ .x * 1000),
     Talker = gsub("(\\.*)_edited$", "\\1", file),
     category = paste0("/", tolower(category), "/")) %>%
   left_join(
@@ -270,7 +270,7 @@ d.chodroff_wilson.isolated <-
       rename(Talker = subj) %>%
       filter(!is.na(gender))) %>%
   rename(Vowel = following_sonorant) %>%
-  select(Talker, gender, segment_start, segment_end, Word, category, Word_duration, VOT, vowel_duration, f0_Mel) %>%
+  select(Talker, Word, Vowel, gender, segment_start, segment_end, category, word_duration, VOT, vowel_duration, f0, f0_Mel) %>%
   na.omit()
 
 d.chodroff_wilson <-
@@ -341,6 +341,51 @@ d.chodroff_wilson <-
     d.chodroff_wilson.connected,
     d.chodroff_wilson.isolated)
 ```
+
+
+```{r IO-predicted-PSE-by-phase-against-human-PSE}
+# Get logistic parameter estimates for a simulated ideal observer listener. Do so for both 
+# exposure and test. Even though this turned out to be overkill, we did it because it was 
+# theoretically possible that the procedure we use to analyze *listeners'* responses (a 
+# logistic model with a linear effect of VOT) introduces a bias into the estimation. Here, 
+# we thus apply a variant of that same analysis approach to responses that are sampled from
+# the three ideal observer fit on the exposure data (one each per exposure condition).
+# 
+# Unlike for the analysis of participants' responses, there is no need to use a psychometric
+# model since ideal observers have not attentional lapses (i.e., lambda = 0). 
+d.io.categorization <- 
+  rbind(
+  # Assess the ideal observers at the exact same locations used during test blocks
+    get_logistic_parameters_from_model(
+      model = io, 
+      model_col = "io", 
+      groups = "Condition.Exposure") %>% 
+      mutate(Phase = "test") %>% 
+      crossing(Block = c(1, 3, 5, 7, 8, 9)) %>% 
+    # Assess the ideal observers on the VOT locations that occur in the three different 
+    # exposure conditions. Only use unlabeled exposure trials, since those are the trials
+    # we assess participants' behavior on.
+    get_logistic_parameters_from_model(
+      io,
+      d.for_analysis %>%
+        filter(Phase == "exposure", Item.Labeled == F) %>%
+        group_by(Condition.Exposure) %>%
+        # Since blocks differ in which VOTs are unlabeled, we include all blocks
+        # (we are simulating the expected parameters across all exposure blocks)
+        filter(ParticipantID == first(ParticipantID)) %>%
+        select(Item.VOT) %>%
+        rename(x = Item.VOT),
+      model_col = "io",
+      groups = "Condition.Exposure") %>%
+      mutate(Phase = "exposure") %>%
+      crossing(Block = c(2, 4, 6))) %>%
+  select(Condition.Exposure, Phase, Block, intercept_unscaled, slope_unscaled, intercept_scaled, slope_scaled, PSE) %>% 
+  mutate(across(c(Phase, Condition.Exposure, Block), factor)) 
+```
+
+
+
+
 
 We follow other work in deriving estimates of listeners' prior expectations about the realization of phonetic categories from a linguistic database [e.g., @feldman2009; @kronrod2016; @norris-mcqueen2008; @persson-jaeger2023; @tan2021; for a helpful review, see @schertz-clare2020]. Such estimates are only as good as the assumptions that they are based on. One important pre-requisite for a reasonable estimate is that the phonetic database employed to estimate listeners' prior experience sufficiently closely approximates the type of input a typical adult listener of the language would have previously experienced. Here, we considered two databases to approximate listeners' prior expectations about the phonetic realization of /d/ and /t/ by a female L1 talkers of US English (as the one employed in our experiment). The two databases contain productions of word-initial /d/ and /t/ in isolated word productions and in connected read speech, respectively [@chodroff-wilson2017], and available by Eleanor Chodroff on OSF at XXX.^[We thank Eleanor Chodroff for making these data available, and for prompt and helpful responses to our questions about the data.] <!-- TO DO: fill in --> The subsets of the data employed in the present study---described in more detail below---are available via the OSF for our project.
 
@@ -593,52 +638,7 @@ This section reports the hypothesis tables for exposure blocks corresponding the
 <!-- TO DO -->
 
 
-## Can assumptions of our analyses explain differences between exposure and test blocks? {sec:SI-exposure-test-zigzag}
-In the main text, we pointed the 'zigzag' pattern in Figure \@ref(fig:plot-fit-slope-PSE)C: the slopes of listeners' categorization functions were smaller during test than during exposure blocks (BF = XXX). <!-- TO DO: can we run a model that contains exposure and test block and runs: Response ~ Block.Type[effect coded] * VOT + Random effects and everything else identical to your main analysis? No exposure condition. The BF of the interaction term is the evidence we need. --> Here, we present auxiliary analyses that suggest that these differences are not due to biases in our analysis.
 
-### Effects of priors on the estimates for exposure and test blocks
-The psychometric mixed-effects analyses followed our previous work [e.g., @hoerberg-jaeger2022; @xie2021] and recommendations in the literature, and used weakly regularizing priors. This raises the question whether the fact that epxosure and test blocks differed in the amount of data they contained (24 unlabelled trials during each exposure block vs. 12 during test) can explain the 'zigzag' pattern evidence in Figure \@ref(fig:plot-fit-slope-PSE)C for slopes and, to a lesser extent, in Figure \@ref(fig:plot-fit-slope-PSE)D for PSEs.
-
-<!-- TO DO: more context needed -->
-
-```{r}
-d.intercept_estimates <-
-  full_join(
-    fit_test_nested %>% get_intercepts_and_slopes(),
-    fit_exposure_nested %>% get_intercepts_and_slopes() %>%
-      mutate(Intercept = Intercept + fixef(fit_exposure)[3] * ((VOT.mean_test - VOT.mean_exposure) / (2 * VOT.sd_exposure)))) %>%
-  group_by(Condition.Exposure, Block) %>%
-  summarise(
-    across(
-      c(Intercept, slope),
-      list(lower = ~ quantile(.x, probs = .025), median = median, upper = ~ quantile(.x, probs = .975))))
-
-
-p.intercept_1to7_adjusted <-
-d.intercept_estimates %>%   
-  ggplot(aes(
-    x = Block, y = Intercept_median,
-    ymin = Intercept_lower, ymax = Intercept_upper,
-    colour = Condition.Exposure, group = Condition.Exposure)) +
-  geom_rect(
-    data = tibble(
-      xmin = c(seq(0.55, 6.55, 2), seq(7.55, 8.55, 1)),
-      xmax = c(seq(1.45, 7.45, 2), seq(8.45, 9.45, 1))),
-    aes(xmin = xmin, xmax = xmax),
-    ymin = -Inf, ymax = Inf, fill = "grey", alpha = .1, inherit.aes = F) +
-  geom_point(position = position_dodge(.3), size = 1) +
-  geom_linerange(linewidth = .6, position = position_dodge(.3), alpha = .5) +
-  stat_summary(geom = "line", position = position_dodge(.3)) +
-  scale_x_discrete("Block", labels = c("1" = "Test 1", "2" = "Exposure 1", "3" = "Test 2", "4" = "Exposure 2", "5" = "Test 3", "6" = "Exposure 3", "7" = "Test 4", "8" = "Test 5", "9" = "Test 6")) +
-  scale_colour_manual("Condition",
-    labels = c("baseline", "+10ms", "+40ms", "prior"),
-    values = c(colours.condition, "darkgray"),
-    aesthetics = "color") +
-  theme(legend.position = "top",
-        axis.text.x = element_text(angle = 22.5, hjust = 1))
-p.intercept_1to7
-p.intercept_1to7_adjusted
-```
 
 
 ### Effects of the linearity assumption

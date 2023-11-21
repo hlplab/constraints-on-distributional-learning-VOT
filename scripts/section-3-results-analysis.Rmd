@@ -113,26 +113,31 @@ io <-
       # who has fully learned the exposure distributions.
       slice_sample(n = 1) %>% 
       unnest(data) %>% 
-      mutate(category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))) %>%
+      mutate(category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))) %>% 
+      # only VOT is used for categorising stimuli
+  left_join(d.for_analysis %>%  
+        filter(Phase == "test") %>%
+        distinct(Condition.Exposure, Item.VOT) %>% 
+  rename(x = Item.VOT) %>% 
+    nest(x = x)) %>% 
   # Add prior based on Chodroff & Wilson (2018). Note that this database has substantially higher 
   # VOT variance than our exposure conditions, which we based on estimates from Kronrod et al. 
-  # (2016).
+  # (2016). Uses all three cues; duration and spectral noise taken from Kronrod et al.
   bind_rows(
     d.chodroff_wilson.isolated %>%
       make_MVG_ideal_observer_from_data(
-        cues = c("VOT"),
-        Sigma_noise = matrix(80, dimnames = list("VOT", "VOT"))) %>%
-      mutate(Condition.Exposure = "prior") %>%
-      nest(io = -c(Condition.Exposure)))
-
-# Alternative model for prior that uses all three cues
-    # d.chodroff_wilson.isolated %>%
-    #   make_MVG_ideal_observer_from_data(
-    #     cues = c("VOT", "f0_Mel", "vowel_duration"),
-    #     Sigma_noise = matrix(c(80, 0, 0, 0, ENTER_MEL_NOISE, 0, 0, 0, 80), nrow = 3, dimnames = list(c("VOT", "f0_Mel", "vowel_duration"), c("VOT", "f0_Mel", "vowel_duration")))) %>%
-    #   mutate(Condition.Exposure = "prior") %>%
-    #   nest(io = -c(Condition.Exposure))
-
+        cues = c("VOT", "f0_Mel", "vowel_duration"),
+        Sigma_noise = matrix(c(80, 0, 0, 0, 878, 0, 0, 0, 80), nrow = 3, dimnames = list(c("VOT", "f0_Mel", "vowel_duration"), c("VOT", "f0_Mel", "vowel_duration")))) %>%
+      mutate(Condition.Exposure = "prior") %>% 
+      # join in the test stimuli. All 3 cues are used here because we assume listeners' prior experience would take into account all cues
+      left_join(d.for_analysis %>%  
+        filter(Phase == "test") %>%
+        distinct(Condition.Exposure, Item.VOT, Item.f0_Mel, Item.vowel_duration) %>% 
+        mutate(x = pmap(.l = list(Item.VOT, Item.f0_Mel, Item.vowel_duration), ~ c(..1, ..2, ..3))) %>% 
+  select(Condition.Exposure, x) %>% 
+  mutate(Condition.Exposure = "prior") %>% 
+  nest(x = x)) %>% 
+    nest(io = -c(Condition.Exposure, x)))  
 
 # Get logistic parameter estimates for a simulated ideal observer listener. Do so for both 
 # exposure and test. Even though this turned out to be overkill, we did it because it was 
@@ -144,35 +149,13 @@ io <-
 # Unlike for the analysis of participants' responses, there is no need to use a psychometric
 # model since ideal observers have not attentional lapses (i.e., lambda = 0). 
 d.io.categorization <- 
-  rbind(
     # Assess the ideal observers at the exact same locations used during test blocks
     get_logistic_parameters_from_model(
       model = io, 
-      x = d.for_analysis %>%  
-        filter(Phase == "test") %>%
-        distinct(Condition.Exposure, Item.VOT) %>%
-        rename(x = Item.VOT), 
       model_col = "io", 
       groups = "Condition.Exposure") %>% 
       mutate(Phase = "test") %>% 
-      crossing(Block = c(1, 3, 5, 7, 8, 9)), 
-    # Assess the ideal observers on the VOT locations that occur in the three different 
-    # exposure conditions. Only use unlabeled exposure trials, since those are the trials
-    # we assess participants' behavior on.
-    get_logistic_parameters_from_model(
-      io, 
-      d.for_analysis %>%  
-        filter(Phase == "exposure", Item.Labeled == F) %>%
-        group_by(Condition.Exposure) %>%
-        # Since blocks differ in which VOTs are unlabeled, we include all blocks
-        # (we are simulating the expected parameters across all exposure blocks)
-        filter(ParticipantID == first(ParticipantID)) %>% 
-        select(Item.VOT) %>% 
-        rename(x = Item.VOT), 
-      model_col = "io", 
-      groups = "Condition.Exposure") %>% 
-      mutate(Phase = "exposure") %>% 
-      crossing(Block = c(2, 4, 6))) %>%
+      crossing(Block = c(1, 3, 5, 7, 8, 9)) %>% 
   select(Condition.Exposure, Phase, Block, intercept_unscaled, slope_unscaled, intercept_scaled, slope_scaled, PSE) %>% 
   mutate(across(c(Phase, Condition.Exposure, Block), factor)) 
 ```
@@ -204,11 +187,11 @@ p.across_blocks <-
 
 p.intercept_1to7 <-
   p.across_blocks +  
-  geom_step(
+  geom_hline(
     data = d.io.categorization,
     # Using scaled intercept (which is keeping the location at which the intercept is evaluated constant 
     # across exposure and test: it's always the mean VOT of test)
-    aes(x = Block, y = intercept_scaled, colour = Condition.Exposure, group = Condition.Exposure),
+    aes(yintercept = intercept_scaled, colour = Condition.Exposure, group = Condition.Exposure),
     linetype = 2, 
     linewidth = .7, 
     alpha = 0.3,
@@ -229,7 +212,7 @@ p.slope_1to7 <-
   # (remove _unscaled to switch to slopes over Gelman-scaled VOT)
   aes(y = slope_unscaled_median, ymin = slope_unscaled_lower, ymax = slope_unscaled_upper) +
   # These are the slopes of the ideal observers
-  geom_step(
+  geom_line(
     data = d.io.categorization,
     # Using UNscaled slope because slopes are comparable across scales anyway and this is more intuitive
     # (substitute _unscaled to _scaled to switch to slopes over Gelman-scaled VOT)
@@ -285,9 +268,9 @@ p.PSE_1to7 <-
     label.padding = unit(.18, "lines"),
     size = 2.2,
     show.legend = F) +
-  geom_step(
+  geom_hline(
     data = d.io.categorization,
-    mapping = aes(x = Block, y = PSE, color = Condition.Exposure, group = Condition.Exposure),
+    mapping = aes(yintercept = PSE, color = Condition.Exposure, group = Condition.Exposure),
     linetype = 2, 
     linewidth = .8, 
     alpha = 0.5, 

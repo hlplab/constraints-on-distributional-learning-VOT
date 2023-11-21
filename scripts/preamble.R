@@ -86,12 +86,11 @@ d.chodroff_wilson.connected <-
     limits.f0 = c(-Inf, Inf),
     max.p_for_multimodality = .1)
 
-# Get production data for the prior -- this is from the isolated speech corpus
-# this may need tidying up later
+# Get production data from the isolated speech corpus
 d.chodroff_wilson.isolated <-
   read_tsv(
     "../data/cueAnalysis_engCVC.txt",
-    col_names = c("file", "category","segment_start","segment_end","interval_number_TextGrid","VOT","following_sonorant", "vowel_duration","Word","Word_duration","f0_1","f0_2","f0_3","f0_4","f0_5","f0_6","f0_7","f0_8","f0_9","f0_10")) %>%
+    col_names = c("file", "category","segment_start","segment_end","interval_number_TextGrid","VOT","following_sonorant", "vowel_duration","Word","word_duration","f0_1","f0_2","f0_3","f0_4","f0_5","f0_6","f0_7","f0_8","f0_9","f0_10")) %>%
   filter(
     following_sonorant != "L",
     !Word %in% c("AGAIN", "xxxGOOT", "POAT0"),
@@ -102,7 +101,7 @@ d.chodroff_wilson.isolated <-
               ~ as.numeric(c(..1, ..2, ..3, ..4, ..5, ..6, ..7, ..8, ..9, ..10))),
     f0 = map_dbl(f0, ~ (.x[!is.na(.x)])[1]),
     f0_Mel = normMel(f0),
-    across(c(Word_duration, VOT, vowel_duration), ~ .x * 1000),
+    across(c(word_duration, VOT, vowel_duration), ~ .x * 1000),
     Talker = gsub("(\\.*)_edited$", "\\1", file),
     category = paste0("/", tolower(category), "/")) %>%
   left_join(
@@ -112,7 +111,7 @@ d.chodroff_wilson.isolated <-
       rename(Talker = subj) %>%
       filter(!is.na(gender))) %>%
   rename(Vowel = following_sonorant) %>%
-  select(Talker, gender, segment_start, segment_end, Word, category, Word_duration, VOT, vowel_duration, f0_Mel) %>%
+  select(Talker, Word, Vowel, gender, segment_start, segment_end, category, word_duration, VOT, vowel_duration, f0, f0_Mel) %>%
   na.omit()
 
 d.chodroff_wilson <-
@@ -159,20 +158,20 @@ d.chodroff_wilson %<>%
 
 d.chodroff_wilson.connected <-
   d.chodroff_wilson %>%
-  filter(speechstyle == "connected") %>%
-  mutate(
-    across(
-      c("VOT", "f0_Mel", "vowel_duration"),
-      function(x) apply_ccure(data = ., cue = substitute(x)))) %>%
+  # filter(speechstyle == "connected") %>%
+  # mutate(
+  #   across(
+  #     c("VOT", "f0_Mel", "vowel_duration"),
+  #     function(x) apply_ccure(data = ., cue = substitute(x)))) %>%
   ungroup()
 
 d.chodroff_wilson.isolated <-
   d.chodroff_wilson %>%
-  filter(speechstyle == "isolated") %>%
-  mutate(
-    across(
-      c("VOT", "f0_Mel", "vowel_duration"),
-      function(x) apply_ccure(data = ., cue = substitute(x)))) %>%
+  # filter(speechstyle == "isolated") %>%
+  # mutate(
+  #   across(
+  #     c("VOT", "f0_Mel", "vowel_duration"),
+  #     function(x) apply_ccure(data = ., cue = substitute(x)))) %>%
   ungroup()
 
 d.chodroff_wilson <-
