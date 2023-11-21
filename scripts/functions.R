@@ -578,7 +578,6 @@ make_VOT_IOs_from_exposure <- function(data, Sigma_noise = matrix(80, dimnames =
 # were they analyzed the same way the human data is analyzed.
 get_logistic_parameters_from_model <- function(
     model,
-    #x,
     model_col = "model",
     groups = NULL,
     resolution = 10^12

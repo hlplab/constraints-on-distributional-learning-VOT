@@ -139,13 +139,7 @@ io <-
   nest(x = x)) %>% 
     nest(io = -c(Condition.Exposure, x)))  
 
-# Get logistic parameter estimates for a simulated ideal observer listener. Do so for both 
-# exposure and test. Even though this turned out to be overkill, we did it because it was 
-# theoretically possible that the procedure we use to analyze *listeners'* responses (a 
-# logistic model with a linear effect of VOT) introduces a bias into the estimation. Here, 
-# we thus apply a variant of that same analysis approach to responses that are sampled from
-# the three ideal observer fit on the exposure data (one each per exposure condition).
-# 
+# Get logistic parameter estimates for a simulated ideal observer listener. 
 # Unlike for the analysis of participants' responses, there is no need to use a psychometric
 # model since ideal observers have not attentional lapses (i.e., lambda = 0). 
 d.io.categorization <- 
