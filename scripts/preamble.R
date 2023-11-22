@@ -87,33 +87,16 @@ d.chodroff_wilson.connected <-
     max.p_for_multimodality = .1)
 
 # Get production data from the isolated speech corpus
+# get_ChodroffWilson_data function on this database causes some categories of some talkers to be dropped
+# this causes problems when get_IO_categorization fn is called on this data set
 d.chodroff_wilson.isolated <-
-  read_tsv(
-    "../data/cueAnalysis_engCVC.txt",
-    col_names = c("file", "category","segment_start","segment_end","interval_number_TextGrid","VOT","following_sonorant", "vowel_duration","Word","word_duration","f0_1","f0_2","f0_3","f0_4","f0_5","f0_6","f0_7","f0_8","f0_9","f0_10")) %>%
-  filter(
-    following_sonorant != "L",
-    !Word %in% c("AGAIN", "xxxGOOT", "POAT0"),
-    category %in% c("D", "T")) %>%
-  mutate(
-    across(c(11:20), function (x) na_if(x, "--undefined--")),
-    f0 = pmap(.l = list(f0_1, f0_2, f0_3, f0_4, f0_5, f0_6, f0_7, f0_8, f0_9, f0_10),
-              ~ as.numeric(c(..1, ..2, ..3, ..4, ..5, ..6, ..7, ..8, ..9, ..10))),
-    f0 = map_dbl(f0, ~ (.x[!is.na(.x)])[1]),
-    f0_Mel = normMel(f0),
-    across(c(word_duration, VOT, vowel_duration), ~ .x * 1000),
-    Talker = gsub("(\\.*)_edited$", "\\1", file),
-    category = paste0("/", tolower(category), "/")) %>%
-  left_join(
-    # Read in the talker by gender data
-    read_delim(
-      file = "../data/engCVC_gender.csv") %>%
-      rename(Talker = subj) %>%
-      filter(!is.na(gender))) %>%
-  rename(Vowel = following_sonorant) %>%
-  select(Talker, Word, Vowel, gender, segment_start, segment_end, category, word_duration, VOT, vowel_duration, f0, f0_Mel) %>%
+  read_csv("../data/chodroff_wilson_isolated_speech.csv") %>% 
+  mutate(f0_Mel = phonR::normMel(f0)) %>% 
+  filter(gender == "female",
+         category %in% c("/d/", "/t/"),
+         f0_Mel > 250) %>% 
   na.omit()
-
+  
 d.chodroff_wilson <-
   bind_rows(
     d.chodroff_wilson.connected %>% mutate(speechstyle = "connected"),
@@ -158,7 +141,7 @@ d.chodroff_wilson %<>%
 
 d.chodroff_wilson.connected <-
   d.chodroff_wilson %>%
-  # filter(speechstyle == "connected") %>%
+  filter(speechstyle == "connected") %>% 
   # mutate(
   #   across(
   #     c("VOT", "f0_Mel", "vowel_duration"),
@@ -167,7 +150,7 @@ d.chodroff_wilson.connected <-
 
 d.chodroff_wilson.isolated <-
   d.chodroff_wilson %>%
-  # filter(speechstyle == "isolated") %>%
+  filter(speechstyle == "isolated") %>% 
   # mutate(
   #   across(
   #     c("VOT", "f0_Mel", "vowel_duration"),

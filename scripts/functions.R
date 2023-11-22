@@ -85,6 +85,23 @@ get_ChodroffWilson_data <- function(
   require(diptest)
 
   # Standardizing variable names and values to confirm to what we usually use.
+  
+  if (str_detect(database_filename, "isolated")) {
+    d <-
+      read_csv(database_filename, show_col_types = FALSE) %>%
+      mutate(
+        category =
+          plyr::mapvalues(
+            category,
+            c("B", "D", "G", "P", "T", "K"),
+            c("/b/", "/d/", "/g/", "/p/", "/t/", "/k/")),
+        gender = factor(gender,
+          levels = c("male", "female")),
+        voicing = factor(
+          ifelse(category %in% c("/b/", "/d/", "/g/"), "yes", "no"),
+          levels = c("yes", "no"))) %>%
+      mutate(across(c(Talker, Word, gender, category), factor))
+  } else {
   d <-
     read_csv(database_filename, show_col_types = FALSE) %>%
     rename(
@@ -117,6 +134,8 @@ get_ChodroffWilson_data <- function(
       Talker, Word, Trial, Vowel, gender, category, poa, voicing, VOT, f0,
       spectral_M1, spectral_M2, spectral_M3, spectral_M4, vowel_duration,
       word_duration, speech_rate)
+  }
+  
 
   d %<>%
     # Filter VOT and f0 for absolute values to deal with outliers
@@ -137,7 +156,7 @@ get_ChodroffWilson_data <- function(
       mutate(
         f0_Mel.multimodal = dip.test(f0_Mel)$p.value < max.p_for_multimodality) %>%
       filter(!f0_Mel.multimodal) %>%
-      droplevels())
+      droplevels()) 
 
   # Keep only talkers with at least n.min observations for each stop
   d %<>%

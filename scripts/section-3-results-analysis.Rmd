@@ -148,8 +148,8 @@ d.io.categorization <-
       model = io, 
       model_col = "io", 
       groups = "Condition.Exposure") %>% 
-      mutate(Phase = "test") %>% 
-      crossing(Block = c(1, 3, 5, 7, 8, 9)) %>% 
+      crossing(Block = c(1:9)) %>%
+  mutate(Phase = ifelse(Block %in% c(2, 4, 6), "exposure", "test")) %>% 
   select(Condition.Exposure, Phase, Block, intercept_unscaled, slope_unscaled, intercept_scaled, slope_scaled, PSE) %>% 
   mutate(across(c(Phase, Condition.Exposure, Block), factor)) 
 ```
@@ -193,6 +193,7 @@ p.intercept_1to7 <-
     inherit.aes = F) +
   scale_y_continuous("Intercept")
 
+
 p.slope_1to7 <-
   # Plotting participants' and ideal observers' slopes. We're transforming both types of slopes back 
   # into the unit ms VOT. This makes sure that the different slopes are actually comparable across 
@@ -235,12 +236,14 @@ d.true_shift <-
 
 # Compute distribution of talker-specific PSEs from Chodroff & Wilson (2018) corpus
 d.talkerPSEs <- 
+  # get each talker's boundary estimate
   get_IO_categorization(
     data = d.chodroff_wilson.isolated,
     cues = c("VOT"),
     groups = c("Talker", "gender"),
     with_noise = TRUE,
     VOTs = seq(0, 85, .5)) %>% 
+  # center talker PSEs to human PSE at block 1 of experiment
   mutate(
     center_constant = mean(d.true_shift$PSE_block1) - mean(PSE),
     PSE_centered = PSE + center_constant) %>% 
@@ -267,7 +270,7 @@ p.PSE_1to7 <-
     mapping = aes(yintercept = PSE, color = Condition.Exposure, group = Condition.Exposure),
     linetype = 2, 
     linewidth = .8, 
-    alpha = 0.5, 
+    alpha = 0.4, 
     direction = "mid",
     inherit.aes = F) +
   geom_text(
@@ -310,7 +313,7 @@ cond_fit_test_exposure <-
         mutate(Item.VOT = descale(VOT_gs, VOT.mean_test, VOT.sd_test)))) %>%
   arrange(as.numeric(as.character(Block))) %>%
   mutate(
-    Phase = ifelse(Block %in% c(1, 3, 5, 7, 8, 9), "test", "exposure"),
+    Phase = ifelse(Block %in% c(2, 4, 6), "exposure", "test"),
     Block.plot_label = factor(case_when(
       Block == 1 ~ "Test 1",
       Block == 3 ~ "Test 2",
@@ -680,7 +683,8 @@ d.test_surprisal <-
   d.for_analysis %>% 
   filter(Phase == "test") %>% 
   distinct(Item.VOT) %>%
-  cross_join(io) %>%
+  cross_join(io) %>% 
+  filter(Condition.Exposure != "prior") %>% 
   # For each test stimulus, calculate the sum of densities of /d/ and /t/ over 
   # that VOT (i.e., the density of the marginal VOT distribution)
   mutate(

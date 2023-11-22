@@ -308,7 +308,7 @@ d.chodroff_wilson %<>%
 ```
 
 
-```{r IO-predicted-PSE-by-phase-against-human-PSE}
+```{r IO-predicted-PSE-bias-correction}
 # Get logistic parameter estimates for a simulated ideal observer listener. Do so for both 
 # exposure and test. Even though this turned out to be overkill, we did it because it was 
 # theoretically possible that the procedure we use to analyze *listeners'* responses (a 
