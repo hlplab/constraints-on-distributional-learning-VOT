@@ -561,7 +561,59 @@ table.interaction.condition_block
 
 ```{r hypothesis-table-interaction-condition-block-VOT, results='asis'}
 # FILL IN
+hyp_interaction.condition_block_VOT <-
+  hypothesis(
+    fit_test,
+    c(
+      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 > 0",
+      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 < 0",
+      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 > 0",
+      "(mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 + mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3) > 0",
+      
+      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 < 0",
+      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 < 0",
+      "(mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5) < 0",
+      
+      "mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 < 0",
+      "mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 > 0",
+      "mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 > 0",
+      "(mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3) > 0",
+      
+      "mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 < 0",
+      "mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 < 0",
+      "(mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5) < 0",
+      
+      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 < 0",
+      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 < 0",
+      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 < 0",
+      "(mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 +
+    mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 +
+    mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1) < 0",
 
+    "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 > 0",
+    "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
+    "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 +
+   mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0"),
+   robust = T) %>%
+  .$hypothesis %>%
+  dplyr::select(-Star)
+
+table.interactions.condition_block_VOT <-
+  make_hyp_table(
+    hyp_interaction.condition_block_VOT,
+    rep(c(
+  # Comparing slope differences in +10 vs. baseline between blocks
+  "Block 1 to 2: increased $\\Delta_{slope}$",
+  "Block 2 to 3: increased $\\Delta_{slope}$",
+  "Block 3 to 4: increased $\\Delta_{slope}$",
+  "{\\em Block 1 to 4: increased $\\Delta_{slope}$}",
+  "Block 4 to 5: decreased $\\Delta_{slope}$",
+  "Block 5 to 6: decreased $\\Delta_{slope}$",
+  "{\\em Block 4 to 6: decreased $\\Delta_{slope}$}"), 3),
+    caption = "Did the rate of block-to-block changes differ across exposure conditions? This table summarizes the interactions between exposure condition and block---specifically, whether the differences between exposure conditions changed from test block to test block.") %>%
+  pack_rows("Difference in slopes: +10 vs. baseline", 1, 7) %>%
+  pack_rows("Difference in slopes: +40 vs. +10", 8, 14) %>%
+  pack_rows("Difference in slopes: +40 vs. baseline", 15, 21)
 table.interactions.condition_block_VOT
 ```
 
