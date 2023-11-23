@@ -1,12 +1,7 @@
 ```{r, include=FALSE, message=FALSE}
 if (!exists("PREAMBLE_LOADED")) source("preamble.R")
-```
 
-# Results
-
-```{r model-fit-test-blocks, include=FALSE}
-# Storing some information about the data set submitted for analysis
-# (to facilitate unscaling predictions back into the original scales for plotting)
+# Store parameters for model fitting
 d.mean_sd_scaling <-
   d.for_analysis %>%
   group_by(Phase) %>%
@@ -21,8 +16,12 @@ rm(d.mean_sd_scaling)
 
 levels_Condition.Exposure = c("Shift0", "Shift10", "Shift40")
 contrast_type <- "difference"
+```
 
-# Fit exposure and test psychometric mixed-effects models
+# Results
+
+```{r model-fit-test-blocks, include=FALSE}
+
 fit_test <-
   fit_model(
     data = d.for_analysis,
@@ -313,18 +312,8 @@ cond_fit_test_exposure <-
         mutate(Item.VOT = descale(VOT_gs, VOT.mean_test, VOT.sd_test)))) %>%
   arrange(as.numeric(as.character(Block))) %>%
   mutate(
-    Phase = ifelse(Block %in% c(2, 4, 6), "exposure", "test"),
-    Block.plot_label = factor(case_when(
-      Block == 1 ~ "Test 1",
-      Block == 3 ~ "Test 2",
-      Block == 5 ~ "Test 3",
-      Block == 7 ~ "Test 4",
-      Block == 8 ~ "Test 5",
-      Block == 9 ~ "Test 6",
-      Block == 2 ~ "Exposure 1",
-      Block == 4 ~ "Exposure 2",
-      Block == 6 ~ "Exposure 3")),
-    Block.plot_label = fct_relevel(Block.plot_label, c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3",  "Test 4", "Test 5", "Test 6")))
+    Phase = ifelse(Block %in% c(2, 4, 6), "exposure", "test")) %>% 
+  relabel_blocks()
 
 label_colour <- 
   tibble(

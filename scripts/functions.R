@@ -334,12 +334,6 @@ get_intercepts_and_slopes <-
   pivot_wider(names_from = term, values_from = ".value") %>%
   relocate(c(Condition.Exposure, Block, Intercept, slope, .chain, .iteration, .draw))
 
-# function to get PSE from a model already in tibble format
-get_PSE <- function(model, y) {
-  y <- model %>% pull(y)
-  as.numeric(model[which(abs(y - .5) == min(abs(y - .5))), 1])
-}
-
 get_conditional_effects <- function(model, data, phase) {
   conditional_effects(
     x = model,
@@ -384,7 +378,22 @@ print_CI <- function(model, term) {
          paste0(round(plogis(as.numeric(summary(model)$fixed[term, 3:4])) * 100, 1), collapse = " to "), "%")
 }
 
-# plotting the Bayesian psychometric fit
+# pipes and functions for plotting the Bayesian psychometric fit
+relabel_blocks <-
+  . %>% mutate(
+    Block.plot_label = factor(case_when(
+      Block == 1 ~ "Test 1",
+      Block == 3 ~ "Test 2",
+      Block == 5 ~ "Test 3",
+      Block == 7 ~ "Test 4",
+      Block == 8 ~ "Test 5",
+      Block == 9 ~ "Test 6",
+      Block == 2 ~ "Exposure 1",
+      Block == 4 ~ "Exposure 2",
+      Block == 6 ~ "Exposure 3")),  
+    Block.plot_label = fct_relevel(Block.plot_label, c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3",  "Test 4", "Test 5", "Test 6")))
+
+
 geom_linefit <- function(data, x, y, fill, legend.position, legend.justification = NULL) {
   list(
     geom_ribbon(aes(x = {{ x }}, y = {{ y }}, group = Condition.Exposure,
