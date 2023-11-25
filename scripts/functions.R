@@ -85,6 +85,23 @@ get_ChodroffWilson_data <- function(
   require(diptest)
 
   # Standardizing variable names and values to confirm to what we usually use.
+  
+  if (str_detect(database_filename, "isolated")) {
+    d <-
+      read_csv(database_filename, show_col_types = FALSE) %>%
+      mutate(
+        category =
+          plyr::mapvalues(
+            category,
+            c("B", "D", "G", "P", "T", "K"),
+            c("/b/", "/d/", "/g/", "/p/", "/t/", "/k/")),
+        gender = factor(gender,
+          levels = c("male", "female")),
+        voicing = factor(
+          ifelse(category %in% c("/b/", "/d/", "/g/"), "yes", "no"),
+          levels = c("yes", "no"))) %>%
+      mutate(across(c(Talker, Word, gender, category), factor))
+  } else {
   d <-
     read_csv(database_filename, show_col_types = FALSE) %>%
     rename(
@@ -117,6 +134,8 @@ get_ChodroffWilson_data <- function(
       Talker, Word, Trial, Vowel, gender, category, poa, voicing, VOT, f0,
       spectral_M1, spectral_M2, spectral_M3, spectral_M4, vowel_duration,
       word_duration, speech_rate)
+  }
+  
 
   d %<>%
     # Filter VOT and f0 for absolute values to deal with outliers
@@ -137,7 +156,7 @@ get_ChodroffWilson_data <- function(
       mutate(
         f0_Mel.multimodal = dip.test(f0_Mel)$p.value < max.p_for_multimodality) %>%
       filter(!f0_Mel.multimodal) %>%
-      droplevels())
+      droplevels()) 
 
   # Keep only talkers with at least n.min observations for each stop
   d %<>%
@@ -157,6 +176,150 @@ get_ChodroffWilson_data <- function(
   return(d)
 }
 
+# Prepare variables for regression modelling ---------------------------------------------------
+
+prepVars <- function(d, test_mean = NULL, levels.Condition = NULL, contrast_type) {
+  d %<>%
+    drop_na(Condition.Exposure, Phase, Block, Item.MinimalPair, ParticipantID, Item.VOT, Response)
+  
+  message("VOT mean:", signif(mean(d$Item.VOT, na.rm = T)))
+  message("VOT sd:", signif(sd(d$Item.VOT, na.rm = T)))
+  message(paste("VOT test mean:", test_mean))
+  
+  d %<>%
+    ungroup() %>%
+    mutate(
+      Block_n = as.numeric(as.character(Block)),
+      across(c(Condition.Exposure, Block, Item.MinimalPair), factor),
+      
+      Condition.Exposure = factor(Condition.Exposure, levels = levels.Condition)) %>%
+    
+    drop_na(Block, Response, Item.VOT) %>%
+    mutate(VOT_gs = (Item.VOT - test_mean) / (2 * sd(Item.VOT, na.rm = TRUE))) %>%
+    droplevels()
+  
+  contrasts(d$Condition.Exposure) <- cbind("_Shift10 vs. Shift0" = c(-2/3, 1/3, 1/3),
+                                           "_Shift40 vs. Shift10" = c(-1/3,-1/3, 2/3))
+  if (all(d$Phase == "test") & n_distinct(d$Block) > 1 & contrast_type == "difference") {
+    contrasts(d$Block) <- MASS::fractions(MASS::contr.sdif(6))
+    dimnames(contrasts(d$Block))[[2]] <- c("_Test2 vs. Test1", "_Test3 vs. Test2", "_Test4 vs. Test3", "_Test5 vs. Test4", "_Test6 vs. Test5")
+    
+    message("Condition contrast is:", contrasts(d$Condition.Exposure))
+    message("Block contrast is:", contrasts(d$Block))
+  } else if (all(d$Phase == "test") & n_distinct(d$Block) > 1 & contrast_type == "helmert"){
+    contrasts(d$Block) <- cbind("_Test2 vs. Test1" = c(-1/2, 1/2, 0, 0, 0, 0),
+                                "_Test3 vs. Test2_1" = c(-1/3, -1/3, 2/3, 0, 0, 0),
+                                "Test4 vs. Test3_2_1" = c(-1/4, -1/4, -1/4, 3/4, 0, 0),
+                                "_Test5 vs. Test4_3_2_1" = c(-1/5, -1/5, -1/5, -1/5, 4/5, 0),
+                                "_Test6 vs. Test5_4_3_2_1" = c(-1/6, -1/6, -1/6, -1/6, -1/6, 5/6))
+    message(contrasts(d$Condition.Exposure))
+    message(contrasts(d$Block))
+  } else if (all(d$Phase == "exposure") & n_distinct(d$Block) > 1 & contrast_type == "difference"){
+    contrasts(d$Block) <- cbind("_Exposure2 vs. Exposure1" = c(-2/3, 1/3, 1/3),
+                                "_Exposure3 vs. Exposure2" = c(-1/3,-1/3, 2/3))
+    message("Condition contrast is:", MASS::fractions(contrasts(d$Condition.Exposure)))
+    message("Block contrast is:", MASS::fractions(contrasts(d$Block)))
+  } else if (n_distinct(d$Block) > 1 & contrast_type == "difference"){
+    contrasts(d$Block) <- MASS::fractions(MASS::contr.sdif(9))
+    dimnames(contrasts(d$Block))[[2]] <- c("_Exp1 vs. Test1", "_Test2 vs. Exp1", "_Exp2 vs. Test2", "_Test3 vs. Exp2", "_Exp3 vs. Test3", "_Test4 vs. Exp3", "_Test5 vs. Test4", "_Test6 vs. Test5")
+    message("Condition contrast is:", MASS::fractions(contrasts(d$Condition.Exposure)))
+    message("Block contrast is:", MASS::fractions(contrasts(d$Block)))
+  } else {
+    message(contrasts(d$Condition.Exposure))
+  }
+  return(d)
+}
+
+
+
+
+# Fit Bayesian model in standard and nested slope formulations--------------------------------------------------- 
+# priorSD argument refers to the SD for the VOT estimate
+fit_model <- function(data, phase, formulation = "standard", priorSD = 2.5, adapt_delta = .99) {
+  require(tidyverse)
+  require(magrittr)
+  require(brms)
+  
+  VOT.mean_test <-
+    data %>%
+    filter(Phase == "test") %>%
+    ungroup() %>%
+    summarise(mean = mean(Item.VOT, na.rm = T)) %>%
+    pull(mean)
+  levels_Condition.Exposure <- c("Shift0", "Shift10", "Shift40")
+  contrast_type <- "difference"
+  chains = 4
+  
+  data %<>%
+    filter(Phase == phase & Item.Labeled == F) %>%
+    prepVars(test_mean = VOT.mean_test, levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type)
+  
+  prior_overwrite <- if (phase == "exposure" & formulation == "nested_slope") {
+    c(set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x2:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x4:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x6:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x2:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x4:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x6:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x2:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x4:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x6:VOT_gs", dpar = "mu2"))
+  } else if (phase == "test" & formulation == "nested_slope") {
+    c(set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x3:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x5:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x8:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x9:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x3:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x5:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x8:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x9:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x3:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x5:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x8:VOT_gs", dpar = "mu2"),
+      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x9:VOT_gs", dpar = "mu2"))
+  } else {
+    c(set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "VOT_gs", dpar = "mu2"))
+  }
+  
+  my_priors <-
+    c(
+      prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),
+      prior_overwrite,
+      prior(cauchy(0, 2.5), class = "sd", dpar = "mu2"),
+      prior(lkj(1), class = "cor"))
+  
+  brm(
+    formula = if (formulation == "nested_slope") {
+      bf(Response.Voiceless ~ 1,
+         mu1 ~ 0 + offset(0),
+         mu2 ~ 0 + I(paste(Condition.Exposure, Block, sep = "x")) / VOT_gs +
+           (0 + Block / VOT_gs | ParticipantID) +
+           (0 + I(paste(Condition.Exposure, Block, sep = "x")) / VOT_gs | Item.MinimalPair),
+         theta1 ~ 1)
+    } else {
+      bf(Response.Voiceless ~ 1,
+         mu1 ~ 0 + offset(0),
+         mu2 ~ 1 + VOT_gs * Condition.Exposure * Block + (1 + VOT_gs * Block | ParticipantID) + (1 + VOT_gs * Condition.Exposure * Block | Item.MinimalPair),
+         theta1 ~ 1)},
+    data = data,
+    prior = my_priors,
+    cores = 4,
+    chains = chains,
+    init = 0,
+    iter = 4000,
+    warmup = 2000,
+    family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
+    control = list(adapt_delta = adapt_delta),
+    file = paste0("../models/", phase, "-", formulation, "-priorSD", priorSD, "-", adapt_delta, ".rds")
+  )
+}
+
 
 # Get info from psychometric model -----------------------------------------------------------
 
@@ -170,12 +333,6 @@ get_intercepts_and_slopes <-
   mutate(Block = ifelse(str_detect(Block, "VOT"), str_replace(Block, "(\\d{1}):VOT_gs", "\\1"), Block)) %>%
   pivot_wider(names_from = term, values_from = ".value") %>%
   relocate(c(Condition.Exposure, Block, Intercept, slope, .chain, .iteration, .draw))
-
-# function to get PSE from a model already in tibble format
-get_PSE <- function(model, y) {
-  y <- model %>% pull(y)
-  as.numeric(model[which(abs(y - .5) == min(abs(y - .5))), 1])
-}
 
 get_conditional_effects <- function(model, data, phase) {
   conditional_effects(
@@ -221,7 +378,22 @@ print_CI <- function(model, term) {
          paste0(round(plogis(as.numeric(summary(model)$fixed[term, 3:4])) * 100, 1), collapse = " to "), "%")
 }
 
-# plotting the Bayesian psychometric fit
+# pipes and functions for plotting the Bayesian psychometric fit
+relabel_blocks <-
+  . %>% mutate(
+    Block.plot_label = factor(case_when(
+      Block == 1 ~ "Test 1",
+      Block == 3 ~ "Test 2",
+      Block == 5 ~ "Test 3",
+      Block == 7 ~ "Test 4",
+      Block == 8 ~ "Test 5",
+      Block == 9 ~ "Test 6",
+      Block == 2 ~ "Exposure 1",
+      Block == 4 ~ "Exposure 2",
+      Block == 6 ~ "Exposure 3")),  
+    Block.plot_label = fct_relevel(Block.plot_label, c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3",  "Test 4", "Test 5", "Test 6")))
+
+
 geom_linefit <- function(data, x, y, fill, legend.position, legend.justification = NULL) {
   list(
     geom_ribbon(aes(x = {{ x }}, y = {{ y }}, group = Condition.Exposure,
@@ -434,7 +606,6 @@ make_VOT_IOs_from_exposure <- function(data, Sigma_noise = matrix(80, dimnames =
 # were they analyzed the same way the human data is analyzed.
 get_logistic_parameters_from_model <- function(
     model,
-    x,
     model_col = "model",
     groups = NULL,
     resolution = 10^12
@@ -445,25 +616,7 @@ get_logistic_parameters_from_model <- function(
         if (any(map(model[[model_col]], is.NIW_ideal_adaptor) %>% unlist()))
           get_categorization_from_NIW_ideal_adaptor else stop("Model type not recognized.")
 
-  if ("prior" %in% model$Condition.Exposure) {
-    x <-
-      bind_rows(
-        x,
-        x %>%
-          # Intentionally do not distinct tokens x here, since we want to capture
-          # the predictions of the model for the entire distribution of x, which
-          # might be non-uniform (for exposure). For the "prior" model, this means
-          # that we are capturing what this model would do if exposed to *all* the
-          # tokens from all three exposure conditions.
-          mutate(Condition.Exposure = "prior"))
-  }
-
   model %>%
-    # Join test tokens for each exposure condition
-    left_join(x, by = "Condition.Exposure") %>%
-    mutate(x = map(x, ~ c(.x))) %>%
-    nest(x = x) %>%
-    # Get categorization proportions (turned into counts below)
     mutate(
       categorization =
         map2(x, !! sym(model_col),
@@ -495,7 +648,7 @@ get_logistic_parameters_from_model <- function(
       PSE = -intercept_unscaled/slope_unscaled)
 }
 
-############################################################################
+
 # Get approximate f0 of synthesised stimuli from VOT values
 ############################################################################
 # Get the linear prediction parameters for exposure stimuli based on f0 measurements aligned with Chodroff-Wilson
@@ -506,9 +659,8 @@ predict_f0 <- function(VOT, intercept = 245.46968, slope = 0.03827, Mel = FALSE)
   return(f0)
 }
 
-############################################################################
-#  function to optimise minimal difference in likelihoods of 2 categories  #
-############################################################################
+
+# Make IOs of each talker in a database and plot their categorization functions---------------------------------------------------  
 get_diff_in_likelihood_from_io <- function(x, io, add_f0 = F, io.type = NULL) {
   # Since we want to only consider cases that have F0 values that are in a certain linear relation to VOT
   # (the way we created our stimuli), we set the F0 based on the VOT.
@@ -551,20 +703,8 @@ get_PSE_from_io <- function(io, io.type = NULL) {
   return(o$par)
 }
 
-############################################################################
-# This can be used to implement different hypotheses about speech perception. There are quite a few choices for the researcher as to what specific hypothesis you want to test:
-#
-# 1) currently uses VOT and f0, but could just use VOT (if you use f0, make sure to choose the relation between f0 and VOT in the arguments)
-#
-# 2) what knowledge do listeners have?
-# grouping by talker makes talker-specific IOs
-# grouping by (only) gender makes gender-specific IOs over all data from that gender
-# grouping by talker and gender and then aggregating down to gender (not yet implemented, but would just require adding aggregate_models_by_group_structure()) give 'typical' (average) gender-specific IOs
-#
-# 3) were listeners' IOs based on centered or uncentered cues?
-#
-# 4) do listeners center during experiment? one can plot this relative to the center of the cues in the experiment or not
-############################################################################
+
+
 get_IO_categorization <- function(
     data = d.chodroff_wilson,
     cues,
@@ -633,6 +773,23 @@ get_IO_categorization <- function(
                               alpha = alpha,
                               linewidth = linewidth)))
 }
+
+
+# Make non-parametric density plot ---------------------------------------------------
+# ensuring that the corresponding proportion of points are included within each contour region as defined by their quantile
+# adjusted from https://stackoverflow.com/questions/75598144/interpretation-of-2d-density-estimate-charts
+# we can get the 2d density with MASS::kde2d, then convert to a raster using terra. We can then order the points according to the density in the associated 2d density grid and find the density at which a quantile is passed with approx
+density_quantiles <- function(x, y, quantiles) {
+  dens <- MASS::kde2d(x, y, n = 500)
+  df   <- cbind(expand.grid(x = dens$x, y = dens$y), z = c(dens$z))
+  r    <- terra::rast(df)
+  ind  <- sapply(seq_along(x), function(i) terra::cellFromXY(r, cbind(x[i], y[i])))
+  ind  <- ind[order(-r[ind][[1]])]
+  vals <- r[ind][[1]]
+  ret  <- approx(seq_along(ind)/length(ind), vals, xout = quantiles)$y
+  replace(ret, is.na(ret), max(r[]))
+}
+
 
 
 # Evaluation of IOs --------------------------------------------------------
@@ -880,161 +1037,39 @@ get_likelihood_from_updated_bias <- function(
   return(ll)
 }
 
-
-############################################################################
-# function to prepare variables for modelling
-############################################################################
-prepVars <- function(d, test_mean = NULL, levels.Condition = NULL, contrast_type) {
-  d %<>%
-    drop_na(Condition.Exposure, Phase, Block, Item.MinimalPair, ParticipantID, Item.VOT, Response)
-
-  message("VOT mean:", signif(mean(d$Item.VOT, na.rm = T)))
-  message("VOT sd:", signif(sd(d$Item.VOT, na.rm = T)))
-  message(paste("VOT test mean:", test_mean))
-
-  d %<>%
-    ungroup() %>%
-    mutate(
-      Block_n = as.numeric(as.character(Block)),
-      across(c(Condition.Exposure, Block, Item.MinimalPair), factor),
-
-      Condition.Exposure = factor(Condition.Exposure, levels = levels.Condition)) %>%
-
-    drop_na(Block, Response, Item.VOT) %>%
-    mutate(VOT_gs = (Item.VOT - test_mean) / (2 * sd(Item.VOT, na.rm = TRUE))) %>%
-    droplevels()
-
-  contrasts(d$Condition.Exposure) <- cbind("_Shift10 vs. Shift0" = c(-2/3, 1/3, 1/3),
-                                          "_Shift40 vs. Shift10" = c(-1/3,-1/3, 2/3))
-  if (all(d$Phase == "test") & n_distinct(d$Block) > 1 & contrast_type == "difference") {
-    contrasts(d$Block) <- MASS::fractions(MASS::contr.sdif(6))
-    dimnames(contrasts(d$Block))[[2]] <- c("_Test2 vs. Test1", "_Test3 vs. Test2", "_Test4 vs. Test3", "_Test5 vs. Test4", "_Test6 vs. Test5")
-
-    message("Condition contrast is:", contrasts(d$Condition.Exposure))
-    message("Block contrast is:", contrasts(d$Block))
-  } else if (all(d$Phase == "test") & n_distinct(d$Block) > 1 & contrast_type == "helmert"){
-    contrasts(d$Block) <- cbind("_Test2 vs. Test1" = c(-1/2, 1/2, 0, 0, 0, 0),
-                                "_Test3 vs. Test2_1" = c(-1/3, -1/3, 2/3, 0, 0, 0),
-                                "Test4 vs. Test3_2_1" = c(-1/4, -1/4, -1/4, 3/4, 0, 0),
-                                "_Test5 vs. Test4_3_2_1" = c(-1/5, -1/5, -1/5, -1/5, 4/5, 0),
-                                "_Test6 vs. Test5_4_3_2_1" = c(-1/6, -1/6, -1/6, -1/6, -1/6, 5/6))
-    message(contrasts(d$Condition.Exposure))
-    message(contrasts(d$Block))
-  } else if (all(d$Phase == "exposure") & n_distinct(d$Block) > 1 & contrast_type == "difference"){
-    contrasts(d$Block) <- cbind("_Exposure2 vs. Exposure1" = c(-2/3, 1/3, 1/3),
-                                "_Exposure3 vs. Exposure2" = c(-1/3,-1/3, 2/3))
-    message("Condition contrast is:", MASS::fractions(contrasts(d$Condition.Exposure)))
-    message("Block contrast is:", MASS::fractions(contrasts(d$Block)))
-  } else if (n_distinct(d$Block) > 1 & contrast_type == "difference"){
-    contrasts(d$Block) <- MASS::fractions(MASS::contr.sdif(9))
-    dimnames(contrasts(d$Block))[[2]] <- c("_Exp1 vs. Test1", "_Test2 vs. Exp1", "_Exp2 vs. Test2", "_Test3 vs. Exp2", "_Exp3 vs. Test3", "_Test4 vs. Exp3", "_Test5 vs. Test4", "_Test6 vs. Test5")
-    message("Condition contrast is:", MASS::fractions(contrasts(d$Condition.Exposure)))
-    message("Block contrast is:", MASS::fractions(contrasts(d$Block)))
-  } else {
-    message(contrasts(d$Condition.Exposure))
+# Make trivariate normal distribution ---------------------------------------------------
+# Function takes as arguments the mean and covariance matrix of a trivariate normal distribution over (in this order)
+# VOT, f0_Mel, and vowel_duration, as well as values for f0_Mel and vowel_duration. The function then returns a 
+# *function* that represents the conditional normal distribution over VOT at that combination of f0_Mel and 
+# vowel_duration values. This function takes VOT as input and returns a density value. 
+#
+# This function was drafted with the help of Google's Bard: https://bard.google.com/chat/32a2428ef7e806bb
+conditional_univariate_normal_from_trivariate_normal <- function(mu, Sigma, f0_Mel, vowel_duration) {
+  # Calculate the conditional mean and conditional standard deviation of x given y = f0_Mel and z = vowel_duration
+  mu_x <- mu[1] + Sigma[1, 2] / Sigma[2, 2] * (f0_Mel - mu[2]) + Sigma[1, 3] / Sigma[3, 3] * (vowel_duration - mu[3])
+  sigma_x <- sqrt(Sigma[1, 1] - Sigma[1, 2] / Sigma[2, 2] * Sigma[2, 1] - Sigma[1, 3] / Sigma[3, 3] * Sigma[3, 1])
+  
+  # Define the function for the conditional univariate normal distribution over x given f0_Mel and vowel_duration
+  f <- function(x) {
+    1 / (sqrt(2 * pi) * sigma_x) * exp(-0.5 * ((x - mu_x) / sigma_x)^2)
   }
-  return(d)
+  
+  return(f)
 }
 
-### function for non-parametric density plot
-# ensuring that the corresponding proportion of points are included within each contour region as defined by their quantile
-# adjusted from https://stackoverflow.com/questions/75598144/interpretation-of-2d-density-estimate-charts
-# we can get the 2d density with MASS::kde2d, then convert to a raster using terra. We can then order the points according to the density in the associated 2d density grid and find the density at which a quantile is passed with approx
-density_quantiles <- function(x, y, quantiles) {
-  dens <- MASS::kde2d(x, y, n = 500)
-  df   <- cbind(expand.grid(x = dens$x, y = dens$y), z = c(dens$z))
-  r    <- terra::rast(df)
-  ind  <- sapply(seq_along(x), function(i) terra::cellFromXY(r, cbind(x[i], y[i])))
-  ind  <- ind[order(-r[ind][[1]])]
-  vals <- r[ind][[1]]
-  ret  <- approx(seq_along(ind)/length(ind), vals, xout = quantiles)$y
-  replace(ret, is.na(ret), max(r[]))
-}
-
-
-
-### function to fit Bayesian model; priorSD argument refers to the SD for the VOT estimate
-fit_model <- function(data, phase, formulation = "standard", priorSD = 2.5, adapt_delta = .99) {
-  require(tidyverse)
-  require(magrittr)
-  require(brms)
-
-  VOT.mean_test <-
-    data %>%
-    filter(Phase == "test") %>%
-    ungroup() %>%
-    summarise(mean = mean(Item.VOT, na.rm = T)) %>%
-    pull(mean)
-  levels_Condition.Exposure <- c("Shift0", "Shift10", "Shift40")
-  contrast_type <- "difference"
-  chains = 4
-
-  data %<>%
-    filter(Phase == phase & Item.Labeled == F) %>%
-    prepVars(test_mean = VOT.mean_test, levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type)
-
-  prior_overwrite <- if (phase == "exposure" & formulation == "nested_slope") {
-    c(set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x2:VOT_gs", dpar = "mu2"),
-      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x4:VOT_gs", dpar = "mu2"),
-      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x6:VOT_gs", dpar = "mu2"),
-      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x2:VOT_gs", dpar = "mu2"),
-      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x4:VOT_gs", dpar = "mu2"),
-      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x6:VOT_gs", dpar = "mu2"),
-      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x2:VOT_gs", dpar = "mu2"),
-      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x4:VOT_gs", dpar = "mu2"),
-      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x6:VOT_gs", dpar = "mu2"))
-  } else if (phase == "test" & formulation == "nested_slope") {
-    c(set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs", dpar = "mu2"),
-      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x3:VOT_gs", dpar = "mu2"),
-      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x5:VOT_gs", dpar = "mu2"),
-      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs", dpar = "mu2"),
-      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x8:VOT_gs", dpar = "mu2"),
-      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x9:VOT_gs", dpar = "mu2"),
-      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs", dpar = "mu2"),
-      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x3:VOT_gs", dpar = "mu2"),
-      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x5:VOT_gs", dpar = "mu2"),
-      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs", dpar = "mu2"),
-      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x8:VOT_gs", dpar = "mu2"),
-      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift10x9:VOT_gs", dpar = "mu2"),
-      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs", dpar = "mu2"),
-      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x3:VOT_gs", dpar = "mu2"),
-      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x5:VOT_gs", dpar = "mu2"),
-      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs", dpar = "mu2"),
-      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x8:VOT_gs", dpar = "mu2"),
-      set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x9:VOT_gs", dpar = "mu2"))
-  } else {
-    c(set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "VOT_gs", dpar = "mu2"))
+# This functions takes as arguments the means and covariance matrices of two trivariate normal distributions, 
+# as well as values for f0_Mel and vowel_duration. The function then returns a *function* that represents the 
+# posterior of the category corresponding to the second trivariate normal distribution.  This function takes 
+# VOT as input and returns a posterior probability.
+conditional_univariate_posterior_t <- function(mu_d, Sigma_d, mu_t, Sigma_t, f0_Mel, vowel_duration) {
+  density_t <- conditional_univariate_normal_from_trivariate_normal(mu_t, Sigma_t, f0_Mel, vowel_duration)
+  density_d <- conditional_univariate_normal_from_trivariate_normal(mu_d, Sigma_d, f0_Mel, vowel_duration)
+  
+  f <- function(x) {
+    density_t(x) / (density_t(x) + density_d(x))
   }
-
-  my_priors <-
-    c(
-      prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),
-      prior_overwrite,
-      prior(cauchy(0, 2.5), class = "sd", dpar = "mu2"),
-      prior(lkj(1), class = "cor"))
-
-  brm(
-    formula = if (formulation == "nested_slope") {
-      bf(Response.Voiceless ~ 1,
-         mu1 ~ 0 + offset(0),
-         mu2 ~ 0 + I(paste(Condition.Exposure, Block, sep = "x")) / VOT_gs +
-           (0 + Block / VOT_gs | ParticipantID) +
-           (0 + I(paste(Condition.Exposure, Block, sep = "x")) / VOT_gs | Item.MinimalPair),
-         theta1 ~ 1)
-    } else {
-      bf(Response.Voiceless ~ 1,
-         mu1 ~ 0 + offset(0),
-         mu2 ~ 1 + VOT_gs * Condition.Exposure * Block + (1 + VOT_gs * Block | ParticipantID) + (1 + VOT_gs * Condition.Exposure * Block | Item.MinimalPair),
-         theta1 ~ 1)},
-    data = data,
-    prior = my_priors,
-    cores = 4,
-    chains = chains,
-    init = 0,
-    iter = 4000,
-    warmup = 2000,
-    family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
-    control = list(adapt_delta = adapt_delta),
-    file = paste0("../models/", phase, "-", formulation, "-priorSD", priorSD, "-", adapt_delta, ".rds")
-  )
 }
+
+
+
+

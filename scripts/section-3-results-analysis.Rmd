@@ -1,12 +1,7 @@
 ```{r, include=FALSE, message=FALSE}
 if (!exists("PREAMBLE_LOADED")) source("preamble.R")
-```
 
-# Results
-
-```{r model-fit-test-blocks, include=FALSE}
-# Storing some information about the data set submitted for analysis
-# (to facilitate unscaling predictions back into the original scales for plotting)
+# Store parameters for model fitting
 d.mean_sd_scaling <-
   d.for_analysis %>%
   group_by(Phase) %>%
@@ -21,8 +16,12 @@ rm(d.mean_sd_scaling)
 
 levels_Condition.Exposure = c("Shift0", "Shift10", "Shift40")
 contrast_type <- "difference"
+```
 
-# Fit exposure and test psychometric mixed-effects models
+# Results
+
+```{r model-fit-test-blocks, include=FALSE}
+
 fit_test <-
   fit_model(
     data = d.for_analysis,
@@ -87,7 +86,8 @@ d.estimates <-
   summarise(
     across(
       c(Intercept, slope, slope_unscaled, PSE),
-      list(lower = ~ quantile(.x, probs = .025), median = median, upper = ~ quantile(.x, probs = .975)))) 
+      list(lower = ~ quantile(.x, probs = .025), median = median, upper = ~ quantile(.x, probs = .975)))) %>% 
+  relabel_blocks()
 ```
 
 ```{r}
@@ -113,68 +113,46 @@ io <-
       # who has fully learned the exposure distributions.
       slice_sample(n = 1) %>% 
       unnest(data) %>% 
-      mutate(category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))) %>%
+      mutate(category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))) %>% 
+      # only VOT is used for categorising stimuli
+  left_join(d.for_analysis %>%  
+        filter(Phase == "test") %>%
+        distinct(Condition.Exposure, Item.VOT) %>% 
+  rename(x = Item.VOT) %>% 
+    nest(x = x)) %>% 
   # Add prior based on Chodroff & Wilson (2018). Note that this database has substantially higher 
   # VOT variance than our exposure conditions, which we based on estimates from Kronrod et al. 
-  # (2016).
+  # (2016). Uses all three cues; duration and spectral noise taken from Kronrod et al.
   bind_rows(
     d.chodroff_wilson.isolated %>%
       make_MVG_ideal_observer_from_data(
-        cues = c("VOT"),
-        Sigma_noise = matrix(80, dimnames = list("VOT", "VOT"))) %>%
-      mutate(Condition.Exposure = "prior") %>%
-      nest(io = -c(Condition.Exposure)))
+        cues = c("VOT", "f0_Mel", "vowel_duration"),
+        Sigma_noise = matrix(c(80, 0, 0, 0, 878, 0, 0, 0, 80), nrow = 3, dimnames = list(c("VOT", "f0_Mel", "vowel_duration"), c("VOT", "f0_Mel", "vowel_duration")))) %>%
+      mutate(Condition.Exposure = "prior") %>% 
+      # join in the test stimuli. All 3 cues are used here because we assume listeners' prior experience would take into account all cues
+      left_join(d.for_analysis %>%  
+        filter(Phase == "test") %>%
+        distinct(Condition.Exposure, Item.VOT, Item.f0_Mel, Item.vowel_duration) %>% 
+        mutate(x = pmap(.l = list(Item.VOT, Item.f0_Mel, Item.vowel_duration), ~ c(..1, ..2, ..3))) %>% 
+  select(Condition.Exposure, x) %>% 
+  mutate(Condition.Exposure = "prior") %>% 
+  nest(x = x)) %>% 
+    nest(io = -c(Condition.Exposure, x)))  
 
-# Alternative model for prior that uses all three cues
-    # d.chodroff_wilson.isolated %>%
-    #   make_MVG_ideal_observer_from_data(
-    #     cues = c("VOT", "f0_Mel", "vowel_duration"),
-    #     Sigma_noise = matrix(c(80, 0, 0, 0, ENTER_MEL_NOISE, 0, 0, 0, 80), nrow = 3, dimnames = list(c("VOT", "f0_Mel", "vowel_duration"), c("VOT", "f0_Mel", "vowel_duration")))) %>%
-    #   mutate(Condition.Exposure = "prior") %>%
-    #   nest(io = -c(Condition.Exposure))
-
-
-# Get logistic parameter estimates for a simulated ideal observer listener. Do so for both 
-# exposure and test. Even though this turned out to be overkill, we did it because it was 
-# theoretically possible that the procedure we use to analyze *listeners'* responses (a 
-# logistic model with a linear effect of VOT) introduces a bias into the estimation. Here, 
-# we thus apply a variant of that same analysis approach to responses that are sampled from
-# the three ideal observer fit on the exposure data (one each per exposure condition).
-# 
+# Get logistic parameter estimates for a simulated ideal observer listener. 
 # Unlike for the analysis of participants' responses, there is no need to use a psychometric
 # model since ideal observers have not attentional lapses (i.e., lambda = 0). 
 d.io.categorization <- 
-  rbind(
     # Assess the ideal observers at the exact same locations used during test blocks
     get_logistic_parameters_from_model(
       model = io, 
-      x = d.for_analysis %>%  
-        filter(Phase == "test") %>%
-        distinct(Condition.Exposure, Item.VOT) %>%
-        rename(x = Item.VOT), 
       model_col = "io", 
       groups = "Condition.Exposure") %>% 
-      mutate(Phase = "test") %>% 
-      crossing(Block = c(1, 3, 5, 7, 8, 9)), 
-    # Assess the ideal observers on the VOT locations that occur in the three different 
-    # exposure conditions. Only use unlabeled exposure trials, since those are the trials
-    # we assess participants' behavior on.
-    get_logistic_parameters_from_model(
-      io, 
-      d.for_analysis %>%  
-        filter(Phase == "exposure", Item.Labeled == F) %>%
-        group_by(Condition.Exposure) %>%
-        # Since blocks differ in which VOTs are unlabeled, we include all blocks
-        # (we are simulating the expected parameters across all exposure blocks)
-        filter(ParticipantID == first(ParticipantID)) %>% 
-        select(Item.VOT) %>% 
-        rename(x = Item.VOT), 
-      model_col = "io", 
-      groups = "Condition.Exposure") %>% 
-      mutate(Phase = "exposure") %>% 
-      crossing(Block = c(2, 4, 6))) %>%
+      crossing(Block = c(1:9)) %>%
+  mutate(Phase = ifelse(Block %in% c(2, 4, 6), "exposure", "test")) %>% 
   select(Condition.Exposure, Phase, Block, intercept_unscaled, slope_unscaled, intercept_scaled, slope_scaled, PSE) %>% 
-  mutate(across(c(Phase, Condition.Exposure, Block), factor)) 
+  relabel_blocks() %>% 
+  mutate(across(c(Phase, Condition.Exposure, Block, Block.plot_label), factor)) 
 ```
 
 ```{r prepare-plot-intercepts-slopes}
@@ -182,7 +160,7 @@ p.across_blocks <-
   d.estimates %>% 
   ggplot(
     aes(
-      x = Block, y = Intercept_median,
+      x = Block.plot_label, y = Intercept_median,
       ymin = Intercept_lower, ymax = Intercept_upper,
       colour = Condition.Exposure, group = Condition.Exposure)) +
   geom_rect(
@@ -194,7 +172,7 @@ p.across_blocks <-
   geom_point(position = position_dodge(.3), size = 1) +
   geom_linerange(linewidth = .6, position = position_dodge(.3), alpha = .5) +
   stat_summary(geom = "line", position = position_dodge(.3)) +
-  scale_x_discrete("Block", labels = c("1" = "Test 1", "2" = "Exposure 1", "3" = "Test 2", "4" = "Exposure 2", "5" = "Test 3", "6" = "Exposure 3", "7" = "Test 4", "8" = "Test 5", "9" = "Test 6")) +
+  scale_x_discrete("Block") +
   scale_colour_manual("Condition",
     labels = c("baseline", "+10ms", "+40ms", "prior"),
     values = c(colours.condition, "darkgray"),
@@ -204,11 +182,11 @@ p.across_blocks <-
 
 p.intercept_1to7 <-
   p.across_blocks +  
-  geom_step(
+  geom_hline(
     data = d.io.categorization,
     # Using scaled intercept (which is keeping the location at which the intercept is evaluated constant 
     # across exposure and test: it's always the mean VOT of test)
-    aes(x = Block, y = intercept_scaled, colour = Condition.Exposure, group = Condition.Exposure),
+    aes(yintercept = intercept_scaled, colour = Condition.Exposure, group = Condition.Exposure),
     linetype = 2, 
     linewidth = .7, 
     alpha = 0.3,
@@ -229,13 +207,12 @@ p.slope_1to7 <-
   # (remove _unscaled to switch to slopes over Gelman-scaled VOT)
   aes(y = slope_unscaled_median, ymin = slope_unscaled_lower, ymax = slope_unscaled_upper) +
   # These are the slopes of the ideal observers
-  geom_step(
+  geom_line(
     data = d.io.categorization,
     # Using UNscaled slope because slopes are comparable across scales anyway and this is more intuitive
     # (substitute _unscaled to _scaled to switch to slopes over Gelman-scaled VOT)
-    aes(x = Block, y = slope_unscaled, color = Condition.Exposure, group = Condition.Exposure),
+    aes(x = Block.plot_label, y = slope_unscaled, color = Condition.Exposure, group = Condition.Exposure),
     linetype = 2, linewidth = .9, alpha = 0.5,
-    direction = "mid",
     inherit.aes = F) +
   scale_y_continuous("slope (log-odds/ms VOT)")
 
@@ -254,16 +231,19 @@ d.true_shift <-
         Condition.Exposure == "Shift10" ~ d.estimates$PSE_median[10],
         Condition.Exposure == "Shift40" ~ d.estimates$PSE_median[19]),
     true_shift = PSE.io_predicted - PSE_block1,
-    proportion_shift = (PSE_median - PSE_block1)/true_shift)
+    proportion_shift = (PSE_median - PSE_block1)/true_shift) %>% 
+  relabel_blocks()
 
 # Compute distribution of talker-specific PSEs from Chodroff & Wilson (2018) corpus
 d.talkerPSEs <- 
+  # get each talker's boundary estimate
   get_IO_categorization(
     data = d.chodroff_wilson.isolated,
     cues = c("VOT"),
     groups = c("Talker", "gender"),
     with_noise = TRUE,
     VOTs = seq(0, 85, .5)) %>% 
+  # center talker PSEs to human PSE at block 1 of experiment
   mutate(
     center_constant = mean(d.true_shift$PSE_block1) - mean(PSE),
     PSE_centered = PSE + center_constant) %>% 
@@ -285,12 +265,12 @@ p.PSE_1to7 <-
     label.padding = unit(.18, "lines"),
     size = 2.2,
     show.legend = F) +
-  geom_step(
+  geom_hline(
     data = d.io.categorization,
-    mapping = aes(x = Block, y = PSE, color = Condition.Exposure, group = Condition.Exposure),
+    mapping = aes(yintercept = PSE, color = Condition.Exposure, group = Condition.Exposure),
     linetype = 2, 
     linewidth = .8, 
-    alpha = 0.5, 
+    alpha = 0.4, 
     direction = "mid",
     inherit.aes = F) +
   geom_text(
@@ -333,18 +313,8 @@ cond_fit_test_exposure <-
         mutate(Item.VOT = descale(VOT_gs, VOT.mean_test, VOT.sd_test)))) %>%
   arrange(as.numeric(as.character(Block))) %>%
   mutate(
-    Phase = ifelse(Block %in% c(1, 3, 5, 7, 8, 9), "test", "exposure"),
-    Block.plot_label = factor(case_when(
-      Block == 1 ~ "Test 1",
-      Block == 3 ~ "Test 2",
-      Block == 5 ~ "Test 3",
-      Block == 7 ~ "Test 4",
-      Block == 8 ~ "Test 5",
-      Block == 9 ~ "Test 6",
-      Block == 2 ~ "Exposure 1",
-      Block == 4 ~ "Exposure 2",
-      Block == 6 ~ "Exposure 3")),
-    Block.plot_label = fct_relevel(Block.plot_label, c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3",  "Test 4", "Test 5", "Test 6")))
+    Phase = ifelse(Block %in% c(2, 4, 6), "exposure", "test")) %>% 
+  relabel_blocks()
 
 label_colour <- 
   tibble(
@@ -425,7 +395,7 @@ rm(fit_test_nested, fit_exposure, fit_exposure_nested, cond_fit_test_exposure)
 ## How quickly does exposure affect listeners' categorization responses? (comparing exposure conditions within each block)
 Figure \@ref(fig:plot-fit-slope-PSE)A suggests that differences between exposure conditions emerged early in the experiment: already in Test 2, listeners in the +10 condition have shifted their categorization functions rightwards relative to the baseline condition, and listeners in the +40 condition have shifted their in categorization functions even further rightwards. This is confirmed by Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-effects-condition). Prior to any exposure, during Test 1, participants' responses did not differ across exposure condition. This result is predicted by models of adaptive speech perception under the assumptions that (a) participants in the different groups have similar prior experiences, and that (b) our sample size of is sufficiently large to yield stable estimates of listeners' categorization function.
 
-During Test 2, after exposure to only 24 /d/ and 24 /t/ stimuli (thereof half labeled), participants' categorization responses already differed between exposure conditions (BFs > 13.7). The differences between exposure conditions that emerged at this point were all in the direction predicted by models of adaptive speech perception. Additional analyses reported in the SI (\@ref(sec:exposure-analyses)) found that listeners' categorization functions had already changed *during* the first exposure block, in line with Figure \@ref(fig:plot-fit-slope-PSE)A. This suggests that changes in listeners' categorization responses emerged *quickly* at the earliest point tested---after only a fraction of exposure trials previously tested in similar paradigms. 
+During Test 2, after exposure to only 24 /d/ and 24 /t/ stimuli (thereof half labeled), participants' categorization responses already differed between exposure conditions (BFs > 14). The differences between exposure conditions that emerged at this point were all in the direction predicted by models of adaptive speech perception. Additional analyses reported in the SI (\@ref(sec:exposure-analyses)) found that listeners' categorization functions had already changed *during* the first exposure block, in line with Figure \@ref(fig:plot-fit-slope-PSE)A. This suggests that changes in listeners' categorization responses emerged *quickly* at the earliest point tested---after only a fraction of exposure trials previously tested in similar paradigms. 
 
 The effects of the three exposure conditions continued to persist until Test 4. Table \@ref(tab:hypothesis-table-simple-effects-condition) does, however, indicate an interesting non-monotonic development in the way that listeners' categorization function changed. While the difference between the +40 condition and both the baseline and +0 condition continued to increase numerically with increasing exposure (increasingly larger magnitude of negative estimates in Tests 2-4), the same was not the case for the difference between the +10 and the baseline condition. Instead, the difference between the +10 and baseline condition reduced with increasing exposure (while maintaining its direction). This development turns out to be potentially important in understanding incremental adaptation, and we continue to discuss it below.
 
@@ -510,7 +480,7 @@ rm(fit_test.simple_effects_condition)
 ## Incremental adaptation from prior expectations (comparing block-to-block changes within exposure conditions)
 Next, we compare how exposure affected listeners' categorization responses from block to block *within* each exposure condition. To facilitate visual comparison, Figure \@ref(fig:plot-fit-slope-PSE)C & D summarize these changes for the slope and PSE, respectively. Focusing for now on Tests 1-4, this highlights four aspects of participants' behavior that were not readily apparent in the statistical comparisons we have summarized so far. 
 
-First, Panel C highlights the relative lack of changes in the slope of listeners categorization function. Compared to the changes in PSEs in Panel D, changes in the *slope* of listeners' categorization functions in Panel C were similar across exposure conditions (BFs < XXX; SI, \@ref(sec:SI-slope-tests)). Slopes also changed little relative to listeners' categorization responses in Test 1 (BFs < XXX; see SI, \@ref(sec:SI-slope-tests)). Both of these findings are in line with distributional learning models of adaptive speech perception [@kleinschmidt-jaeger2015], given that the variance of /d/ and /t/ was (a) held constant across all three exposure conditions, and (b) designed to resemble the variance of /d/ and /t/ in typical speech input.<!-- TO DO: THIS NEEDS TO BE TESTED add those tables to SI and CHECK whether they agree with what we've written here. --> Slope changes, or lack thereof, have received comparatively little attention in previous work [but see @clayards2008; @theodore-monto2019] but they are an important part of the empirical facts that theories of speech perception need to account for [see also @kleinschmidt2020]. 
+First, Panel C highlights the relative lack of changes in the slope of listeners categorization function. Compared to the changes in PSEs in Panel D, changes in the *slope* of listeners' categorization functions in Panel C were similar across exposure conditions (BFs < 5; SI, \@ref(sec:SI-slope-tests)). Slopes also changed little relative to listeners' categorization responses in Test 1 (BFs < 2; see SI, \@ref(sec:SI-slope-tests)). Both of these findings are in line with distributional learning models of adaptive speech perception [@kleinschmidt-jaeger2015], given that the variance of /d/ and /t/ was (a) held constant across all three exposure conditions, and (b) designed to resemble the variance of /d/ and /t/ in typical speech input.<!-- TO DO: THIS NEEDS TO BE TESTED add those tables to SI and CHECK whether they agree with what we've written here. --> Slope changes, or lack thereof, have received comparatively little attention in previous work [but see @clayards2008; @theodore-monto2019] but they are an important part of the empirical facts that theories of speech perception need to account for [see also @kleinschmidt2020]. 
 
 ```{r fit-simple-effects-block, results='hide'}
 my_priors <- c(
@@ -611,6 +581,42 @@ Second, while the PSEs for the +40 and +10 conditions were shifted rightwards co
 
 (ref:exposure-means-database-density) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for `r nrow(d.chodroff_wilson)` word-initial /d/ and /t/ productions in L1-US English [based on `r length(unique(d.chodroff_wilson$Talker))` female talkers in @chodroff-wilson2018, for details, see SI \@ref(sec:SI-phonetic-data)]. The outermost contour of each category shows the 95% density quantile. Points show the category means of the exposure condition.
 
+```{r cue-correlation-matrix-plot, fig.width=base.width*4, fig.height=base.height*2.5+1}
+d.chodroff_wilson %>%
+  group_by(speechstyle, category) %>%
+  filter(if_all(c(VOT, f0_Mel, vowel_duration), ~ abs(scale(.x)[,1]) < 3.5)) %>%
+  ggplot(aes(color = category, fill = category)) +
+  geom_autopoint(aes(shape = speechstyle), alpha = .1) +
+  geom_autodensity(aes(linetype = speechstyle), position = "identity", alpha = .5) +
+  stat_ellipse(aes(x = .panel_x, y = .panel_y, linetype = speechstyle)) +
+  geom_autopoint(
+    data = d.for_analysis %>% 
+      filter(Phase == "test") %>% 
+      mutate(category = "test"), 
+    color = "black", alpha = .02, size = 1) +
+  scale_color_manual(
+      "Category",
+      labels = c("/d/", "/t/"),
+      values = colours.category,
+      aesthetics = c("color", "fill")) +
+  guides(colour = "none",
+         linetype = guide_legend(title = "Speech style", override.aes = list(fill = NA)),
+         shape = guide_legend(title = "Speech style", override.aes = list(alpha = 1, size = 2))) +
+  # geom_autopoint(
+  #   data = d.for_analysis %>% 
+  #     select(-c(VOT, f0_Mel, vowel_duration)) %>%
+  #     rename(VOT = VOT.CCuRE, f0_Mel = f0_Mel.CCuRE, vowel_duration = vowel_duration.CCuRE) %>%
+  #     filter(Phase == "test") %>% 
+  #     mutate(category = "test"), 
+  #   color = "gray", alpha = .5, size = 1) +
+  facet_matrix(vars(c(VOT, f0_Mel, vowel_duration)), layer.lower = c(1, 4:5), layer.diag = 2,
+               layer.upper = c(3, 4:5)) +
+  theme(legend.position = "top")
+```
+
+
+
+
 ```{r prepare-quantile-plot}
 # specify quantiles for density plots
 quantile_levels <- c(.05, .25, .5, .75, .95)
@@ -703,7 +709,8 @@ d.test_surprisal <-
   d.for_analysis %>% 
   filter(Phase == "test") %>% 
   distinct(Item.VOT) %>%
-  cross_join(io) %>%
+  cross_join(io) %>% 
+  filter(Condition.Exposure != "prior") %>% 
   # For each test stimulus, calculate the sum of densities of /d/ and /t/ over 
   # that VOT (i.e., the density of the marginal VOT distribution)
   mutate(

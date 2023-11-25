@@ -63,7 +63,7 @@ The critical minimal pair recordings were used to create four VOT continua rangi
 ## Procedure
 At the start of the experiment, participants acknowledged that they met all requirements and provided consent, as per the Research Subjects Review Board of the University of Rochester. Participants had to pass a headphone test [@woods2017], and were instructed to not change the volume throughout the experiment. Following instructions, participants completed 234 two-alternative forced-choice categorization trials. Participants were given the opportunity to take breaks after every 60 trials, which was always during an exposure block. Finally, participants completed an exit survey and an optional demographics survey.
 
-For the two-alternative forced-choice categorization trials, participants were instructed that they would hear a female talker say a single word on each trial, and had to select which word they heard. Participants were asked to listen carefully and "answer as quickly and as accurately as possible". <!-- TO DO: check whether this is a quote --> They were also alerted to the fact that the recordings were subtly different and therefore may sound repetitive. Each trial started with a dark-shaded green fixation dot being displayed. At 500ms from trial onset, two minimal pair words appeared on the screen, as shown in Figure \@ref(fig:example-trial). At 1000ms from trial onset, the fixation dot would turn bright green and participants had to click on the dot to play the recording. This was meant to reduce trial-to-trial correlations by resetting the mouse pointer to the center of the screen at the start of each trial. Participants responded by clicking on the word they heard and the next trial would begin. Unbeknownst to participants, the 234 trials were split into three exposure blocks (54 trials each) and six test blocks (12 trials each, as shown in Figure \@ref(fig:block-design-figure)). 
+For the two-alternative forced-choice categorization trials, participants were instructed that they would hear a female talker say a single word on each trial, and had to select which word they heard. Participants were asked to listen carefully and "answer as quickly and as accurately as possible". They were also alerted to the fact that the recordings were subtly different and therefore may sound repetitive. Each trial started with a dark-shaded green fixation dot being displayed. At 500ms from trial onset, two minimal pair words appeared on the screen, as shown in Figure \@ref(fig:example-trial). At 1000ms from trial onset, the fixation dot would turn bright green and participants had to click on the dot to play the recording. This was meant to reduce trial-to-trial correlations by resetting the mouse pointer to the center of the screen at the start of each trial. Participants responded by clicking on the word they heard and the next trial would begin. Unbeknownst to participants, the 234 trials were split into three exposure blocks (54 trials each) and six test blocks (12 trials each, as shown in Figure \@ref(fig:block-design-figure)). 
 
 ```{r example-trial, fig.cap="Example trial display. When the green button turned bright green, participants had to click on it to play the recording. The placement of response options was counter-balanced across participants.", out.width="33%"}
 knitr::include_graphics("../figures/trial_example.png")
@@ -175,7 +175,7 @@ p.histogram_conditions <-
 p.histogram_conditions
 ```
 
-Half of the /d/ and half of the /t/ trials in each exposure block were labeled, the other half was unlabeled. Earlier distributional learning studies have mostly used fully unlabeled exposure [@bejjanki2011; @clayards2008; @nixon2016]. <!-- TO DO: check --> This contrasts with visually- or lexically-guided perceptual learning studies, which use labeled exposure [@bertelson2003; @norris2003; @kraljic-samuel2005; @vroomen2007]. Such labeling is known to facilitate adaptation [@burchill2018; @burchill2023; but see @kleinschmidt2015]---indeed, if shifted pronunciations are embedded in minimal pair or nonce-word contexts, listeners do not shift their categorization boundary [@norris2003; @REF-theodore?; @babel?]. While lexical contexts often disambiguate sounds in everyday speech, that is not *always* the case: especially, when confronted with unfamiliar accents, listeners often have uncertainty about the word they are hearing, and must either use contextual information to label the input or adapt from unlabeled input. Here, we thus aimed to strike a compromise between always and never labeling the input [following one of the conditions in @kleinschmidt2015].
+Half of the /d/ and half of the /t/ trials in each exposure block were labeled, the other half was unlabeled. Earlier distributional learning studies have mostly used fully unlabeled exposure [@clayards2008; @nixon2016; @theodore-monto2019]. This contrasts with visually- or lexically-guided perceptual learning studies, which use labeled exposure [@bertelson2003; @norris2003; @kraljic-samuel2005; @vroomen2007]. Such labeling is known to facilitate adaptation [@burchill2018; @burchill2023; but see @kleinschmidt2015]---indeed, if shifted pronunciations are embedded in minimal pair or nonce-word contexts, listeners do not shift their categorization boundary [@norris2003]. While lexical contexts often disambiguate sounds in everyday speech, that is not *always* the case: especially, when confronted with unfamiliar accents, listeners often have uncertainty about the word they are hearing, and must either use contextual information to label the input or adapt from unlabeled input. Here, we thus aimed to strike a compromise between always and never labeling the input [following one of the conditions in @kleinschmidt2015].
 
 Unlabeled trials were identical to test trials except that the distribution of VOTs across those trials was bimodal (rather than uniform), and determined by the exposure condition. Labeled trials instead presented two response options with identical stop onsets (e.g., *din* and *dill*). This effectively labeled the input as belonging to the intended category (e.g., /d/).
 
@@ -265,19 +265,8 @@ d.for_analysis <-
     Exclude_participant.due_to_catch_trials == FALSE,
     Exclude_participant.due_to_labeled_trials == FALSE,
     Exclude_participant.due_to_VOT_slope == FALSE) %>% 
-  group_by(Block) %>%
-  mutate(
-    Block.plot_label = factor(case_when(
-      Block == 1 ~ "Test 1",
-      Block == 3 ~ "Test 2",
-      Block == 5 ~ "Test 3",
-      Block == 7 ~ "Test 4",
-      Block == 8 ~ "Test 5",
-      Block == 9 ~ "Test 6",
-      Block == 2 ~ "Exposure 1",
-      Block == 4 ~ "Exposure 2",
-      Block == 6 ~ "Exposure 3")),
-    Block.plot_label = fct_relevel(Block.plot_label, c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3",  "Test 4", "Test 5", "Test 6"))) %>% 
+  group_by(Block) %>% 
+  relabel_blocks() %>% 
   ungroup()
 ```
 
