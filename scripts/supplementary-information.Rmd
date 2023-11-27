@@ -378,27 +378,53 @@ Finally, the model is a multilevel or mixed-effects model since we recognize the
 ```{r DMMM-setup}
 d.chodroff_wilson.for_analysis <-
   d.chodroff_wilson %>%
-    # Remove pitch-halving and extreme vowel duration outlier
-    # (vowel duration is also truncated at > 30ms because of the automatic alignment that
-    # was used by Chodroff and Wilson to get those measures)
-    filter(f0_Mel > 201, vowel_duration < 450) %>%
-    mutate(
-      across(
-        c(VOT, f0_Mel, vowel_duration),
-        ~ (.x - mean(.x)) / (2 * sd(.x))))
+  select(Talker, category, VOT, f0_Mel, vowel_duration) %>%
+  # Remove pitch-halving and extreme vowel duration outlier
+  # (vowel duration is also truncated at > 30ms because of the automatic alignment that
+  # was used by Chodroff and Wilson to get those measures)
+  filter(f0_Mel > 200, vowel_duration < 450)
+
+scale_f0 <- scale(d.chodroff_wilson.for_analysis$f0_Mel)
+scale_vowel_duration <- scale(d.chodroff_wilson.for_analysis$vowel_duration)
+d.chodroff_wilson.for_analysis %<>%
+  mutate(
+    across(
+      c(VOT, f0_Mel, vowel_duration),
+      ~ (.x - mean(.x, na.rm = T)) / (2 * sd(.x, na.rm = T))))
+
+# Recognizing that f0 was censored at lower end
+# Recognizing that vowel duration was censored at lower and upper end
+bounds <- list()
+bounds[["f0_Mel"]] <- range(d.chodroff_wilson.for_analysis$f0_Mel) * 1.0001
+bounds[["vowel_duration"]] <- range(d.chodroff_wilson.for_analysis$vowel_duration) * 1.0001
 
 my.priors.DMMM <-
   c(
-# Uncomment if we'd like to include speechstyle as a predictor, or if we'd like to fit
-# the data from both categories in one model (in which case, we'd need to add category
-# as predictor)
-    prior(student_t(3, 0, 2.5), class = b),
-    prior(student_t(3, 0, 2.5), class = b, resp = VOT),
-    prior(student_t(3, 0, 2.5), class = b, resp = f0Mel),
-    prior(student_t(3, 0, 2.5), class = b, resp = vowelduration),
-    prior(cauchy(0, 2.5), class = sd, resp = VOT),
-    prior(cauchy(0, 2.5), class = sd, resp = f0Mel),
-    prior(cauchy(0, 2.5), class = sd, resp = vowelduration))
+    # Uncomment if we'd like to include speechstyle as a predictor, or if we'd like to fit
+    # the data from both categories in one model (in which case, we'd need to add category
+    # as predictor)
+    #
+    # MU: COEFFICIENTS IN LINEAR PREDICTOR
+    prior(student_t(3, 0, 2.5), class = b, resp = VOT, dpar = mu),
+    prior(student_t(3, 0, 2.5), class = b, resp = f0Mel, dpar = mu),
+    prior(student_t(3, 0, 2.5), class = b, resp = vowelduration, dpar = mu),
+    prior(cauchy(0, 2.5), class = sd, resp = VOT, dpar = mu),
+    prior(cauchy(0, 2.5), class = sd, resp = f0Mel, dpar = mu),
+    prior(cauchy(0, 2.5), class = sd, resp = vowelduration, dpar = mu),
+    # SIGMA: VARIANCE OF RANDOM EFFECTS
+    prior(student_t(3, 0, 2.5), class = b, resp = VOT, dpar = sigma),
+    prior(student_t(3, 0, 2.5), class = b, resp = f0Mel, dpar = sigma),
+    prior(student_t(3, 0, 2.5), class = b, resp = vowelduration, dpar = sigma),
+    prior(cauchy(0, 2.5), class = sd, resp = VOT, dpar = sigma),
+    prior(cauchy(0, 2.5), class = sd, resp = f0Mel, dpar = sigma),
+    prior(cauchy(0, 2.5), class = sd, resp = vowelduration, dpar = sigma),
+    prior(student_t(3, 0, 2.5), class = b, resp = VOT, dpar = alpha),
+    prior(student_t(3, 0, 2.5), class = b, resp = vowelduration, dpar = alpha),
+    # prior(cauchy(0, 2.5), class = sd, resp = VOT, dpar = alpha),
+    # prior(cauchy(0, 2.5), class = sd, resp = vowelduration, dpar = alpha),
+    # COR: CORRELATION OF RANDOM EFFECTS
+    prior(lkj(1), class = cor)
+)
 
 # TO DO: consider using a gaussian after all.
 # formula + set_rescor(rescor = TRUE) is only implemented for gaussian and student models
@@ -408,37 +434,44 @@ my.priors.DMMM <-
 # allows us to do so across categories.
 bf_VOT <-
   bf(VOT ~ 1 + category + (1 + category | p | Talker)) +
-  lf(sigma ~ 1 + category + (1 + category | p | Talker)) +
-  lf(alpha ~ 1 + category + (1 + category | p | Talker)) +
+  lf(sigma ~ 1 + category + (1 + category | q | Talker)) +
+  # lf(alpha ~ 1 + category + (1 + category | o | Talker)) +
+  lf(alpha ~ 1 + category) +
   brmsfamily(
     "skew_normal",
     link = "identity",
     link_sigma = "log",
     link_alpha = "identity")
 
-# Recognizing that f0 was censored at lower end
-# Recognizing that vowel duration was censored at lower and upper end
-bounds <- list()
-bounds[["f0_Mel"]] <- range(d.chodroff_wilson.for_analysis$f0_Mel)
-bounds[["vowel_duration"]] <- range(d.chodroff_wilson.for_analysis$vowel_duration)
-
 bf_f0 <-  
-  bf(paste0("f0_Mel | trunc(lb = ", bounds[["f0_Mel"]][1], ") ~ 1 + category + (1 + category | p | Talker)")) +
-  lf(sigma ~ 1 + category + (1 + category | p | Talker)) +
+  # bf(paste0("f0_Mel | trunc(lb = ", bounds[["f0_Mel"]][1], ") ~ 1 + category + (1 + category | p | Talker)")) +
+  bf(f0_Mel ~ 1 + category + (1 + category | p | Talker)) +
+  lf(sigma ~ 1 + category + (1 + category | q | Talker)) +
   brmsfamily(
     "gaussian",
     link = "identity",
     link_sigma = "log")
 
 bf_vowel_duration <-  
-  bf(paste0("vowel_duration | trunc(lb = ", bounds[["vowel_duration"]][1], ", ub = ", bounds[["vowel_duration"]][2], ") ~ 1 + category + (1 + category | p | Talker)")) +
-  lf(sigma ~ 1 + category + (1 + category | p | Talker)) +
-  lf(alpha ~ 1 + category + (1 + category | p | Talker)) +
+  # bf(paste0("vowel_duration | trunc(lb = ", bounds[["vowel_duration"]][1], ", ub = ", bounds[["vowel_duration"]][2], ") ~ 1 + category + (1 + category | p | Talker)")) +
+ bf(vowel_duration ~ 1 + category + (1 + category | p | Talker)) +
+  lf(sigma ~ 1 + category + (1 + category | q | Talker)) +
+#  lf(alpha ~ 1 + category + (1 + category | o | Talker)) +
+  lf(alpha ~ 1 + category) +
   brmsfamily(
     "skew_normal",
     link = "identity",
     link_sigma = "log",
     link_alpha = "identity")
+
+inits <- 
+  
+  list(
+    b_alpha_VOT_Intercept = 5,
+    b_alpha_VOT_categoryD = 1,
+    b_alpha_vowelduration_Intercept = 5,
+    b_alpha_duration_categoryD = 1,
+  )
 
 # TO DO: consider using *all* talkers here (currently subset to female talkers)
 # (inclusion of male talkers would require taking care of pitch-halving separately
@@ -455,25 +488,150 @@ DMMM <-
   iter = 4000,
   thin = 1,
   threads = threading(threads = 2),
-  backend = "cmdstanr",
-  control = list(adapt_delta = .9, max_treedepth = 15),
-  save_model = "../models/DMMM.stan")
+  control = list(adapt_delta = .85, max_treedepth = 15))
 
-saveRDS(DMMM, file = "../models/DMMM-attempt2.rds")
+save_model = "../models/DMMM.stan"
+saveRDS(DMMM, file = "../models/DMMM-attempt4.rds")
+DMMM <- readRDS(file = "../models/DMMM-attempt3.rds")
 ```
 
 ```{r checking-posterior-predictive}
-pp_check(DMMM, resp = "VOTgs")
-pp_check(DMMM, resp = "f0Melgs")
-pp_check(DMMM, resp = "voweldurationgs")
+pp_check(DMMM, resp = "VOT")
+pp_check(DMMM, resp = "f0Mel")
+pp_check(DMMM, resp = "vowelduration")
 ```
 
 ```{r draw-samples-from-DMMM}
-DMMM %>%
-  spread_draws()  
+# 1. Get estimates of each talker model. This could be a. or b.
+#   a. use mean/median estimates
+#   b. marginalize over all parameters that go into each talker model.
+# 2. Calculate marginal density of test tokens under each (draw of each) talker model. 
+#    This could be done in a number of ways:
+#   a. for each test token, take density under category that maximizes the density
+#   b. for each test token, take average density by weighting density under each 
+#      category proporotional to the density of the observation under that category.
+#   c. ...
+#   
+# OR select model based on stimulus *mean* (mean generated under talker model is most 
+# similar to currently observed mean)  
+#   
+# 3. Calculate categorization function over test tokens conditional on the relative 
+#    probability of the different talker models, by either
+#   a. selecting the talker model that achieved the highest density, or 
+#   b. weighting each talker model relative to the density the test tokens have under 
+#      that model.
+s.DMMM <-
+  DMMM %>%
+  spread_draws(
+    # fixed effects for mu, sigma, and alpha 
+    !!! syms(pmap_chr(
+      expand_grid(
+        parameter = c("b", "b_sigma", "b_alpha"), 
+        cue = c("VOT", "f0Mel", "vowelduration"), 
+        coef = c("Intercept", "categoryD")) %>%
+        # Filter an variables for which alpha was not modeled
+        filter(!(cue == "f0Mel" & parameter == "b_alpha")),
+      ~ paste(..., sep = "_"))),
+    # random effects for mu, sigma, and alpha
+    r_Talker__VOT[TalkerID, coef],
+    r_Talker__f0Mel[TalkerID, coef],
+    r_Talker__vowelduration[TalkerID, coef],
+    r_Talker__sigma_VOT[TalkerID, coef],  
+    r_Talker__sigma_f0Mel[TalkerID, coef],
+    r_Talker__sigma_vowelduration[TalkerID, coef]) %>%
+  # The followoing only applies the indices to the first element to the list of random effect names
+  # { !!! syms(pmap_chr(
+  #   expand_grid(
+  #     parameter = c("r_Talker_", "r_Talker__sigma", "r_Talker__alpha"), 
+  #     cue = c("VOT", "f0Mel", "vowelduration")) %>%
+  #     # Filter an variables for which *random effects* of alpha were not modeled
+  #     filter(!(cue %in% c("VOT", "f0Mel", "vowelduration") & parameter == "r_Talker__alpha")),
+  #   ~ paste(..., sep = "_"))) }[TalkerID, coef] 
+  # Spread the random effects
+  pivot_wider(
+    values_from = starts_with("r_"),
+    names_from = coef) %>%
+  # Add random effects to fixed effects 
+  # (and add 0 if no random effect matching the fixed effect is found)
+  mutate(
+    across(
+      starts_with("b_"),
+      function(x) {
+        r_name <- gsub("^b", "r_Talker_", cur_column())
+        r_value <- if (r_name %in% names(.)) get(r_name) else 0
+        x + r_value 
+      })) %>%
+  select(-starts_with("r_")) %>%
+  # Get the predicted values for all category parameters
+  mutate(
+    across(
+      ends_with("Intercept"),
+      list(
+        "catD" = function(x) {
+          r_name <- gsub("Intercept", "categoryD", cur_column())
+          x + get(r_name) 
+        },
+        "catT" = function(x) {
+          r_name <- gsub("Intercept", "categoryD", cur_column())
+          x - get(r_name) 
+        }),
+      .names = "{.col}_{.fn}")) %>%
+  select(TalkerID, .chain, .draw, ends_with(c("catD", "catT"))) %>%
+  rename_with(~ gsub("Intercept_", "", .x)) %>%
+  rename_with(~ gsub("b_(VOT|f0Mel|vowelduration)", "b_mu_\\1", .x)) 
 
-d.chodroff_wilson.isolated %>% 
-  group_by(Talker, category) %>% tally()
+s.DMMM %>%
+  # Add sampling functions for all three cues
+  mutate(
+    marginal_VOT = 
+      pmap(
+        list(b_mu_VOT_catD, b_sigma_VOT_catD, b_alpha_VOT_catD, b_mu_VOT_catT, b_sigma_VOT_catT, b_alpha_VOT_catT),
+        ~ function(muD, sigmaD, alphaD, muT, sigmaT, alphaT) {
+          dD <- dskew_normal(x, mu = muD, sigma = sigmaD, alpha = alphaD)
+          dT <- dskew_normal(x, mu = muT, sigma = sigmaT, alpha = alphaT)
+          (dD + dT)
+          }),
+    posterior_VOT_T = 
+      pmap(
+        list(b_mu_VOT_catD, b_sigma_VOT_catD, b_alpha_VOT_catD, b_mu_VOT_catT, b_sigma_VOT_catT, b_alpha_VOT_catT),
+        ~ function(muD, sigmaD, alphaD, muT, sigmaT, alphaT) {
+          dD <- dskew_normal(x, mu = muD, sigma = sigmaD, alpha = alphaD)
+          dT <- dskew_normal(x, mu = muT, sigma = sigmaT, alpha = alphaT)
+          dT / (dD + dT)
+          }),
+    marginal_f0Mel = 
+      pmap(
+        list(b_mu_f0Mel_catD, b_sigma_f0Mel_catD, b_mu_f0Mel_catT, b_sigma_f0Mel_catT),
+        ~ function(muD, sigmaD, muT, sigmaT) {
+          dD <- dnorm(x, mu = muD, sigma = sigmaD)
+          dT <- dnorm(x, mu = muT, sigma = sigmaT))
+          (dD + dT)
+          }),
+    posterior_f0Mel_T = 
+      pmap(
+        list(b_mu_f0Mel_catD, b_sigma_f0Mel_catD, b_mu_f0Mel_catT, b_sigma_f0Mel_catT),
+        ~ function(muD, sigmaD, muT, sigmaT) {
+          dD <- dnorm(x, mu = muD, sigma = sigmaD)
+          dT <- dnorm(x, mu = muT, sigma = sigmaT)
+          dT / (dD + dT)
+          }),
+    marginal_vowelduration = 
+      pmap(
+        list(b_mu_vowelduration_catD, b_sigma_vowelduration_catD, b_alpha_vowelduration_catD, b_mu_vowelduration_catT, b_sigma_vowelduration_catT, b_alpha_vowelduration_catT),
+        ~ function(muD, sigmaD, alphaD, muT, sigmaT, alphaT) {
+          dD <- dskew_normal(x, mu = muD, sigma = sigmaD, alpha = alphaD)
+          dT <- dskew_normal(x, mu = muT, sigma = sigmaT, alpha = alphaT)
+          (dD + dT)
+          }),
+    posterior_vowelduration_T = 
+      pmap(
+        list(b_mu_vowelduration_catD, b_sigma_vowelduration_catD, b_alpha_vowelduration_catD, b_mu_vowelduration_catT, b_sigma_vowelduration_catT, b_alpha_vowelduration_catT),
+        ~ function(muD, sigmaD, alphaD, muT, sigmaT, alphaT) {
+          dD <- dskew_normal(x, mu = muD, sigma = sigmaD, alpha = alphaD)
+          dT <- dskew_normal(x, mu = muT, sigma = sigmaT, alpha = alphaT)
+          dT / (dD + dT)
+          })) %>%
+    select(TalkerID, .chain, .draw, ends_with(c("_D", "_T")))
 ```
 
 advantages for regression-based approach fitting categories
