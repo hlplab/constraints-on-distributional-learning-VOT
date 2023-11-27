@@ -471,6 +471,9 @@ pp_check(DMMM, resp = "voweldurationgs")
 ```{r draw-samples-from-DMMM}
 DMMM %>%
   spread_draws()  
+
+d.chodroff_wilson.isolated %>% 
+  group_by(Talker, category) %>% tally()
 ```
 
 advantages for regression-based approach fitting categories
@@ -484,8 +487,9 @@ advantages for regression-based approach fitting categories
 
 
 ### Phonetic database [@chodroff-wilson2017]
-<!-- TO DO: context + database intro + explanation -->
-The database contains 92 talkers (female = XXX, male = XXX; for details, see SI, \@ref(sec:VOT-production)).
+The production data we used in our analysis is a subset of two annotated phonetic databases from @chodroff-wilson2017 (downloadable at https://osf.io/k6djr/). The databases differed in size and the way the productions were elicited; the larger of the two was made up of 180 adult L1-US English talkers (102 female) producing stop-initial words in connected speech  while the smaller was made up of recordings of isolated utterances of stop-initial CVC syllables by 24 L1-US English talkers (13 female) [see @chodroff-wilson2017 pp. 33; 37- 39 for details]. For the connected speech database we filtered the databases to /d/ and /t/ tokens and removed tokens that showed pitch-doubling by running a dip test for bimodality. We also restricted the talkers to those with a minimum of 10 tokens per category. 
+For the isolated database we removed talkers with no data (3 talkers), tokens that were not stop-initial utterances, tokens that had anomalous labeling (e.g. "xxxGOOT" or "POAT0"), and tokens with NA for f0 measurements. We filtered the data to only female talkers and removed tokens with f0s less than 150 Hz (as advised by Eleanor Chodroff, these tokens were likely due to measurement error). 
+For the combined databases we ensured that the talkers we sampled had sufficient amount of data and that the number of tokens from each category were balanced. We then took only the female talkers to match the gender of our test talker. This left us with a total of 5,122 tokens from 40 talkers: 4,324 tokens by 27 female talkers from the connected speech database and 798 tokens by 13 female talkers from the isolated speech database.
 
 ## Idealized learners that have fully learned the exposure distribution
 <!-- TO DO: explain how those were derived -->
