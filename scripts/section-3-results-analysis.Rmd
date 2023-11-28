@@ -141,7 +141,7 @@ io <-
 
 # Get logistic parameter estimates for a simulated ideal observer listener. 
 # Unlike for the analysis of participants' responses, there is no need to use a psychometric
-# model since ideal observers have not attentional lapses (i.e., lambda = 0). 
+# model since ideal observers have no attentional lapses (i.e., lambda = 0). 
 d.io.categorization <- 
     # Assess the ideal observers at the exact same locations used during test blocks
     get_logistic_parameters_from_model(
@@ -575,6 +575,62 @@ make_hyp_table(
 rm(fit_test.simple_effects_block)
 ```
 
+```{r, fig.caption="TEMPORARILY PUTTING SLOPES PLOT HERE", results='asis'}
+hyp_interaction.condition_block_VOT <-
+  hypothesis(
+    fit_test,
+    c(
+      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 > 0",
+      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 > 0",
+      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 > 0",
+      "(mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 + mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3) > 0",
+      
+      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 < 0",
+      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 < 0",
+      "(mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5) < 0",
+      
+      "mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 > 0",
+      "mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 > 0",
+      "mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 > 0",
+      "(mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3) > 0",
+      
+      "mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 < 0",
+      "mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 < 0",
+      "(mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5) < 0",
+      
+      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1 > 0",
+      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 > 0",
+      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 > 0",
+      "(mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test4vs.Test3 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test4vs.Test3 +
+    mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test3vs.Test2 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test3vs.Test2 +
+    mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test2vs.Test1) > 0",
+
+    "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 > 0",
+    "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
+    "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 +
+   mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0"),
+   robust = T) %>%
+  .$hypothesis %>%
+  dplyr::select(-Star)
+
+table.interactions.condition_block_VOT <-
+  make_hyp_table(
+    hyp_interaction.condition_block_VOT,
+    rep(c(
+  # Comparing slope differences in +10 vs. baseline between blocks
+  "Block 1 to 2: increased $\\Delta_{slope}$",
+  "Block 2 to 3: increased $\\Delta_{slope}$",
+  "Block 3 to 4: increased $\\Delta_{slope}$",
+  "{\\em Block 1 to 4: increased $\\Delta_{slope}$}",
+  "Block 4 to 5: decreased $\\Delta_{slope}$",
+  "Block 5 to 6: decreased $\\Delta_{slope}$",
+  "{\\em Block 4 to 6: decreased $\\Delta_{slope}$}"), 3),
+    caption = "Did the slope differences between exposure conditions change from block to block? This table summarizes the interactions between exposure condition and block---specifically, whether the differences in slopes between exposure conditions changed from test block to test block.") %>%
+  pack_rows("Difference in slopes: +10 vs. baseline", 1, 7) %>%
+  pack_rows("Difference in slopes: +40 vs. +10", 8, 14) %>%
+  pack_rows("Difference in slopes: +40 vs. baseline", 15, 21)
+table.interactions.condition_block_VOT
+```
 
 
 Second, while the PSEs for the +40 and +10 conditions were shifted rightwards compared to the baseline condition, both the +10 and the baseline condition seem to shift *left*wards relative to their pre-exposure starting point in Test 1. This is supported by Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-effects-block). The evidence for the leftward shifts is quite weak for the +10 condition (BF = 3.5 for changes from Test 1 to 4), for which the PSE changes comparatively little across tests, but it is stronger for the baseline condition (BF = 7.6). In contrast, the +40 condition is clearly shifted rightwards relative to pre-exposure (BF = 45.2). To understand this pattern, it is helpful to relate the three exposure conditions to the distribution of VOT in listeners' prior experience. Figure \@ref(fig:exposure-means-database-density) shows a matrix plot of joint cue distributions for the three cues that are relevant to distinguishing L1-US English /d/ and /t/ [based on databases of two speech styles in @chodroff-wilson2018] with the category means of our exposure conditions. This comparison offers an explanation as to why the baseline condition (and to some extent the +10 condition) shift leftwards with increasing exposure, whereas the +40 condition shifts rightwards: relative to listeners' prior experience, only the +40 condition presented larger-than-expected category means, whereas the baseline condition and, to some extent, the +10 condition presented lower-than-expected category means. That is, once we take into account how our exposure conditions relate to listeners' prior experience, both the direction of changes from Test 1 to 4 *within* each exposure condition (Table \@ref(tab:hypothesis-table-simple-effects-block)), and the direction of differences *between* exposure conditions receive an explanation (Table \@ref(tab:hypothesis-table-simple-effects-condition)).
