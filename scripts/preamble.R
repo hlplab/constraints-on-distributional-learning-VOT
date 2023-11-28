@@ -65,7 +65,8 @@ r_refs(file = "latex-stuff/r-references.bib")
 # plot formatting
 myGplot.defaults("paper")
 colours.condition <- c("Shift0" = "#cc0000", "Shift10" = "#12D432", "Shift40" = "#0481F3")
-colours.category <- c("/d/" = "#afafaf", "/t/" = "#d2d4dc")
+colours.category_greyscale <- c("/d/" = "#afafaf", "/t/" = "#d2d4dc")
+colours.category <- c("/d/" = "#eb6223", "/t/" = "#522888")
 
 set.seed(42007)
 
