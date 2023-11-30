@@ -10,15 +10,10 @@ Like previous studies in accent adaptation, LGPL, and VGPL we find rapid adaptat
 ### evidence that adaptation is cumulative and incremental
   + To the question of whether adaptation proceeds incrementally as predicted by DL models, the strength of evidence in support of this prediction depends on where the test talker's exposure distributions are placed relative to listeners' starting point. We found stronger evidence of incrementality in the +40 condition compared to the baseline and +10 conditions which were both left-shifted. Specifically incrementality was evident in +40 and +10 but not obvious in the baseline condition. 
     + The pattern of change does correspond to the findings of [@kleinschmidt2020; @kleinschmidt-jaeger2016] -- by the end of exposure the resultant categorization did not fully converge on the ideal boundary. 
-  + The block-to-block changes of the respective conditions emphasises the link between incremental adaptation and listener prior expectations of cue distributions. In the +40 condition
-  Adaptation can proceed incrementally in the direction of the cue shift only, it seems, if it respects the structure of the natural distributions of cues. 
   + Focussing on the +40 rightwards shift, incremental changes was observed in the rightwards boundary shift between test 1 and test 2 and between test 3 and test 2. In test 4 we observed a slight retraction in the boundary but we have no indication whether this represents listeners' refusal to adapt further in spite of the input or if it was part of natural oscillation in boundary estimates given the relatively wider CIs of the estimates in this condition. 
   + The MAP estimate for kappa which is the confidence in prior mean was ~ 240 -- after 144 exposures, the updated mean is still dominated by the prior mean suggesting that it may take more exposure trials for convergence. 
 
 ### Pace of adaptation between blocks
-+ 
-  
-
 
 
 ### Does labelling quicken the pace of adaptation [this may be moved further down to deprioritise it]
