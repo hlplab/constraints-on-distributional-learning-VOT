@@ -1,3 +1,8 @@
+# This script is for tidying the Chodroff & Wilson 2008 isolated speech database downloaded from https://osf.io/k6djr/
+# It combines two files: cueAnalysis_engCVC.txt which has the phonetic cue measurements and the list of subjects by sex engCVC_gender.csv
+# The columns f0_1 to f0_10 are f0 measurements taken at intervals of 5ms from vowel onset. We took the first available measurement for each token and 
+# discarded any rows with NA values
+#------------------------------------------------
 library(tidyverse)          # keeping things tidy
 library(magrittr)           # pipes
 
