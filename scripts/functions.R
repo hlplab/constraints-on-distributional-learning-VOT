@@ -85,7 +85,7 @@ get_ChodroffWilson_data <- function(
   require(diptest)
 
   # Standardizing variable names and values to confirm to what we usually use.
-  
+
   if (str_detect(database_filename, "isolated")) {
     d <-
       read_csv(database_filename, show_col_types = FALSE) %>%
@@ -135,7 +135,7 @@ get_ChodroffWilson_data <- function(
       spectral_M1, spectral_M2, spectral_M3, spectral_M4, vowel_duration,
       word_duration, speech_rate)
   }
-  
+
 
   d %<>%
     # Filter VOT and f0 for absolute values to deal with outliers
@@ -156,7 +156,7 @@ get_ChodroffWilson_data <- function(
       mutate(
         f0_Mel.multimodal = dip.test(f0_Mel)$p.value < max.p_for_multimodality) %>%
       filter(!f0_Mel.multimodal) %>%
-      droplevels()) 
+      droplevels())
 
   # Keep only talkers with at least n.min observations for each stop
   d %<>%
@@ -181,29 +181,29 @@ get_ChodroffWilson_data <- function(
 prepVars <- function(d, test_mean = NULL, levels.Condition = NULL, contrast_type) {
   d %<>%
     drop_na(Condition.Exposure, Phase, Block, Item.MinimalPair, ParticipantID, Item.VOT, Response)
-  
+
   message("VOT mean:", signif(mean(d$Item.VOT, na.rm = T)))
   message("VOT sd:", signif(sd(d$Item.VOT, na.rm = T)))
   message(paste("VOT test mean:", test_mean))
-  
+
   d %<>%
     ungroup() %>%
     mutate(
       Block_n = as.numeric(as.character(Block)),
       across(c(Condition.Exposure, Block, Item.MinimalPair), factor),
-      
+
       Condition.Exposure = factor(Condition.Exposure, levels = levels.Condition)) %>%
-    
+
     drop_na(Block, Response, Item.VOT) %>%
     mutate(VOT_gs = (Item.VOT - test_mean) / (2 * sd(Item.VOT, na.rm = TRUE))) %>%
     droplevels()
-  
+
   contrasts(d$Condition.Exposure) <- cbind("_Shift10 vs. Shift0" = c(-2/3, 1/3, 1/3),
                                            "_Shift40 vs. Shift10" = c(-1/3,-1/3, 2/3))
   if (all(d$Phase == "test") & n_distinct(d$Block) > 1 & contrast_type == "difference") {
     contrasts(d$Block) <- MASS::fractions(MASS::contr.sdif(6))
     dimnames(contrasts(d$Block))[[2]] <- c("_Test2 vs. Test1", "_Test3 vs. Test2", "_Test4 vs. Test3", "_Test5 vs. Test4", "_Test6 vs. Test5")
-    
+
     message("Condition contrast is:", contrasts(d$Condition.Exposure))
     message("Block contrast is:", contrasts(d$Block))
   } else if (all(d$Phase == "test") & n_distinct(d$Block) > 1 & contrast_type == "helmert"){
@@ -233,13 +233,13 @@ prepVars <- function(d, test_mean = NULL, levels.Condition = NULL, contrast_type
 
 
 
-# Fit Bayesian model in standard and nested slope formulations--------------------------------------------------- 
+# Fit Bayesian model in standard and nested slope formulations---------------------------------------------------
 # priorSD argument refers to the SD for the VOT estimate
 fit_model <- function(data, phase, formulation = "standard", priorSD = 2.5, adapt_delta = .99) {
   require(tidyverse)
   require(magrittr)
   require(brms)
-  
+
   VOT.mean_test <-
     data %>%
     filter(Phase == "test") %>%
@@ -249,11 +249,11 @@ fit_model <- function(data, phase, formulation = "standard", priorSD = 2.5, adap
   levels_Condition.Exposure <- c("Shift0", "Shift10", "Shift40")
   contrast_type <- "difference"
   chains = 4
-  
+
   data %<>%
     filter(Phase == phase & Item.Labeled == F) %>%
     prepVars(test_mean = VOT.mean_test, levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type)
-  
+
   prior_overwrite <- if (phase == "exposure" & formulation == "nested_slope") {
     c(set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x2:VOT_gs", dpar = "mu2"),
       set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x4:VOT_gs", dpar = "mu2"),
@@ -286,14 +286,14 @@ fit_model <- function(data, phase, formulation = "standard", priorSD = 2.5, adap
   } else {
     c(set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "VOT_gs", dpar = "mu2"))
   }
-  
+
   my_priors <-
     c(
       prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),
       prior_overwrite,
       prior(cauchy(0, 2.5), class = "sd", dpar = "mu2"),
       prior(lkj(1), class = "cor"))
-  
+
   brm(
     formula = if (formulation == "nested_slope") {
       bf(Response.Voiceless ~ 1,
@@ -390,7 +390,7 @@ relabel_blocks <-
       Block == 9 ~ "Test 6",
       Block == 2 ~ "Exposure 1",
       Block == 4 ~ "Exposure 2",
-      Block == 6 ~ "Exposure 3")),  
+      Block == 6 ~ "Exposure 3")),
     Block.plot_label = fct_relevel(Block.plot_label, c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3",  "Test 4", "Test 5", "Test 6")))
 
 
@@ -427,11 +427,16 @@ align_tab <- function(hyp) {
   map_chr(hyp, ~ ifelse(class(.x) == "numeric", "r","l"))
 }
 
-make_hyp_table <- function(hypothesis, hypothesis_names, caption, col1_width = "15em") {
+make_hyp_table <- function(hypothesis, hypothesis_names, caption, col1_width = "15em", digits = 2) {
   bind_cols(tibble(Hypothesis = hypothesis_names), hypothesis) %>%
     dplyr::select(-2) %>%
     mutate(
-      across(where(is.numeric), ~ round(., digits = 3)),
+      across(
+        c(Estimate, Est.Error, CI.Lower, CI.Upper, Evid.Ratio),
+        ~ round(., digits = digits)),
+      across(
+        c(Post.Prob),
+        ~ round(., digits = 3)),
       CI = paste0("[", CI.Lower, ", ", CI.Upper, "]")) %>%
     dplyr::select(-c(CI.Upper, CI.Lower)) %>%
     relocate(CI, .before = "Evid.Ratio") %>%
@@ -660,7 +665,7 @@ predict_f0 <- function(VOT, intercept = 245.46968, slope = 0.03827, Mel = FALSE)
 }
 
 
-# Make IOs of each talker in a database and plot their categorization functions---------------------------------------------------  
+# Make IOs of each talker in a database and plot their categorization functions---------------------------------------------------
 get_diff_in_likelihood_from_io <- function(x, io, add_f0 = F, io.type = NULL) {
   # Since we want to only consider cases that have F0 values that are in a certain linear relation to VOT
   # (the way we created our stimuli), we set the F0 based on the VOT.
@@ -1039,32 +1044,32 @@ get_likelihood_from_updated_bias <- function(
 
 # Make trivariate normal distribution ---------------------------------------------------
 # Function takes as arguments the mean and covariance matrix of a trivariate normal distribution over (in this order)
-# VOT, f0_Mel, and vowel_duration, as well as values for f0_Mel and vowel_duration. The function then returns a 
-# *function* that represents the conditional normal distribution over VOT at that combination of f0_Mel and 
-# vowel_duration values. This function takes VOT as input and returns a density value. 
+# VOT, f0_Mel, and vowel_duration, as well as values for f0_Mel and vowel_duration. The function then returns a
+# *function* that represents the conditional normal distribution over VOT at that combination of f0_Mel and
+# vowel_duration values. This function takes VOT as input and returns a density value.
 #
 # This function was drafted with the help of Google's Bard: https://bard.google.com/chat/32a2428ef7e806bb
 conditional_univariate_normal_from_trivariate_normal <- function(mu, Sigma, f0_Mel, vowel_duration) {
   # Calculate the conditional mean and conditional standard deviation of x given y = f0_Mel and z = vowel_duration
   mu_x <- mu[1] + Sigma[1, 2] / Sigma[2, 2] * (f0_Mel - mu[2]) + Sigma[1, 3] / Sigma[3, 3] * (vowel_duration - mu[3])
   sigma_x <- sqrt(Sigma[1, 1] - Sigma[1, 2] / Sigma[2, 2] * Sigma[2, 1] - Sigma[1, 3] / Sigma[3, 3] * Sigma[3, 1])
-  
+
   # Define the function for the conditional univariate normal distribution over x given f0_Mel and vowel_duration
   f <- function(x) {
     1 / (sqrt(2 * pi) * sigma_x) * exp(-0.5 * ((x - mu_x) / sigma_x)^2)
   }
-  
+
   return(f)
 }
 
-# This functions takes as arguments the means and covariance matrices of two trivariate normal distributions, 
-# as well as values for f0_Mel and vowel_duration. The function then returns a *function* that represents the 
-# posterior of the category corresponding to the second trivariate normal distribution.  This function takes 
+# This functions takes as arguments the means and covariance matrices of two trivariate normal distributions,
+# as well as values for f0_Mel and vowel_duration. The function then returns a *function* that represents the
+# posterior of the category corresponding to the second trivariate normal distribution.  This function takes
 # VOT as input and returns a posterior probability.
 conditional_univariate_posterior_t <- function(mu_d, Sigma_d, mu_t, Sigma_t, f0_Mel, vowel_duration) {
   density_t <- conditional_univariate_normal_from_trivariate_normal(mu_t, Sigma_t, f0_Mel, vowel_duration)
   density_d <- conditional_univariate_normal_from_trivariate_normal(mu_d, Sigma_d, f0_Mel, vowel_duration)
-  
+
   f <- function(x) {
     density_t(x) / (density_t(x) + density_d(x))
   }

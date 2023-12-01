@@ -109,7 +109,7 @@ knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 ```
 
 ```{r}
-INCLUDE_TODO = T            # switch on/off to get to do list.
+INCLUDE_TODO = F           # switch on/off to get to do list.
 ```
 
 ```{r, child="section-0-TO-DO.Rmd", eval= if (INCLUDE_TODO) TRUE else FALSE}
