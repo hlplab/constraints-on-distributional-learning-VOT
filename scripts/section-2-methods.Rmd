@@ -158,7 +158,7 @@ p.histogram_conditions <-
     inherit.aes = F) +
   facet_grid(
     condition ~ block, 
-    labeller = labeller(block = c("Block A" = "Block A", "Block B" = "Block B", "Block C" = "Block C", "Block D" = "all")), # facet_grid not respecting factor order when block values include "all" 
+    labeller = labeller(block = c("Block A" = "Block A", "Block B" = "Block B", "Block C" = "Block C", "Block D" = "all")), 
     scales = "free_y") +
   guides(linetype = "none") +
   theme(legend.position = "top",

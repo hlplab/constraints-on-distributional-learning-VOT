@@ -190,7 +190,6 @@ p.intercept_1to7 <-
     linetype = 2, 
     linewidth = .7, 
     alpha = 0.3,
-    direction = "mid",
     inherit.aes = F) +
   scale_y_continuous("Intercept")
 
@@ -272,7 +271,6 @@ p.PSE_1to7 <-
     linetype = 2, 
     linewidth = .8, 
     alpha = 0.4, 
-    direction = "mid",
     inherit.aes = F) +
   geom_text(
     data = d.true_shift %>% 
