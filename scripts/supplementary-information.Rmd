@@ -118,7 +118,7 @@ d %>%
 
 ## Performance on labelled exposure trials
 
-```{r labeled-trial-performance-group, fig.width=6, fig.height=4, message=F}
+```{r labeled-trial-performance-group, fig.width=6.5, fig.height=4, message=F}
 p.labelled <- d %>%
   filter(Phase == "exposure") %>%
   group_by(ParticipantID, Condition.Exposure) %>%
@@ -148,10 +148,12 @@ p.labelled.group <- d %>%
                       values = colours.condition) +
   scale_x_continuous("Total labelled trial errors") +
   theme(legend.position = "top") +
-  facet_grid(Condition.Exposure ~ Block)
+  facet_grid(Condition.Exposure ~ Block, labeller = labeller(
+    .cols = c("2" = "Exposure 1", "4" = "Exposure 2", "6" = "Exposure 3"), 
+    .rows = c("baseline", "+10", "+40")))
 
 p.labelled | p.labelled.group +
-  plot_layout(guides = "collect") & theme(legend.position = "top")
+  plot_layout(guides = "collect") & theme(legend.position = "top", legend.box.just = "left")
 ```
 
 ```{r fig,width=8, fig.height=5, fig.width=6}
@@ -232,7 +234,7 @@ In the main text, we employ ideal observers [specifically, the ASP framework des
 
 We follow other work in deriving estimates of listeners' prior expectations about the realization of phonetic categories from a linguistic database [e.g., @feldman2009; @kronrod2016; @norris-mcqueen2008; @persson-jaeger2023; @tan2021; for a helpful review, see @schertz-clare2020]. Such estimates are only as good as the assumptions that they are based on. One important pre-requisite for a reasonable estimate is that the phonetic database employed to estimate listeners' prior experience sufficiently closely approximates the type of input a typical adult listener of the language would have previously experienced. Here, we considered two databases to approximate listeners' prior expectations about the phonetic realization of /d/ and /t/ by a female L1 talkers of US English (as the one employed in our experiment). The two databases contain productions of word-initial /d/ and /t/ in isolated word productions and in connected read speech, respectively [@chodroff-wilson2017], and available by Eleanor Chodroff on OSF at https://osf.io/k6djr/ ^[We thank Eleanor Chodroff for making these data available, and for prompt and helpful responses to our questions about the data.] The subsets of the data employed in the present study---described in more detail below---are available via the OSF for our project.
 
-Committing to a database is, however, not a *sufficient* assumption. Estimates of listeners' prior expectations also depend strongly on assumptions about how listeners represent the mapping from phonetic cues to phonetic categories. For example, previous work has often derived estimates under the implicit assumption that listener learn and maintain a *single* representation for each phonetic category across talkers. This assumption typically has taken one of two forms. One approach is to entirely ignore talker identity during the estimation of phonetic categories. This is illustrated in Figure \@ref(plot-database-pairwise-cue-correlations) which shows the distribution of /d/ and /t/ over VOT, f0, and vowel duration in isolated (top left) and connected (bottom left) speech. Ellipses indicate the phonetic category representations that would be estimated from these data. <!-- TO DO: make 3d plot, f0 is mel; use color for /d/ vs. /t/; fat point for mean, transparent ellipses for 95% multivariate gaussian. Caption should say this. Figure has multiple cols A, B --> Another approach is to first normalize each cue within each talker---e.g., by subtracting the talker's cue mean from each token [e.g., @cole2010; @mcmurray-jongman2011; for review, see @apfelbaum-mcmurray2015; @weatherholtz-jaeger2016]. Phonetic categories are then estimated over these normalized cues. The resulting representations are shown in Figure \@ref(plot-database-pairwise-cue-correlations)C and \@ref(plot-database-pairwise-cue-correlations)D . 
+Committing to a database is, however, not a *sufficient* assumption. Estimates of listeners' prior expectations also depend strongly on assumptions about how listeners represent the mapping from phonetic cues to phonetic categories. For example, previous work has often derived estimates under the implicit assumption that listener learn and maintain a *single* representation for each phonetic category across talkers. This assumption typically has taken one of two forms. One approach is to entirely ignore talker identity during the estimation of phonetic categories. This is illustrated in Figure \@ref(plot-database-pairwise-cue-correlations) which shows the distribution of /d/ and /t/ over VOT, f0, and vowel duration in isolated (top left) and connected (bottom left) speech. Ellipses indicate the phonetic category representations that would be estimated from these data. <!-- TO DO: make 3d plot, f0 is mel; use color for /d/ vs. /t/; fat point for mean, transparent ellipses for 95% multivariate gaussian. Caption should say this. Figure has multiple cols A, B --> Another approach is to first normalize each cue within each talker---e.g., by subtracting the talker's cue mean from each token [e.g., @mcmurray2011; @mcmurray-jongman2011; for review, see @apfelbaum-mcmurray2015; @weatherholtz-jaeger2016]. Phonetic categories are then estimated over these normalized cues. The resulting representations are shown in Figure \@ref(plot-database-pairwise-cue-correlations)C and \@ref(plot-database-pairwise-cue-correlations)D . 
 
 The two approaches have different trade-offs. When cues are not talker-normalized, the resulting category representations inherit not only within-category variability but also variability across talker, over-estimating the actual category covariances for any given talker. Normalizing cues addresses this problem. It does, however, remove potentially useful information about the correlation between cues from the signal: compared to unnormalized cues in Panel A, the talker-normalized cues in Panel B contain less information about the covariance of VOT, f0, and vowel duration.
 
