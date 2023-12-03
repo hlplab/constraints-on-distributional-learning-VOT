@@ -142,7 +142,7 @@ p.labelled.group <- d %>%
   summarise(LabeledTrial.Errors = 24 - sum(LabeledTrial.Correct, na.rm = TRUE)) %>%
   ggplot(aes(x = LabeledTrial.Errors, fill = Condition.Exposure)) +
   geom_bar(position = position_dodge(width = .5, preserve = "single"), width = .5) +
-  scale_colour_manual("Exposure condition",
+  scale_colour_manual("Condition",
                       aesthetics = c("colour", "fill"),
                       labels = c("baseline", "+10", "+40"),
                       values = colours.condition) +
@@ -150,7 +150,7 @@ p.labelled.group <- d %>%
   theme(legend.position = "top") +
   facet_grid(Condition.Exposure ~ Block, labeller = labeller(
     .cols = c("2" = "Exposure 1", "4" = "Exposure 2", "6" = "Exposure 3"), 
-    .rows = c("baseline", "+10", "+40")))
+    .rows = c(Shift0 = "baseline", Shift10 = "+10", Shift40 = "+40")))
 
 p.labelled | p.labelled.group +
   plot_layout(guides = "collect") & theme(legend.position = "top", legend.box.just = "left")
