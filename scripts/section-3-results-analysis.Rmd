@@ -570,7 +570,7 @@ make_hyp_table(
 rm(fit_test.simple_effects_block)
 ```
 
-```{r, fig.caption="TEMPORARILY PUTTING SLOPES PLOT HERE", results='asis'}
+```{r, fig.caption="TEMPORARILY PUTTING SLOPES TABLE HERE", results='asis'}
 hyp_interaction.condition_block_VOT <-
   hypothesis(
     fit_test,
