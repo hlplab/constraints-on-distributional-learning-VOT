@@ -988,6 +988,7 @@ plot_predicted_vs_actual_categorization_responses <- function(data, colors.group
       ExposureGroup = gsub("[ABC]A", "", ExposureGroup),
       ExposureGroup = gsub("^.*Shift([0-9]+).*$", "+\\1", ExposureGroup)) %>%
     ggplot(aes(x = Predicted_posterior, y = Response)) +
+    geom_abline(intercept = 0, slope = 1, color = "lightgray") +
     geom_text(aes(color = ExposureGroup, label = Test)) +
     geom_smooth(aes(color = ExposureGroup)) +
     annotate(
@@ -1083,7 +1084,7 @@ d_for_ASP <-
   mutate(ExposureGroup = factor(ExposureGroup)) %>%
   select(
     ExposureGroup, Phase, ParticipantID, Block, Trial, x,
-    VOT, f0_Mel, Response.Category, Item.ExpectedResponse.Category)
+    VOT, f0_Mel, vowel_duration, Response.Category, Item.ExpectedResponse.Category)
 ```
 
 ```{r set-subsample-proportion}
@@ -1569,6 +1570,33 @@ m_IA_inferred <-
   infer_prior_beliefs(
     exposure = d_for_ASP %>% filter(Phase == "exposure"),
     test = d_for_ASP %>% filter(Phase == "test"),
+    cues = c("VOT"),  
+    category = "Item.ExpectedResponse.Category",
+    response = "Response.Category",
+    group = "ParticipantID",
+    group.unique = "ExposureGroup",
+    center.observations = T,   
+    scale.observations = T,
+    pca.observations = F,
+    lapse_rate = NULL,
+    mu_0 = NULL,
+    Sigma_0 = NULL,
+    use_multivariate_updating = T,
+    sample = T,
+    file = "../models/IBBU_VOT_uninformative priors.RDS",
+    warmup = 3000, iter = 4000,
+    control = list(adapt_delta = .995, max_treedepth = 15))
+
+summarize.NIW_ideal_adaptor_stanfit(m_IA_inferred) 
+make_all_plots(m_IA_inferred)
+```
+
+
+```{r, size='tiny', fig.width=12, fig.height=12, warning=FALSE, results='asis'}
+m_IA_inferred.VOT_f0 <-
+  infer_prior_beliefs(
+    exposure = d_for_ASP %>% filter(Phase == "exposure"),
+    test = d_for_ASP %>% filter(Phase == "test"),
     cues = c("VOT", "f0_Mel"),  
     category = "Item.ExpectedResponse.Category",
     response = "Response.Category",
@@ -1585,8 +1613,33 @@ m_IA_inferred <-
     warmup = 3000, iter = 4000,
     control = list(adapt_delta = .995, max_treedepth = 15))
 
-summarize.NIW_ideal_adaptor_stanfit(m_IA_inferred) 
-make_all_plots(m_IA_inferred)
+summarize.NIW_ideal_adaptor_stanfit(m_IA_inferred.VOT_f0) 
+make_all_plots(m_IA_inferred.VOT_f0)
+```
+
+```{r, size='tiny', fig.width=12, fig.height=12, warning=FALSE, results='asis'}
+m_IA_inferred.VOT_f0_vowelduration <-
+  infer_prior_beliefs(
+    exposure = d_for_ASP %>% filter(Phase == "exposure"),
+    test = d_for_ASP %>% filter(Phase == "test"),
+    cues = c("VOT", "f0_Mel", "vowel_duration"),  
+    category = "Item.ExpectedResponse.Category",
+    response = "Response.Category",
+    group = "ParticipantID",
+    group.unique = "ExposureGroup",
+    center.observations = T,   
+    scale.observations = T,
+    pca.observations = F,
+    lapse_rate = NULL,
+    mu_0 = NULL,
+    Sigma_0 = NULL,
+    sample = T,
+    file = "../models/IBBU_VOT+f0+vowelduration_uninformative priors.RDS",
+    warmup = 3000, iter = 4000,
+    control = list(adapt_delta = .995, max_treedepth = 15))
+
+summarize.NIW_ideal_adaptor_stanfit(m_IA_inferred.VOT_f0_vowelduration) 
+make_all_plots(m_IA_inferred.VOT_f0_vowelduration)
 ```
 
 ### Fit with informative priors about expected category means and covariances
