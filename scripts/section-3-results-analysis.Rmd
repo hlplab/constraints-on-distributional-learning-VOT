@@ -570,7 +570,7 @@ make_hyp_table(
 rm(fit_test.simple_effects_block)
 ```
 
-```{r, fig.caption="TEMPORARILY PUTTING SLOPES PLOT HERE", results='asis'}
+```{r, fig.caption="TEMPORARILY PUTTING SLOPES TABLE HERE", results='asis'}
 hyp_interaction.condition_block_VOT <-
   hypothesis(
     fit_test,
@@ -659,8 +659,10 @@ d.chodroff_wilson %>%
              values = colours.condition) +
    guides(colour = "none",
          linetype = guide_legend(title = "Speech style", override.aes = list(fill = NA, shape = c(0, 3)))) +
-  facet_matrix(vars(c(VOT, f0_Mel, vowel_duration)), layer.lower = c(1, 4:5), layer.diag = 2,
-               layer.upper = c(3, 4:5)) +
+  facet_matrix(vars(c(VOT, f0_Mel, vowel_duration)), layer.lower = c(3, 4:5), layer.diag = 2,
+               layer.upper = c(1, 4:5),
+               labeller = labeller(.rows = c(VOT = "VOT", f0_Mel = "F0 (Mel)", vowel_duration = "Vowel duration"),
+               .cols = c(VOT = "VOT", f0_Mel = "F0 (Mel)", vowel_duration = "Vowel duration"))) +
   theme(legend.position = "top")
 ```
 

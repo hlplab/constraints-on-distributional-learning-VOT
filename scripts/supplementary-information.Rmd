@@ -1,5 +1,11 @@
 ```{r, include=FALSE, message=FALSE}
 if (!exists("PREAMBLE_LOADED")) source("preamble.R")
+
+# load required objects that were removed for memory efficiency
+fit_test.simple_effects_condition <- readRDS("../models/test-nested-condition.rds")
+fit_test.simple_effects_block <- readRDS("../models/test-nested-block.rds")
+
+
 ```
 
 <!-- Do NOT knit this document. It is part of a larger document. Instead knit the main document (my-apa-formatted-article)
@@ -142,7 +148,7 @@ p.labelled.group <- d %>%
   summarise(LabeledTrial.Errors = 24 - sum(LabeledTrial.Correct, na.rm = TRUE)) %>%
   ggplot(aes(x = LabeledTrial.Errors, fill = Condition.Exposure)) +
   geom_bar(position = position_dodge(width = .5, preserve = "single"), width = .5) +
-  scale_colour_manual("Exposure condition",
+  scale_colour_manual("Condition",
                       aesthetics = c("colour", "fill"),
                       labels = c("baseline", "+10", "+40"),
                       values = colours.condition) +
@@ -150,7 +156,7 @@ p.labelled.group <- d %>%
   theme(legend.position = "top") +
   facet_grid(Condition.Exposure ~ Block, labeller = labeller(
     .cols = c("2" = "Exposure 1", "4" = "Exposure 2", "6" = "Exposure 3"), 
-    .rows = c("baseline", "+10", "+40")))
+    .rows = c(Shift0 = "baseline", Shift10 = "+10", Shift40 = "+40")))
 
 p.labelled | p.labelled.group +
   plot_layout(guides = "collect") & theme(legend.position = "top", legend.box.just = "left")
@@ -756,6 +762,111 @@ table.interaction.condition_block
 ```
 
 ### Differences in block-to block *slope* changes across conditions
+Analyses of changes in slopes that compare changes between blocks within conditions and interactions of exposure conditions and blocks are summarized in Tables \@ref(tab:hypothesis-table-simple-slopes-condition), \@ref(tab:hypothesis-table-simple-slopes-block), and \@ref(tab:hypothesis-table-interaction-condition-block-VOT) 
+
+```{r hypothesis-table-simple-slopes-condition, results='asis'}
+hyp.simple_slopes_condition <- 
+  hypothesis(
+    fit_test.simple_effects_condition, 
+    c(
+      "mu2_Block1:Condition.Exposure_Shift10vs.Shift0:VOT_gs = 0",
+      "mu2_Block1:Condition.Exposure_Shift40vs.Shift10:VOT_gs = 0",
+      "mu2_Block1:Condition.Exposure_Shift40vs.Shift10:VOT_gs + mu2_Block1:Condition.Exposure_Shift10vs.Shift0:VOT_gs = 0",
+      "mu2_Block3:Condition.Exposure_Shift10vs.Shift0:VOT_gs > 0",
+      "mu2_Block3:Condition.Exposure_Shift40vs.Shift10:VOT_gs > 0",
+      "mu2_Block3:Condition.Exposure_Shift40vs.Shift10:VOT_gs + mu2_Block3:Condition.Exposure_Shift10vs.Shift0:VOT_gs > 0",
+      "mu2_Block5:Condition.Exposure_Shift10vs.Shift0:VOT_gs < 0",
+      "mu2_Block5:Condition.Exposure_Shift40vs.Shift10:VOT_gs < 0",
+      "mu2_Block5:Condition.Exposure_Shift40vs.Shift10:VOT_gs + mu2_Block5:Condition.Exposure_Shift10vs.Shift0:VOT_gs < 0",
+      "mu2_Block7:Condition.Exposure_Shift10vs.Shift0:VOT_gs < 0",
+      "mu2_Block7:Condition.Exposure_Shift40vs.Shift10:VOT_gs < 0",
+      "mu2_Block7:Condition.Exposure_Shift40vs.Shift10:VOT_gs + mu2_Block7:Condition.Exposure_Shift10vs.Shift0:VOT_gs < 0",
+      "mu2_Block8:Condition.Exposure_Shift10vs.Shift0:VOT_gs < 0",
+      "mu2_Block8:Condition.Exposure_Shift40vs.Shift10:VOT_gs < 0",
+      "mu2_Block8:Condition.Exposure_Shift40vs.Shift10:VOT_gs + mu2_Block7:Condition.Exposure_Shift10vs.Shift0:VOT_gs < 0",
+      "mu2_Block9:Condition.Exposure_Shift10vs.Shift0:VOT_gs < 0",
+      "mu2_Block9:Condition.Exposure_Shift40vs.Shift10:VOT_gs < 0",
+      "mu2_Block9:Condition.Exposure_Shift40vs.Shift10:VOT_gs + mu2_Block7:Condition.Exposure_Shift10vs.Shift0:VOT_gs < 0"),
+    robust = T) %>%
+  .$hypothesis %>% 
+  dplyr::select(-Star)
+
+make_hyp_table(
+  hyp.simple_slopes_condition, 
+  c("+10 vs. baseline = 0", "+40 vs. +10 = 0", "+40 vs. baseline = 0", rep(c("+10 vs. baseline", "+40 vs. +10", "+40 vs. baseline"), 5)), 
+    caption = "Did exposure affect the slope of categorization responses? This table summarizes the differences in slopes between the exposure conditions for each test block.") %>% 
+  pack_rows("Test block 1 (pre-exposure)", 1, 3) %>%
+  pack_rows("Test block 2", 4, 6) %>% 
+  pack_rows("Test block 3", 7, 9) %>% 
+  pack_rows("Test block 4", 10, 12) %>% 
+  pack_rows("Test block 5 (repeated testing without additional exposure)", 13, 15) %>% 
+  pack_rows("Test block 6 (repeated testing without additional exposure)", 16, 18)
+
+rm(fit_test.simple_effects_condition)
+```
+
+```{r hypothesis-table-simple-slopes-block, results='asis'}
+hyp.simple_slopes_block <- 
+  hypothesis(
+    fit_test.simple_effects_block, 
+    c(
+      "mu2_Condition.ExposureShift0:Block_Test2vs.Test1:VOT_gs > 0",
+      "mu2_Condition.ExposureShift0:Block_Test3vs.Test2:VOT_gs > 0",
+      "mu2_Condition.ExposureShift0:Block_Test4vs.Test3:VOT_gs > 0",
+      "mu2_Condition.ExposureShift0:Block_Test2vs.Test1:VOT_gs + mu2_Condition.ExposureShift0:Block_Test3vs.Test2:VOT_gs + mu2_Condition.ExposureShift0:Block_Test4vs.Test3:VOT_gs > 0",
+      "mu2_Condition.ExposureShift0:Block_Test5vs.Test4:VOT_gs > 0",
+      "mu2_Condition.ExposureShift0:Block_Test6vs.Test5:VOT_gs > 0",
+      "mu2_Condition.ExposureShift0:Block_Test5vs.Test4:VOT_gs + mu2_Condition.ExposureShift0:Block_Test6vs.Test5:VOT_gs > 0",
+      
+      "mu2_Condition.ExposureShift10:Block_Test2vs.Test1:VOT_gs > 0",
+      "mu2_Condition.ExposureShift10:Block_Test3vs.Test2:VOT_gs > 0",
+      "mu2_Condition.ExposureShift10:Block_Test4vs.Test3:VOT_gs > 0",
+      "mu2_Condition.ExposureShift10:Block_Test2vs.Test1:VOT_gs + mu2_Condition.ExposureShift10:Block_Test3vs.Test2:VOT_gs + mu2_Condition.ExposureShift10:Block_Test4vs.Test3:VOT_gs > 0",
+
+      "mu2_Condition.ExposureShift10:Block_Test5vs.Test4:VOT_gs > 0",
+      "mu2_Condition.ExposureShift10:Block_Test6vs.Test5:VOT_gs > 0",
+      "mu2_Condition.ExposureShift10:Block_Test5vs.Test4:VOT_gs + mu2_Condition.ExposureShift10:Block_Test6vs.Test5:VOT_gs > 0",
+      
+      "mu2_Condition.ExposureShift40:Block_Test2vs.Test1:VOT_gs > 0",
+      "mu2_Condition.ExposureShift40:Block_Test3vs.Test2:VOT_gs > 0",
+      "mu2_Condition.ExposureShift40:Block_Test4vs.Test3:VOT_gs > 0",
+      "mu2_Condition.ExposureShift40:Block_Test2vs.Test1:VOT_gs + mu2_Condition.ExposureShift40:Block_Test3vs.Test2:VOT_gs + mu2_Condition.ExposureShift40:Block_Test4vs.Test3:VOT_gs > 0",
+    
+      "mu2_Condition.ExposureShift40:Block_Test5vs.Test4:VOT_gs > 0",
+      "mu2_Condition.ExposureShift40:Block_Test6vs.Test5:VOT_gs > 0",
+      "mu2_Condition.ExposureShift40:Block_Test5vs.Test4:VOT_gs + mu2_Condition.ExposureShift40:Block_Test6vs.Test5:VOT_gs > 0"),
+    robust = T) %>%
+  .$hypothesis %>% 
+  dplyr::select(-Star)
+
+make_hyp_table(
+    hyp.simple_slopes_block,
+    c(rep(c(
+  # Comparing differences blocks within conditions
+  "Block 1 to 2: decreased slope",
+  "Block 2 to 3: decreased slope",
+  "Block 3 to 4: decreased slope",
+  "{\\em Block 1 to 4: decreased slope}",
+  "Block 4 to 5: increased slope",
+  "Block 5 to 6: increased slope",
+  "{\\em Block 4 to 6: increased slope}"), 2),
+  "Block 1 to 2: increased slope",
+  "Block 2 to 3: increased slope",
+  "Block 3 to 4: increased slope",
+  "{\\em Block 1 to 4: increased slope}",
+  "Block 4 to 5: decreased slope",
+  "Block 5 to 6: decreased slope",
+  "{\\em Block 4 to 6: decreased slope}"),
+    caption = "Was there incremental change in slope from test block 1 to 4? Did slopes change dissipate with repeated testing from block 4 to 6? This table summarizes the simple slopes for each exposure condition between blocks.") %>% 
+  pack_rows("Difference between blocks: baseline", 1, 7) %>%
+  pack_rows("Difference between blocks: +10", 8, 14) %>%
+  pack_rows("Difference between blocks: +40", 15, 21) 
+
+rm(fit_test.simple_effects_block)
+```
+
+
+
 
 ```{r hypothesis-table-interaction-condition-block-VOT, results='asis'}
 hyp_interaction.condition_block_VOT <-
