@@ -72,7 +72,12 @@ set.seed(42007)
 
 # Load data ---------------------------------------------------------------------
 
+n_min_per_talker <- 10
+
 # Get production data for the prior.
+#
+# TO DO: unify import of both databases (outside of this script). Then import them
+# together. NA omits should apply to all three cues.
 #
 # We are reimporting the data because here we are subsetting the Mixer 6 data to
 # talkers that have at least 10 instances each of the relevant stops (we're being
@@ -83,27 +88,47 @@ d.chodroff_wilson.connected <-
   get_ChodroffWilson_data(
     database_filename = "../data/chodroff_wilson_mixer6_non-missing_vot_cog_f0.csv",
     categories = c("/d/", "/t/"),
-    min.n_per_talker_and_category = 10,
+    # Since we haven't yet merged the two databases, we're disabling exclusions here
+    # (so that they can be done later, after merging)
+    min.n_per_talker_and_category = 0,
     limits.VOT = c(-Inf, Inf),
     limits.f0 = c(-Inf, Inf),
-    max.p_for_multimodality = .1)
+    # Setting multi-modality exclusion to 0 disables it
+    max.p_for_multimodality = 0)
 
 # Get production data from the isolated speech corpus
 # get_ChodroffWilson_data function on this database causes some categories of some talkers to be dropped
 # this causes problems when get_IO_categorization fn is called on this data set
 d.chodroff_wilson.isolated <-
-  read_csv("../data/chodroff_wilson_isolated_speech.csv") %>% 
-  mutate(f0_Mel = phonR::normMel(f0)) %>% 
-  filter(gender == "female",
-         category %in% c("/d/", "/t/"),
-         f0 > 150) %>% 
+  read_csv("../data/chodroff_wilson_isolated_speech.csv") %>%
+  mutate(f0_Mel = phonR::normMel(f0)) %>%
+  filter(category %in% c("/d/", "/t/")) %>%
   na.omit()
-  
+
 d.chodroff_wilson <-
   bind_rows(
     d.chodroff_wilson.connected %>% mutate(speechstyle = "connected"),
     d.chodroff_wilson.isolated %>% mutate(speechstyle = "isolated")) %>%
-  mutate(across(c(speechstyle, Talker, category, gender), factor))
+  mutate(across(c(speechstyle, Talker, category, gender), factor)) %>%
+  # Subset to female talkers and exclude cases with NAs and distributional outliers
+  filter(
+    gender == "female",
+    if_all(c("VOT", "f0_Mel", "vowel_duration"), ~ !is.na(.x)),
+    if_all(c("VOT", "f0_Mel", "vowel_duration"), ~ abs(scale(.x)) < 3.5))
+
+# We selected an f0_Mel cutoff point based on visual inspection to remove pitch-halving tokens
+# (this truncates the f0 distribution).
+d.chodroff_wilson %>%
+  ggplot(aes(x = f0_Mel)) +
+  geom_density() +
+  geom_vline(xintercept = 200, linetype = "dashed") +
+  facet_wrap(~ Talker, ncol = 5)
+
+# Filter out tokens with pitch-halving
+# TO DO: store all exceptions
+f0_cutoff.by_talker <- c("113093" = 100)
+d.chodroff_wilson %<>%
+  filter(ifelse(Talker %in% names(f0_cutoff.by_talker), f0_Mel > f0_cutoff.by_talker[Talker], f0_Mel > 200))
 
 # This dataframe is used whenever we reference overall stats from Chodroff & Wilson,
 # prior to excluding any talkers, or subsetting the data. Not all of the quantities
@@ -123,8 +148,6 @@ d.chodroff_wilson.talker_stats <-
 
 # SUBSET TO DATA THAT WE USE TO CREATE PRIORS FOR THE PRESENT PROJECT
 d.chodroff_wilson %<>%
-  # Subset to female talkers and exclude distributional outliers
-  filter(gender == "female", if_all(c("VOT", "f0_Mel", "vowel_duration"), ~ abs(scale(.x)) < 3.5)) %>%
   group_by(speechstyle, Talker, category) %>%
   # Subset the data to be balanced, so that each talker provides an equal number of
   # /d/ and /t/ tokens, the maximal number of tokens possible for that talker. This
@@ -132,18 +155,18 @@ d.chodroff_wilson %<>%
   # indirect information about category identity.
   mutate(n.for_category_and_talker = n()) %>%
   group_by(speechstyle, Talker) %>%
-  mutate(
-    n_min.for_category_and_talker = min(n.for_category_and_talker),
-    n_category.for_category_and_talker = n_distinct(category)) %>%
   # Select talkers that have both /d/ and /t/ observations
-  filter(n_category.for_category_and_talker == 2) %>%
+  filter(all(c("/d/", "/t/") %in% unique(category))) %>%
+  # Get the smaller number of counts for the two categories for each talker and sample
+  # that many (and thus equally many) tokens from each category for that talker.
+  mutate(n_min.for_category_and_talker = min(n.for_category_and_talker)) %>%
   group_by(speechstyle, Talker, category) %>%
-  sample_n(size = first(n_min.for_category_and_talker)) %>%
+  sample_n(size = unique(n_min.for_category_and_talker)) %>%
   ungroup()
 
 d.chodroff_wilson.connected <-
   d.chodroff_wilson %>%
-  filter(speechstyle == "connected") %>% 
+  filter(speechstyle == "connected") %>%
   # mutate(
   #   across(
   #     c("VOT", "f0_Mel", "vowel_duration"),
@@ -152,7 +175,7 @@ d.chodroff_wilson.connected <-
 
 d.chodroff_wilson.isolated <-
   d.chodroff_wilson %>%
-  filter(speechstyle == "isolated") %>% 
+  filter(speechstyle == "isolated") %>%
   # mutate(
   #   across(
   #     c("VOT", "f0_Mel", "vowel_duration"),
@@ -162,7 +185,10 @@ d.chodroff_wilson.isolated <-
 d.chodroff_wilson <-
   bind_rows(
     d.chodroff_wilson.connected,
-    d.chodroff_wilson.isolated)
+    d.chodroff_wilson.isolated) %>%
+  # Filter out talkers that have very few tokens
+  group_by(speechstyle, Talker) %>%
+  filter(n() >= n_min_per_talker)
 
 PREAMBLE_LOADED <- TRUE
 

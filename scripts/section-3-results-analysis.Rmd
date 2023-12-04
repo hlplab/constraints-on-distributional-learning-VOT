@@ -630,7 +630,7 @@ table.interactions.condition_block_VOT
 
 First, while the PSEs for the +40 and +10 conditions were shifted rightwards compared to the baseline condition, both the +10 and the baseline condition seem to shift *left*wards relative to their pre-exposure starting point in Test 1. This is supported by Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-effects-block). The evidence for the leftward shifts is quite weak for the +10 condition (BF = 3.5 for changes from Test 1 to 4), for which the PSE changes comparatively little across tests, but it is stronger for the baseline condition (BF = 7.6). In contrast, the +40 condition is clearly shifted rightwards relative to pre-exposure (BF = 45.2). To understand this pattern, it is helpful to relate the three exposure conditions to the distribution of VOT in listeners' prior experience. Figure \@ref(fig:exposure-means-database-matrix-plot) shows a matrix plot of pairwise distributions for the three cues that are relevant to distinguishing L1-US English /d/ and /t/ [based on databases of two speech styles in @chodroff-wilson2018] with the category means of our exposure conditions. This comparison offers an explanation as to why the baseline condition (and to some extent the +10 condition) shift leftwards with increasing exposure, whereas the +40 condition shifts rightwards: relative to listeners' prior experience, only the +40 condition presented larger-than-expected category means, whereas the baseline condition and, to some extent, the +10 condition presented lower-than-expected category means. That is, once we take into account how our exposure conditions relate to listeners' prior experience, both the direction of changes from Test 1 to 4 *within* each exposure condition (Table \@ref(tab:hypothesis-table-simple-effects-block)), and the direction of differences *between* exposure conditions receive an explanation (Table \@ref(tab:hypothesis-table-simple-effects-condition)). To further illustrates this point, the gray dashed line in Figure \@ref(fig:plot-fit-slope-PSE)D shows the PSE predicted by a Bayesian ideal observer trained on the distribution of VOT, f0, and vowel duration in Figure \@ref(fig:exposure-means-database-matrix-plot). Following @xie2023, we included perceptual noise in the ideal observer [estimates taken from @kronrod2016, for details, see SI, \@ref(sec:prior-idealized-listeners)].  While not a perfect fit, this line qualitatively predicts listeners' pre-exposure PSE in Test 1. 
 
-(ref:exposure-means-database-matrix-plot) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for `r nrow(d.chodroff_wilson)` word-initial /d/ and /t/ productions by `r length(unique(d.chodroff_wilson$Talker))` female L1 talkers of US English in @chodroff-wilson2018. For details, see SI \@ref(sec:SI-phonetic-data)]. Points show the category means of the exposure conditions.
+(ref:exposure-means-database-matrix-plot) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for `r nrow(d.chodroff_wilson)` word-initial /d/ and /t/ productions by `r length(unique(d.chodroff_wilson$Talker))` female L1 talkers of US English in @chodroff-wilson2018. For details, see SI \@ref(sec:SI-phonetic-data). Colored points show the category means of the exposure conditions.
 
 ```{r exposure-means-database-matrix-plot, fig.width=base.width*4, fig.height=base.height*2.5+1, fig.cap="(ref:exposure-means-database-matrix-plot)"}
 d.chodroff_wilson %>%
@@ -668,7 +668,40 @@ d.chodroff_wilson %>%
 
 Second, similar reasoning about the exposure distributions relative to listeners' prior experience offers an explanation for the relative lack of changes in the slope of listeners categorization function, visible in Figure \@ref(fig:plot-fit-slope-PSE)C. Slope changes, or lack thereof, have received comparatively little attention in previous work [but see @clayards2008; @theodore-monto2019] but they are an important part of the empirical facts that theories of speech perception need to account for [see also @kleinschmidt2020]. Compared to the changes in PSEs in Panel D, changes in the *slope* of listeners' categorization functions in Panel C were similar across exposure conditions ($0.XX \leq$ BFs $\leq X.XX$; SI, \@ref(sec:SI-slope-tests)).<!-- TO DO: these should be the simple slopes of exposure within each test block--> Slopes also changed little relative to listeners' categorization responses in Test 1 ($0.27 \leq$ BFs $\leq 4.66$; see SI, \@ref(sec:SI-slope-tests)).<!-- TO DO: these should be the simple slopes of block within each exposure condition--> Both of these findings are in line with distributional learning models of adaptive speech perception [@kleinschmidt-jaeger2015], given that the variance of /d/ and /t/ was (a) held constant across all three exposure conditions, and (b) designed to approximate the variance of /d/ and /t/ in typical speech input. Indeed, the same ideal observer model used to predict listeners' pre-exposure PSE also quite closely predicts listeners' pre-exposure slopes in Test 1, prior to any exposure (gray dashed lines in  Figure \@ref(fig:plot-fit-slope-PSE)C; we discuss the colored dashed lines in the next section).
 
-Third, returning to PSEs, the estimates in Table \@ref(tab:hypothesis-table-simple-effects-block) suggest that listeners' PSEs changed most from Test 1 to Test 2, and then changed less and less with additional exposure up to Test 4 (smaller magnitude of estimates compared to earlier test blocks). This is particularly pronounced for the two conditions that shifted the most relative to pre-exposure, the baseline condition and the +40 condition. This pattern is predicted by models of adaptive speech perception that are sensitive to the prediction error experienced while processing speech. This includes models that assume error-based learning [@sohoglu-davis2016; see also discussion in @davis-sohoglu2020; @harmon2019] as well as Bayesian belief-updating models [@kleinschmidt-jaeger2015; for demonstration, see @jaeger2019].
+```{r prediction-error--during-exposure}
+d.exposure_surprisal <-
+  d.for_analysis %>% 
+  filter(Phase == "exposure", Item.Labeled) %>% 
+  cross_join(
+    io %>% 
+      select(-x) %>%
+      rename(IO.Type = Condition.Exposure)) %>% 
+  # For each labeled exposure stimulus, calculate the surprisal of seeing the category label
+  # (this is not quite parallel to what we did for test tokens, which was looking at the 
+  # surprisal of the VOT, rather than the surprisal of the category label)
+  mutate(
+    x = ifelse(IO.Type != "prior", Item.VOT, pmap(list(Item.VOT, Item.f0_Mel, Item.vowel_duration), ~ c(...))),
+    posterior = pmap_dbl(
+      .l = 
+        list(
+          x, 
+          category,
+          io),
+      .f = function(x, y, z) 
+        pmap(
+          list(z$mu, z$Sigma, z$Sigma_noise),
+          ~ dmvnorm(x, ..1, ..2 + ..3)) %>%
+        reduce(~ ..1 / (..1 + ..2)) %>%
+        { if (y == "/d/") . else 1 - .}),
+    surprisal = -log2(posterior))
+
+d.exposure_surprisal %<>%
+  group_by(Condition.Exposure, IO.Type) %>%
+  summarise(across(surprisal, list(mean = mean, sd = sd)))
+```
+
+Third, returning to PSEs, the estimates in Table \@ref(tab:hypothesis-table-simple-effects-block) suggest that listeners' PSEs changed most from Test 1 to Test 2, and then changed less and less with additional exposure up to Test 4 (smaller magnitude of estimates compared to earlier test blocks). This is particularly pronounced for the two conditions that shifted the most relative to pre-exposure, the baseline condition and the +40 condition. This pattern is predicted by models of adaptive speech perception that are sensitive to the prediction error experienced while processing speech. This includes models that assume error-based learning [@sohoglu-davis2016; see also discussion in @davis-sohoglu2020; @harmon2019] as well as Bayesian belief-updating models [@kleinschmidt-jaeger2015; for demonstration, see @jaeger2019]. Specifically, prior to exposure, an idealized listener (gray lines in Figure \@ref(fig:plot-fit-slope-PSE)C-D) would experience high surprisal processing the first few labeled exposure tokens (mean surprisal per exposure input in baseline condition = `r d.exposure_surprisal %>% filter(Condition.Exposure == "Shift0", IO.Type == "prior") %>% pull(surprisal_mean) %>% round(., 2)` bits; +10 condition = `r d.exposure_surprisal %>% filter(Condition.Exposure == "Shift10", IO.Type == "prior") %>% pull(surprisal_mean) %>% round(., 2)` bits; +40 condition = `r d.exposure_surprisal %>% filter(Condition.Exposure == "Shift40", IO.Type == "prior") %>% pull(surprisal_mean) %>% round(., 2)` bits). As listeners converge towards the distribution of /d/ and /t/ in the exposure condition, they should experience increasingly less surprisal processing the exposure tokens. An idealized learner that has fully converged against the exposure distributions (colored lines in Figure \@ref(fig:plot-fit-slope-PSE)C-D) would, for instance, experience only 
+`r d.exposure_surprisal %>% filter(Condition.Exposure == IO.Type) %>% pull(surprisal_mean) %>% mean(.) %>% round(., 2)` bits of surprisal.
 
 Fourth and finally, Panel D also begins to illuminate the reasons for the non-monotonic development of the +10 and baseline conditions relative to each other, discussed in the previous section. In particular, this non-monotonicity does *not* appear due to a reversal of the effects in either of the two exposure conditions. Rather, both exposure conditions continue to change listeners' categorization function in the same direction from Test 1 to Test 4. However, after the rapid change from the pre-exposure Test 1 to the first post-exposure Test 2, listeners' categorization responses in the baseline condition did not change as much as in the +10 condition. Additional Bayesian hypothesis tests reported in the SI (\@ref(sec:hypothesis-test-test-interactions)) suggest that these differences in the incremental effects of the two conditions are credible (BF = XXX).<!-- TO DO: this is the interaction test. Pls add info from SI --> This explains the reduction in the difference between the +10 and baseline conditions discussed in the previous section. It does, however, raise the question *why* listeners' responses in the baseline condition did not change further with increasing exposure. Our third and final perspective on the incremental changes induced by exposure begins to address this question.
 
@@ -700,7 +733,7 @@ d.test_surprisal <-
           list(y$mu, y$Sigma, y$Sigma_noise),
           ~ dmvnorm(x, ..1, ..2 + ..3)) %>%
         reduce(`+`)),
-    surprisal = -log(density))
+    surprisal = -log2(density))
 
 # # Visualize marginal density
 # d.test_surprisal %>%
