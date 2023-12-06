@@ -667,7 +667,7 @@ d.io.categorization <-
       model_col = "io", 
       groups = "Condition.Exposure") %>% 
       mutate(Phase = "test") %>% 
-      crossing(Block = c(1, 3, 5, 7, 8, 9)) %>% 
+      crossing(Block = c(1, 3, 5, 7, 8, 9)), 
     # Assess the ideal observers on the VOT locations that occur in the three different 
     # exposure conditions. Only use unlabeled exposure trials, since those are the trials
     # we assess participants' behavior on.

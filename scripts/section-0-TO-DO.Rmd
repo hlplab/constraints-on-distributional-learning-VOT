@@ -4,10 +4,7 @@
 
 ## Highest priority
  * MARYANN
-  * There is something wrong with the coding of race. see my earlier comment over slack. Or is it really the case that over 80 people declined to comment? --YES I COUNTED 85 FROM THE RAW DATA 
-  * create a script that joins the gender etc. data from chodroff and makes a new CSV file that's more similar to the one we use for connected speech. the present project should import that more standardized file. 
-    * I would not exclude gender = NA at that point. Rather hand those NAs through and then exclude when we subset to female talkers. 
-  * Address remaining TO DOs comments in Rmds, starting at intro
+
   * Fill in references
   * Replace 2D density plot with a perspective shot of 3D distribution of cues in chodroff data, and place your test stimuli into that space. @xie2023 contains code for taking such snapshots (but for now you can just do screen shots). Consider two separate plots for isolated and connected speech.
 

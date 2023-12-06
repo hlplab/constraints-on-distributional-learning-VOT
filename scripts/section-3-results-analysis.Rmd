@@ -1,6 +1,7 @@
 ```{r, include=FALSE, message=FALSE}
 if (!exists("PREAMBLE_LOADED")) source("preamble.R")
 
+
 # Store parameters for model fitting
 d.mean_sd_scaling <-
   d.for_analysis %>%
@@ -206,13 +207,16 @@ p.slope_1to7 <-
   # (remove _unscaled to switch to slopes over Gelman-scaled VOT)
   aes(y = slope_unscaled_median, ymin = slope_unscaled_lower, ymax = slope_unscaled_upper) +
   # These are the slopes of the ideal observers
-  geom_line(
-    data = d.io.categorization,
+  geom_hline(
+    data = d.io.categorization %>% 
+      filter(Condition.Exposure %in% c("prior", "Shift10")),
     # Using UNscaled slope because slopes are comparable across scales anyway and this is more intuitive
     # (substitute _unscaled to _scaled to switch to slopes over Gelman-scaled VOT)
-    aes(x = Block.plot_label, y = slope_unscaled, color = Condition.Exposure, group = Condition.Exposure),
-    linetype = 2, linewidth = .9, alpha = 0.5,
-    inherit.aes = F) +
+    mapping = aes(yintercept = slope_unscaled),
+    linetype = 2, linewidth = .8, alpha = 0.5) +
+  new_scale_color() +
+  scale_colour_manual(
+    "prior" = "grey", "Shift0" = "black") +
   scale_y_continuous("slope (log-odds/ms VOT)")
 
 # get the relative distance of the IO-predicted PSEs from the starting point PSE at test 1
