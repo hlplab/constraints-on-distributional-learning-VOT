@@ -209,14 +209,22 @@ p.slope_1to7 <-
   # These are the slopes of the ideal observers
   geom_hline(
     data = d.io.categorization %>% 
-      filter(Condition.Exposure %in% c("prior", "Shift10")),
+      filter(Condition.Exposure == "prior"),
     # Using UNscaled slope because slopes are comparable across scales anyway and this is more intuitive
     # (substitute _unscaled to _scaled to switch to slopes over Gelman-scaled VOT)
     mapping = aes(yintercept = slope_unscaled),
-    linetype = 2, linewidth = .8, alpha = 0.5) +
-  new_scale_color() +
-  scale_colour_manual(
-    "prior" = "grey", "Shift0" = "black") +
+    linetype = 2, 
+    linewidth = .8, 
+    colour = "grey",
+    alpha = 0.5) +
+  geom_hline(
+    data = d.io.categorization %>% 
+      filter(Condition.Exposure == "Shift10"),
+    mapping = aes(yintercept = slope_unscaled),
+    linetype = 2, 
+    linewidth = .8, 
+    colour = "purple",
+    alpha = 0.5) +
   scale_y_continuous("slope (log-odds/ms VOT)")
 
 # get the relative distance of the IO-predicted PSEs from the starting point PSE at test 1

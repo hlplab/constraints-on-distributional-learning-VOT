@@ -748,7 +748,7 @@ d.io.categorization <-
       groups = "Condition.Exposure") %>%
       mutate(Phase = "exposure") %>%
       crossing(Block = c(2, 4, 6))) %>%
-  select(Condition.Exposure, Phase, model_unscaled, Block, intercept_unscaled, slope_unscaled, intercept_scaled, slope_scaled, PSE) %>% 
+  select(Condition.Exposure, Phase, data, model_unscaled, Block, intercept_unscaled, slope_unscaled, intercept_scaled, slope_scaled, PSE) %>% 
   mutate(across(c(Phase, Condition.Exposure, Block), factor)) 
 ```
 
@@ -769,7 +769,13 @@ tokens <-
         select(Condition.Exposure, Phase, Item.VOT) %>% 
         rename(VOT = Item.VOT)) %>% 
       select(Condition.Exposure, Phase, VOT)
-  
+
+arrow_df <- d.io.categorization %>% 
+  filter(Condition.Exposure != "prior") %>% 
+  select(Condition.Exposure, Phase, PSE) %>%
+  group_by(Condition.Exposure, Phase) %>% 
+  slice_head(n = 1) %>% 
+  mutate(x = PSE, xend = PSE, y = .5, yend = .01)  
 
 d.io.categorization %>% 
   filter(Condition.Exposure != "prior") %>% 
@@ -779,23 +785,52 @@ d.io.categorization %>%
   # append VOT values for models to predict
   cross_join(
     tibble(
-      VOT = seq(-50, 150, 5))) %>% 
-  nest(data = VOT) %>% 
-  mutate(prediction = map2(.x = data, .y = model_unscaled, ~ predict(.y, newdata = .x))) %>% 
-  unnest(c(data, prediction)) %>% 
+      VOT = seq(-50, 135, 5))) %>% 
+  nest(stimuli = VOT) %>% 
+  mutate(prediction = map2(.x = stimuli, .y = model_unscaled, ~ predict(.y, newdata = .x))) %>% 
+  unnest(c(stimuli, prediction)) %>% 
   mutate(proportion_t_responses = plogis(prediction)) %>% 
   ggplot(aes(x = VOT, y = proportion_t_responses, colour = Condition.Exposure)) +
-  geom_line(size = 1.2) +
+  geom_line(size = 1) + 
+  geom_line(
+    data = io %>% 
+  filter(Condition.Exposure != "prior") %>% 
+  select(-x) %>% 
+  group_by(Condition.Exposure, Phase) %>% 
+  cross_join(
+    tibble(x = seq(-50, 130, 5))) %>% 
+  nest(x = x) %>% 
+  mutate(categorisation = 
+           map2(x, io, ~ 
+                  get_categorization_from_MVG_ideal_observer(x = .x$x, model = .y, decision_rule = "proportional") %>% 
+                  mutate(VOT = map(x, ~ .x[1]) %>% unlist()))) %>% 
+  unnest(categorisation, names_repair = "unique") %>% 
+  filter(category == "/t/"),
+  mapping = aes(x = VOT, y = response, colour = Condition.Exposure),
+  alpha = .5,
+  size = 1,
+  linetype = 2,
+  inherit.aes = F) +
   geom_rug(
-    data = tokens %>%  group_by(Condition.Exposure, Phase),
-    mapping = aes(x = VOT),
+    data = tokens %>% group_by(Condition.Exposure, Phase),
+    mapping = aes(x = VOT, colour = Condition.Exposure),
     alpha = .6,
     size = .8,
     inherit.aes = F) +
-  scale_x_continuous(breaks = seq(-50, 150, 20)) +
-  facet_grid(Condition.Exposure ~ Phase) +
+  geom_segment(data = arrow_df,
+          mapping = aes(x = x, xend = xend, y = y , yend = yend, group = Phase),
+           colour = "grey",
+          alpha = 0.8,
+           arrow = arrow(type = "open" , length = unit(0.04, "npc"))) +
+  geom_text(data = arrow_df, 
+            mapping = aes(x = x+2.5, y = .2, label = round(PSE, 2)),
+            size = 2.5) +
+  scale_x_continuous(breaks = seq(-50, 135, 20)) +
+  scale_y_continuous("Proportion 't'-responses") +
+  facet_wrap( ~ Phase, ncol = 1) +
   scale_color_manual("Exposure condition", labels = c("baseline", "+10", "+40"), values = colours.condition) +
   theme(legend.position = "top")
+
 
 
 ```
