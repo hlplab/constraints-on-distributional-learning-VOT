@@ -8,15 +8,16 @@ Like previous studies on accent adaptation, LGPL, and VGPL we find rapid adaptat
 
 
 ### evidence that adaptation is cumulative and incremental
-  + To the question of whether adaptation proceeds incrementally as predicted by DL models, the strength of evidence in support of this prediction depends on where the test talker's exposure distributions are placed relative to listeners' starting point. We found stronger evidence of incrementality in the +40 condition compared to the baseline and +10 conditions which were both left-shifted. Specifically incremental adaptation was evident in +40 and +10 but not obvious in the baseline condition. 
+  + To the question of whether adaptation proceeds incrementally as predicted by DL models, the strength of evidence in support of this prediction depends on where the test talker's exposure distributions are placed relative to listeners' starting point. We found stronger evidence of incrementality in the +40 condition compared to the baseline and +10 conditions which were both left-shifted. Specifically, incremental adaptation was evident in +40 and +10 but less obvious in the baseline condition. 
   
-    + The pattern of change does correspond to the findings of [@kleinschmidt2020; @kleinschmidt-jaeger2016] -- by the end of exposure the resultant categorization did not fully converge on the ideal boundary. This raises the possibility that adaptation is constrained like that which was found in @kleinschmidt-jaeger2016 and 
-  + Focussing on the +40 rightwards shift, incremental changes was observed in the rightwards boundary shift between test 1 and test 2 and between test 3 and test 2. In test 4 we observed a slight retraction in the boundary but we have no indication whether this represents listeners' refusal to adapt further in spite of the input or if it was part of natural oscillation in boundary estimates given the relatively wider CIs of the estimates in this condition. 
++ A striking pattern of the change between blocks is a very rapid shift in categorization (between the first test after exposure and the pre-test) followed by greatly diminished incremental changes in subsequent test blocks. Most of the adaptive changes were recorded after the first exposure block. This finding is consistent with hypotheses that emphasise error-based learning [@olejarczuk2018; @harmon2019] or predictive coding [@davis-sohoglu2020] where adaptation is observed in behavioural and neural responses as a result of effort to reduce the disparity between expected stimulus and the heard stimulus. This difference between expected and actual    
   
-  + The MAP estimate for kappa which is the confidence in prior mean was ~ 240 -- after 144 exposures, the updated mean is still dominated by the prior mean suggesting that it may take more exposure trials for convergence. 
+
 
 ### Pace of adaptation between blocks
 
+
++ discuss the fact that changes from block to block were largest at the beginning is consistent with the predictions of error-based learning [@sohoglu-davis2016] and Bayesian inference [@kleinschmidt-jaeger2015; for demonstration, see @jaeger2019].
 
 ### Does labelling quicken the pace of adaptation [this may be moved further down to deprioritise it]
 We did not design the study with a strong hypothesis about labelling given that previous studies found no effect of labelling on DL [@kleinschmidt2015] while studies in LGPL found that disambiguating labels were critical for phonetic adaptation [@norris2003]. What remains unclear is whether labelling could be effective in the earliest moments of exposure particularly for extremely shifted conditions which would presumably be the most challenging for listeners to adapt to. Because we planned for very short blocks of exposure, including labelled trials hedged our position in the event that labelling facilitates quicker DL. This would not interfere with our main experiment goals nor its ecological validity since real-life encounters would present a listener with both labelled and unlabelled input. Although this study does not provide us with conclusive evidence on the effects of labelling on DL, a future study similar in design to the present one, should test how the presence of labelling or the type of labelling could affect the pace of DL.
@@ -26,7 +27,7 @@ We did not design the study with a strong hypothesis about labelling given that 
  + discuss fast-then-slow adaptation. link to findings in VGPL [kj11, 12, K20] 
  + discuss other evidence for constraints in DL work [kj16; k20], potentially also limits in vroomen 07, kj12 though these are harder to compare.
 
- + discuss the fact that changes from block to block were largest at the beginning is consistent with the predictions of error-based learning [@sohoglu-davis2016] and Bayesian inference [@kleinschmidt-jaeger2015; for demonstration, see @jaeger2019].
+ 
  + discuss consequences of findings for other accounts (decision-making; normalization)
 
  
