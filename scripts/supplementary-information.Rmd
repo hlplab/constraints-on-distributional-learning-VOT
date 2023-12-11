@@ -1932,6 +1932,9 @@ We emphasize that our discussion deliberately focuses on *models*, not theories.
 The only distributional learning model that has been more repeatedly tested against adaptive speech perception---incremental Bayesian belief-updating [@kleinschmidt-jaeger2011]---predicts proportional, rather than sublinear, shifts. This model had previously been found to closely predict the cumulative effects of exposure in perceptual recalibration to audio-visually [@kleinschmidt2011-jaeger; @kleinschmidt-jaeger2012] or lexically labeled speech [@cummings-theodore2023], as well as the type of exposure to unlabelled minimal pair words employed by Kleinschmidt and Jaeger [@theodore-monto2019]. However, all of these studies employed comparatively small changes in cue distributions, and lacked the design necessary to detect deviation from proportionality (we return to this point below). The findings presented in @kleinschmidt-jaeger2016 would seem to reject this specific distributional learning model [though not necessarily the theory it is derived from, @kleinschmidt-jaeger2015; for discussion of the relation between theory and model, see also @kleinschmidt2020]  <!-- TO DO: make sure we do -->
 
 ```{r}
+# TO DO: This needs to be adjusted (if we keep it) so that the function doesn't just assume that the only cue is VOT 
+# (currently parts of the function make that assumption but other parts don't)
+
 get_IBBU_updates <- function(
     prior = NULL,
     exposure = NULL,
@@ -1940,6 +1943,7 @@ get_IBBU_updates <- function(
     cues = c("VOT", "f0_Mel"),
     kappa = 72, nu = 72,
     updates_to_keep = c(0, 48, 96, 144),
+    d.chodroff_wilson = d.chodroff_wilson.isolated,
     seed = 1234
 ) {
   set.seed(seed)
@@ -1966,8 +1970,8 @@ get_IBBU_updates <- function(
       reduce(rbind) %>%
       mutate(
         Trial = 1:144,
-        Condition.Exposure = paste0("TrueShift", .env$condition),
-        VOT = VOT + as.numeric(.env$condition),
+        Condition.Exposure = paste0("True", .env$condition),
+        VOT = VOT + as.numeric(gsub("Shift", "", .env$condition)),
         f0 = predict_f0(VOT, Mel = F),
         f0_Mel = predict_f0(VOT, Mel = T)) %>%
       relocate(Condition.Exposure, Trial, category, VOT, f0)
@@ -1975,10 +1979,14 @@ get_IBBU_updates <- function(
 
   idealized_ios <-
     make_VOT_IOs_from_exposure(exposure) %>%
+    cross_join(
+      exposure %>%  
+        transmute(x = pmap(list(VOT), ~ c(...))) %>%
+        nest(x = x)) %>%
     get_logistic_parameters_from_model(
-    model = ., x = map(test, ~ .x[1]),
-    model_col = "io",
-    groups = "Condition.Exposure")
+      model = ., 
+      model_col = "io",
+      groups = "Condition.Exposure")
 
   update_NIW_ideal_adaptor_incrementally(
     prior = prior,
@@ -2005,9 +2013,11 @@ get_IBBU_updates <- function(
                   color = if (condition %in% c("Shift0", "Shift10", "Shift40")) colours.condition[condition] else "black"))) %>%
     select(-c(observation.bin, observation.alpha)) %>%
     relocate(Condition.Exposure, observation.n, ia, cf, sf) %>%
+    mutate(x = list(.env$test)) %>%
     # Convert updated beliefs into estimated PSE and slope
     get_logistic_parameters_from_model(
-      model = ., x = test, model_col = "ia",
+      model = ., 
+      model_col = "ia",
       groups = c("Condition.Exposure", "observation.n", "cf", "sf")) %>%
     # Join in information about idealized prior and posterior
     # (the latter based on ideal observer that has fully learned the exposure distribution).
@@ -2029,23 +2039,20 @@ get_IBBU_updates <- function(
 }
 
 get_IBBU_updates_for_experiment <- function(
+    data = d.for_analysis,
     condition,
     test = NULL,
     cues = c("VOT", "f0_Mel"),
     kappa = 72, nu = 72
 ) {
   exposure <-
-    d.for_analysis %>%
+    data %>%
     ungroup() %>%
     filter(
       Condition.Exposure == condition,
       Phase == "exposure") %>%
     filter(ParticipantID == first(ParticipantID)) %>%
-    mutate(
-      category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")) %>%
-    rename(
-      VOT = Item.VOT,
-      f0_Mel = Item.f0_Mel)
+    mutate(category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))
 
   get_IBBU_updates(
     exposure = exposure,
@@ -2065,9 +2072,10 @@ x <-
 
 # Plot updates for our three exposure condition
 d.updates <-  
-  bind_rows(get_IBBU_updates_for_experiment("Shift0", test = x),
-            get_IBBU_updates_for_experiment("Shift10", test = x),
-            get_IBBU_updates_for_experiment("Shift40", test = x))
+  bind_rows(
+    get_IBBU_updates_for_experiment(condition = "Shift0", test = x, cues = c("VOT")),
+    get_IBBU_updates_for_experiment(condition = "Shift10", test = x, cues = c("VOT")),
+    get_IBBU_updates_for_experiment(condition = "Shift40", test = x, cues = c("VOT")))
 
 # d.exposure %>%
 #   distinct(VOT) %>%

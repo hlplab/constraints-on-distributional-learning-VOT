@@ -597,9 +597,9 @@ get_logistic_parameters_from_model <- function(
     resolution = 10^12
 ) {
   f <-
-    if (any(map(model[[model_col]], is.MVG_ideal_observer) %>% unlist()))
+    if (any(map_lgl(model[[model_col]], is.MVG_ideal_observer)))
       get_categorization_from_MVG_ideal_observer else
-        if (any(map(model[[model_col]], is.NIW_ideal_adaptor) %>% unlist()))
+        if (any(map_lgl(model[[model_col]], is.NIW_ideal_adaptor)))
           get_categorization_from_NIW_ideal_adaptor else stop("Model type not recognized.")
 
   model %>%
@@ -608,7 +608,7 @@ get_logistic_parameters_from_model <- function(
         map2(x, !! sym(model_col),
              ~ f(
                x = .x$x, model = .y, decision_rule = "proportional") %>%
-               mutate(VOT = map(x, ~ .x[1]) %>% unlist()))) %>%
+               mutate(VOT = map_dbl(x, ~ .x[1])))) %>%
     unnest(cols = categorization, names_repair = "unique") %>%
     # Prepare data frame for logistic regression
     pivot_wider(names_from = category, values_from = response, names_prefix = "response_") %>%

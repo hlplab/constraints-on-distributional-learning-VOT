@@ -658,24 +658,29 @@ d.chodroff_wilson %>%
       values = colours.category_greyscale,
       aesthetics = c("color", "fill")) +
   new_scale_color() +
-  geom_autopoint(
-    data = d.for_analysis %>% filter(Phase == "exposure") %>% 
-  group_by(Condition.Exposure, category) %>% 
-  summarise(across(c(VOT, f0_Mel, vowel_duration), mean)), 
-  mapping = aes(shape = category, colour = Condition.Exposure), 
-  alpha = .8, size = 1.8,
-  show.legend = F,
-  inherit.aes = F) +
+  geom_text(
+    data = 
+      d.for_analysis %>% 
+      filter(Phase == "exposure") %>% 
+      group_by(Condition.Exposure, category) %>% 
+      summarise(across(c(VOT, f0_Mel, vowel_duration), mean)), 
+    mapping = aes(x = .panel_x, y = .panel_y, label = category, colour = Condition.Exposure), 
+    alpha = .8, size = 3,
+    show.legend = F,
+    inherit.aes = F) +
   scale_colour_manual(
-             labels = c("baseline", "+10ms", "+40ms"),
-             values = colours.condition) +
-   guides(colour = "none",
-         linetype = guide_legend(title = "Speech style", override.aes = list(fill = NA, shape = c(0, 3)))) +
-  facet_matrix(vars(c(VOT, f0_Mel, vowel_duration)), layer.lower = c(3, 4:5), layer.diag = 2,
-               layer.upper = c(1, 4:5),
-               labeller = labeller(.rows = c(VOT = "VOT (ms)", f0_Mel = "f0 (Mel)", vowel_duration = "Vowel duration (ms)"),
-               .cols = c(VOT = "VOT (ms)", f0_Mel = "f0 (Mel)", vowel_duration = "Vowel duration (ms)"))) +
-  theme(legend.position = "top")
+    labels = c("baseline", "+10ms", "+40ms"),
+    values = colours.condition) +
+  guides(
+    colour = "none",
+    linetype = guide_legend(title = "Speech style", override.aes = list(fill = NA, shape = c(0, 3)))) +
+  facet_matrix(
+    vars(c(VOT, f0_Mel, vowel_duration)), 
+    layer.lower = c(3, 4:5), layer.diag = 2, layer.upper = c(1, 4:5),
+    labeller = labeller(
+      .rows = c(VOT = "VOT\n(ms)", f0_Mel = "f0\n(Mel)", vowel_duration = "Vowel duration\n(ms)"),
+      .cols = c(VOT = "VOT\n(ms)", f0_Mel = "f0\n(Mel)", vowel_duration = "Vowel duration\n(ms)"))) +
+  theme(legend.position = "top", axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 Second, similar reasoning about the exposure distributions relative to listeners' prior experience offers an explanation for the relative lack of changes in the slope of listeners categorization function, visible in Figure \@ref(fig:plot-fit-slope-PSE)C. Slope changes, or lack thereof, have received comparatively little attention in previous work [but see @clayards2008; @theodore-monto2019] but they are an important part of the empirical facts that theories of speech perception need to account for [see also @kleinschmidt2020]. Compared to the changes in PSEs in Panel D, changes in the *slope* of listeners' categorization functions in Panel C were similar across exposure conditions ($0.2 \leq$ BFs $\leq 3.3$; SI, \@ref(sec:SI-slope-tests)).<!-- TO DO: these should be the simple slopes of exposure within each test block--> Slopes also changed little relative to listeners' categorization responses in Test 1 ($0.6 \leq$ BFs $\leq 4$; see SI, \@ref(sec:SI-slope-tests)).<!-- TO DO: these should be the simple slopes of block within each exposure condition--> Both of these findings are in line with distributional learning models of adaptive speech perception [@kleinschmidt-jaeger2015], given that the variance of /d/ and /t/ was (a) held constant across all three exposure conditions, and (b) designed to approximate the variance of /d/ and /t/ in typical speech input. Indeed, the same ideal observer model used to predict listeners' pre-exposure PSE also quite closely predicts listeners' pre-exposure slopes in Test 1, prior to any exposure (gray dashed lines in  Figure \@ref(fig:plot-fit-slope-PSE)C; we discuss the colored dashed lines in the next section).
