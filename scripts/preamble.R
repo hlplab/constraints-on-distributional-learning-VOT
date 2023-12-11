@@ -68,7 +68,7 @@ colours.condition <- c("Shift0" = "#cc0000", "Shift10" = "#12D432", "Shift40" = 
 colours.category_greyscale <- c("/d/" = "#afafaf", "/t/" = "#d2d4dc")
 colours.category <- c("/d/" = "#eb6223", "/t/" = "#522888")
 
-#set.seed(42007)
+set.seed(42007)
 
 # Load data ---------------------------------------------------------------------
 
@@ -202,7 +202,6 @@ d.chodroff_wilson.isolated <-
   #     c("VOT", "f0_Mel", "vowel_duration"),
   #     function(x) apply_ccure(data = ., cue = substitute(x)))) %>%
   ungroup()
-
 
 PREAMBLE_LOADED <- TRUE
 

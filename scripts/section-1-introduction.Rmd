@@ -1,5 +1,4 @@
 ```{r setup, include=FALSE, message=FALSE}
-source("production_database.R")
 if (!exists("PREAMBLE_LOADED")) source("preamble.R")
 ```
 

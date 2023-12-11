@@ -242,7 +242,7 @@ Committing to a database is, however, not a *sufficient* assumption. Estimates o
 
 The two approaches have different trade-offs. When cues are not talker-normalized, the resulting category representations inherit not only within-category variability but also variability across talker, over-estimating the actual category covariances for any given talker. Normalizing cues addresses this problem. It does, however, remove potentially useful information about the correlation between cues from the signal: compared to unnormalized cues in Panel A, the talker-normalized cues in Panel B contain less information about the covariance of VOT, f0, and vowel duration.
 
-The two approaches also share potentially important shortcomings. Specifically, neither approach is well-suited if the correlation between cues *within* talkers differs from the correlation between talker means of those cues. The /d/ and /t/ categories in Panel A conflate the two source of covariance; the categories in Panel B completely removed any information about covariance in talker means. This is problematic, as there is strong evidence that such correlations exists [@chodroff-wilson2017; @chodroff-wilson2019; @REF-OTHERS], and that listeners have strong expectations about, at least some types of, correlations between talker means [@idemaru-holt2011; @idemaru-holt2020; @schertz; @OTHERs].^[Additionally, the category means for /d/ and /t/ (solid points) for unnormalized cues are the simply the weighted average of the talkers available in the data. If talkers contribute different amounts of data to the database, this means that the category means might disproportionately depend on a subset of the data.]. This issue is illustrated in Figure XXX, which shows that correlation between phonetic cues *within* talkers (Panel A) and the correlations of talker means of the phonetic cues *across* talkers (Panel B).<!-- TO DO: add figure. think about visualization -->  XXX <!-- TO DO: add description . NOTE that even when those two types of correlations are similar, one would have to somehow USE that knowledge when generalizing prior expectations to a new talker. --> For the same reasons, neither of the two approaches considered above captures correlations between talkers' category means and category (co)variances. Both approaches would, for example, miss if category variance generally increases for larger category means (or vice versa).
+The two approaches also share potentially important shortcomings. Specifically, neither approach is well-suited if the correlation between cues *within* talkers differs from the correlation between talker means of those cues. The /d/ and /t/ categories in Panel A conflate the two source of covariance; the categories in Panel B completely removed any information about covariance in talker means. This is problematic, as there is strong evidence that such correlations exists [@chodroff-wilson2017; @chodroff-wilson2019; @theodore2009; @sonderegger2020], and that listeners have strong expectations about, at least some types of, correlations between talker means [@idemaru-holt2011; @idemaru-holt2020; @schertz; @OTHERs].^[Additionally, the category means for /d/ and /t/ (solid points) for unnormalized cues are the simply the weighted average of the talkers available in the data. If talkers contribute different amounts of data to the database, this means that the category means might disproportionately depend on a subset of the data.]. This issue is illustrated in Figure XXX, which shows that correlation between phonetic cues *within* talkers (Panel A) and the correlations of talker means of the phonetic cues *across* talkers (Panel B).<!-- TO DO: add figure. think about visualization -->  XXX <!-- TO DO: add description . NOTE that even when those two types of correlations are similar, one would have to somehow USE that knowledge when generalizing prior expectations to a new talker. --> For the same reasons, neither of the two approaches considered above captures correlations between talkers' category means and category (co)variances. Both approaches would, for example, miss if category variance generally increases for larger category means (or vice versa).
 
 ```{r}
 p.database <- d.chodroff_wilson %>% 
@@ -272,8 +272,10 @@ p.database <- d.chodroff_wilson %>%
     labels = c("/d/", "/t/"),
     values = colours.category,
     aesthetics = c("color", "fill")) +
-  facet_matrix(vars(c(VOT, f0_Mel, vowel_duration)), layer.lower = c(1, 5:6), layer.diag = 2,
-               layer.upper = c(3:6)) +
+  facet_matrix(vars(c(VOT, f0_Mel, vowel_duration)), layer.lower = c(3, 4:5), layer.diag = 2,
+               layer.upper = c(1, 4:5),
+               labeller = labeller(.rows = c(VOT = "VOT", f0_Mel = "F0 (Mel)", vowel_duration = "Vowel duration"),
+               .cols = c(VOT = "VOT (ms)", f0_Mel = "f0 (Mel)", vowel_duration = "Vowel duration (ms)"))) +
   theme(legend.position = "top")
 
 p.matrix_isolated <- p.database %+%  
@@ -338,8 +340,10 @@ p.database.norm <- d.chodroff_wilson.norm %>%
       labels = c("/d/", "/t/"),
       values = colours.category,
       aesthetics = c("color", "fill")) +
-  facet_matrix(vars(c(VOT, f0_Mel, vowel_duration)), layer.lower = c(1, 5:6), layer.diag = 2,
-               layer.upper = c(3:6)) +
+  facet_matrix(vars(c(VOT, f0_Mel, vowel_duration)), layer.lower = c(3, 4:5), layer.diag = 2,
+               layer.upper = c(1, 4:5),
+               labeller = labeller(.rows = c(VOT = "VOT", f0_Mel = "f0 (Mel)", vowel_duration = "Vowel duration"),
+               .cols = c(VOT = "VOT (ms)", f0_Mel = "f0 (Mel)", vowel_duration = "Vowel duration (ms)"))) +
   theme(legend.position = "top") 
 
 p.matrix_isolated.norm <- p.database.norm %+%  
@@ -751,8 +755,8 @@ d.io.categorization <-
   select(Condition.Exposure, Phase, data, model_unscaled, Block, intercept_unscaled, slope_unscaled, intercept_scaled, slope_scaled, PSE) %>% 
   mutate(across(c(Phase, Condition.Exposure, Block), factor)) 
 ```
-
-```{r plot-IO-logistic-regression-estimates}
+(ref:plot-IO-logistic-regression-fit) The expected categorization functions predicted by the logistic regression of responses by idealized listeners by exposure condition and phase (solid lines). The ideal listeners' proportion of "t"-responses (dashed lines) converge with the logistic regression fit along the assessed VOT region and are therefore partially obscured by the logistic regression fitted lines. 
+```{r plot-IO-logistic-regression-fit}
 tokens <- 
   bind_rows(
       d.for_analysis %>%  
@@ -830,13 +834,11 @@ d.io.categorization %>%
   facet_wrap( ~ Phase, ncol = 1) +
   scale_color_manual("Exposure condition", labels = c("baseline", "+10", "+40"), values = colours.condition) +
   theme(legend.position = "top")
-
-
-
+rm(arrow_df, tokens)
 ```
 
 ## Accounting for potential biases in the estimation of intercepts, slopes, and PSEs {#sec:io-bias-correction}
-The perceptual model of our psychometric mixed-effects analyses assumed linear effects of VOT on the log-odds of "t"-responses. We made this assumptions for the sake of simplicity, and in order to avoid over-fitting. The ideal observers, however, predict non-linear effects of VOT [since /d/ and /t/ do *not* have equal variances; for details, see @bicknell2018; @kleinschmidt-jaeger2015; @kronrod2016]. <!-- TO DO: add figures that illustrate this --> We thus estimated the intercepts, slopes, and PSEs of ideal observers paralleling the analysis approach for the human data. This makes sure that any biases in the estimation of human intercepts, slopes, and PSEs that are introduced by our analysis approach are also taken into account for the idealized listeners (see also SI, \@ref{sec:GAMM} for a re-analysis of the human data that relaxes the linearity assumption).
+The perceptual model of our psychometric mixed-effects analyses assumed linear effects of VOT on the log-odds of "t"-responses. We made this assumptions for the sake of simplicity, and in order to avoid over-fitting. The ideal observers, however, predict non-linear effects of VOT [since /d/ and /t/ do *not* have equal variances; for details, see @bicknell2018; @kleinschmidt-jaeger2015; @kronrod2016]. We thus estimated the intercepts, slopes, and PSEs of ideal observers paralleling the analysis approach for the human data. This makes sure that any biases in the estimation of human intercepts, slopes, and PSEs that are introduced by our analysis approach are also taken into account for the idealized listeners (see also SI, \@ref{sec:GAMM} for a re-analysis of the human data that relaxes the linearity assumption).
 
 <!-- TO DO: this is where we will talk about how we estimated the dashed lines in the main text. then we will present additional, more fine-grained bias correction -->
 
@@ -906,7 +908,7 @@ table.interaction.condition_block <-
 table.interaction.condition_block
 ```
 
-### Slopes: Differences across exposure conditions, across blocks within each condition, and differences in the rate of change between exposure conditions and block
+### Slopes: Differences across exposure conditions, across blocks within each condition, and differences in the rate of change between exposure conditions and block {#sec:slopes analyses}
 Analyses of changes in slopes that compare changes between blocks within conditions and interactions of exposure conditions and blocks are summarized in Tables \@ref(tab:hypothesis-table-simple-slopes-condition), \@ref(tab:hypothesis-table-simple-slopes-block), and \@ref(tab:hypothesis-table-interaction-condition-block-VOT) 
 
 ```{r hypothesis-table-simple-slopes-condition, results='asis'}
@@ -920,18 +922,18 @@ hyp.simple_slopes_condition <-
       "mu2_Block3:Condition.Exposure_Shift10vs.Shift0:VOT_gs > 0",
       "mu2_Block3:Condition.Exposure_Shift40vs.Shift10:VOT_gs > 0",
       "mu2_Block3:Condition.Exposure_Shift40vs.Shift10:VOT_gs + mu2_Block3:Condition.Exposure_Shift10vs.Shift0:VOT_gs > 0",
-      "mu2_Block5:Condition.Exposure_Shift10vs.Shift0:VOT_gs < 0",
-      "mu2_Block5:Condition.Exposure_Shift40vs.Shift10:VOT_gs < 0",
-      "mu2_Block5:Condition.Exposure_Shift40vs.Shift10:VOT_gs + mu2_Block5:Condition.Exposure_Shift10vs.Shift0:VOT_gs < 0",
-      "mu2_Block7:Condition.Exposure_Shift10vs.Shift0:VOT_gs < 0",
-      "mu2_Block7:Condition.Exposure_Shift40vs.Shift10:VOT_gs < 0",
-      "mu2_Block7:Condition.Exposure_Shift40vs.Shift10:VOT_gs + mu2_Block7:Condition.Exposure_Shift10vs.Shift0:VOT_gs < 0",
-      "mu2_Block8:Condition.Exposure_Shift10vs.Shift0:VOT_gs < 0",
-      "mu2_Block8:Condition.Exposure_Shift40vs.Shift10:VOT_gs < 0",
-      "mu2_Block8:Condition.Exposure_Shift40vs.Shift10:VOT_gs + mu2_Block7:Condition.Exposure_Shift10vs.Shift0:VOT_gs < 0",
-      "mu2_Block9:Condition.Exposure_Shift10vs.Shift0:VOT_gs < 0",
-      "mu2_Block9:Condition.Exposure_Shift40vs.Shift10:VOT_gs < 0",
-      "mu2_Block9:Condition.Exposure_Shift40vs.Shift10:VOT_gs + mu2_Block7:Condition.Exposure_Shift10vs.Shift0:VOT_gs < 0"),
+      "mu2_Block5:Condition.Exposure_Shift10vs.Shift0:VOT_gs > 0",
+      "mu2_Block5:Condition.Exposure_Shift40vs.Shift10:VOT_gs > 0",
+      "mu2_Block5:Condition.Exposure_Shift40vs.Shift10:VOT_gs + mu2_Block5:Condition.Exposure_Shift10vs.Shift0:VOT_gs > 0",
+      "mu2_Block7:Condition.Exposure_Shift10vs.Shift0:VOT_gs > 0",
+      "mu2_Block7:Condition.Exposure_Shift40vs.Shift10:VOT_gs > 0",
+      "mu2_Block7:Condition.Exposure_Shift40vs.Shift10:VOT_gs + mu2_Block7:Condition.Exposure_Shift10vs.Shift0:VOT_gs > 0",
+      "mu2_Block8:Condition.Exposure_Shift10vs.Shift0:VOT_gs > 0",
+      "mu2_Block8:Condition.Exposure_Shift40vs.Shift10:VOT_gs > 0",
+      "mu2_Block8:Condition.Exposure_Shift40vs.Shift10:VOT_gs + mu2_Block7:Condition.Exposure_Shift10vs.Shift0:VOT_gs > 0",
+      "mu2_Block9:Condition.Exposure_Shift10vs.Shift0:VOT_gs > 0",
+      "mu2_Block9:Condition.Exposure_Shift40vs.Shift10:VOT_gs > 0",
+      "mu2_Block9:Condition.Exposure_Shift40vs.Shift10:VOT_gs + mu2_Block7:Condition.Exposure_Shift10vs.Shift0:VOT_gs > 0"),
     robust = T) %>%
   .$hypothesis %>% 
   dplyr::select(-Star)
@@ -1067,14 +1069,14 @@ table.interactions.condition_block_VOT <-
 table.interactions.condition_block_VOT
 ```
 
-## Exposure blocks {sec:SI-analysis-exposure-blocks}
+## Exposure blocks {#SI-analysis-exposure-blocks}
 This section reports the hypothesis tables for exposure blocks corresponding the simple effects of exposure condition and blocks (provided in the main text for test blocks), and the interaction between condition and block.
 
 <!-- TO DO: add overall summary here, summarizing the most important parallels and differences to the results for test blocks. -->
 <!-- TO DO: follow the heading format for test blocks -->
 
 ### PSE: Simple effects of exposure condition within each block
-<!-- TO DO --> WE DID NOT FIT A NESTED BLOCK MODEL FOR EXPOSURE
+<!-- TO DO --> 
 
 
 ### PSE: Simple effects of block within each exposure condition

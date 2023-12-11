@@ -46,3 +46,4 @@ chodroff_wilson_speech_db <- read_tsv(
              speechstyle = "connected"))
 
 write_csv(chodroff_wilson_speech_db, "../data/chodroff_wilson_speech_db.csv")
+rm(chodroff_wilson_speech_db)
