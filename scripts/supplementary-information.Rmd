@@ -352,6 +352,7 @@ p.matrix_isolated.norm <- p.database.norm %+%
 p.matrix_connected.norm <- p.database.norm %+%  
   subset(d.chodroff_wilson.norm %>% filter(speechstyle == "connected")) +
   theme(strip.text.x = element_blank())
+rm(d.chodroff_wilson.connected.norm, d.chodroff_wilson.isolated.norm)
 ```
 
 (ref:plot-database-pairwise-cue-correlations) Distribution of L1 US-English talker cues against test tokens, unnormalized (black) and normalized (gray). Test tokens are normalized according to overall cue means of both corpora.  **Panel A:** Isolated speech of initial /d/ and /t/ syllables by 13 females. **Panel B:** Same as **A** but normalised. **Panel C:** Connected speech of word-initial /d/ and /t/ by 102 females. **Panel D:** Same as **C** but normalised within talker. In  **B** and **D** the mean of talker means was added to each token in order to keep tokens in the familiar phonetic space [following @xie2023]
@@ -755,7 +756,7 @@ d.io.categorization <-
   select(Condition.Exposure, Phase, data, model_unscaled, Block, intercept_unscaled, slope_unscaled, intercept_scaled, slope_scaled, PSE) %>% 
   mutate(across(c(Phase, Condition.Exposure, Block), factor)) 
 ```
-(ref:plot-IO-logistic-regression-fit) The expected categorization functions predicted by the logistic regression of responses by idealized listeners by exposure condition and phase (solid lines). The ideal listeners' proportion of "t"-responses (dashed lines) converge with the logistic regression fit along the assessed VOT region and are therefore partially obscured by the logistic regression fitted lines. 
+(ref:plot-IO-logistic-regression-fit) The expected categorization functions predicted by the logistic regression of responses by idealized listeners by exposure condition and phase (solid lines). The ideal listeners' proportion of "t"-responses (dashed lines) converge with the logistic regression fit along the assessed VOT region and are therefore partially obscured by the logistic regression fitted lines. Grey arrows point to expected PSEs of the logistic regression fit. 
 ```{r plot-IO-logistic-regression-fit}
 tokens <- 
   bind_rows(
@@ -818,7 +819,7 @@ d.io.categorization %>%
   geom_rug(
     data = tokens %>% group_by(Condition.Exposure, Phase),
     mapping = aes(x = VOT, colour = Condition.Exposure),
-    alpha = .6,
+    alpha = .4,
     size = .8,
     inherit.aes = F) +
   geom_segment(data = arrow_df,

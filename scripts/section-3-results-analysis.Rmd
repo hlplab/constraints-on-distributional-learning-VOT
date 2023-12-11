@@ -653,28 +653,29 @@ d.chodroff_wilson %>%
   geom_autodensity(aes(linetype = speechstyle), position = "identity", alpha = .5) +
   stat_ellipse(aes(x = .panel_x, y = .panel_y, linetype = speechstyle)) +
   scale_color_manual(
-      "Category",
-      labels = c("/d/", "/t/"),
-      values = colours.category_greyscale,
-      aesthetics = c("color", "fill")) +
+    "Category",
+    labels = c("/d/", "/t/"),
+    values = colours.category_greyscale,
+    aesthetics = c("color", "fill")) +
   new_scale_color() +
   geom_autopoint(
-    data = d.for_analysis %>% filter(Phase == "exposure") %>% 
-  group_by(Condition.Exposure, category) %>% 
-  summarise(across(c(VOT, f0_Mel, vowel_duration), mean)), 
-  mapping = aes(shape = category, colour = Condition.Exposure), 
-  alpha = .8, size = 1.8,
-  show.legend = F,
-  inherit.aes = F) +
+    data = d.for_analysis %>% 
+      filter(Phase == "exposure") %>% 
+      group_by(Condition.Exposure, category) %>% 
+      summarise(across(c(VOT, f0_Mel, vowel_duration), mean)), 
+    mapping = aes(shape = category, colour = Condition.Exposure), 
+    alpha = .8, size = 1.8,
+    show.legend = F,
+    inherit.aes = F) +
   scale_colour_manual(
-             labels = c("baseline", "+10ms", "+40ms"),
-             values = colours.condition) +
-   guides(colour = "none",
+    labels = c("baseline", "+10ms", "+40ms"),
+    values = colours.condition) +
+  guides(colour = "none",
          linetype = guide_legend(title = "Speech style", override.aes = list(fill = NA, shape = c(0, 3)))) +
   facet_matrix(vars(c(VOT, f0_Mel, vowel_duration)), layer.lower = c(3, 4:5), layer.diag = 2,
                layer.upper = c(1, 4:5),
                labeller = labeller(.rows = c(VOT = "VOT (ms)", f0_Mel = "f0 (Mel)", vowel_duration = "Vowel duration (ms)"),
-               .cols = c(VOT = "VOT (ms)", f0_Mel = "f0 (Mel)", vowel_duration = "Vowel duration (ms)"))) +
+                                   .cols = c(VOT = "VOT (ms)", f0_Mel = "f0 (Mel)", vowel_duration = "Vowel duration (ms)"))) +
   theme(legend.position = "top")
 ```
 
