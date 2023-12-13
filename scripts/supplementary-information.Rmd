@@ -223,7 +223,7 @@ d %>%
 ## Additional information about the Bayesian psychometric mixed-effects model {sec:analysis-approach}
 We analyzed participants' categorization responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric model [@prins2011]. The psychometric model is an extension of mixed-effects logistic regression that also takes into account attentional lapses.
 
-The mixed-effects psychometric model describes the probability of "t"-responses as a weighted mixture of a perceptual and a lapsing model. The perceptual model predicts responses on trials where participants pay attention and respond based on the stimulus. We implemented the perceptual model as used mixed-effects logistic regression, predicting "t"-responses from exposure condition (backward difference coded, comparing the +10ms against the +0ms shift condition, and the +40ms against the +10ms shift condition), test block (backward difference coded from the first to last test block), VOT (Gelman scaled), and their full factorial interaction. The model included by-participant random intercepts and slopes for all within-participant maniplations (block and VOT) and by-item random intercepts and slopes for all within-participant manipulations (exposure condition, block, VOT).
+The mixed-effects psychometric model describes the probability of "t"-responses as a weighted mixture of a perceptual and a lapsing model. The perceptual model predicts responses on trials where participants pay attention and respond based on the stimulus. We implemented the perceptual model as used mixed-effects logistic regression, predicting "t"-responses from exposure condition (backward difference coded, comparing the +10ms against the +0ms shift condition, and the +40ms against the +10ms shift condition), test block (backward difference coded from the first to last test block), VOT (Gelman scaled), and their full factorial interaction. The model included by-participant random intercepts and slopes for all within-participant manipulations (block and VOT) and by-item random intercepts and slopes for all within-participant manipulations (exposure condition, block, VOT).
 
 The lapsing model predicts participant responses that are made independent of the stimulus---for example, responses that result from attentional lapses. These responses depend only on participants' response bias. We used mixed-effects logistic regression with only a population-level intercept, allowing non-uniform responses bias but assuming that response biases did not vary across participants. Finally, the relative weight of the perceptual and lapsing model is determined by the lapse rate. We again used mixed-effects logistic regression with only a population-level intercept, inferring lapse rates from that data while assuming that lapse rates did not vary across participants or blocks. This assumption is validated by Figures \@ref(fig:plot-fit-intercept-slope-PSE)A-B, which shows that participants' responses (the point ranges) in all exposure and test blocks approach 0 and 100% "t"-responses for small and large VOTs, respectively [unlike in @kleinschmidt2020]. One possible explanation for these consistently small lapse rate [also compared to @clayards2008] is that the present experiment recruited participants from the Prolific platform, which has been found [@REFS] to deliver higher data quality than the Amazon's Mechanical Turk crowdsourcing platform used by @kleinschmidt-jaeger2016 and @kleinschmidt2020.
 
@@ -648,7 +648,7 @@ advantages for regression-based approach fitting categories
 ### Phonetic database [@chodroff-wilson2017]
 The production data we used in our analysis is a subset of two annotated phonetic databases from @chodroff-wilson2017 (downloadable at https://osf.io/k6djr/). The databases differed in size and the way the productions were elicited; the larger of the two was made up of 180 adult L1-US English talkers (102 female) producing stop-initial words in connected speech  while the smaller was made up of recordings of isolated utterances of stop-initial CVC syllables by 24 L1-US English talkers (13 female) [see @chodroff-wilson2017 pp. 33; 37- 39 for details]. For the connected speech database we filtered the databases to /d/ and /t/ tokens and removed tokens that showed pitch-doubling by running a dip test for bimodality. We also restricted the talkers to those with a minimum of 10 tokens per category. 
 For the isolated database we removed talkers with no data (3 talkers), tokens that were not stop-initial utterances, tokens that had anomalous labeling (e.g. "xxxGOOT" or "POAT0"), and tokens with NA for f0 measurements. We filtered the data to only female talkers and removed tokens with f0s less than 150 Hz (as advised by Eleanor Chodroff, these tokens were likely due to measurement error). 
-For the combined databases we ensured that the talkers we sampled had sufficient amount of data and that the number of tokens from each category were balanced. We then took only the female talkers to match the gender of our test talker. This left us with a total of 5,122 tokens from 40 talkers: 4,324 tokens by 27 female talkers from the connected speech database and 798 tokens by 13 female talkers from the isolated speech database.
+For the combined databases we ensured that the talkers we sampled had sufficient amount of data and that the number of tokens from each category were balanced. We then took only the female talkers to match the gender of our test talker. This left us with a total of 5,122 tokens from 40 talkers: `r nrow(d.chodroff_wilson.connected)` tokens by `r length(unique(d.chodroff_wilson.connected$Talker))` female talkers from the connected speech database and `r nrow(d.chodroff_wilson.isolated)` tokens by `r length(unique(d.chodroff_wilson.isolated$Talker))` female talkers from the isolated speech database.
 
 ## Idealized learners that have fully learned the exposure distribution
 For each exposure condition we constructed ideal observers to simulate a learner that fully learned the exposure distribution (i.e. the cumulative distribution after undergoing all 144 trials) and who did not suffer from attentional lapses. Such an ideal learner would therefore categorize the stimuli at test based purely on the statistics of exposure input. The optimal categorizations of the test stimuli by each of these IOs were obtained following Bayes' rule under the assumption of equal prior probability for both categories. Following this we multiplied each IOs' responses at each stimulus to simulate categorization over a large number of trials and fitted three separate logistic regressions to the responses with VOT as the sole predictor. We obtained the predicted PSEs from each of the linear models which represent the ideal boundary of each exposure condition. These converged with the boundaries computed from the parameters of the Gaussian distributions that underlie each category within each condition. 
@@ -787,10 +787,10 @@ d.io.categorization %>%
   select(Condition.Exposure, Phase, model_unscaled) %>% 
   group_by(Condition.Exposure, Phase) %>% 
   slice_head(n = 1) %>% 
-  # append VOT values for models to predict
+  # append VOT values for logistic regression models to predict
   cross_join(
     tibble(
-      VOT = seq(-50, 135, 5))) %>% 
+      VOT = seq(-50, 150, 5))) %>% 
   nest(stimuli = VOT) %>% 
   mutate(prediction = map2(.x = stimuli, .y = model_unscaled, ~ predict(.y, newdata = .x))) %>% 
   unnest(c(stimuli, prediction)) %>% 
@@ -801,9 +801,10 @@ d.io.categorization %>%
     data = io %>% 
   filter(Condition.Exposure != "prior") %>% 
   select(-x) %>% 
+  # append VOT values for IO to categorise
   group_by(Condition.Exposure, Phase) %>% 
   cross_join(
-    tibble(x = seq(-50, 130, 5))) %>% 
+    tibble(x = seq(-50, 150, 5))) %>% 
   nest(x = x) %>% 
   mutate(categorisation = 
            map2(x, io, ~ 
@@ -830,7 +831,7 @@ d.io.categorization %>%
   geom_text(data = arrow_df, 
             mapping = aes(x = x+2.5, y = .2, label = round(PSE, 2)),
             size = 2.5) +
-  scale_x_continuous(breaks = seq(-50, 135, 20)) +
+  scale_x_continuous(breaks = seq(-50, 130, 20)) +
   scale_y_continuous("Proportion 't'-responses") +
   facet_wrap( ~ Phase, ncol = 1) +
   scale_color_manual("Exposure condition", labels = c("baseline", "+10", "+40"), values = colours.condition) +

@@ -86,8 +86,6 @@ d.chodroff_wilson <-
   get_ChodroffWilson_data(
     database_filename = "../data/chodroff_wilson_speech_db.csv",
     categories = c("/d/", "/t/"),
-    # Since we haven't yet merged the two databases, we're disabling exclusions here
-    # (so that they can be done later, after merging)
     min.n_per_talker_and_category = n_min_per_talker,
     limits.VOT = c(-Inf, Inf),
     limits.f0 = c(-Inf, Inf),
@@ -97,6 +95,8 @@ d.chodroff_wilson <-
 d.chodroff_wilson %<>% 
   mutate(across(c(speechstyle, Talker, category, gender), factor)) %>%
   # Subset to female talkers and exclude cases with NAs and distributional outliers
+  # do this by speech style because the category separation is extreme in the isolated speech database
+  group_by(speechstyle) %>% 
   filter(
     gender == "female",
     if_all(c("VOT", "f0_Mel", "vowel_duration"), ~ !is.na(.x)),
@@ -168,22 +168,6 @@ d.chodroff_wilson.talker_stats <-
       ends_with(c("_mean", "_sd", "_var")),
       list(mean = mean, sd = sd, var = var)))
 
-d.chodroff_wilson %<>%
-  group_by(speechstyle, Talker, category) %>%
-  # Subset the data to be balanced, so that each talker provides an equal number of
-  # /d/ and /t/ tokens, the maximal number of tokens possible for that talker. This
-  # is done in order to make sure that normalization (if applied) doesn't introduce
-  # indirect information about category identity.
-  mutate(n.for_category_and_talker = n()) %>%
-  group_by(speechstyle, Talker) %>%
-  # Select talkers that have both /d/ and /t/ observations
-  filter(all(c("/d/", "/t/") %in% unique(category))) %>%
-  # Get the smaller number of counts for the two categories for each talker and sample
-  # that many (and thus equally many) tokens from each category for that talker.
-  mutate(n_min.for_category_and_talker = min(n.for_category_and_talker)) %>%
-  group_by(speechstyle, Talker, category) %>%
-  sample_n(size = unique(n_min.for_category_and_talker)) %>%
-  ungroup()
 
 d.chodroff_wilson.connected <-
   d.chodroff_wilson %>%
@@ -196,7 +180,7 @@ d.chodroff_wilson.connected <-
 
 d.chodroff_wilson.isolated <-
   d.chodroff_wilson %>%
-  filter(speechstyle == "isolated", Talker != "CVC12") %>%
+  filter(speechstyle == "isolated") %>%
   # mutate(
   #   across(
   #     c("VOT", "f0_Mel", "vowel_duration"),

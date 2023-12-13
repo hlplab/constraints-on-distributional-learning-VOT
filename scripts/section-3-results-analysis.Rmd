@@ -209,21 +209,12 @@ p.slope_1to7 <-
   # These are the slopes of the ideal observers
   geom_hline(
     data = d.io.categorization %>% 
-      filter(Condition.Exposure == "prior"),
+      mutate(slope_unscaled = ifelse(Condition.Exposure != "prior", .237, slope_unscaled)),
     # Using UNscaled slope because slopes are comparable across scales anyway and this is more intuitive
     # (substitute _unscaled to _scaled to switch to slopes over Gelman-scaled VOT)
-    mapping = aes(yintercept = slope_unscaled),
+    mapping = aes(yintercept = slope_unscaled, colour = Condition.Exposure, group = Condition.Exposure),
     linetype = 2, 
     linewidth = .8, 
-    colour = "grey",
-    alpha = 0.5) +
-  geom_hline(
-    data = d.io.categorization %>% 
-      filter(Condition.Exposure == "Shift10"),
-    mapping = aes(yintercept = slope_unscaled),
-    linetype = 2, 
-    linewidth = .8, 
-    colour = "purple",
     alpha = 0.5) +
   scale_y_continuous("slope (log-odds/ms VOT)")
 
@@ -270,7 +261,8 @@ p.PSE_1to7 <-
   aes(y = PSE_median, ymin = PSE_lower, ymax = PSE_upper) +
   geom_linerange(linewidth = .6, position = position_dodge(.3), alpha = .5) +
   geom_label(
-    data = d.true_shift %>% filter(Block != 1), 
+    data = d.true_shift %>% 
+      filter(Block != 1), 
     mapping = aes(label = paste(scales::percent(proportion_shift, accuracy = .1))),
     position = position_dodge(.3),
     label.size = .15,
@@ -282,8 +274,7 @@ p.PSE_1to7 <-
     mapping = aes(yintercept = PSE, color = Condition.Exposure, group = Condition.Exposure),
     linetype = 2, 
     linewidth = .8, 
-    alpha = 0.4, 
-    inherit.aes = F) +
+    alpha = 0.4) +
   geom_text(
     data = d.true_shift %>% 
       filter(Phase == "exposure") %>% 
@@ -368,7 +359,7 @@ p.fit_7to9 <-
   theme( axis.title.y = element_blank())
 ```
 
-(ref:plot-fit-slope-PSE) Summary of results. **Panel A:** Changes in listeners psychometric categorization functions as a function of exposure, from Test 1 to Test 4 with all intervening exposure blocks (only unlabeled trials were included in the analysis of exposure blocks since labeled trials provide no information about listeners' categorization function). Point ranges indicate the mean proportion of participants' "t"-responses and their 95% bootstrapped CI. Lines and shaded intervals show the *maximum a posteriori* (MAP) estimates and 95% posterior CIs of a Bayesian mixed-effects psychometric model fit to participants' responses. **Panel B:** Same as Panel A but for the final three test blocks without intervening exposure. Test 4 is shown as part of both Panels A and B. **Panels C \& D:** Changes across blocks in the slope and boundary (point-of-subjective-equality, PSE) of the categorization functions shown in Panels A \& B. Point ranges represent the posterior medians and their 95% CI. Dashed reference lines show the intercepts and PSEs that naive learner would be expected to converge against after sufficient exposure (an ideal observer model that has fully learned the exposure distributions). Percentage labels indicate the amount of shift as a proportion of the expected shift under an ideal observer.
+(ref:plot-fit-slope-PSE) Summary of results. **Panel A:** Changes in listeners psychometric categorization functions as a function of exposure, from Test 1 to Test 4 with all intervening exposure blocks (only unlabeled trials were included in the analysis of exposure blocks since labeled trials provide no information about listeners' categorization function). Point ranges indicate the mean proportion of participants' "t"-responses and their 95% bootstrapped CI. Lines and shaded intervals show the *maximum a posteriori* (MAP) estimates and 95% posterior CIs of a Bayesian mixed-effects psychometric model fit to participants' responses. **Panel B:** Same as Panel A but for the final three test blocks without intervening exposure. Test 4 is shown as part of both Panels A and B. **Panels C \& D:** Changes across blocks in the slope and boundary (point-of-subjective-equality, PSE) of the categorization functions shown in Panels **A** \& **B**. Point ranges represent the posterior medians and their 95% CI. Dashed reference lines show the slopes and PSEs that naive learner would be expected to converge against after sufficient exposure (an ideal observer model that has fully learned the exposure distributions). Percentage labels indicate the amount of shift as a proportion of the expected shift under an ideal observer.
 
 \begin{landscape}
 
@@ -406,7 +397,7 @@ Figure \@ref(fig:plot-fit-slope-PSE)A suggests that differences between exposure
 
 During Test 2, after exposure to only 24 /d/ and 24 /t/ stimuli (thereof half labeled), participants' categorization responses already differed between exposure conditions (BFs > 14). The differences between exposure conditions that emerged at this point were all in the direction predicted by models of adaptive speech perception. Additional analyses reported in the SI (\@ref(SI-analysis-exposure-blocks)) found that listeners' categorization functions had already changed *during* the first exposure block, in line with Figure \@ref(fig:plot-fit-slope-PSE)A. This suggests that changes in listeners' categorization responses emerged *quickly* at the earliest point tested---after only a fraction of exposure trials previously tested in similar paradigms. 
 
-The effects of the three exposure conditions continued to persist until Test 4. Table \@ref(tab:hypothesis-table-simple-effects-condition) does, however, indicate an interesting non-monotonic development in the way that listeners' categorization function changed. While the difference between the +40 condition and both the baseline and +0 condition continued to increase numerically with increasing exposure (increasingly larger magnitude of negative estimates in Tests 2-4), the same was not the case for the difference between the +10 and the baseline condition. Instead, the difference between the +10 and baseline condition *reduced* with increasing exposure (while maintaining its direction). This seemingly unexpected development turns out to be potentially important in understanding incremental adaptation, and we continue to discuss it below.
+The effects of the three exposure conditions continued to persist until Test 4. Table \@ref(tab:hypothesis-table-simple-effects-condition) does, however, indicate an interesting non-monotonic development in the way that listeners' categorization function changed. While the difference between the +40 condition and both the baseline and +10 condition continued to increase numerically with increasing exposure (increasingly larger magnitude of negative estimates in Tests 2-4), the same was not the case for the difference between the +10 and the baseline condition. Instead, the difference between the +10 and baseline condition *reduced* with increasing exposure (while maintaining its direction). This seemingly unexpected development turns out to be potentially important in understanding incremental adaptation, and we continue to discuss it below.
 
 ```{r fit-simple-effects-condition, results='hide'}
 # Get simple effects of Condition nested under block
@@ -579,7 +570,7 @@ make_hyp_table(
   pack_rows("Difference between blocks: +10", 8, 14) %>%
   pack_rows("Difference between blocks: +40", 15, 21) 
 
-rm(fit_test.simple_effects_block)
+#rm(fit_test.simple_effects_block)
 ```
 
 ```{r hypothesis-table-interaction-condition-block, "TEMPORARY PLACEMENT OF INTERACTION TABLE HERE", results='asis'}
@@ -642,7 +633,7 @@ table.interaction.condition_block
 
 First, while the PSEs for the +40 and +10 conditions were shifted rightwards compared to the baseline condition, both the +10 and the baseline condition seem to shift *left*wards relative to their pre-exposure starting point in Test 1. This is supported by Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-effects-block). The evidence for the leftward shifts is quite weak for the +10 condition (BF = 3.5 for changes from Test 1 to 4), for which the PSE changes comparatively little across tests, but it is stronger for the baseline condition (BF = 7.6). In contrast, the +40 condition is clearly shifted rightwards relative to pre-exposure (BF = 45.2). To understand this pattern, it is helpful to relate the three exposure conditions to the distribution of VOT in listeners' prior experience. Figure \@ref(fig:exposure-means-database-matrix-plot) shows a matrix plot of pairwise distributions for the three cues that are relevant to distinguishing L1-US English /d/ and /t/ [based on databases of two speech styles in @chodroff-wilson2018] with the category means of our exposure conditions. This comparison offers an explanation as to why the baseline condition (and to some extent the +10 condition) shift leftwards with increasing exposure, whereas the +40 condition shifts rightwards: relative to listeners' prior experience, only the +40 condition presented larger-than-expected category means, whereas the baseline condition and, to some extent, the +10 condition presented lower-than-expected category means. That is, once we take into account how our exposure conditions relate to listeners' prior experience, both the direction of changes from Test 1 to 4 *within* each exposure condition (Table \@ref(tab:hypothesis-table-simple-effects-block)), and the direction of differences *between* exposure conditions receive an explanation (Table \@ref(tab:hypothesis-table-simple-effects-condition)). To further illustrates this point, the gray dashed line in Figure \@ref(fig:plot-fit-slope-PSE)D shows the PSE predicted by a Bayesian ideal observer trained on the distribution of VOT, f0, and vowel duration in Figure \@ref(fig:exposure-means-database-matrix-plot). Following @xie2023, we included perceptual noise in the ideal observer [estimates taken from @kronrod2016, for details, see SI, \@ref(sec:prior-idealized-listeners)].  While not a perfect fit, this line qualitatively predicts listeners' pre-exposure PSE in Test 1. 
 
-(ref:exposure-means-database-matrix-plot) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for `r nrow(d.chodroff_wilson)` word-initial /d/ and /t/ productions by `r length(unique(d.chodroff_wilson$Talker))` female L1 talkers of US English in @chodroff-wilson2018. For details, see SI \@ref(sec:SI-phonetic-data). Colored points show the category means of the exposure conditions.
+(ref:exposure-means-database-matrix-plot) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for `r nrow(d.chodroff_wilson)` word-initial /d/ and /t/ productions by `r length(unique(d.chodroff_wilson$Talker))` female L1 talkers of US English in @chodroff-wilson2018. For details, see SI \@ref(sec:SI-phonetic-data). Colored labels show the category means of the exposure conditions.
 
 ```{r exposure-means-database-matrix-plot, fig.width=base.width*4, fig.height=base.height*2.5+1, fig.cap="(ref:exposure-means-database-matrix-plot)"}
 d.chodroff_wilson %>%
