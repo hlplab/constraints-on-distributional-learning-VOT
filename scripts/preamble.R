@@ -95,8 +95,7 @@ d.chodroff_wilson <-
 d.chodroff_wilson %<>% 
   mutate(across(c(speechstyle, Talker, category, gender), factor)) %>%
   # Subset to female talkers and exclude cases with NAs and distributional outliers
-  # do this by speech style because the category separation is extreme in the isolated speech database
-  group_by(speechstyle) %>% 
+  group_by(Talker) %>% 
   filter(
     gender == "female",
     if_all(c("VOT", "f0_Mel", "vowel_duration"), ~ !is.na(.x)),
