@@ -225,6 +225,7 @@ d.true_shift <-
   left_join(
     d.io.categorization %>% 
       dplyr::select(Phase, Condition.Exposure, Block, PSE) %>% 
+      mutate(PSE = round(PSE, 1)) %>% 
       rename(PSE.io_predicted = PSE), by = c("Condition.Exposure", "Block")) %>%
   group_by(Condition.Exposure) %>% 
   mutate(

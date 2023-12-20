@@ -651,7 +651,7 @@ For the isolated database we removed talkers with no data (3 talkers), tokens th
 For the combined databases we ensured that the talkers we sampled had sufficient amount of data and that the number of tokens from each category were balanced. We then took only the female talkers to match the gender of our test talker. This left us with a total of 5,122 tokens from 40 talkers: `r nrow(d.chodroff_wilson.connected)` tokens by `r length(unique(d.chodroff_wilson.connected$Talker))` female talkers from the connected speech database and `r nrow(d.chodroff_wilson.isolated)` tokens by `r length(unique(d.chodroff_wilson.isolated$Talker))` female talkers from the isolated speech database.
 
 ## Idealized learners that have fully learned the exposure distribution
-For each exposure condition we constructed ideal observers to simulate a learner that fully learned the exposure distribution (i.e. the cumulative distribution after undergoing all 144 trials) and who did not suffer from attentional lapses. Such an ideal learner would therefore categorize the stimuli at test based purely on the statistics of exposure input. The optimal categorizations of the test stimuli by each of these IOs were obtained following Bayes' rule under the assumption of equal prior probability for both categories. Following this we multiplied each IOs' responses at each stimulus to simulate categorization over a large number of trials and fitted three separate logistic regressions to the responses with VOT as the sole predictor. We obtained the predicted PSEs from each of the linear models which represent the ideal boundary of each exposure condition. These converged with the boundaries computed from the parameters of the Gaussian distributions that underlie each category within each condition. 
+For each exposure condition we constructed ideal observers to simulate a learner that fully learned the exposure distribution (i.e. the cumulative distribution after undergoing all 144 trials) and who did not suffer from attentional lapses. Ideal observers are a useful framework for assessing what a theoretically optimal learner would do given fidelity to the input distribution. Such an ideal learner would therefore categorize the stimuli at test based purely on the statistics of exposure input. The optimal categorizations of the test stimuli by each of these IOs were obtained following Bayes' rule under the assumption of equal prior probability for both categories. Following this we multiplied each IOs' responses at each stimulus to simulate categorization over a large number of trials and fitted three separate logistic regressions to the responses with VOT as the sole predictor. We obtained the predicted PSEs from each of the linear models which represent the ideal boundary of each exposure condition. These converged with the boundaries computed from the parameters of the Gaussian distributions that underlie each category within each condition. 
 
 
 ```{r IO-predicted-PSE-bias-correction}
@@ -840,7 +840,7 @@ rm(arrow_df, tokens)
 ```
 
 ## Accounting for potential biases in the estimation of intercepts, slopes, and PSEs {#sec:io-bias-correction}
-The perceptual model of our psychometric mixed-effects analyses assumed linear effects of VOT on the log-odds of "t"-responses. We made this assumptions for the sake of simplicity, and in order to avoid over-fitting. The ideal observers, however, predict non-linear effects of VOT [since /d/ and /t/ do *not* have equal variances; for details, see @bicknell2018; @kleinschmidt-jaeger2015; @kronrod2016]. We thus estimated the intercepts, slopes, and PSEs of ideal observers paralleling the analysis approach for the human data. This makes sure that any biases in the estimation of human intercepts, slopes, and PSEs that are introduced by our analysis approach are also taken into account for the idealized listeners (see also SI, \@ref{sec:GAMM} for a re-analysis of the human data that relaxes the linearity assumption).
+The perceptual model of our psychometric mixed-effects analyses assumed linear effects of VOT on the log-odds of "t"-responses. We made this assumptions for the sake of simplicity, and in order to avoid over-fitting. The ideal observers, however, predict non-linear effects of VOT [since /d/ and /t/ do *not* have equal variances; for details, see @bicknell2018; @kleinschmidt-jaeger2015; @kronrod2016]. We thus estimated the intercepts, slopes, and PSEs of ideal observers separately for test and exposure blocks, paralleling the analysis approach for the human data. This makes sure that any biases in the estimation of human intercepts, slopes, and PSEs that are introduced by our analysis approach are also taken into account for the idealized listeners (see also SI, \@ref{sec:GAMM} for a re-analysis of the human data that relaxes the linearity assumption).
 
 <!-- TO DO: this is where we will talk about how we estimated the dashed lines in the main text. then we will present additional, more fine-grained bias correction -->
 
@@ -1949,7 +1949,7 @@ get_IBBU_updates <- function(
     seed = 1234
 ) {
   set.seed(seed)
-  Sigma_noise <- matrix(diag(c(80, 878))[1:length(cues)])
+  Sigma_noise <- diag(c(80, 878))[1:length(cues)]
   dimnames(Sigma_noise) <- list(cues, cues)
 
   if (is.null(prior)) {
