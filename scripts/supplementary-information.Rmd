@@ -1949,7 +1949,7 @@ get_IBBU_updates <- function(
     seed = 1234
 ) {
   set.seed(seed)
-  Sigma_noise <- diag(c(80, 878)[1:length(cues)])
+  Sigma_noise <- matrix(diag(c(80, 878))[1:length(cues)])
   dimnames(Sigma_noise) <- list(cues, cues)
 
   if (is.null(prior)) {
