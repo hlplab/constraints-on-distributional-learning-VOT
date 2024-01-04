@@ -8,7 +8,7 @@ d <-
   read_csv("../data/experiment-results.csv", show_col_types = F) %>% 
   # load f0 measurements of stimuli
   left_join(
-    read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv", show_col_types = F) %>%
+    read_csv("../data/exposure_stimuli_f0_5ms.csv", show_col_types = F) %>%
       dplyr::select(filename, VOT, f0_5ms_into_vowel, Item.Vowel_duration) %>%
       rename(
         Item.VOT = VOT,

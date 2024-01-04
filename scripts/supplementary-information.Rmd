@@ -75,25 +75,13 @@ The vowel cut-back ratio was set at 0.33 which translates into .33ms vowel reduc
 Lastly, the rate of increase for aspiration intensity was kept at the default settings of the script.
 
 ### Token with pre-voicing ('negative VOTs')
-Pre-voicing in 5ms increments were generated from a a clear pre-voicing waveform excised from a pre-voiced token produced by the talker. To achieve a desired duration a duration factor was first computed and then converted with the "lengthen (overlap-add)" function in Praat. For example, if the desired amount of pre-voicing was 50ms then the duration factor would be 50ms/length of the original pre-voicing sample. Each pre-voicing step was then prepended to a token with 0ms VOT. Each of these 0ms tokens was generated with @winn2020 Praat script by manually entering the expected F0 value for a given pre-voicing duration based on the predictions of the linear model. No vowel-cut back was implemented for pre-voiced tokens.
+Pre-voicing in 5ms increments were generated from a a clear pre-voicing waveform excised from a pre-voiced token produced by the talker. To achieve a desired duration a duration factor was first computed and then converted with the "lengthen (overlap-add)" function in Praat based on the PSOLA algorithm. For example, if the desired amount of pre-voicing was 50ms then the duration factor would be 50ms/length of the original pre-voicing sample. Each pre-voicing step was then prepended to a token with 0ms VOT. Each of these 0ms tokens was generated with @winn2020 Praat script by manually entering the expected F0 value for a given pre-voicing duration based on the predictions of the linear model. No vowel-cut back was implemented for pre-voiced tokens.
 
 All the synthesised stimuli were subsequently annotated for pre-voicing, VOT, vowel duration and F0 at the first 5ms from vowel onset. This F0 measurement was made in order to align the data with the production database that we use for ideal observer analysis. Items' F0 in relation to VOT is plotted in Figure \@ref(fig:stimuli-cue-measurements). 
 
 ```{r stimuli-cue-measurements}
 # Annotation information of synthesised stimuli
-files <- list.files(path = "../materials/stimuli_AE/annotation_files/", pattern = "^d.*_stimuli_f0_measured.csv")
-
-file_list <- seq(1:length(files))
-
-d.stimuli <- map(file_list, ~ read_csv(file = str_c("../materials/stimuli_AE/annotation_files/", files[[.x]])))
-d.stimuli %<>% bind_rows() %>%
-  mutate(temp = filename) %>%
-  separate(temp, c("word", "VOT", "target_f0"), sep = "_") %>%
-  mutate(VOT = as.numeric(gsub("VOT(.*)$", "\\1", VOT))) %>%
-  arrange(filename, word, vowel, VOT, target_f0, f0_5ms_into_vowel, f0_10ms_into_vowel)
-
-# Using lm() to obtain linear relation between VOT and f0
-talker_m <- lm(f0_5ms_into_vowel ~ 1 + VOT, data = d.stimuli)
+d.stimuli <- read_csv("../data/exposure_stimuli_f0_5ms.csv", show_col_types = F)
 
 p.stimuli.VOT_f0 <- d.stimuli %>%
   ggplot(aes(x = VOT, y = f0_5ms_into_vowel, colour = word)) +
@@ -1949,7 +1937,7 @@ get_IBBU_updates <- function(
     seed = 1234
 ) {
   set.seed(seed)
-  Sigma_noise <- diag(c(80, 878))[1:length(cues)]
+  Sigma_noise <- diag(c(80, 878)[1:length(cues)], nrow = length(cues))
   dimnames(Sigma_noise) <- list(cues, cues)
 
   if (is.null(prior)) {
@@ -1957,7 +1945,8 @@ get_IBBU_updates <- function(
       make_NIW_ideal_adaptor_from_data(
         cues = cues, kappa = kappa, nu = nu, Sigma_noise = Sigma_noise)
   }
-
+  message("NIW made")
+  
   if (is.null(exposure)) {
     message("When exposure is NULL, condition is interpreted as the VOT shift.")
     exposure <-
