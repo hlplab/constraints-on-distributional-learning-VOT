@@ -26,7 +26,7 @@ library(patchwork)          # plot layouts
 library(magick)
 library(webshot)
 library(ggstance)
-library(ggforce)            # facet_matrix for pairwaise correlation plots
+library(ggforce)            # facet_matrix for pairwise correlation plots
 library(ggtext)             # make geom textboxes
 library(ggnewscale)         # extra colour scale in ggplots
 library(kableExtra)         # for formatting tables
@@ -38,6 +38,7 @@ library(brms)               # fit Bayesian regression models
 library(tidybayes)          # posterior samples and plots in tidy format
 library(broom.mixed)        # extracting effects from lmer models
 library(posterior)
+library(rsample)            # bootstrapping 
 
 library(phonR)              # normalization of f0
 library(supunsup)           # Kleinschmidt & Jaeger 2016 data

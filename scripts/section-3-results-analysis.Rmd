@@ -92,6 +92,18 @@ d.estimates <-
 ```
 
 ```{r}
+# divide database into k-folds
+d.chodroff_wilson.isolated %<>% 
+  group_by(Talker) %>% 
+  vfold_cv(v = 5)
+# get the folds from each train-test split
+# nested within each row
+d.chodroff_wilson.isolated <- map(.x = c(1:5), ~ 
+      assessment(d.chodroff_wilson.isolated$splits[[.x]]) %>% 
+        mutate(fold = .x)) %>% 
+  list_rbind()
+
+
 # Make ideal observers that are fit on the exposure VOTs of the three exposure conditions.
 # These ideal observers can be thought of as reflecting a learner that has fully learned 
 # the exposure distributions. Note that we include perceptual noise in the ideal observers
@@ -125,20 +137,26 @@ io <-
   # VOT variance than our exposure conditions, which we based on estimates from Kronrod et al. 
   # (2016). Uses all three cues; duration and spectral noise taken from Kronrod et al.
   bind_rows(
-    d.chodroff_wilson.isolated %>%
-      make_MVG_ideal_observer_from_data(
-        cues = c("VOT", "f0_Mel", "vowel_duration"),
-        Sigma_noise = matrix(c(80, 0, 0, 0, 878, 0, 0, 0, 80), nrow = 3, dimnames = list(c("VOT", "f0_Mel", "vowel_duration"), c("VOT", "f0_Mel", "vowel_duration")))) %>%
-      mutate(Condition.Exposure = "prior") %>% 
-      # join in the test stimuli. All 3 cues are used here because we assume listeners' prior experience would take into account all cues
-      left_join(d.for_analysis %>%  
-        filter(Phase == "test") %>%
-        distinct(Condition.Exposure, Item.VOT, Item.f0_Mel, Item.vowel_duration) %>% 
-        mutate(x = pmap(.l = list(Item.VOT, Item.f0_Mel, Item.vowel_duration), ~ c(..1, ..2, ..3))) %>% 
-  select(Condition.Exposure, x) %>% 
+    d.chodroff_wilson.isolated %>% 
+  group_by(fold) %>% 
+  nest(data = -fold) %>% 
+  mutate(io = map(data, ~
+                    make_MVG_ideal_observer_from_data(
+                      data = .x,
+                      cues = c("VOT", "f0_Mel", "vowel_duration"),
+                      Sigma_noise = matrix(c(80, 0, 0, 0, 878, 0, 0, 0, 80), 
+                                           nrow = 3, 
+                                           dimnames = list(c("VOT", "f0_Mel", "vowel_duration"), c("VOT", "f0_Mel", "vowel_duration")))))) %>%
   mutate(Condition.Exposure = "prior") %>% 
-  nest(x = x)) %>% 
-    nest(io = -c(Condition.Exposure, x)))  
+    select(-data) %>% 
+   left_join(d.for_analysis %>%  
+              filter(Phase == "test") %>%
+              distinct(Condition.Exposure, Item.VOT, Item.f0_Mel, Item.vowel_duration) %>% 
+              mutate(x = pmap(.l = list(Item.VOT, Item.f0_Mel, Item.vowel_duration), ~ c(..1, ..2, ..3))) %>% 
+              select(Condition.Exposure, x) %>% 
+              mutate(Condition.Exposure = "prior") %>% 
+              nest(x = x)) %>% 
+  mutate(Condition.Exposure = str_c("prior", fold)))  
 
 # Get logistic parameter estimates for a simulated ideal observer listener. 
 # Unlike for the analysis of participants' responses, there is no need to use a psychometric
@@ -166,7 +184,7 @@ p.across_blocks <-
       colour = Condition.Exposure, group = Condition.Exposure)) +
   geom_rect(
     data = tibble(
-      xmin = c(seq(0.5, 6.5, 2), seq(7.55, 8.55, 1)), 
+      xmin = c(seq(0.5, 6.5, 2), seq(7.6, 8.6, 1)), 
       xmax = c(seq(1.5, 7.5, 2), seq(8.5, 9.5, 1))),
     mapping = aes(xmin = xmin, xmax = xmax),
     ymin = -Inf, ymax = Inf, fill = "grey", alpha = .1, inherit.aes = F) +
@@ -209,13 +227,23 @@ p.slope_1to7 <-
   # These are the slopes of the ideal observers
   geom_hline(
     data = d.io.categorization %>% 
-      mutate(slope_unscaled = ifelse(Condition.Exposure != "prior", .237, slope_unscaled)),
+      mutate(slope_unscaled = ifelse(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40"), .237, slope_unscaled)) %>% 
+      filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")),
     # Using UNscaled slope because slopes are comparable across scales anyway and this is more intuitive
     # (substitute _unscaled to _scaled to switch to slopes over Gelman-scaled VOT)
     mapping = aes(yintercept = slope_unscaled, colour = Condition.Exposure, group = Condition.Exposure),
     linetype = 2, 
     linewidth = .8, 
     alpha = 0.5) +
+  geom_rect(
+    data = d.io.categorization %>% 
+      group_by(Condition.Exposure) %>% 
+      summarise(slope_unscaled = mean(slope_unscaled)) %>% 
+      filter(!Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")),
+    mapping = aes(xmin = -Inf, ymin = min(slope_unscaled), ymax = max(slope_unscaled), xmax = Inf),
+    fill = "#d2d4dc",
+    alpha = .05, 
+    inherit.aes = F) +
   scale_y_continuous("slope (log-odds/ms VOT)")
 
 # get the relative distance of the IO-predicted PSEs from the starting point PSE at test 1
@@ -271,11 +299,20 @@ p.PSE_1to7 <-
     size = 2.2,
     show.legend = F) +
   geom_hline(
-    data = d.io.categorization,
+    data = d.io.categorization %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")),
     mapping = aes(yintercept = PSE, color = Condition.Exposure, group = Condition.Exposure),
     linetype = 2, 
     linewidth = .8, 
     alpha = 0.4) +
+  geom_rect(
+    data = d.io.categorization %>% 
+      group_by(Condition.Exposure) %>% 
+      summarise(PSE = mean(PSE)) %>% 
+      filter(!Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")),
+    mapping = aes(xmin = -Inf, ymin = min(PSE), ymax = max(PSE), xmax = Inf),
+    fill = "#d2d4dc",
+    alpha = .05, 
+    inherit.aes = F) +
   geom_text(
     data = d.true_shift %>% 
       filter(Phase == "exposure") %>% 
