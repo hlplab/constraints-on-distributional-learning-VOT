@@ -639,6 +639,7 @@ get_logistic_parameters_from_model <- function(
 ############################################################################
 # Get the linear prediction parameters for exposure stimuli based on f0 measurements aligned with Chodroff-Wilson
 
+# intercept and slope values are obtained from linear model of exposure stimuli
 predict_f0 <- function(VOT, intercept = 245.46968, slope = 0.03827, Mel = FALSE) {
   f0 <- intercept + slope * (VOT)
   if (Mel) f0 <- phonR::normMel(f0)

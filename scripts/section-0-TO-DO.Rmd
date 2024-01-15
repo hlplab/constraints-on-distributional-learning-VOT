@@ -5,7 +5,6 @@
 ## Highest priority
  * MARYANN
 
-  * Fill in references
   * Replace 2D density plot with a perspective shot of 3D distribution of cues in chodroff data, and place your test stimuli into that space. @xie2023 contains code for taking such snapshots (but for now you can just do screen shots). Consider two separate plots for isolated and connected speech.
 
 

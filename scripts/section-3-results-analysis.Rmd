@@ -44,7 +44,6 @@ We analyzed participants' categorization responses during exposure and test bloc
 
 The psychometric models for exposure and test blocks each regressed participants' categorization responses against the full factorial interaction of VOT, block, and exposure condition, along with the maximal random effect structure (by-subject intercepts and slopes for VOT, block, and their interaction, and by-item intercept and slopes for the full factorial design; see SI, \@ref(sec:analysis-approach)). All hypothesis tests reported below are based on these models. Figure \@ref(fig:plot-fit-slope-PSE) summarizes the results that we describe in more detail next. Panels A and B show participants’ categorization responses during exposure and test blocks, along with the categorization function estimated from those responses via the mixed-effects psychometric models. These panels facilitate comparison between exposure conditions within each block. Panels C and D show the slope and point of subject equality (PSE)---i.e., the point at which participants are equally likely to respond "d" and "t"---of the categorization function across blocks and conditions. These panels facilitate comparison across blocks within each exposure condition. Here we focus on the test blocks, which were identical within and across exposure conditions. Analyses of the exposure blocks are reported in the SI (\@ref(sec:SI-analysis-exposure-blocks)), and replicate all effects found in the test blocks. 
 
-We begin by presenting the overall effects, averaging across all test blocks. This part of our analysis resembles previous work, which analyzed the *average* effect of exposure across the entire experiment ['batch tests', e.g., @clayards2008; @kleinschmidt-jaeger2016; @nixon2016; @theodore-monto2019]. <!-- Unlike those previous studies, however, we compare responses over test trials that are physically identical across conditions and placed throughout the experiment. This reduces the risk that assumptions baked into the analysis approach (e.g., linearity along the acoustic-phonetic continuum) bias the results. --> Then we the address the questions about incremental adaptation that motivated our experiment---testing the predictions described in the introduction. 
 
 ```{r fit-nested-models-for-intercepts-slopes-plot, message=FALSE}
 # Refit the same model, formulated as nesting intercepts and slopes within each unique combination of
@@ -92,6 +91,18 @@ d.estimates <-
 ```
 
 ```{r}
+# divide database into k-folds
+d.chodroff_wilson.isolated %<>% 
+  group_by(Talker) %>% 
+  vfold_cv(v = 5)
+# get the folds from each train-test split
+# nested within each row
+d.chodroff_wilson.isolated <- map(.x = c(1:5), ~ 
+      assessment(d.chodroff_wilson.isolated$splits[[.x]]) %>% 
+        mutate(fold = .x)) %>% 
+  list_rbind()
+
+
 # Make ideal observers that are fit on the exposure VOTs of the three exposure conditions.
 # These ideal observers can be thought of as reflecting a learner that has fully learned 
 # the exposure distributions. Note that we include perceptual noise in the ideal observers
@@ -125,20 +136,31 @@ io <-
   # VOT variance than our exposure conditions, which we based on estimates from Kronrod et al. 
   # (2016). Uses all three cues; duration and spectral noise taken from Kronrod et al.
   bind_rows(
-    d.chodroff_wilson.isolated %>%
-      make_MVG_ideal_observer_from_data(
-        cues = c("VOT", "f0_Mel", "vowel_duration"),
-        Sigma_noise = matrix(c(80, 0, 0, 0, 878, 0, 0, 0, 80), nrow = 3, dimnames = list(c("VOT", "f0_Mel", "vowel_duration"), c("VOT", "f0_Mel", "vowel_duration")))) %>%
+  # make sure the IOs to be constructed from database include both folded data and unfolded (all) data  
+    bind_rows(d.chodroff_wilson.isolated %>% 
+                group_by(fold) %>% 
+                nest(data = -fold), 
+              d.chodroff_wilson.isolated %>% 
+                ungroup() %>% 
+                nest(data = everything()) %>% 
+                mutate(fold = NA)) %>% 
+      mutate(io = map(data, ~
+                        make_MVG_ideal_observer_from_data(
+                          data = .x,
+                          cues = c("VOT", "f0_Mel", "vowel_duration"),
+                          Sigma_noise = matrix(c(80, 0, 0, 0, 878, 0, 0, 0, 80), 
+                                               nrow = 3, 
+                                               dimnames = list(c("VOT", "f0_Mel", "vowel_duration"), c("VOT", "f0_Mel", "vowel_duration")))))) %>%
       mutate(Condition.Exposure = "prior") %>% 
-      # join in the test stimuli. All 3 cues are used here because we assume listeners' prior experience would take into account all cues
+      select(-data) %>% 
       left_join(d.for_analysis %>%  
-        filter(Phase == "test") %>%
-        distinct(Condition.Exposure, Item.VOT, Item.f0_Mel, Item.vowel_duration) %>% 
-        mutate(x = pmap(.l = list(Item.VOT, Item.f0_Mel, Item.vowel_duration), ~ c(..1, ..2, ..3))) %>% 
-  select(Condition.Exposure, x) %>% 
-  mutate(Condition.Exposure = "prior") %>% 
-  nest(x = x)) %>% 
-    nest(io = -c(Condition.Exposure, x)))  
+                  filter(Phase == "test") %>%
+                  distinct(Condition.Exposure, Item.VOT, Item.f0_Mel, Item.vowel_duration) %>% 
+                  mutate(x = pmap(.l = list(Item.VOT, Item.f0_Mel, Item.vowel_duration), ~ c(..1, ..2, ..3))) %>% 
+                  select(Condition.Exposure, x) %>% 
+                  mutate(Condition.Exposure = "prior") %>% 
+                  nest(x = x)) %>% 
+      mutate(Condition.Exposure = ifelse(is.na(fold), "prior", str_c("prior", fold)))) 
 
 # Get logistic parameter estimates for a simulated ideal observer listener. 
 # Unlike for the analysis of participants' responses, there is no need to use a psychometric
@@ -166,7 +188,7 @@ p.across_blocks <-
       colour = Condition.Exposure, group = Condition.Exposure)) +
   geom_rect(
     data = tibble(
-      xmin = c(seq(0.5, 6.5, 2), seq(7.55, 8.55, 1)), 
+      xmin = c(seq(0.5, 6.5, 2), seq(7.6, 8.6, 1)), 
       xmax = c(seq(1.5, 7.5, 2), seq(8.5, 9.5, 1))),
     mapping = aes(xmin = xmin, xmax = xmax),
     ymin = -Inf, ymax = Inf, fill = "grey", alpha = .1, inherit.aes = F) +
@@ -209,13 +231,23 @@ p.slope_1to7 <-
   # These are the slopes of the ideal observers
   geom_hline(
     data = d.io.categorization %>% 
-      mutate(slope_unscaled = ifelse(Condition.Exposure != "prior", .237, slope_unscaled)),
+      mutate(slope_unscaled = ifelse(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40"), .237, slope_unscaled)) %>% 
+      filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")),
     # Using UNscaled slope because slopes are comparable across scales anyway and this is more intuitive
     # (substitute _unscaled to _scaled to switch to slopes over Gelman-scaled VOT)
     mapping = aes(yintercept = slope_unscaled, colour = Condition.Exposure, group = Condition.Exposure),
     linetype = 2, 
     linewidth = .8, 
     alpha = 0.5) +
+  geom_rect(
+    data = d.io.categorization %>% 
+      group_by(Condition.Exposure) %>% 
+      summarise(slope_unscaled = mean(slope_unscaled)) %>% 
+      filter(!Condition.Exposure %in% c("Shift0", "Shift10", "Shift40", "prior")),
+    mapping = aes(xmin = -Inf, ymin = min(slope_unscaled), ymax = max(slope_unscaled), xmax = Inf),
+    fill = "#d2d4dc",
+    alpha = .05, 
+    inherit.aes = F) +
   scale_y_continuous("slope (log-odds/ms VOT)")
 
 # get the relative distance of the IO-predicted PSEs from the starting point PSE at test 1
@@ -271,11 +303,20 @@ p.PSE_1to7 <-
     size = 2.2,
     show.legend = F) +
   geom_hline(
-    data = d.io.categorization,
+    data = d.io.categorization %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")),
     mapping = aes(yintercept = PSE, color = Condition.Exposure, group = Condition.Exposure),
     linetype = 2, 
     linewidth = .8, 
     alpha = 0.4) +
+  geom_rect(
+    data = d.io.categorization %>% 
+      group_by(Condition.Exposure) %>% 
+      summarise(PSE = mean(PSE)) %>% 
+      filter(!Condition.Exposure %in% c("Shift0", "Shift10", "Shift40", "prior")),
+    mapping = aes(xmin = -Inf, ymin = min(PSE), ymax = max(PSE), xmax = Inf),
+    fill = "#d2d4dc",
+    alpha = .05, 
+    inherit.aes = F) +
   geom_text(
     data = d.true_shift %>% 
       filter(Phase == "exposure") %>% 
@@ -692,24 +733,25 @@ Second, similar reasoning about the exposure distributions relative to listeners
 
 ```{r prediction-error-during-exposure}
 d.exposure_surprisal <-
-  d.for_analysis %>% 
-  filter(Phase == "exposure", Item.Labeled) %>% 
+  d.for_analysis %>%
+  filter(Phase == "exposure", Item.Labeled) %>%
   cross_join(
-    io %>% 
+    io %>%
+      filter(io %in% c("Shift0", "Shift10", "Shift40", "prior")) %>% 
       select(-x) %>%
-      rename(IO.Type = Condition.Exposure)) %>% 
+      rename(IO.Type = Condition.Exposure)) %>%
   # For each labeled exposure stimulus, calculate the surprisal of seeing the category label
-  # (this is not quite parallel to what we did for test tokens, which was looking at the 
+  # (this is not quite parallel to what we did for test tokens, which was looking at the
   # surprisal of the VOT, rather than the surprisal of the category label)
   mutate(
     x = ifelse(IO.Type != "prior", Item.VOT, pmap(list(Item.VOT, Item.f0_Mel, Item.vowel_duration), ~ c(...))),
     posterior = pmap_dbl(
-      .l = 
+      .l =
         list(
-          x, 
+          x,
           category,
           io),
-      .f = function(x, y, z) 
+      .f = function(x, y, z)
         pmap(
           list(z$mu, z$Sigma, z$Sigma_noise),
           ~ dmvnorm(x, ..1, ..2 + ..3)) %>%
@@ -761,33 +803,33 @@ First, the slopes of listeners' categorization functions in Panel C approximate 
 
 ```{r calculate-test-surprisal}
 d.test_surprisal <-
-  d.for_analysis %>% 
-  filter(Phase == "test") %>% 
+  d.for_analysis %>%
+  filter(Phase == "test") %>%
   distinct(Item.VOT) %>%
-  cross_join(io) %>% 
-  filter(Condition.Exposure != "prior") %>% 
-  # For each test stimulus, calculate the sum of densities of /d/ and /t/ over 
+  cross_join(io) %>%
+  filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")) %>%
+  # For each test stimulus, calculate the sum of densities of /d/ and /t/ over
   # that VOT (i.e., the density of the marginal VOT distribution)
   mutate(
     density = map2_dbl(
-      Item.VOT, 
-      io, 
-      function(x, y) 
+      Item.VOT,
+      io,
+      function(x, y)
         pmap(
           list(y$mu, y$Sigma, y$Sigma_noise),
           ~ dmvnorm(x, ..1, ..2 + ..3)) %>%
         reduce(`+`)),
     surprisal = -log2(density))
 
-# # Visualize marginal density
-# d.test_surprisal %>%
-#   ggplot(aes(x = Item.VOT, y = density, color = Condition.Exposure)) +
-#       geom_line()
-# 
-# # Visualize surprisal
-# d.test_surprisal %>%
-#   ggplot(aes(x = Item.VOT, y = surprisal, color = Condition.Exposure)) +
-#       geom_line()
+# Visualize marginal density
+d.test_surprisal %>%
+  ggplot(aes(x = Item.VOT, y = density, color = Condition.Exposure)) +
+      geom_line()
+
+# Visualize surprisal
+d.test_surprisal %>%
+  ggplot(aes(x = Item.VOT, y = surprisal, color = Condition.Exposure)) +
+      geom_line()
 
 d.test_surprisal %<>%
   group_by(Condition.Exposure) %>%
