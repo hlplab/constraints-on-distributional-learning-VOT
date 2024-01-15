@@ -1737,10 +1737,14 @@ plot_predicted_vs_actual_categorization_responses_for_IBBU <- function(
           .l = list(f, cues_joint, target_category),
           .f = ~ exec(..1, x = ..2$x, target_category = target_category))) %>%
     select(-f) %>%
-    unnest(c(cues_joint, cues_separate, Predicted_posterior))
-
-  d.pars %<>% mutate(Predicted_posterior = ifelse(is.infinite(Predicted_posterior), 1, Predicted_posterior))
-
+    unnest(c(cues_joint, cues_separate, Predicted_posterior)) %>%
+    # Repair estimates that yield infinite posteriors
+    mutate(
+      Predicted_posterior = case_when(
+        is.infinite(Predicted_posterior) & sign(Predicted_posterior) == 1 ~ 1, 
+        is.infinite(Predicted_posterior) & sign(Predicted_posterior) == -1 ~ 0,
+        T ~ Predicted_posterior))
+  
   # Compare predicted and actual responses
   d.pars %>%
     group_by(group, VOT) %>%
@@ -1755,6 +1759,36 @@ plot_predicted_vs_actual_categorization_responses_for_IBBU <- function(
       # different block orders for each of these unique combinations)
       group = gsub("[ABC]A", "", group)) %>%
     plot_predicted_vs_actual_categorization_responses(colors.group = colors.group)
+  
+  # Could feed d.pars into parts of get_logistic_parameters_from_model 
+  # (only the part that samples responses and fits the logistic to it).
+  # That would return a posterior distribution of PSEs (one PSE for each posterior draw of parameters)
+  # that could be compared against listeners' PSEs.
+  resolution <- 10000
+  d.pars %>%
+    # Prepare data frame for logistic regression
+    mutate(
+      n_d = round((if (target_category == 1) Predicted_posterior else (1 - Predicted_posterior)) * .env$resolution), 
+      n_t = .env$resolution - n_d) %>%
+    group_by(group, .draw) %>%
+    nest() %>%
+    # Fit logistic regression and extract relevant information
+    # (the regression only uses VOT regardless of what cues are used for the categorization
+    # so that this matches the analysis of the human responses)
+    mutate(
+      model_unscaled = map(data, ~ glm(
+        cbind(n_t, n_d) ~ 1 + VOT,
+        family = binomial,
+        data = .x)),
+      intercept_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[1, 2] %>% pull()),
+      slope_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[2, 2] %>% pull()),
+      model_scaled = map(data, ~ glm(
+        cbind(n_t, n_d) ~ 1 + I((VOT - VOT.mean_test) / (2 * VOT.sd_test)),
+        family = binomial,
+        data = .x)),
+      intercept_scaled = map_dbl(model_scaled, ~ tidy(.x)[1, 2] %>% pull()),
+      slope_scaled = map_dbl(model_scaled, ~ tidy(.x)[2, 2] %>% pull()),
+      PSE = -intercept_unscaled/slope_unscaled)
 }
 
 make_all_plots <- function(
@@ -1804,7 +1838,7 @@ make_all_plots <- function(
 Here some initial plots. While the plots are back-transformed into the original cue space, the table is not (yet).
 
 ```{r, size='tiny', fig.width=12, fig.height=12, warning=FALSE, results='asis'}
-m_IA_inferred <-
+m_IA_inferred.VOT <-
   infer_prior_beliefs(
     exposure = d_for_ASP %>% filter(Phase == "exposure"),
     test = d_for_ASP %>% filter(Phase == "test"),
@@ -1819,14 +1853,13 @@ m_IA_inferred <-
     lapse_rate = NULL,
     mu_0 = NULL,
     Sigma_0 = NULL,
-    use_multivariate_updating = T,
     sample = T,
     file = "../models/IBBU_VOT_uninformative priors.RDS",
     warmup = 3000, iter = 4000,
     control = list(adapt_delta = .995, max_treedepth = 15))
 
-summarize.NIW_ideal_adaptor_stanfit(m_IA_inferred) 
-make_all_plots(m_IA_inferred)
+summarize.NIW_ideal_adaptor_stanfit(m_IA_inferred.VOT) 
+make_all_plots(m_IA_inferred.VOT)
 ```
 
 
