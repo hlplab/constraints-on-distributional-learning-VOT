@@ -831,7 +831,7 @@ rm(arrow_df, tokens)
 The perceptual model of our psychometric mixed-effects analyses assumed linear effects of VOT on the log-odds of "t"-responses. We made this assumptions for the sake of simplicity, and in order to avoid over-fitting. The ideal observers, however, predict non-linear effects of VOT [since /d/ and /t/ do *not* have equal variances; for details, see @bicknell2018; @kleinschmidt-jaeger2015; @kronrod2016]. We thus estimated the intercepts, slopes, and PSEs of ideal observers separately for test and exposure blocks, paralleling the analysis approach for the human data. This makes sure that any biases in the estimation of human intercepts, slopes, and PSEs that are introduced by our analysis approach are also taken into account for the idealized listeners (see also SI, \@ref{sec:GAMM} for a re-analysis of the human data that relaxes the linearity assumption).
 
 ### Estimating listeners' prior PSEs and slopes
-In estimating listeners' slope and PSE before they receive exposure to the test talker we used data from the isolated speech database of @chodroff-wilson2017 as that would closely resemble the speech of our test talker since both elicitation methods would have increased the chances of hyperarticulation. The mean PSE marginalised across all talkers in this database produced a point estimate that closely fitted the PSE across all three conditions in pre-exposure test block 1 estimated by the psychometric model. Given the small number of talkers in the database (13), its restriction to University students from a single campus, and the stimuli being limited to selected phonetic contexts this result is unlikely to be representative of a typical listener's exposure to everyday speech. To safeguard against providing a false sense of strength of this result we therefore divided the database into 5 folds by talker and constructed ideal observers from the data in each fold (i.e. data to train each IO never overlapped but each had a fifth of the data points produced by each talker). An alternative would have been to randomly distribute talkers into the folds. With few talkers in the database this would have meant that each prior PSE estimate would have been based on data from only 2-3 talkers. Since the aim is to simulate an adult L1 US English listener's knowledge the prior should ideally be estimated on as many talkers as possible. The first option strikes the best compromise given the small database we had at hand. 
+In estimating listeners' slope and PSE before they receive exposure to the test talker we used data from the isolated speech database of @chodroff-wilson2017 as that would closely resemble the speech of our test talker since both elicitation methods would have increased the chances of hyperarticulation. The mean PSE marginalised across all talkers in this database produced a point estimate that closely fitted the PSE across all three conditions in pre-exposure test block 1 estimated by the psychometric model. Given the small number of talkers in the database (13), its restriction to University students from a single campus, and the stimuli being limited to selected phonetic contexts this result is unlikely to be representative of a typical listener's exposure to everyday speech. To safeguard against providing a false sense of strength of given by this point estimate we therefore divided the database into 5 folds by talker and constructed ideal observers from the data in each fold (i.e. data to train each IO never overlapped but each had a fifth of the data points produced by each talker). An alternative would have been to randomly distribute talkers into the folds. With few talkers in the database this would have meant that each prior PSE estimate would have been based on data from only 2-3 talkers. Since the aim is to simulate an adult L1 US English listener's knowledge the prior should ideally be estimated on as many talkers as possible. The first option strikes the best compromise given the small database we had at hand. 
 
 
 # Additional Bayesian hypothesis tests
@@ -1061,10 +1061,13 @@ table.interactions.condition_block_VOT
 ```
 
 ## Exposure blocks {#SI-analysis-exposure-blocks}
-This section reports the hypothesis tables for exposure blocks corresponding the simple effects of exposure condition and blocks (provided in the main text for test blocks), and the interaction between condition and block.
+We performed the same hypotheses tests on the exposure block model which was fitted separately from test. Analogous to test, we fitted models in standard and nested formulations to obtain interactions and simple effects using the same weakly regularizing priors. While the standard formulation of the model converged (Tables \@ref(tab:hypothesis-table-exposure-interaction-condition-block) and \@ref(tab:hypothesis-table-exposure-interaction-condition-block-VOT)) the nested formulations returned several divergent transitions during sampling. Divergent transitions give pause for caution in model interpretation (see https://mc-stan.org/misc/warnings.html#runtime-warnings for explanation of warning types). 
+A possible solution to eliminating divergent transitions in this model would be to relax the variance of the prior distribution assumed for the slope parameter (VOT_gs in the model formula). Indeed, in earlier fits of the test block data we faced convergence issues when we used the recommended weakly regularising prior (student-t distribution with SD = 2.5; @gelman-prior2008) for the slope parameter. Diagnostic plots revealed a slight bi-modality in the posterior distribution which may have been an impediment to smooth sampling; this was solved by increasing the prior distribution's SD which allow the inclusion of data points that were further from the mean. However, fitting the nested exposure models here with yet more accommodating priors would detract from having an identical set of priors across all models fitted for test and exposure. Given that both the simple effects models returned only a few divergent transitions (3 in the nested block and 9 in the nested condition model) and showed fairly good Rhat values (all 1.0 except for one parameter) and ESS values we opted not to explore further solutions for them at this point.  
 
-<!-- TO DO: add overall summary here, summarizing the most important parallels and differences to the results for test blocks. -->
-<!-- TO DO: follow the heading format for test blocks -->
+Consistent with the trend observed in test blocks, categorization boundaries were clearly distinct between the conditions in all exposure blocks and grew progressively larger with more exposure. Evidence for the effect was stronger in the +40 vs. +10 comparison ($24.7 \leq$ BFs $\leq 100.3$) with the difference in PSE reaching its widest in the final exposure block (BF = 91). The difference between +10 and baseline widened from the exposure block 1 to 2 but narrowed in the final block where evidence in support of the difference also fell substantially (BF = 11.4). The weaker effects of exposure condition in this comparison reflect the pattern in test blocks. 
+
+
+
 
 ### PSE: Simple effects of exposure condition within each block
 
@@ -1098,12 +1101,12 @@ brm(
   warmup = 2000,
   family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
   sample_prior = "yes",
-  control = list(adapt_delta = .995),
+  control = list(adapt_delta = .999),
   file = "../models/exposure-nested-condition.rds")
 ```
 
 
-```{r}
+```{r hypothesis-table-exposure-simple-effects-block, results='asis'}
 hyp.exposure_simple_effects_condition <- 
   hypothesis(
     fit_exposure.simple_effects_condition, 
@@ -1129,10 +1132,10 @@ make_hyp_table(
   pack_rows("Exposure block 1", 1, 3) %>%
   pack_rows("Exposure block 2", 4, 6) %>% 
   pack_rows("Exposure block 3", 7, 9) 
-
+table.exposure_simple_effects_condition
 ```
 
-### Changes
+### Slopes: between conditions in each exposure block
 ```{r}
 hyp.exposure_simple_slopes_condition <- 
   hypothesis(
@@ -1207,13 +1210,13 @@ hyp.exposure_simple_effects_block <-
   hypothesis(
     fit_exposure.simple_effects_block, 
     c(
-      "mu2_Condition.ExposureShift0:Block_Exposure2vs.Exposure1 < 0",
-      "mu2_Condition.ExposureShift0:Block_Exposure3vs.Exposure2 < 0",
-      "mu2_Condition.ExposureShift0:Block_Exposure2vs.Exposure1 + mu2_Condition.ExposureShift0:Block_Exposure3vs.Exposure2 < 0",
+      "mu2_Condition.ExposureShift0:Block_Exposure2vs.Exposure1 > 0",
+      "mu2_Condition.ExposureShift0:Block_Exposure3vs.Exposure2 > 0",
+      "mu2_Condition.ExposureShift0:Block_Exposure2vs.Exposure1 + mu2_Condition.ExposureShift0:Block_Exposure3vs.Exposure2 > 0",
 
-      "mu2_Condition.ExposureShift10:Block_Exposure2vs.Exposure1 < 0",
-      "mu2_Condition.ExposureShift10:Block_Exposure3vs.Exposure2 < 0",
-      "mu2_Condition.ExposureShift10:Block_Exposure2vs.Exposure1 + mu2_Condition.ExposureShift10:Block_Exposure3vs.Exposure2 < 0",
+      "mu2_Condition.ExposureShift10:Block_Exposure2vs.Exposure1 > 0",
+      "mu2_Condition.ExposureShift10:Block_Exposure3vs.Exposure2 > 0",
+      "mu2_Condition.ExposureShift10:Block_Exposure2vs.Exposure1 + mu2_Condition.ExposureShift10:Block_Exposure3vs.Exposure2 > 0",
 
       "mu2_Condition.ExposureShift40:Block_Exposure2vs.Exposure1 < 0",
       "mu2_Condition.ExposureShift40:Block_Exposure3vs.Exposure2 < 0",
@@ -1222,24 +1225,28 @@ hyp.exposure_simple_effects_block <-
   .$hypothesis %>% 
   dplyr::select(-Star)
 
+table.exposure_simple_effects_block <- 
 make_hyp_table(
     hyp.exposure_simple_effects_block,
-   rep(c(
+   c(rep(c(
   # Comparing differences blocks within conditions
   "Block 1 to 2: decreased PSE",
   "Block 2 to 3: decreased PSE",
-  "{\\em Block 1 to 3: decreased PSE}"), 3),
+  "{\\em Block 1 to 3: decreased PSE}"), 2),
+  "Block 1 to 2: increased PSE",
+  "Block 2 to 3: increased PSE",
+  "{\\em Block 1 to 3: increased PSE}"),
     caption = "Was there incremental change from exposure block 1 to 3? This table summarizes the simple effects of block for each exposure condition. Note that rightward shifts of the categorization function (and its PSE) correspond to negative estimates (lower intercepts in predicting the log-odds of \`\`t\'\'-responses).") %>% 
   pack_rows("Difference between blocks: baseline", 1, 3) %>%
   pack_rows("Difference between blocks: +10", 4, 6) %>%
   pack_rows("Difference between blocks: +40", 7, 9) 
 
-rm(fit_exposure.simple_effects_block)
+#rm(fit_exposure.simple_effects_block)
 ```
 
 
 
-### Differences in block-to block *PSE* changes by condition (interaction)
+### PSE: Differences in the rate of change between exposure conditions and block
 
 ```{r include=FALSE}
 fit_exposure <-
@@ -1283,7 +1290,7 @@ rm(fit_exposure)
 ```
 
 
-### Differences in block-to block *slope* changes by condition
+### Slopes: differences in the rate of change between exposure conditions and block
 
 ```{r hypothesis-table-exposure-interaction-condition-block-VOT, results='asis'}
 hyp.interaction.exposure.condition_block_VOT <- 
