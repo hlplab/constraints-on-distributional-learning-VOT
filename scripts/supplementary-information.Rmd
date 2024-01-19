@@ -831,7 +831,7 @@ rm(arrow_df, tokens)
 The perceptual model of our psychometric mixed-effects analyses assumed linear effects of VOT on the log-odds of "t"-responses. We made this assumptions for the sake of simplicity, and in order to avoid over-fitting. The ideal observers, however, predict non-linear effects of VOT [since /d/ and /t/ do *not* have equal variances; for details, see @bicknell2018; @kleinschmidt-jaeger2015; @kronrod2016]. We thus estimated the intercepts, slopes, and PSEs of ideal observers separately for test and exposure blocks, paralleling the analysis approach for the human data. This makes sure that any biases in the estimation of human intercepts, slopes, and PSEs that are introduced by our analysis approach are also taken into account for the idealized listeners (see also SI, \@ref{sec:GAMM} for a re-analysis of the human data that relaxes the linearity assumption).
 
 ### Estimating listeners' prior PSEs and slopes
-In estimating listeners' slope and PSE before they receive exposure to the test talker we used data from the isolated speech database of @chodroff-wilson2017 as that would closely resemble the speech of our test talker since both elicitation methods would have increased the chances of hyperarticulation. The mean PSE marginalised across all talkers in this database produced a point estimate that closely fitted the PSE across all three conditions in pre-exposure test block 1 estimated by the psychometric model. Given the small number of talkers in the database (13), its restriction to University students from a single campus, and the stimuli being limited to selected phonetic contexts this result is unlikely to be representative of a typical listener's exposure to everyday speech. To safeguard against providing a false sense of strength of this result. We therefore divided the database into 5 folds by talker and constructed ideal observers from the data in each fold (i.e. data to train each IO never overlapped but each had a fifth of the data points produced by each talker). An alternative would have been to randomly distribute talkers into the folds. With few talkers in the database this would have meant that each prior PSE estimate would have been based on data from only 2-3 talkers. Since the aim is to simulate an adult L1 US English listener's knowledge the prior should ideally be estimated on as many talkers as possible. The first option strikes the best compromise given the small database we had at hand. 
+In estimating listeners' slope and PSE before they receive exposure to the test talker we used data from the isolated speech database of @chodroff-wilson2017 as that would closely resemble the speech of our test talker since both elicitation methods would have increased the chances of hyperarticulation. The mean PSE marginalised across all talkers in this database produced a point estimate that closely fitted the PSE across all three conditions in pre-exposure test block 1 estimated by the psychometric model. Given the small number of talkers in the database (13), its restriction to University students from a single campus, and the stimuli being limited to selected phonetic contexts this result is unlikely to be representative of a typical listener's exposure to everyday speech. To safeguard against providing a false sense of strength of this result we therefore divided the database into 5 folds by talker and constructed ideal observers from the data in each fold (i.e. data to train each IO never overlapped but each had a fifth of the data points produced by each talker). An alternative would have been to randomly distribute talkers into the folds. With few talkers in the database this would have meant that each prior PSE estimate would have been based on data from only 2-3 talkers. Since the aim is to simulate an adult L1 US English listener's knowledge the prior should ideally be estimated on as many talkers as possible. The first option strikes the best compromise given the small database we had at hand. 
 
 
 # Additional Bayesian hypothesis tests
@@ -1975,10 +1975,14 @@ plot_predicted_vs_actual_categorization_responses_for_IBBU <- function(
           .l = list(f, cues_joint, target_category),
           .f = ~ exec(..1, x = ..2$x, target_category = target_category))) %>%
     select(-f) %>%
-    unnest(c(cues_joint, cues_separate, Predicted_posterior))
-
-  d.pars %<>% mutate(Predicted_posterior = ifelse(is.infinite(Predicted_posterior), 1, Predicted_posterior))
-
+    unnest(c(cues_joint, cues_separate, Predicted_posterior)) %>%
+    # Repair estimates that yield infinite posteriors
+    mutate(
+      Predicted_posterior = case_when(
+        is.infinite(Predicted_posterior) & sign(Predicted_posterior) == 1 ~ 1, 
+        is.infinite(Predicted_posterior) & sign(Predicted_posterior) == -1 ~ 0,
+        T ~ Predicted_posterior))
+  
   # Compare predicted and actual responses
   d.pars %>%
     group_by(group, VOT) %>%
@@ -1993,6 +1997,36 @@ plot_predicted_vs_actual_categorization_responses_for_IBBU <- function(
       # different block orders for each of these unique combinations)
       group = gsub("[ABC]A", "", group)) %>%
     plot_predicted_vs_actual_categorization_responses(colors.group = colors.group)
+  
+  # Could feed d.pars into parts of get_logistic_parameters_from_model 
+  # (only the part that samples responses and fits the logistic to it).
+  # That would return a posterior distribution of PSEs (one PSE for each posterior draw of parameters)
+  # that could be compared against listeners' PSEs.
+  resolution <- 10000
+  d.pars %>%
+    # Prepare data frame for logistic regression
+    mutate(
+      n_d = round((if (target_category == 1) Predicted_posterior else (1 - Predicted_posterior)) * .env$resolution), 
+      n_t = .env$resolution - n_d) %>%
+    group_by(group, .draw) %>%
+    nest() %>%
+    # Fit logistic regression and extract relevant information
+    # (the regression only uses VOT regardless of what cues are used for the categorization
+    # so that this matches the analysis of the human responses)
+    mutate(
+      model_unscaled = map(data, ~ glm(
+        cbind(n_t, n_d) ~ 1 + VOT,
+        family = binomial,
+        data = .x)),
+      intercept_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[1, 2] %>% pull()),
+      slope_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[2, 2] %>% pull()),
+      model_scaled = map(data, ~ glm(
+        cbind(n_t, n_d) ~ 1 + I((VOT - VOT.mean_test) / (2 * VOT.sd_test)),
+        family = binomial,
+        data = .x)),
+      intercept_scaled = map_dbl(model_scaled, ~ tidy(.x)[1, 2] %>% pull()),
+      slope_scaled = map_dbl(model_scaled, ~ tidy(.x)[2, 2] %>% pull()),
+      PSE = -intercept_unscaled/slope_unscaled)
 }
 
 make_all_plots <- function(
@@ -2042,7 +2076,7 @@ make_all_plots <- function(
 Here some initial plots. While the plots are back-transformed into the original cue space, the table is not (yet).
 
 ```{r, size='tiny', fig.width=12, fig.height=12, warning=FALSE, results='asis'}
-m_IA_inferred <-
+m_IA_inferred.VOT <-
   infer_prior_beliefs(
     exposure = d_for_ASP %>% filter(Phase == "exposure"),
     test = d_for_ASP %>% filter(Phase == "test"),
@@ -2057,14 +2091,13 @@ m_IA_inferred <-
     lapse_rate = NULL,
     mu_0 = NULL,
     Sigma_0 = NULL,
-    use_multivariate_updating = T,
     sample = T,
     file = "../models/IBBU_VOT_uninformative priors.RDS",
     warmup = 3000, iter = 4000,
     control = list(adapt_delta = .995, max_treedepth = 15))
 
-summarize.NIW_ideal_adaptor_stanfit(m_IA_inferred) 
-make_all_plots(m_IA_inferred)
+summarize.NIW_ideal_adaptor_stanfit(m_IA_inferred.VOT) 
+make_all_plots(m_IA_inferred.VOT)
 ```
 
 
