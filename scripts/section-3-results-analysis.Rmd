@@ -246,7 +246,7 @@ p.slope_1to7 <-
       filter(!Condition.Exposure %in% c("Shift0", "Shift10", "Shift40", "prior")),
     mapping = aes(xmin = -Inf, ymin = min(slope_unscaled), ymax = max(slope_unscaled), xmax = Inf),
     fill = "#d2d4dc",
-    alpha = .05, 
+    alpha = .07, 
     inherit.aes = F) +
   scale_y_continuous("slope (log-odds/ms VOT)")
 
@@ -315,7 +315,7 @@ p.PSE_1to7 <-
       filter(!Condition.Exposure %in% c("Shift0", "Shift10", "Shift40", "prior")),
     mapping = aes(xmin = -Inf, ymin = min(PSE), ymax = max(PSE), xmax = Inf),
     fill = "#d2d4dc",
-    alpha = .05, 
+    alpha = .07, 
     inherit.aes = F) +
   geom_text(
     data = d.true_shift %>% 
@@ -565,7 +565,7 @@ hyp.simple_effects_block <-
       "mu2_Condition.ExposureShift0:Block_Test4vs.Test3 > 0",
       "mu2_Condition.ExposureShift0:Block_Test2vs.Test1 + mu2_Condition.ExposureShift0:Block_Test3vs.Test2 + mu2_Condition.ExposureShift0:Block_Test4vs.Test3 > 0",
       "mu2_Condition.ExposureShift0:Block_Test5vs.Test4 < 0",
-      "mu2_Condition.ExposureShift0:Block_Test6vs.Test5 < 0",
+      "mu2_Condition.ExposureShift0:Block_Test6vs.Test5 < 0",                     
       "mu2_Condition.ExposureShift0:Block_Test5vs.Test4 + mu2_Condition.ExposureShift0:Block_Test6vs.Test5 < 0",
       
       "mu2_Condition.ExposureShift10:Block_Test2vs.Test1 > 0",
@@ -611,9 +611,11 @@ make_hyp_table(
   pack_rows("Difference between blocks: baseline", 1, 7) %>%
   pack_rows("Difference between blocks: +10", 8, 14) %>%
   pack_rows("Difference between blocks: +40", 15, 21) 
-
-#rm(fit_test.simple_effects_block)
 ```
+### Differences in block-to block *slope* changes by condition
+
+
+
 
 ```{r hypothesis-table-interaction-condition-block, "TEMPORARY PLACEMENT OF INTERACTION TABLE HERE", results='asis'}
 hyp_interaction.condition_block <-
@@ -673,9 +675,84 @@ table.interaction.condition_block <-
 table.interaction.condition_block
 ```
 
+```{r include=FALSE}
+fit_exposure <-
+  fit_model(
+    data = d.for_analysis,
+    phase = "exposure",
+    formulation = "standard",
+    priorSD = 15, 
+    adapt_delta = .999)
+```
+
+```{r "TEMPORARY PLACEMENT OF INTERACTION TABLE HERE1", results='asis'}
+hyp.interaction.exposure.condition_block <- 
+  hypothesis(
+    fit_exposure, 
+    c(
+      "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 < 0",
+      "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure3vs.Exposure2  < 0",
+      "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure3vs.Exposure2  < 0",
+
+      "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 < 0",
+      "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure3vs.Exposure2  < 0",
+      "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure3vs.Exposure2  < 0"),
+    robust = T) %>%
+  .$hypothesis %>% 
+  dplyr::select(-Star)
+
+table.interaction.exposure.condition_block <-
+  make_hyp_table(
+    hyp.interaction.exposure.condition_block,
+    rep(c(
+  # Comparing differences in +10 vs. baseline between blocks
+  "Block 1 to 2: increased $\\Delta_{PSE}$",
+  "Block 2 to 3: increased $\\Delta_{PSE}$",
+  "{\\em Block 1 to 3: increased $\\Delta_{PSE}$}"), 2),
+    caption = "Did the rate of block-to-block changes differ between exposure conditions? This table summarizes the interactions between exposure condition and block---specifically, whether the differences between exposure conditions changed from exposure block to exposure block.") %>%
+  pack_rows("Difference in +10 vs. baseline", 1, 3) %>%
+  pack_rows("Difference in +40 vs. +10", 4, 6) 
+table.interaction.exposure.condition_block
+```
+
+
+
+
+```{r "TEMPORARY PLACEMENT OF INTERACTION TABLE HERE2", results='asis'}
+hyp.interaction.exposure.condition_block_VOT <- 
+  hypothesis(
+    fit_exposure, 
+    c(
+      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 < 0",
+      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Exposure3vs.Exposure2  < 0",
+      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 + mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Exposure3vs.Exposure2  < 0",
+
+      "mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 < 0",
+      "mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Exposure3vs.Exposure2  < 0",
+      "mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Exposure3vs.Exposure2  < 0"),
+    robust = T) %>%
+  .$hypothesis %>% 
+  dplyr::select(-Star)
+
+table.interaction.exposure.condition_block_VOT <-
+  make_hyp_table(
+    hyp.interaction.exposure.condition_block_VOT,
+    rep(c(
+  # Comparing differences in +10 vs. baseline between blocks
+  "Block 1 to 2: increased $\\Delta_{slope}$",
+  "Block 2 to 3: increased $\\Delta_{slope}$",
+  "{\\em Block 1 to 3: increased $\\Delta_{slope}$}"), 2),
+    caption = "Did the rate of block-to-block changes differ across exposure conditions? This table summarizes the interactions between between VOT, exposure condition, and block ---specifically, whether the differences between exposure conditions changed from exposure block to exposure block.") %>%
+  pack_rows("Difference in +10 vs. baseline", 1, 3) %>%
+  pack_rows("Difference in +40 vs. +10", 4, 6) 
+
+table.interaction.exposure.condition_block_VOT
+```
+
+
 First, while the PSEs for the +40 and +10 conditions were shifted rightwards compared to the baseline condition, both the +10 and the baseline condition seem to shift *left*wards relative to their pre-exposure starting point in Test 1. This is supported by Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-effects-block). The evidence for the leftward shifts is quite weak for the +10 condition (BF = 3.5 for changes from Test 1 to 4), for which the PSE changes comparatively little across tests, but it is stronger for the baseline condition (BF = 7.6). In contrast, the +40 condition is clearly shifted rightwards relative to pre-exposure (BF = 45.2). To understand this pattern, it is helpful to relate the three exposure conditions to the distribution of phonetic cues in listeners' prior experience. Figure \@ref(fig:exposure-means-database-matrix-plot) shows the exposure means for /d/ and /t/ relative to the distributions of three important cues to the word-initial /d/-/t/ contrast in L1-US English [based on databases of isolated and connected speech, @chodroff-wilson2018]. This comparison offers an explanation as to why the baseline condition (and to some extent the +10 condition) shift leftwards with increasing exposure, whereas the +40 condition shifts rightwards: relative to listeners' prior experience, only the +40 condition presented larger-than-expected category means, whereas the baseline condition and, to some extent, the +10 condition presented lower-than-expected category means. That is, once we take into account how our exposure conditions relate to listeners' prior experience, both the direction of changes from Test 1 to 4 *within* each exposure condition (Table \@ref(tab:hypothesis-table-simple-effects-block)), and the direction of differences *between* exposure conditions receive an explanation (Table \@ref(tab:hypothesis-table-simple-effects-condition)). 
 
-To further illustrates this point, the gray dashed line in Figure \@ref(fig:plot-fit-slope-PSE)D shows the PSE predicted by a Bayesian ideal observer trained on the distribution of VOT, f0, and vowel duration for isolated word productions in Figure \@ref(fig:exposure-means-database-matrix-plot). Following @xie2023, the ideal observers included perceptual noise [estimates taken from @kronrod2016, for details, see SI, \@ref(sec:prior-idealized-listeners)]. We emphasize that the seemingly close fit between ideal observers' predictions and listeners' behavior should not be interpreted with caution: the ideal observer predictions shown in Figure \@ref(fig:plot-fit-slope-PSE)D are based on a single phonetic database. We chose this database because it is large compared to other phonetically annotated databases, and because it contains recordings that were obtained under similar conditions as our stimuli---conditions likely to, for example, elicit some degree of hyper-articulation. It should, however, be kept in mind that the database reflects the speech of talkers recruited at a single university campus in the US, and stimuli selected to cover specific phonetic contexts rather than to be representative of a typical listener's everyday speech input. <!-- TO DO: are the points in this sentence correct? --> 
+To further illustrates this point, the gray band in Figure \@ref(fig:plot-fit-slope-PSE)D shows the range of PSEs predicted by Bayesian ideal observers trained on the distribution of VOT, f0, and vowel duration for isolated word productions in Figure \@ref(fig:exposure-means-database-matrix-plot). Following @xie2023, the ideal observers included perceptual noise [estimates taken from @kronrod2016, for details, see SI, \@ref(sec:prior-idealized-listeners)]. We emphasize that the seemingly close fit between ideal observers' predictions and listeners' behavior should be interpreted with caution: the ideal observer predictions shown in Figure \@ref(fig:plot-fit-slope-PSE)D are based on a single phonetic database. We chose this database because it is large compared to other phonetically annotated databases, and because it contains recordings that were obtained under similar conditions as our stimuli---conditions likely to, for example, elicit some degree of hyper-articulation. It should, however, be kept in mind that the database reflects the speech of talkers recruited at a single university campus in the US, and stimuli selected to cover specific phonetic contexts rather than to be representative of a typical listener's everyday speech input. <!-- TO DO: are the points in this sentence correct? --> 
 
 <!-- POSSIBLE ADDITION BUT IT WOULD PROBABLY BE MISREAD BY SOME READERS, AND PROVIDE A FALSE SENSE OF THE STRENTH OF THIS RESULT: Credible intervals of the pre-exposure PSEs in Test 1 overlapped with the predictions of the ideal observer model, and support for the hypothesis that listeners' pre-exposure PSEs were identical to these predictions was strong (BF = XXX). 
 
@@ -725,11 +802,11 @@ d.chodroff_wilson %>%
   theme(legend.position = "top", axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-Second, similar reasoning about the exposure distributions relative to listeners' prior experience offers an explanation for the relative lack of changes in the slope of listeners categorization function, visible in Figure \@ref(fig:plot-fit-slope-PSE)C. Slope changes, or lack thereof, have received comparatively little attention in previous work [but see @clayards2008; @theodore-monto2019] but they are an important part of the empirical facts that theories of speech perception need to account for [see also @kleinschmidt2020]. While the present experiment was not designed to test hypotheses about slope changes, we make two post-hoc observations. Compared to the changes in PSEs in Panel D, changes in the *slope* of listeners' categorization functions in Panel C were similar across exposure conditions ($0.2 \leq$ BFs $\leq 3.3$; SI, \@ref(sec:SI-slope-tests)). This is expected under distributional learning models of adaptive speech perception [@kleinschmidt-jaeger2015], given that the exposure variances of /d/ and /t/---unlike their means---were held constant across all three exposure conditions. Slopes also changed comparatively little relative to listeners' categorization responses in Test 1 ($0.6 \leq$ BFs $\leq 4$; see SI, \@ref(sec:SI-slope-tests)). This finding, too, is broadly compatible with distributional learning models of adaptive speech perception, given that the exposure variances of /d/ and /t/ were designed to approximate the variance of /d/ and /t/ in typical speech input (see Methods). Credible intervals of the pre-exposure slopes in Test 1 overlap with the predictions of the ideal observer model introduced in the preceding paragraph (gray dashed lines in  Figure \@ref(fig:plot-fit-slope-PSE)C; we discuss the colored dashed lines in the next section). It is, however, worth noting that listeners' slopes in all three exposure conditions were consistently larger than those predicted by the ideal observer. 
+Second, similar reasoning about the exposure distributions relative to listeners' prior experience offers an explanation for the relative lack of changes in the slope of listeners categorization function, visible in Figure \@ref(fig:plot-fit-slope-PSE)C. Slope changes, or lack thereof, have received comparatively little attention in previous work [but see @clayards2008; @theodore-monto2019] but they are an important part of the empirical facts that theories of speech perception need to account for [see also @kleinschmidt2020]. While the present experiment was not designed to test hypotheses about slope changes, we make two post-hoc observations. Compared to the changes in PSEs in Panel D, changes in the *slope* of listeners' categorization functions in Panel C were similar across exposure conditions ($0.2 \leq$ BFs $\leq 12.8$; SI, \@ref(sec:SI-slope-tests)). This is expected under distributional learning models of adaptive speech perception [@kleinschmidt-jaeger2015], given that the exposure variances of /d/ and /t/---unlike their means---were held constant across all three exposure conditions. Slopes also changed comparatively little relative to listeners' categorization responses in Test 1 ($0.6 \leq$ BFs $\leq 4$; see SI, \@ref(sec:SI-slope-tests)). This finding, too, is broadly compatible with distributional learning models of adaptive speech perception, given that the exposure variances of /d/ and /t/ were designed to approximate the variance of /d/ and /t/ in typical speech input (see Methods). Credible intervals of the pre-exposure slopes in Test 1 overlap with the predictions of the ideal observer model introduced in the preceding paragraph (gray dashed lines in  Figure \@ref(fig:plot-fit-slope-PSE)C; we discuss the colored dashed lines in the next section). It is, however, worth noting that listeners' slopes in all three exposure conditions were consistently larger than those predicted by the ideal observer. 
 
 <!-- POSSIBLE ADDITION, PARALLELING WHAT I WROTE ABOVE ABOUT PSEs: (BF = XXX), so that support was weak for the hypothesis that listeners' pre-exposure slopes were identical to the predictions (BF = XXX).  -->
 
-<!-- [first BF would be direcitonal hyp test, second would be point hypothesis for VOT slope in block 1 == prediction using model that nests as follows: 0 + block / (1 + condition * VOT) ... -->] -->
+<!-- [first BF would be direcitonal hyp test, second would be point hypothesis for VOT slope in block 1 == prediction using model that nests as follows: 0 + block / (1 + condition * VOT) ... -->
 
 ```{r prediction-error-during-exposure}
 d.exposure_surprisal <-
@@ -824,12 +901,21 @@ d.test_surprisal <-
 # Visualize marginal density
 d.test_surprisal %>%
   ggplot(aes(x = Item.VOT, y = density, color = Condition.Exposure)) +
-      geom_line()
+      geom_line() +
+  scale_color_manual("Condition",
+    labels = c("baseline", "+10ms", "+40ms"),
+    values = colours.condition) +
+  theme(legend.position = "top")
 
 # Visualize surprisal
 d.test_surprisal %>%
   ggplot(aes(x = Item.VOT, y = surprisal, color = Condition.Exposure)) +
-      geom_line()
+      geom_line() +
+  scale_color_manual("Condition",
+    labels = c("baseline", "+10ms", "+40ms"),
+    values = colours.condition) +
+  theme(legend.position = "top")
+    
 
 d.test_surprisal %<>%
   group_by(Condition.Exposure) %>%

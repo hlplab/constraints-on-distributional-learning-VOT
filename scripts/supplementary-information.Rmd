@@ -831,7 +831,7 @@ rm(arrow_df, tokens)
 The perceptual model of our psychometric mixed-effects analyses assumed linear effects of VOT on the log-odds of "t"-responses. We made this assumptions for the sake of simplicity, and in order to avoid over-fitting. The ideal observers, however, predict non-linear effects of VOT [since /d/ and /t/ do *not* have equal variances; for details, see @bicknell2018; @kleinschmidt-jaeger2015; @kronrod2016]. We thus estimated the intercepts, slopes, and PSEs of ideal observers separately for test and exposure blocks, paralleling the analysis approach for the human data. This makes sure that any biases in the estimation of human intercepts, slopes, and PSEs that are introduced by our analysis approach are also taken into account for the idealized listeners (see also SI, \@ref{sec:GAMM} for a re-analysis of the human data that relaxes the linearity assumption).
 
 ### Estimating listeners' prior PSEs and slopes
-In estimating listeners' slope and PSE before they receive exposure to the test talker we used data from the isolated speech database of @chodroff-wilson2017 as that would closely resemble the speech of our test talker. The mean PSE marginalised across all talkers in this database produced a point estimate that equated well with the estimated PSE across all three conditions in pre-exposure test block 1. Given the small number of talkers in the database (13) and the known variability in VOT (@kleinschmidt2019 we divided the database into 5 folds by talker and constructed ideal observers from the data in each fold i.e. data to train each IO never overlapped but each had about a fifth of the data points produced by each talker. An alternative would have been to randomly distribute talkers into the folds. With few talkers in the database this would have implied that each prior PSE estimate would have been based on data from only 3-4 talkers. Since the idea is to simulate an adult L1 US English listener's knowledge the prior should ideally be estimated on as many talkers as possible. The first option strikes the best compromise given the small database we had at hand. 
+In estimating listeners' slope and PSE before they receive exposure to the test talker we used data from the isolated speech database of @chodroff-wilson2017 as that would closely resemble the speech of our test talker since both elicitation methods would have increased the chances of hyperarticulation. The mean PSE marginalised across all talkers in this database produced a point estimate that closely fitted the PSE across all three conditions in pre-exposure test block 1 estimated by the psychometric model. Given the small number of talkers in the database (13), its restriction to University students from a single campus, and the stimuli being limited to selected phonetic contexts this result is unlikely to be representative of a typical listener's exposure to everyday speech. To safeguard against providing a false sense of strength of this result. We therefore divided the database into 5 folds by talker and constructed ideal observers from the data in each fold (i.e. data to train each IO never overlapped but each had a fifth of the data points produced by each talker). An alternative would have been to randomly distribute talkers into the folds. With few talkers in the database this would have meant that each prior PSE estimate would have been based on data from only 2-3 talkers. Since the aim is to simulate an adult L1 US English listener's knowledge the prior should ideally be estimated on as many talkers as possible. The first option strikes the best compromise given the small database we had at hand. 
 
 
 # Additional Bayesian hypothesis tests
@@ -977,6 +977,7 @@ hyp.simple_slopes_block <-
   .$hypothesis %>% 
   dplyr::select(-Star)
 
+table.simple_slopes_block <- 
 make_hyp_table(
     hyp.simple_slopes_block,
     c(rep(c(
@@ -999,8 +1000,7 @@ make_hyp_table(
   pack_rows("Difference between blocks: baseline", 1, 7) %>%
   pack_rows("Difference between blocks: +10", 8, 14) %>%
   pack_rows("Difference between blocks: +40", 15, 21) 
-
-rm(fit_test.simple_effects_block)
+table.simple_slopes_block
 ```
 
 ```{r hypothesis-table-interaction-condition-block-VOT, results='asis'}
@@ -1067,7 +1067,7 @@ This section reports the hypothesis tables for exposure blocks corresponding the
 <!-- TO DO: follow the heading format for test blocks -->
 
 ### PSE: Simple effects of exposure condition within each block
-<!-- TO DO --> 
+
 ```{r fit-exposure-simple-effects-condition, results='hide'}
 my_priors <- c(
   prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),  
@@ -1121,6 +1121,7 @@ hyp.exposure_simple_effects_condition <-
   .$hypothesis %>% 
   dplyr::select(-Star)
 
+table.exposure_simple_effects_condition <- 
 make_hyp_table(
   hyp.exposure_simple_effects_condition, 
   rep(c("+10 vs. baseline < 0", "+40 vs. +10 < 0", "+40 vs. baseline < 0"), 3), 
@@ -1128,7 +1129,41 @@ make_hyp_table(
   pack_rows("Exposure block 1", 1, 3) %>%
   pack_rows("Exposure block 2", 4, 6) %>% 
   pack_rows("Exposure block 3", 7, 9) 
+
 ```
+
+### Changes
+```{r}
+hyp.exposure_simple_slopes_condition <- 
+  hypothesis(
+    fit_exposure.simple_effects_condition, 
+    c(
+      "mu2_Block2:Condition.Exposure_Shift10vs.Shift0:VOT_gs < 0",
+      "mu2_Block2:Condition.Exposure_Shift40vs.Shift10:VOT_gs < 0",
+      "mu2_Block2:Condition.Exposure_Shift10vs.Shift0:VOT_gs + mu2_Block2:Condition.Exposure_Shift40vs.Shift10:VOT_gs < 0",
+      "mu2_Block4:Condition.Exposure_Shift10vs.Shift0:VOT_gs < 0",
+      "mu2_Block4:Condition.Exposure_Shift40vs.Shift10:VOT_gs < 0",
+      "mu2_Block4:Condition.Exposure_Shift40vs.Shift10:VOT_gs + mu2_Block4:Condition.Exposure_Shift10vs.Shift0:VOT_gs < 0",
+      "mu2_Block6:Condition.Exposure_Shift10vs.Shift0:VOT_gs < 0",
+      "mu2_Block6:Condition.Exposure_Shift40vs.Shift10:VOT_gs < 0",
+      "mu2_Block6:Condition.Exposure_Shift40vs.Shift10 + mu2_Block6:Condition.Exposure_Shift10vs.Shift0:VOT_gs < 0"),
+    robust = T) %>%
+  .$hypothesis %>% 
+  dplyr::select(-Star)
+
+table.exposure_simple_effects_condition <- 
+make_hyp_table(
+  hyp.exposure_simple_slopes_condition, 
+  rep(c("+10 vs. baseline < 0", "+40 vs. +10 < 0", "+40 vs. baseline < 0"), 3), 
+    caption = "Did exposure affect the slope of categorization responses? This table summarizes the differences in slopes between the exposure conditions for each exposure block.") %>% 
+  pack_rows("Exposure block 1", 1, 3) %>%
+  pack_rows("Exposure block 2", 4, 6) %>% 
+  pack_rows("Exposure block 3", 7, 9) 
+
+rm(fit_exposure.simple_effects_condition)
+```
+
+
 
 ### PSE: Simple effects of block within each exposure condition
 
@@ -1172,17 +1207,17 @@ hyp.exposure_simple_effects_block <-
   hypothesis(
     fit_exposure.simple_effects_block, 
     c(
-      "mu2_Condition.ExposureShift0:Block_Exposure2vs.Exposure1 > 0",
-      "mu2_Condition.ExposureShift0:Block_Exposure3vs.Exposure2 > 0",
-      "mu2_Condition.ExposureShift0:Block_Exposure2vs.Exposure1 + mu2_Condition.ExposureShift0:Block_Exposure3vs.Exposure2 > 0",
+      "mu2_Condition.ExposureShift0:Block_Exposure2vs.Exposure1 < 0",
+      "mu2_Condition.ExposureShift0:Block_Exposure3vs.Exposure2 < 0",
+      "mu2_Condition.ExposureShift0:Block_Exposure2vs.Exposure1 + mu2_Condition.ExposureShift0:Block_Exposure3vs.Exposure2 < 0",
 
-      "mu2_Condition.ExposureShift10:Block_Exposure2vs.Exposure1 > 0",
-      "mu2_Condition.ExposureShift10:Block_Exposure3vs.Exposure2 > 0",
-      "mu2_Condition.ExposureShift10:Block_Exposure2vs.Exposure1 + mu2_Condition.ExposureShift10:Block_Exposure3vs.Exposure2 > 0",
+      "mu2_Condition.ExposureShift10:Block_Exposure2vs.Exposure1 < 0",
+      "mu2_Condition.ExposureShift10:Block_Exposure3vs.Exposure2 < 0",
+      "mu2_Condition.ExposureShift10:Block_Exposure2vs.Exposure1 + mu2_Condition.ExposureShift10:Block_Exposure3vs.Exposure2 < 0",
 
-      "mu2_Condition.ExposureShift40:Block_Exposure2vs.Exposure1 > 0",
-      "mu2_Condition.ExposureShift40:Block_Exposure3vs.Exposure2 > 0",
-      "mu2_Condition.ExposureShift40:Block_Exposure2vs.Exposure1 + mu2_Condition.ExposureShift40:Block_Exposure3vs.Exposure2 > 0"),
+      "mu2_Condition.ExposureShift40:Block_Exposure2vs.Exposure1 < 0",
+      "mu2_Condition.ExposureShift40:Block_Exposure3vs.Exposure2 < 0",
+      "mu2_Condition.ExposureShift40:Block_Exposure2vs.Exposure1 + mu2_Condition.ExposureShift40:Block_Exposure3vs.Exposure2 < 0"),
     robust = T) %>%
   .$hypothesis %>% 
   dplyr::select(-Star)
@@ -1199,16 +1234,87 @@ make_hyp_table(
   pack_rows("Difference between blocks: +10", 4, 6) %>%
   pack_rows("Difference between blocks: +40", 7, 9) 
 
-#rm(fit_test.simple_effects_block)
+rm(fit_exposure.simple_effects_block)
 ```
 
 
 
-### Differences in block-to block *PSE* changes across conditions
+### Differences in block-to block *PSE* changes by condition (interaction)
+
+```{r include=FALSE}
+fit_exposure <-
+  fit_model(
+    data = d.for_analysis,
+    phase = "exposure",
+    formulation = "standard",
+    priorSD = 15, 
+    adapt_delta = .999)
+```
+
+```{r hypothesis-table-exposure-interaction-condition-block, results='asis'}
+hyp.interaction.exposure.condition_block <- 
+  hypothesis(
+    fit_exposure, 
+    c(
+      "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 < 0",
+      "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure3vs.Exposure2  < 0",
+      "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure3vs.Exposure2  < 0",
+
+      "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 < 0",
+      "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure3vs.Exposure2  < 0",
+      "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure3vs.Exposure2  < 0"),
+    robust = T) %>%
+  .$hypothesis %>% 
+  dplyr::select(-Star)
+
+table.interaction.exposure.condition_block <-
+  make_hyp_table(
+    hyp.interaction.exposure.condition_block,
+    rep(c(
+  # Comparing differences in +10 vs. baseline between blocks
+  "Block 1 to 2: increased $\\Delta_{PSE}$",
+  "Block 2 to 3: increased $\\Delta_{PSE}$",
+  "{\\em Block 1 to 3: increased $\\Delta_{PSE}$}"), 2),
+    caption = "Did the rate of block-to-block changes differ between exposure conditions? This table summarizes the interactions between exposure condition and block---specifically, whether the differences between exposure conditions changed from exposure block to exposure block.") %>%
+  pack_rows("Difference in +10 vs. baseline", 1, 3) %>%
+  pack_rows("Difference in +40 vs. +10", 4, 6) 
+table.interaction.exposure.condition_block
+rm(fit_exposure)
+```
 
 
-### Differences in block-to block *slope* changes across conditions
-<!-- TO DO -->
+### Differences in block-to block *slope* changes by condition
+
+```{r hypothesis-table-exposure-interaction-condition-block-VOT, results='asis'}
+hyp.interaction.exposure.condition_block_VOT <- 
+  hypothesis(
+    fit_exposure, 
+    c(
+      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 < 0",
+      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Exposure3vs.Exposure2  < 0",
+      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 + mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Exposure3vs.Exposure2  < 0",
+
+      "mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 < 0",
+      "mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Exposure3vs.Exposure2  < 0",
+      "mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Exposure3vs.Exposure2  < 0"),
+    robust = T) %>%
+  .$hypothesis %>% 
+  dplyr::select(-Star)
+
+table.interaction.exposure.condition_block_VOT <-
+  make_hyp_table(
+    hyp.interaction.exposure.condition_block_VOT,
+    rep(c(
+  # Comparing differences in +10 vs. baseline between blocks
+  "Block 1 to 2: increased $\\Delta_{slope}$",
+  "Block 2 to 3: increased $\\Delta_{slope}$",
+  "{\\em Block 1 to 3: increased $\\Delta_{slope}$}"), 2),
+    caption = "Did the rate of block-to-block changes differ across exposure conditions? This table summarizes the interactions between between VOT, exposure condition, and block ---specifically, whether the differences between exposure conditions changed from exposure block to exposure block.") %>%
+  pack_rows("Difference in +10 vs. baseline", 1, 3) %>%
+  pack_rows("Difference in +40 vs. +10", 4, 6) 
+
+table.interaction.exposure.condition_block_VOT
+```
 
 
 
