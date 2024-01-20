@@ -87,7 +87,7 @@ p.stimuli.VOT_f0 <- d.stimuli %>%
   ggplot(aes(x = VOT, y = f0_5ms_into_vowel, colour = word)) +
   geom_point(alpha = .4, size = 2) +
   scale_x_continuous(breaks = seq(-100, 150, 15)) +
-  scale_y_continuous(breaks = seq(240, 252, 0.5)) +
+  scale_y_continuous("F0", breaks = seq(240, 252, 0.5)) +
   scale_colour_discrete("Minimal pair")
 p.stimuli.VOT_f0
 ```
@@ -111,7 +111,7 @@ d %>%
 ```
 
 ## Performance on labelled exposure trials
-
+Labelled trials provided another measure to check participant attention during the experiment. Performance on labelled trials was generally good across all exposure conditions with participants in the +40 condition committing the most errors. This is not unexpected for the +40 condition was the furthest shifted with the most unexpected cue-category mappings. 
 ```{r labeled-trial-performance-group, fig.width=6.5, fig.height=4, message=F}
 p.labelled <- d %>%
   filter(Phase == "exposure") %>%
@@ -121,7 +121,7 @@ p.labelled <- d %>%
   summarise(freq = n()) %>%
   ggplot(aes(x = LabeledTrial.Correct, y = freq, fill = Condition.Exposure)) +
   geom_bar(stat = "identity", position = position_dodge2(width = .5, preserve = "single"), width = .5) +
-  geom_text(aes(label = freq), position = position_dodge(width = .5), vjust = -.5) +
+  #geom_text(aes(label = freq), position = position_dodge(width = .5), vjust = -.5) +
   scale_colour_manual("Exposure condition",
                       aesthetics = c("colour", "fill"),
                       labels = c("baseline", "+10", "+40"),
@@ -140,15 +140,19 @@ p.labelled.group <- d %>%
                       aesthetics = c("colour", "fill"),
                       labels = c("baseline", "+10", "+40"),
                       values = colours.condition) +
-  scale_x_continuous("Total labelled trial errors") +
+  scale_x_continuous("Total errors") +
   theme(legend.position = "top") +
   facet_grid(Condition.Exposure ~ Block, labeller = labeller(
     .cols = c("2" = "Exposure 1", "4" = "Exposure 2", "6" = "Exposure 3"), 
     .rows = c(Shift0 = "baseline", Shift10 = "+10", Shift40 = "+40")))
+```
 
+```{r plot-labeled-trial-performance}
 p.labelled | p.labelled.group +
   plot_layout(guides = "collect") & theme(legend.position = "top", legend.box.just = "left")
 ```
+
+
 
 ```{r fig,width=8, fig.height=5, fig.width=6}
 d %>%
@@ -211,9 +215,42 @@ d %>%
 ## Additional information about the Bayesian psychometric mixed-effects model {sec:analysis-approach}
 We analyzed participants' categorization responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric model [@prins2011]. The psychometric model is an extension of mixed-effects logistic regression that also takes into account attentional lapses.
 
-The mixed-effects psychometric model describes the probability of "t"-responses as a weighted mixture of a perceptual and a lapsing model. The perceptual model predicts responses on trials where participants pay attention and respond based on the stimulus. We implemented the perceptual model as used mixed-effects logistic regression, predicting "t"-responses from exposure condition (backward difference coded, comparing the +10ms against the +0ms shift condition, and the +40ms against the +10ms shift condition), test block (backward difference coded from the first to last test block), VOT (Gelman scaled), and their full factorial interaction. The model included by-participant random intercepts and slopes for all within-participant manipulations (block and VOT) and by-item random intercepts and slopes for all within-participant manipulations (exposure condition, block, VOT).
+The mixed-effects psychometric model describes the probability of "t"-responses as a weighted mixture of a perceptual and a lapsing model. The perceptual model predicts responses on trials where participants pay attention and respond based on the stimulus. We implemented the perceptual model as used mixed-effects logistic regression, predicting "t"-responses from exposure condition (backward difference coded, comparing the +10ms against the baseline condition, and the +40ms against the +10ms shift condition), test block (backward difference coded from the first to last test block), VOT (Gelman scaled), and their full factorial interaction. The model included by-participant random intercepts and slopes for all within-participant manipulations (block and VOT) and by-item random intercepts and slopes for all within-participant manipulations (exposure condition, block, VOT).
 
-The lapsing model predicts participant responses that are made independent of the stimulus---for example, responses that result from attentional lapses. These responses depend only on participants' response bias. We used mixed-effects logistic regression with only a population-level intercept, allowing non-uniform responses bias but assuming that response biases did not vary across participants. Finally, the relative weight of the perceptual and lapsing model is determined by the lapse rate. We again used mixed-effects logistic regression with only a population-level intercept, inferring lapse rates from that data while assuming that lapse rates did not vary across participants or blocks. This assumption is validated by Figures \@ref(fig:plot-fit-intercept-slope-PSE)A-B, which shows that participants' responses (the point ranges) in all exposure and test blocks approach 0 and 100% "t"-responses for small and large VOTs, respectively [unlike in @kleinschmidt2020]. One possible explanation for these consistently small lapse rate [also compared to @clayards2008] is that the present experiment recruited participants from the Prolific platform, which has been found [@REFS] to deliver higher data quality than the Amazon's Mechanical Turk crowdsourcing platform used by @kleinschmidt-jaeger2016 and @kleinschmidt2020.
+### Analysis of lapse rates {sec:analysis-lapse}
+The lapsing model reported in \@ref(sec:results) predicts participant responses that are made independent of the stimulus---for example, responses that result from attentional lapses. These responses depend only on participants' response bias. We used mixed-effects logistic regression with only a population-level intercept, allowing non-uniform responses bias but assuming that response biases did not vary across participants. Finally, the relative weight of the perceptual and lapsing model is determined by the lapse rate. We again used mixed-effects logistic regression with only a population-level intercept, inferring lapse rates from that data while assuming that lapse rates did not vary across participants or blocks. This assumption is validated by Figures \@ref(fig:plot-fit-intercept-slope-PSE)A-B, which shows that participants' responses (the point ranges) in all exposure and test blocks approach 0 and 100% "t"-responses for small and large VOTs, respectively [unlike in @kleinschmidt2020]. One possible explanation for these consistently small lapse rate [also compared to @clayards2008] is that the present experiment recruited participants from the Prolific platform, which has been found [@REFS] to deliver higher data quality than the Amazon's Mechanical Turk crowd-sourcing platform used by @kleinschmidt-jaeger2016 and @kleinschmidt2020.
+
+As additional analysis we refitted the same mixed-effects psychometric model with a lapse model that included Block as a predictor to estimate the differences in lapse rates between blocks. The estimated lapse rate (in log-odds) for each block is shown in Table \@ref(tab:hypothesis-table-lapse-by-block). Lapse rates were at their highest in the first block (1.5%) but fell sharply up to the fifth block before rising in the sixth (0.07%) and seventh block. Where estimates were especially low, we note the accompanying wide confidence intervals. Overall, the trend shows some evidence of participants getting familiar with the task but with the very low lapse to begin with, suggests that they were indeed paying attention from the very beginning. 
+
+```{r fit-lapse-by-block}
+fit.lapse_by_block <- 
+  fit_model(
+    data = d.for_analysis,
+    phase = "all",
+    formulation = "lapse_block",
+    priorSD = 15, 
+    adapt_delta = .999
+  )
+```
+
+
+
+```{r hypothesis-table-lapse-by-block, results='asis'}
+hyp.lapse <- 
+hypothesis(fit.lapse_by_block, 
+           map_chr(.x = c(1:9), ~ c(get_lapse_hypothesis(.x)))) %>% 
+  .$hypothesis %>% 
+  dplyr::select(-Star)
+
+table.lapse <- 
+make_hyp_table(
+  hyp.lapse, 
+  paste(rep("Block", 9), c(1:9), "< 0"), 
+    caption = "This table summarizes estimated lapse rate in each block of the experiment.") %>% 
+  pack_rows("Estimated lapse rate", 1, 9)  
+table.lapse
+rm(fit.lapse_by_block)
+```
 
 
 
@@ -1068,7 +1105,7 @@ table.interactions.condition_block_VOT
 We performed the same hypotheses tests on the exposure block model which was fitted separately from test. Analogous to test, we fitted models in standard and nested formulations to obtain interactions and simple effects using the same weakly regularizing priors. While the standard formulation of the model converged (Tables \@ref(tab:hypothesis-table-exposure-interaction-condition-block) and \@ref(tab:hypothesis-table-exposure-interaction-condition-block-VOT)) the nested formulations returned several divergent transitions during sampling. Divergent transitions give pause for caution in model interpretation (see https://mc-stan.org/misc/warnings.html#runtime-warnings for explanation of warning types). 
 A possible solution to eliminating divergent transitions in this model would be to relax the variance of the prior distribution assumed for the slope parameter (VOT_gs in the model formula). Indeed, in earlier fits of the test block data we faced convergence issues when we used the recommended weakly regularising prior (student-t distribution with SD = 2.5; @gelman-prior2008) for the slope parameter. Diagnostic plots revealed a slight bi-modality in the posterior distribution which may have been an impediment to smooth sampling; this was solved by increasing the prior distribution's SD which allow the inclusion of data points that were further from the mean. However, fitting the nested exposure models here with yet more accommodating priors would detract from having an identical set of priors across all models fitted for test and exposure. Given that both the simple effects models returned only a few divergent transitions (3 in the nested block and 9 in the nested condition model) and showed fairly good Rhat values (all 1.0 except for one parameter) and ESS values we opted not to explore further solutions for them at this point.  
 
-Consistent with the trend observed in test blocks, categorization boundaries were clearly distinct between the conditions in all exposure blocks and grew progressively larger with more exposure. Evidence for the effect was stronger in the +40 vs. +10 comparison ($24.7 \leq$ BFs $\leq 100.3$) with the difference in PSE reaching its widest in the final exposure block (BF = 91). The difference between +10 and baseline widened from the exposure block 1 to 2 but narrowed in the final block where evidence in support of the difference also fell substantially (BF = 11.4). The weaker effects of exposure condition in this comparison reflect the pattern in test blocks. 
+Consistent with the trend observed in test blocks, categorization boundaries were clearly separated between the conditions in all exposure blocks and grew progressively larger with more exposure. Evidence for the effect was stronger in the +40 vs. +10 comparison ($24.7 \leq$ BFs $\leq 100.3$) with the difference in PSE reaching its maximum in the final exposure block (`r get_bf(fit_exposure.simple_effects_condition, "mu2_Block6:Condition.Exposure_Shift40vs.Shift10 < 0")`). The difference between +10 and baseline widened in exposure block 2 (`r get_bf(fit_exposure.simple_effects_condition, "mu2_Block4:Condition.Exposure_Shift10vs.Shift0 < 0")`) but narrowed in the final block where evidence in support of the difference also fell substantially (`r get_bf(fit_exposure.simple_effects_condition, "mu2_Block6:Condition.Exposure_Shift10vs.Shift0 < 0")`). The smaller difference in PSE between the +10 and baseline conditions reflected the pattern in test blocks. 
 
 
 

@@ -187,7 +187,7 @@ prepVars <- function(d, test_mean = NULL, levels.Condition = NULL, contrast_type
 
     message("Condition contrast is:", contrasts(d$Condition.Exposure))
     message("Block contrast is:", contrasts(d$Block))
-  } else if (all(d$Phase == "test") & n_distinct(d$Block) > 1 & contrast_type == "helmert"){
+  } else if (all(d$Phase == "test") & n_distinct(d$Block) > 1 & contrast_type == "helmert") {
     contrasts(d$Block) <- cbind("_Test2 vs. Test1" = c(-1/2, 1/2, 0, 0, 0, 0),
                                 "_Test3 vs. Test2_1" = c(-1/3, -1/3, 2/3, 0, 0, 0),
                                 "Test4 vs. Test3_2_1" = c(-1/4, -1/4, -1/4, 3/4, 0, 0),
@@ -195,7 +195,7 @@ prepVars <- function(d, test_mean = NULL, levels.Condition = NULL, contrast_type
                                 "_Test6 vs. Test5_4_3_2_1" = c(-1/6, -1/6, -1/6, -1/6, -1/6, 5/6))
     message(contrasts(d$Condition.Exposure))
     message(contrasts(d$Block))
-  } else if (all(d$Phase == "exposure") & n_distinct(d$Block) > 1 & contrast_type == "difference"){
+  } else if (all(d$Phase == "exposure") & n_distinct(d$Block) > 1 & contrast_type == "difference") {
     contrasts(d$Block) <- cbind("_Exposure2 vs. Exposure1" = c(-2/3, 1/3, 1/3),
                                 "_Exposure3 vs. Exposure2" = c(-1/3,-1/3, 2/3))
     message("Condition contrast is:", MASS::fractions(contrasts(d$Condition.Exposure)))
@@ -231,10 +231,16 @@ fit_model <- function(data, phase, formulation = "standard", priorSD = 2.5, adap
   contrast_type <- "difference"
   chains = 4
 
-  data %<>%
-    filter(Phase == phase & Item.Labeled == F) %>%
-    prepVars(test_mean = VOT.mean_test, levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type)
-
+  if (phase == "all") {
+    data %<>%
+      filter(Item.Labeled == F) %>%
+      prepVars(test_mean = VOT.mean_test, levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type)
+  } else {
+    data %<>%
+      filter(Phase == phase & Item.Labeled == F) %>%
+      prepVars(test_mean = VOT.mean_test, levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type)
+  }
+  
   prior_overwrite <- if (phase == "exposure" & formulation == "nested_slope") {
     c(set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x2:VOT_gs", dpar = "mu2"),
       set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x4:VOT_gs", dpar = "mu2"),
@@ -283,7 +289,12 @@ fit_model <- function(data, phase, formulation = "standard", priorSD = 2.5, adap
            (0 + Block / VOT_gs | ParticipantID) +
            (0 + I(paste(Condition.Exposure, Block, sep = "x")) / VOT_gs | Item.MinimalPair),
          theta1 ~ 1)
-    } else {
+    } else if (formulation == "lapse_block") {
+      bf(Response.Voiceless ~ 1,
+         mu1 ~ 0 + offset(0),
+         mu2 ~ 1 + VOT_gs * Condition.Exposure * Block + (1 + VOT_gs * Block | ParticipantID) + (1 + VOT_gs * Condition.Exposure * Block | Item.MinimalPair),
+         theta1 ~ 1 + Block)}
+      else {
       bf(Response.Voiceless ~ 1,
          mu1 ~ 0 + offset(0),
          mu2 ~ 1 + VOT_gs * Condition.Exposure * Block + (1 + VOT_gs * Block | ParticipantID) + (1 + VOT_gs * Condition.Exposure * Block | Item.MinimalPair),
@@ -329,6 +340,20 @@ get_conditional_effects <- function(model, data, phase) {
     re_formula = NA)
 }
 
+get_lapse_hypothesis <- function(contrast_row = 1) {
+  paste(
+    "theta1_Intercept +", 
+    paste(
+      paste(
+        unname(attr(lapse_by_block$data$Block, "contrasts")[contrast_row, 1:7]), 
+        "*", 
+        rownames(fixef(lapse_by_block))[56:62], "+", collapse = " "), 
+      paste(
+        unname(attr(lapse_by_block$data$Block, "contrasts")[contrast_row, 8]), 
+        "*", 
+        rownames(fixef(lapse_by_block))[63])), 
+    "< 0")
+}
 
 get_bf <- function(model, hypothesis) {
   n.posterior_samples <-
