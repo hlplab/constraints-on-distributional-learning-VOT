@@ -39,7 +39,7 @@ You will also need to download the IPA font [SIL Doulos](https://software.sil.or
 We used the following R packages to create this document: `r cite_r("latex-stuff/r-references.bib", withhold = T, pkgs = c("MVBeliefUpdatr"))`. If opened in RStudio, the top of the R markdown document should alert you to any libraries you will need to download, if you have not already installed them. The full session information is provided at the end of this document.
 
 
-# Additional information about Materials {sec:stimulus-generation}
+# Additional information about Materials {#sec:stimulus-generation}
 All stimuli are available as part of the OSF repository for this article.
 
 ## Recordings
@@ -79,7 +79,7 @@ Pre-voicing in 5ms increments were generated from a a clear pre-voicing waveform
 
 All the synthesised stimuli were subsequently annotated for pre-voicing, VOT, vowel duration and F0 at the first 5ms from vowel onset. This F0 measurement was made in order to align the data with the production database that we use for ideal observer analysis. Items' F0 in relation to VOT is plotted in Figure \@ref(fig:stimuli-cue-measurements). 
 
-```{r stimuli-cue-measurements}
+```{r stimuli-cue-measurements, fig.height=4, fig.width=5, fig.cap="cue measurements of synthesised stimuli"}
 # Annotation information of synthesised stimuli
 d.stimuli <- read_csv("../data/exposure_stimuli_f0_5ms.csv", show_col_types = F)
 
@@ -88,19 +88,20 @@ p.stimuli.VOT_f0 <- d.stimuli %>%
   geom_point(alpha = .4, size = 2) +
   scale_x_continuous(breaks = seq(-100, 150, 15)) +
   scale_y_continuous("F0", breaks = seq(240, 252, 0.5)) +
-  scale_colour_discrete("Minimal pair")
+  scale_colour_discrete("Minimal pair") +
+  theme(legend.position = "top")
 p.stimuli.VOT_f0
 ```
 
 
-# Additional information on participant exclusions {sec:exclusions}
+# Additional information on participant exclusions {#sec:exclusions}
 We provide additional information on participants' performance during catch trials and on labelled trials (for which there is a clearly correct response). Both of these measures were used to exclude participants.
 
 ## Performance on catch trials
 
 (ref:plot-catch-trial-performance) Of the 122 participants, 1 committed more than 3 errors (<84% accuracy)
 
-```{r plot-catch-trial-performance, fig.height=4, fig.width=6, fig.cap="ref:plot-catch-trial-performance"}
+```{r plot-catch-trial-performance, fig.height=4, fig.width=6, fig.cap="(ref:plot-catch-trial-performance)"}
 d %>%
   group_by(ParticipantID) %>%
   summarise(Total_errors = 18 - sum(CatchTrial.Correct, na.rm = T)) %>%
@@ -112,7 +113,7 @@ d %>%
 
 ## Performance on labelled exposure trials
 Labelled trials provided another measure to check participant attention during the experiment. Performance on labelled trials was generally good across all exposure conditions with participants in the +40 condition committing the most errors. This is not unexpected for the +40 condition was the furthest shifted with the most unexpected cue-category mappings. 
-```{r labeled-trial-performance-group, fig.width=6.5, fig.height=4, message=F}
+```{r labeled-trial-performance-group, message=F}
 p.labelled <- d %>%
   filter(Phase == "exposure") %>%
   group_by(ParticipantID, Condition.Exposure) %>%
@@ -126,7 +127,7 @@ p.labelled <- d %>%
                       aesthetics = c("colour", "fill"),
                       labels = c("baseline", "+10", "+40"),
                       values = colours.condition) +
-  scale_x_continuous("Total labelled trial errors") +
+  scale_x_continuous("Total errors") +
   scale_y_continuous("No. of participants", breaks  = seq(0, 115, 5)) +
   theme(legend.position = "none")
 
@@ -140,14 +141,14 @@ p.labelled.group <- d %>%
                       aesthetics = c("colour", "fill"),
                       labels = c("baseline", "+10", "+40"),
                       values = colours.condition) +
-  scale_x_continuous("Total errors") +
+  scale_x_continuous("Total labelled trial errors") +
   theme(legend.position = "top") +
   facet_grid(Condition.Exposure ~ Block, labeller = labeller(
     .cols = c("2" = "Exposure 1", "4" = "Exposure 2", "6" = "Exposure 3"), 
     .rows = c(Shift0 = "baseline", Shift10 = "+10", Shift40 = "+40")))
 ```
 
-```{r plot-labeled-trial-performance}
+```{r plot-labeled-trial-performance, fig.height=5, fig.width=5 }
 p.labelled | p.labelled.group +
   plot_layout(guides = "collect") & theme(legend.position = "top", legend.box.just = "left")
 ```
@@ -173,7 +174,7 @@ d %>%
   facet_wrap( ~ Block )
 ```
 
-```{r, fig.width=8, fig.height=3}
+```{r, fig.height=3.5, fig.width=6, include=FALSE}
 d.for_analysis %>%
   group_by(ParticipantID, Block) %>%
   mutate(
@@ -192,7 +193,7 @@ d.for_analysis %>%
   theme(legend.position = "none")
 ```
 
-```{r, fig.width=8, fig.height=3}
+```{r, fig.height=3.5, fig.width=6, include=FALSE}
 d %>%
   group_by(Trial, Condition.Exposure, Block) %>%
   mutate(Response.log_RT = log10(Response.RT)) %>%
@@ -218,11 +219,8 @@ We analyzed participants' categorization responses during exposure and test bloc
 The mixed-effects psychometric model describes the probability of "t"-responses as a weighted mixture of a perceptual and a lapsing model. The perceptual model predicts responses on trials where participants pay attention and respond based on the stimulus. We implemented the perceptual model as used mixed-effects logistic regression, predicting "t"-responses from exposure condition (backward difference coded, comparing the +10ms against the baseline condition, and the +40ms against the +10ms shift condition), test block (backward difference coded from the first to last test block), VOT (Gelman scaled), and their full factorial interaction. The model included by-participant random intercepts and slopes for all within-participant manipulations (block and VOT) and by-item random intercepts and slopes for all within-participant manipulations (exposure condition, block, VOT).
 
 ### Analysis of lapse rates {sec:analysis-lapse}
-The lapsing model reported in \@ref(sec:results) predicts participant responses that are made independent of the stimulus---for example, responses that result from attentional lapses. These responses depend only on participants' response bias. We used mixed-effects logistic regression with only a population-level intercept, allowing non-uniform responses bias but assuming that response biases did not vary across participants. Finally, the relative weight of the perceptual and lapsing model is determined by the lapse rate. We again used mixed-effects logistic regression with only a population-level intercept, inferring lapse rates from that data while assuming that lapse rates did not vary across participants or blocks. This assumption is validated by Figures \@ref(fig:plot-fit-intercept-slope-PSE)A-B, which shows that participants' responses (the point ranges) in all exposure and test blocks approach 0 and 100% "t"-responses for small and large VOTs, respectively [unlike in @kleinschmidt2020]. One possible explanation for these consistently small lapse rate [also compared to @clayards2008] is that the present experiment recruited participants from the Prolific platform, which has been found [@REFS] to deliver higher data quality than the Amazon's Mechanical Turk crowd-sourcing platform used by @kleinschmidt-jaeger2016 and @kleinschmidt2020.
 
-As additional analysis we refitted the same mixed-effects psychometric model with a lapse model that included Block as a predictor to estimate the differences in lapse rates between blocks. The estimated lapse rate (in log-odds) for each block is shown in Table \@ref(tab:hypothesis-table-lapse-by-block). Lapse rates were at their highest in the first block (1.5%) but fell sharply up to the fifth block before rising in the sixth (0.07%) and seventh block. Where estimates were especially low, we note the accompanying wide confidence intervals. Overall, the trend shows some evidence of participants getting familiar with the task but with the very low lapse to begin with, suggests that they were indeed paying attention from the very beginning. 
-
-```{r fit-lapse-by-block}
+```{r fit-lapse-by-block, message=FALSE}
 fit.lapse_by_block <- 
   fit_model(
     data = d.for_analysis,
@@ -232,6 +230,11 @@ fit.lapse_by_block <-
     adapt_delta = .999
   )
 ```
+
+
+The lapsing model reported in \@ref(sec:results) predicts participant responses that are made independent of the stimulus---for example, responses that result from attentional lapses. These responses depend only on participants' response bias. We used mixed-effects logistic regression with only a population-level intercept, allowing non-uniform responses bias but assuming that response biases did not vary across participants. Finally, the relative weight of the perceptual and lapsing model is determined by the lapse rate. We again used mixed-effects logistic regression with only a population-level intercept, inferring lapse rates from that data while assuming that lapse rates did not vary across participants or blocks. This assumption is validated by Figures \@ref(fig:plot-fit-intercept-slope-PSE)A-B, which shows that participants' responses (the point ranges) in all exposure and test blocks approach 0 and 100% "t"-responses for small and large VOTs, respectively [unlike in @kleinschmidt2020]. One possible explanation for these consistently small lapse rate [also compared to @clayards2008] is that the present experiment recruited participants from the Prolific platform, which has been found [@REFS] to deliver higher data quality than the Amazon's Mechanical Turk crowd-sourcing platform used by @kleinschmidt-jaeger2016 and @kleinschmidt2020.
+
+To explore changes in lapse rates we refitted the same mixed-effects psychometric model with a lapse model that included Block as a predictor. The estimated lapse rate (in log-odds) for each block is shown in Table \@ref(tab:hypothesis-table-lapse-by-block). Lapse rates were at their highest in the first block ($1.5\%$) but fell sharply up to the fifth block ($\leq.0011\%$) before rising in the sixth ($0.07\%$) and seventh block ($0.04\%$). Where estimates were especially low, we note the accompanying wide confidence intervals. Overall, the trend shows some evidence of participants' gaining familiarity with the task but with the very low lapse to begin with, suggests that they were indeed paying attention from the very beginning. 
 
 
 
@@ -246,7 +249,7 @@ table.lapse <-
 make_hyp_table(
   hyp.lapse, 
   paste(rep("Block", 9), c(1:9), "< 0"), 
-    caption = "This table summarizes estimated lapse rate in each block of the experiment.") %>% 
+    caption = "This table summarizes estimated lapse rates in each block of the experiment.") %>% 
   pack_rows("Estimated lapse rate", 1, 9)  
 table.lapse
 rm(fit.lapse_by_block)
@@ -386,7 +389,7 @@ rm(d.chodroff_wilson.connected.norm, d.chodroff_wilson.isolated.norm)
 
 (ref:plot-database-pairwise-cue-correlations) Distribution of L1 US-English talker cues against test tokens, unnormalized (black) and normalized (gray). Test tokens are normalized according to overall cue means of both corpora.  **Panel A:** Isolated speech of initial /d/ and /t/ syllables by 13 females. **Panel B:** Same as **A** but normalised. **Panel C:** Connected speech of word-initial /d/ and /t/ by 102 females. **Panel D:** Same as **C** but normalised within talker. In  **B** and **D** the mean of talker means was added to each token in order to keep tokens in the familiar phonetic space [following @xie2023]
 
-```{r plot-database-pairwise-cue-correlations, fig.height=8.5, fig.width=10}
+```{r plot-database-pairwise-cue-correlations, fig.height=8.5, fig.width=10, fig.cap="(ref:plot-database-pairwise-cue-correlations)"}
 (p.matrix_isolated + p.matrix_isolated.norm) / (p.matrix_connected + p.matrix_connected.norm) +
   plot_annotation(tag_levels = 'A', tag_suffix = ")") + 
   plot_layout(guides = "collect") &
@@ -405,7 +408,7 @@ The model is multivariate because we fit the data simultaneously to all three cu
 
 Finally, the model is a multilevel or mixed-effects model since we recognize the hierarchical grouping structure of the data (talkers).
 
-```{r DMMM-setup}
+```{r DMMM-setup, eval=FALSE}
 d.chodroff_wilson.for_analysis <-
   d.chodroff_wilson %>%
   select(Talker, category, VOT, f0_Mel, vowel_duration) %>%
@@ -525,13 +528,13 @@ saveRDS(DMMM, file = "../models/DMMM-attempt4.rds")
 DMMM <- readRDS(file = "../models/DMMM-attempt3.rds")
 ```
 
-```{r checking-posterior-predictive}
+```{r checking-posterior-predictive, eval=FALSE}
 pp_check(DMMM, resp = "VOT")
 pp_check(DMMM, resp = "f0Mel")
 pp_check(DMMM, resp = "vowelduration")
 ```
 
-```{r draw-samples-from-DMMM}
+```{r draw-samples-from-DMMM, eval=FALSE}
 # 1. Get estimates of each talker model. This could be a. or b.
 #   a. use mean/median estimates
 #   b. marginalize over all parameters that go into each talker model.
@@ -674,7 +677,7 @@ advantages for regression-based approach fitting categories
 
 
 
-### Phonetic database [@chodroff-wilson2017]
+### Phonetic database {#sec:SI-phonetic-data}
 The production data we used in our analysis is a subset of two annotated phonetic databases from @chodroff-wilson2017 (downloadable at https://osf.io/k6djr/). The databases differed in size and the way the productions were elicited; the larger of the two was made up of 180 adult L1-US English talkers (102 female) producing stop-initial words in connected speech  while the smaller was made up of recordings of isolated utterances of stop-initial CVC syllables by 24 L1-US English talkers (13 female) [see @chodroff-wilson2017 pp. 33; 37- 39 for details]. For the connected speech database we filtered the databases to /d/ and /t/ tokens and removed tokens that showed pitch-doubling by running a dip test for bimodality. We also restricted the talkers to those with a minimum of 10 tokens per category. 
 For the isolated database we removed talkers with no data (3 talkers), tokens that were not stop-initial utterances, tokens that had anomalous labeling (e.g. "xxxGOOT" or "POAT0"), and tokens with NA for f0 measurements. We filtered the data to only female talkers and removed tokens with f0s less than 150 Hz (as advised by Eleanor Chodroff, these tokens were likely due to measurement error). 
 For the combined databases we ensured that the talkers we sampled had sufficient amount of data and that the number of tokens from each category were balanced. We then took only the female talkers to match the gender of our test talker. This left us with a total of 5,122 tokens from 40 talkers: `r nrow(d.chodroff_wilson.connected)` tokens by `r length(unique(d.chodroff_wilson.connected$Talker))` female talkers from the connected speech database and `r nrow(d.chodroff_wilson.isolated)` tokens by `r length(unique(d.chodroff_wilson.isolated$Talker))` female talkers from the isolated speech database.
@@ -786,7 +789,7 @@ d.io.categorization <-
   mutate(across(c(Phase, Condition.Exposure, Block), factor)) 
 ```
 (ref:plot-IO-logistic-regression-fit) The expected categorization functions predicted by the logistic regression of responses by idealized listeners by exposure condition and phase (solid lines). The ideal listeners' proportion of "t"-responses (dashed lines) converge with the logistic regression fit along the assessed VOT region and are therefore partially obscured by the logistic regression fitted lines. Grey arrows point to expected PSEs of the logistic regression fit. 
-```{r plot-IO-logistic-regression-fit}
+```{r plot-IO-logistic-regression-fit, fig.height=base.height*3+1/2, fig.width=base.width*4}
 tokens <- 
   bind_rows(
       d.for_analysis %>%  
@@ -940,7 +943,7 @@ table.interaction.condition_block <-
 table.interaction.condition_block
 ```
 
-### Slopes: Differences across exposure conditions, across blocks within each condition, and differences in the rate of change between exposure conditions and block {#sec:slopes analyses}
+### Slopes: Differences across exposure conditions, across blocks within each condition, and differences in the rate of change between exposure conditions and block {#sec:slopes-analyses}
 Analyses of changes in slopes that compare changes between blocks within conditions and interactions of exposure conditions and blocks are summarized in Tables \@ref(tab:hypothesis-table-simple-slopes-condition), \@ref(tab:hypothesis-table-simple-slopes-block), and \@ref(tab:hypothesis-table-interaction-condition-block-VOT) 
 
 ```{r hypothesis-table-simple-slopes-condition, results='asis'}
@@ -973,7 +976,7 @@ hyp.simple_slopes_condition <-
 make_hyp_table(
   hyp.simple_slopes_condition, 
   c("+10 vs. baseline = 0", "+40 vs. +10 = 0", "+40 vs. baseline = 0", rep(c("+10 vs. baseline", "+40 vs. +10", "+40 vs. baseline"), 5)), 
-    caption = "Did exposure affect the slope of categorization responses? This table summarizes the differences in slopes between the exposure conditions for each test block.") %>% 
+    caption = "Did exposure condition affect the slope of categorization responses? This table summarizes the differences in slopes between the exposure conditions within each test block.") %>% 
   pack_rows("Test block 1 (pre-exposure)", 1, 3) %>%
   pack_rows("Test block 2", 4, 6) %>% 
   pack_rows("Test block 3", 7, 9) %>% 
@@ -1037,7 +1040,7 @@ make_hyp_table(
   "Block 4 to 5: decreased slope",
   "Block 5 to 6: decreased slope",
   "{\\em Block 4 to 6: decreased slope}"),
-    caption = "Was there incremental change in slope from test block 1 to 4? Did slopes change dissipate with repeated testing from block 4 to 6? This table summarizes the simple slopes for each exposure condition between blocks.") %>% 
+    caption = "Did participants' categorization slopes change from test block 1 to 4? This table summarizes the interactions between exposure condition, block, and VOT---specifically whether the differences in slopes between exposure condition changed between blocks.") %>%
   pack_rows("Difference between blocks: baseline", 1, 7) %>%
   pack_rows("Difference between blocks: +10", 8, 14) %>%
   pack_rows("Difference between blocks: +40", 15, 21) 
@@ -1100,14 +1103,11 @@ table.interactions.condition_block_VOT <-
   pack_rows("Difference in slopes: +40 vs. baseline", 15, 21)
 table.interactions.condition_block_VOT
 ```
+\newpage
 
-## Exposure blocks {#SI-analysis-exposure-blocks}
-We performed the same hypotheses tests on the exposure block model which was fitted separately from test. Analogous to test, we fitted models in standard and nested formulations to obtain interactions and simple effects using the same weakly regularizing priors. While the standard formulation of the model converged (Tables \@ref(tab:hypothesis-table-exposure-interaction-condition-block) and \@ref(tab:hypothesis-table-exposure-interaction-condition-block-VOT)) the nested formulations returned several divergent transitions during sampling. Divergent transitions give pause for caution in model interpretation (see https://mc-stan.org/misc/warnings.html#runtime-warnings for explanation of warning types). 
-A possible solution to eliminating divergent transitions in this model would be to relax the variance of the prior distribution assumed for the slope parameter (VOT_gs in the model formula). Indeed, in earlier fits of the test block data we faced convergence issues when we used the recommended weakly regularising prior (student-t distribution with SD = 2.5; @gelman-prior2008) for the slope parameter. Diagnostic plots revealed a slight bi-modality in the posterior distribution which may have been an impediment to smooth sampling; this was solved by increasing the prior distribution's SD which allow the inclusion of data points that were further from the mean. However, fitting the nested exposure models here with yet more accommodating priors would detract from having an identical set of priors across all models fitted for test and exposure. Given that both the simple effects models returned only a few divergent transitions (3 in the nested block and 9 in the nested condition model) and showed fairly good Rhat values (all 1.0 except for one parameter) and ESS values we opted not to explore further solutions for them at this point.  
-
-Consistent with the trend observed in test blocks, categorization boundaries were clearly separated between the conditions in all exposure blocks and grew progressively larger with more exposure. Evidence for the effect was stronger in the +40 vs. +10 comparison ($24.7 \leq$ BFs $\leq 100.3$) with the difference in PSE reaching its maximum in the final exposure block (`r get_bf(fit_exposure.simple_effects_condition, "mu2_Block6:Condition.Exposure_Shift40vs.Shift10 < 0")`). The difference between +10 and baseline widened in exposure block 2 (`r get_bf(fit_exposure.simple_effects_condition, "mu2_Block4:Condition.Exposure_Shift10vs.Shift0 < 0")`) but narrowed in the final block where evidence in support of the difference also fell substantially (`r get_bf(fit_exposure.simple_effects_condition, "mu2_Block6:Condition.Exposure_Shift10vs.Shift0 < 0")`). The smaller difference in PSE between the +10 and baseline conditions reflected the pattern in test blocks. 
-
-
+## Exposure blocks {#sec:SI-exposure-block-analysis}
+We performed the same hypotheses tests on the exposure phase model which was fitted separately from test. Analogous to test, we fitted models in standard and nested formulations to obtain interactions and simple effects using the same weakly regularizing priors. While the standard formulation of the model converged (Tables \@ref(tab:hypothesis-table-exposure-interaction-condition-block) and \@ref(tab:hypothesis-table-exposure-interaction-condition-block-VOT)) the nested formulations from which we obtain simple effects, returned several divergent transitions during sampling. Divergent transitions signal the need for caution in model interpretation because it indicates unreliability of the posterior estimate (see https://mc-stan.org/misc/warnings.html#runtime-warnings for explanation of warning types). 
+A possible solution to eliminating divergent transitions in this model would be to relax the variance of the prior distribution assumed for the slope parameter (*VOT_gs* in the model formula). Indeed, in earlier fits of the test phase data we faced convergence issues when we used the recommended weakly regularising prior (student-t distribution with SD = 2.5; @gelman-prior2008) for the slope parameter. Diagnostic plots revealed a slight bi-modality in the posterior distribution which may have been an impediment to smooth sampling; this was solved by increasing the prior distribution's variance to 15 units which allowed the inclusion of data points that were further from the mean. However, fitting the nested exposure models here with yet more accommodating priors would detract from having an identical set of priors across all models fitted for test and exposure. Given that both the simple effects models returned only a few divergent transitions (3 in the nested block and 9 in the nested condition model) and showed fairly good $\hat{R}$ values (all 1.0 except for one parameter) and ESS values we opted not to explore further solutions for them at this point.  
 
 
 ### PSE: Simple effects of exposure condition within each block
@@ -1147,7 +1147,18 @@ brm(
 ```
 
 
-```{r hypothesis-table-exposure-simple-effects-block, results='asis'}
+Consistent with the trend observed in test blocks, categorization boundaries were clearly separated between the conditions in all exposure blocks and grew progressively larger with more exposure (Table \@ref(tab:hypothesis-table-exposure-simple-effects-condition)). Evidence for the effect was stronger in the +40 vs. +10 comparison 
+($24.7 \leq BFs\leq 100.3$) with the difference in PSE reaching its maximum in the final exposure block ($`r get_bf(fit_exposure.simple_effects_condition, "mu2_Block6:Condition.Exposure_Shift40vs.Shift10 < 0")`$). The difference between +10 and baseline widened in exposure block 2 ($`r get_bf(fit_exposure.simple_effects_condition, "mu2_Block4:Condition.Exposure_Shift10vs.Shift0 < 0")`$) but narrowed in the final block where evidence in support of the difference also fell substantially ($`r get_bf(fit_exposure.simple_effects_condition, "mu2_Block6:Condition.Exposure_Shift10vs.Shift0 < 0")`$). The smaller difference in PSE between the +10 and baseline conditions reflected the pattern in test blocks. 
+
+Evidence for boundary shifts between exposure blocks was weak across all conditions ($0.9 \leq BFs \leq 2.1$; Table \@ref(tab:hypothesis-table-exposure-simple-effect-condition-slope)). This pattern was similar to test for block comparisons within the baseline and +10 conditions but less so in the +40 condition where evidence for incremental adaptation was stronger during test. One explanation for the weak evidence in the exposure blocks is found in the CI of the estimated differences, all of which were wide and included 0. It was during exposure where participants in the +40 condition encountered the most unexpected trials. Stimuli with high VOT values, typically classified as "t" would have to be treated as "d"; this may have caused greater uncertainty on the part of participants and therefore a wider interval for the boundary estimate. 
+
+The effects of VOT (slope) did not change significantly between conditions within exposure block (Table \@ref(tab:hypothesis-table-exposure-simple-slopes-condition)) and between blocks within exposure condition (Table \@ref(tab:hypothesis-table-exposure-simple-slopes-block)). This conforms to the trend found in slope analysis for test blocks as well as the predictions of the ideal observers.
+Table \@ref(tab:hypothesis-table-exposure-interaction-condition-block) and Table \@ref(tab:hypothesis-table-exposure-interaction-condition-block-VOT) report the effects of interaction between exposure condition and block (PSE); and exposure, condition, block and VOT respectively (slope). With respect to PSE changes, the difference between +10 and baseline remained unchanged between exposure blocks as observed in the comparison between test blocks ($0.06\leq estimates \leq 0.34$; $0.5\leq BFs \leq0.86$). Comparisons between the +40 and baseline conditions between exposure blocks were in the similar direction as test but failed to achieve sufficient evidential support ($2.1\leq BFs \leq 3.6$).  
+
+
+
+### PSE: Simple effects of condition within each exposure block
+```{r hypothesis-table-exposure-simple-effects-condition, results='asis'}
 hyp.exposure_simple_effects_condition <- 
   hypothesis(
     fit_exposure.simple_effects_condition, 
@@ -1173,40 +1184,9 @@ make_hyp_table(
   pack_rows("Exposure block 1", 1, 3) %>%
   pack_rows("Exposure block 2", 4, 6) %>% 
   pack_rows("Exposure block 3", 7, 9) 
+
 table.exposure_simple_effects_condition
 ```
-
-### Slopes: between conditions in each exposure block
-```{r}
-hyp.exposure_simple_slopes_condition <- 
-  hypothesis(
-    fit_exposure.simple_effects_condition, 
-    c(
-      "mu2_Block2:Condition.Exposure_Shift10vs.Shift0:VOT_gs < 0",
-      "mu2_Block2:Condition.Exposure_Shift40vs.Shift10:VOT_gs < 0",
-      "mu2_Block2:Condition.Exposure_Shift10vs.Shift0:VOT_gs + mu2_Block2:Condition.Exposure_Shift40vs.Shift10:VOT_gs < 0",
-      "mu2_Block4:Condition.Exposure_Shift10vs.Shift0:VOT_gs < 0",
-      "mu2_Block4:Condition.Exposure_Shift40vs.Shift10:VOT_gs < 0",
-      "mu2_Block4:Condition.Exposure_Shift40vs.Shift10:VOT_gs + mu2_Block4:Condition.Exposure_Shift10vs.Shift0:VOT_gs < 0",
-      "mu2_Block6:Condition.Exposure_Shift10vs.Shift0:VOT_gs < 0",
-      "mu2_Block6:Condition.Exposure_Shift40vs.Shift10:VOT_gs < 0",
-      "mu2_Block6:Condition.Exposure_Shift40vs.Shift10 + mu2_Block6:Condition.Exposure_Shift10vs.Shift0:VOT_gs < 0"),
-    robust = T) %>%
-  .$hypothesis %>% 
-  dplyr::select(-Star)
-
-table.exposure_simple_effects_condition <- 
-make_hyp_table(
-  hyp.exposure_simple_slopes_condition, 
-  rep(c("+10 vs. baseline < 0", "+40 vs. +10 < 0", "+40 vs. baseline < 0"), 3), 
-    caption = "Did exposure affect the slope of categorization responses? This table summarizes the differences in slopes between the exposure conditions for each exposure block.") %>% 
-  pack_rows("Exposure block 1", 1, 3) %>%
-  pack_rows("Exposure block 2", 4, 6) %>% 
-  pack_rows("Exposure block 3", 7, 9) 
-
-rm(fit_exposure.simple_effects_condition)
-```
-
 
 
 ### PSE: Simple effects of block within each exposure condition
@@ -1246,7 +1226,8 @@ fit_exposure.simple_effects_block <-
     file ="../models/exposure-nested-block.rds")
 ```
 
-```{r hypothesis-table-exposure-simple-effects-block, results='asis', fig.cap=""}
+
+```{r hypothesis-table-exposure-simple-effects-block, results='asis'}
 hyp.exposure_simple_effects_block <- 
   hypothesis(
     fit_exposure.simple_effects_block, 
@@ -1285,12 +1266,83 @@ make_hyp_table(
 #rm(fit_exposure.simple_effects_block)
 ```
 
+### Slopes: difference between conditions within exposure block
+The effects of VOT (slope) did not change significantly between conditions within exposure block (Table \@ref(tab:hypothesis-table-exposure-simple-slopes-condition)) and between blocks within exposure condition (Table \@ref(tab:hypothesis-table-exposure-simple-slopes-block)). This conforms to the trend found in slope analysis for test blocks as well as the predictions of the ideal observers.
+Table \@ref(tab:hypothesis-table-exposure-interaction-condition-block) and Table \@ref(tab:hypothesis-table-exposure-interaction-condition-block-VOT) report the effects of interaction between exposure condition and block (PSE); and exposure, condition, block and VOT respectively (slope). With respect to PSE changes, the difference between +10 and baseline remained unchanged between exposure blocks as observed in the comparison between test blocks ($ 0.06 \leq estimates \leq 0.34$; $0.5\leq BFs \leq0.86 $). Comparisons between the +40 and baseline conditions between exposure blocks were in the similar direction as test but failed to achieve sufficient evidential support ($2.1\leq BFs \leq 3.6$).  
+
+
+```{r hypothesis-table-exposure-simple-slopes-condition, results='asis'}
+hyp.exposure_simple_slopes_condition <- 
+  hypothesis(
+    fit_exposure.simple_effects_condition, 
+    c(
+      "mu2_Block2:Condition.Exposure_Shift10vs.Shift0:VOT_gs > 0",
+      "mu2_Block2:Condition.Exposure_Shift40vs.Shift10:VOT_gs > 0",
+      "mu2_Block2:Condition.Exposure_Shift10vs.Shift0:VOT_gs + mu2_Block2:Condition.Exposure_Shift40vs.Shift10:VOT_gs > 0",
+      "mu2_Block4:Condition.Exposure_Shift10vs.Shift0:VOT_gs > 0",
+      "mu2_Block4:Condition.Exposure_Shift40vs.Shift10:VOT_gs > 0",
+      "mu2_Block4:Condition.Exposure_Shift40vs.Shift10:VOT_gs + mu2_Block4:Condition.Exposure_Shift10vs.Shift0:VOT_gs > 0",
+      "mu2_Block6:Condition.Exposure_Shift10vs.Shift0:VOT_gs > 0",
+      "mu2_Block6:Condition.Exposure_Shift40vs.Shift10:VOT_gs > 0",
+      "mu2_Block6:Condition.Exposure_Shift40vs.Shift10 + mu2_Block6:Condition.Exposure_Shift10vs.Shift0:VOT_gs > 0"),
+    robust = T) %>%
+  .$hypothesis %>% 
+  dplyr::select(-Star)
+
+table.exposure_simple_slopes_condition <- 
+make_hyp_table(
+  hyp.exposure_simple_slopes_condition, 
+  rep(c("+10 vs. baseline < 0", "+40 vs. +10 < 0", "+40 vs. baseline < 0"), 3), 
+    caption = "Did exposure affect the slope of categorization responses? This table summarizes the differences in slopes between the exposure conditions for each exposure block.") %>% 
+  pack_rows("Exposure block 1", 1, 3) %>%
+  pack_rows("Exposure block 2", 4, 6) %>% 
+  pack_rows("Exposure block 3", 7, 9) 
+
+table.exposure_simple_slopes_condition
+rm(fit_exposure.simple_effects_condition)
+```
+
+### Slopes: difference between blocks within exposure condition
+
+```{r hypothesis-table-exposure-simple-slopes-block, results='asis'}
+hyp.exposure_simple_slopes_block <- 
+  hypothesis(
+    fit_exposure.simple_effects_block, 
+    c(
+      "mu2_Condition.ExposureShift0:Block_Exposure2vs.Exposure1:VOT_gs > 0",
+      "mu2_Condition.ExposureShift0:Block_Exposure3vs.Exposure2:VOT_gs > 0",
+      "mu2_Condition.ExposureShift0:Block_Exposure2vs.Exposure1:VOT_gs + mu2_Condition.ExposureShift0:Block_Exposure3vs.Exposure2:VOT_gs > 0",
+
+      "mu2_Condition.ExposureShift10:Block_Exposure2vs.Exposure1:VOT_gs > 0",
+      "mu2_Condition.ExposureShift10:Block_Exposure3vs.Exposure2:VOT_gs > 0",
+      "mu2_Condition.ExposureShift10:Block_Exposure2vs.Exposure1:VOT_gs + mu2_Condition.ExposureShift10:Block_Exposure3vs.Exposure2:VOT_gs > 0",
+
+      "mu2_Condition.ExposureShift40:Block_Exposure2vs.Exposure1:VOT_gs > 0",
+      "mu2_Condition.ExposureShift40:Block_Exposure3vs.Exposure2:VOT_gs > 0",
+      "mu2_Condition.ExposureShift40:Block_Exposure2vs.Exposure1:VOT_gs + mu2_Condition.ExposureShift40:Block_Exposure3vs.Exposure2:VOT_gs > 0"),
+    robust = T) %>%
+  .$hypothesis %>% 
+  dplyr::select(-Star)
+
+table.exposure_simple_slopes_block <- 
+make_hyp_table(
+  hyp.exposure_simple_slopes_condition, 
+  rep(c("Block 1 to 2", "Block 2 to 3", "Block 1 to 3"), 3), 
+    caption = "Did exposure affect the slope of categorization responses? This table summarizes the differences in slopes between the blocks for each exposure condition") %>% 
+  pack_rows("baseline", 1, 3) %>%
+  pack_rows("+10", 4, 6) %>% 
+  pack_rows("+40", 7, 9) 
+
+table.exposure_simple_slopes_block
+rm(fit_exposure.simple_effects_block)
+```
+
 
 
 ### PSE: Differences in the rate of change between exposure conditions and block
 
 ```{r include=FALSE}
-fit_exposure <-
+fit.exposure <-
   fit_model(
     data = d.for_analysis,
     phase = "exposure",
@@ -1302,15 +1354,19 @@ fit_exposure <-
 ```{r hypothesis-table-exposure-interaction-condition-block, results='asis'}
 hyp.interaction.exposure.condition_block <- 
   hypothesis(
-    fit_exposure, 
+    fit.exposure, 
     c(
       "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 < 0",
       "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure3vs.Exposure2  < 0",
       "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure3vs.Exposure2  < 0",
-
+      
       "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 < 0",
       "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure3vs.Exposure2  < 0",
-      "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure3vs.Exposure2  < 0"),
+      "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure3vs.Exposure2  < 0",
+      
+      "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 < 0",
+      "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure3vs.Exposure2  < 0",
+      "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure3vs.Exposure2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure3vs.Exposure2  < 0"),
     robust = T) %>%
   .$hypothesis %>% 
   dplyr::select(-Star)
@@ -1322,12 +1378,13 @@ table.interaction.exposure.condition_block <-
   # Comparing differences in +10 vs. baseline between blocks
   "Block 1 to 2: increased $\\Delta_{PSE}$",
   "Block 2 to 3: increased $\\Delta_{PSE}$",
-  "{\\em Block 1 to 3: increased $\\Delta_{PSE}$}"), 2),
+  "{\\em Block 1 to 3: increased $\\Delta_{PSE}$}"), 3),
     caption = "Did the rate of block-to-block changes differ between exposure conditions? This table summarizes the interactions between exposure condition and block---specifically, whether the differences between exposure conditions changed from exposure block to exposure block.") %>%
   pack_rows("Difference in +10 vs. baseline", 1, 3) %>%
-  pack_rows("Difference in +40 vs. +10", 4, 6) 
+  pack_rows("Difference in +40 vs. +10", 4, 6) %>% 
+  pack_rows("Difference in +40 vs. baseline", 7, 9)
+
 table.interaction.exposure.condition_block
-rm(fit_exposure)
 ```
 
 
@@ -1336,7 +1393,7 @@ rm(fit_exposure)
 ```{r hypothesis-table-exposure-interaction-condition-block-VOT, results='asis'}
 hyp.interaction.exposure.condition_block_VOT <- 
   hypothesis(
-    fit_exposure, 
+    fit.exposure, 
     c(
       "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 < 0",
       "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Exposure3vs.Exposure2  < 0",
@@ -1344,7 +1401,11 @@ hyp.interaction.exposure.condition_block_VOT <-
 
       "mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 < 0",
       "mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Exposure3vs.Exposure2  < 0",
-      "mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Exposure3vs.Exposure2  < 0"),
+      "mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Exposure3vs.Exposure2  < 0",
+      
+      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 < 0",
+      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Exposure3vs.Exposure2  < 0",
+      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 + mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Exposure3vs.Exposure2 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Exposure3vs.Exposure2  < 0"),
     robust = T) %>%
   .$hypothesis %>% 
   dplyr::select(-Star)
@@ -1356,12 +1417,14 @@ table.interaction.exposure.condition_block_VOT <-
   # Comparing differences in +10 vs. baseline between blocks
   "Block 1 to 2: increased $\\Delta_{slope}$",
   "Block 2 to 3: increased $\\Delta_{slope}$",
-  "{\\em Block 1 to 3: increased $\\Delta_{slope}$}"), 2),
+  "{\\em Block 1 to 3: increased $\\Delta_{slope}$}"), 3),
     caption = "Did the rate of block-to-block changes differ across exposure conditions? This table summarizes the interactions between between VOT, exposure condition, and block ---specifically, whether the differences between exposure conditions changed from exposure block to exposure block.") %>%
   pack_rows("Difference in +10 vs. baseline", 1, 3) %>%
-  pack_rows("Difference in +40 vs. +10", 4, 6) 
+  pack_rows("Difference in +40 vs. +10", 4, 6) %>% 
+  pack_rows("Difference in +40 vs. baseline", 7, 9)
 
 table.interaction.exposure.condition_block_VOT
+rm(fit.exposure)
 ```
 
 
@@ -1378,7 +1441,7 @@ While the linearity assumption made in our main analysis does not *necessarily* 
 ### Substituting GAMMs for GLMMs in our psychometric mixed-effects model
 Specifically, we use the same psychometric mixed-effects model as in the main analysis, except that we replaced the full factorial of VOT, block, and exposure condition in the perceptual model with a separate tensor smooth of VOT and trial for each of the three exposure conditions.^[`t2(VOT, Trial, by = Condition.Exposure, bs = "tp")`]. This makes this auxiliary analysis a mixed-effect mixture model, for which the mixture component that is the perceptual model is a generalized additive mixed-effect models (GAMM), rather than a generalized linear mixed-effects model. The analysis contained the same full random effect structure and priors as the psychometric model presented in the main text. Both VOT and trial were Gelman-scaled prior to the analysis.
 
-```{r}
+```{r message=FALSE}
 VOT.mean_test <-
     d.for_analysis %>%
     filter(Phase == "test") %>%
@@ -1454,7 +1517,7 @@ The GAMM results also confirm that the changes introduced by exposure are undone
 
 (ref:GAMM-figure) Predicted log-odds of "t"-response by trial (across all exposure and test blocks) and VOT for each of the three exposure conditions. Combinations of trial and VOT that did not occur in any of the three exposure conditions are left white (the reduced VOT range of test blocks makes them easily identifiable).
 
-```{r GAMM-figure, fig.cap="(ref:GAMM-figure)"}
+```{r GAMM-figure, fig.height=base.height*3+1/2, fig.width=base.width*4, warning=FALSE, fig.cap="(ref:GAMM-figure)"}
 # Plot smooth over rescaled data
 ms <- conditional_smooths(
   m,
@@ -1470,8 +1533,11 @@ p[[1]] +
   geom_contour(aes(z = estimate__), color = "black") +
   xlab("Trial") + ylab("VOT") +
   scale_fill_viridis_c('log-odds of "t"-response') +
-  coord_cartesian(expand = F) +
-  theme(legend.position = "top")
+  coord_cartesian(expand = F) + 
+  facet_wrap(~ Condition.Exposure, 
+             labeller = labeller(Condition.Exposure = c("Shift0" = "baseline", "Shift10" = "+10", "Shift40" = "+40"))) + 
+  theme(legend.position = "top") 
+
 ```
 
 
@@ -1720,8 +1786,9 @@ cat("Changes in normalization achieve maximum log-likelihood of", best_performin
 cat("The same kappa achieved log-likelihood of", NA, "one whole data set.")
 ```
 
-```{r, fig.width=7, fig.height=6}
-df.normalized %>% plot_predicted_vs_actual_categorization_responses()
+```{r, fig.width=7, fig.height=6, fig.cap="Ideal Adapter predicted categorization behavior"}
+df.normalized %>% 
+  plot_predicted_vs_actual_categorization_responses()
 ```
 
 ## Changes in decision-making
@@ -1855,7 +1922,7 @@ df.bias %>% plot_predicted_vs_actual_categorization_responses()
 
 ## Changes in category representations
 
-```{r}
+```{r, eval=FALSE}
 # NOT YET IMPLEMENTED
 filename <- "../models/best_performing_parameters.representation.rds"
 
@@ -2123,7 +2190,7 @@ make_all_plots <- function(
 ### Fit with uninformative (regularizing) priors
 Here some initial plots. While the plots are back-transformed into the original cue space, the table is not (yet).
 
-```{r, size='tiny', fig.width=12, fig.height=12, warning=FALSE, results='asis'}
+```{r, size='tiny', fig.width=12, fig.height=12, warning=FALSE, results='asis', eval=FALSE}
 m_IA_inferred.VOT <-
   infer_prior_beliefs(
     exposure = d_for_ASP %>% filter(Phase == "exposure"),
@@ -2149,7 +2216,7 @@ make_all_plots(m_IA_inferred.VOT)
 ```
 
 
-```{r, size='tiny', fig.width=12, fig.height=12, warning=FALSE, results='asis'}
+```{r, size='tiny', fig.width=12, fig.height=12, warning=FALSE, results='asis', eval=FALSE}
 m_IA_inferred.VOT_f0 <-
   infer_prior_beliefs(
     exposure = d_for_ASP %>% filter(Phase == "exposure"),
@@ -2174,7 +2241,7 @@ summarize.NIW_ideal_adaptor_stanfit(m_IA_inferred.VOT_f0)
 make_all_plots(m_IA_inferred.VOT_f0)
 ```
 
-```{r, size='tiny', fig.width=12, fig.height=12, warning=FALSE, results='asis'}
+```{r, size='tiny', fig.width=12, fig.height=12, warning=FALSE, results='asis', eval=FALSE}
 m_IA_inferred.VOT_f0_vowelduration <-
   infer_prior_beliefs(
     exposure = d_for_ASP %>% filter(Phase == "exposure"),
@@ -2201,7 +2268,7 @@ make_all_plots(m_IA_inferred.VOT_f0_vowelduration)
 
 ### Fit with informative priors about expected category means and covariances
 
-```{r, size='tiny', fig.width=12, fig.height=12, warning=FALSE, results='asis'}
+```{r, size='tiny', fig.width=12, fig.height=12, warning=FALSE, results='asis', eval=FALSE}
 m_IA_inferred.fixed_pars <-
   infer_prior_beliefs(
     exposure = d_for_ASP %>% filter(Phase == "exposure"),
@@ -2240,7 +2307,7 @@ We emphasize that our discussion deliberately focuses on *models*, not theories.
 ## Incremental Bayesian belief-updating [@kleinschmidt-jaeger2011, @kleinschmidt-jaeger2012, @kleinschmidt-jaeger 2015, @kleinschmidt-jaeger2016; @kleinschmidt2020]
 The only distributional learning model that has been more repeatedly tested against adaptive speech perception---incremental Bayesian belief-updating [@kleinschmidt-jaeger2011]---predicts proportional, rather than sublinear, shifts. This model had previously been found to closely predict the cumulative effects of exposure in perceptual recalibration to audio-visually [@kleinschmidt2011-jaeger; @kleinschmidt-jaeger2012] or lexically labeled speech [@cummings-theodore2023], as well as the type of exposure to unlabelled minimal pair words employed by Kleinschmidt and Jaeger [@theodore-monto2019]. However, all of these studies employed comparatively small changes in cue distributions, and lacked the design necessary to detect deviation from proportionality (we return to this point below). The findings presented in @kleinschmidt-jaeger2016 would seem to reject this specific distributional learning model [though not necessarily the theory it is derived from, @kleinschmidt-jaeger2015; for discussion of the relation between theory and model, see also @kleinschmidt2020]  <!-- TO DO: make sure we do -->
 
-```{r}
+```{r, eval=FALSE}
 # TO DO: This needs to be adjusted (if we keep it) so that the function doesn't just assume that the only cue is VOT 
 # (currently parts of the function make that assumption but other parts don't)
 
@@ -2405,7 +2472,7 @@ d.updates <-
 
 
 
-```{r get-updates-nu-equal-kappa}
+```{r, get-updates-nu-equal-kappa, eval=FALSE}
 x <-
   tibble(VOT = seq(0, 100)) %>%
   mutate(x = map(VOT, ~ c(.x, predict_f0(.x, Mel = T)))) %>%
@@ -2431,7 +2498,7 @@ tibble(VOT = seq(10, 90)) %>%
     y = .5)
 ```
 
-```{r get-updates-nu-larger-kappa}
+```{r get-updates-nu-larger-kappa, eval=FALSE}
 d.updates <-  
   bind_rows(get_IBBU_updates(condition = 10, test = x, nu = 10000),
             get_IBBU_updates(condition = 20, test = x, nu = 10000),
@@ -2452,7 +2519,7 @@ tibble(VOT = seq(10, 90)) %>%
 ```
 
 
-```{r get-updates-nu-smaller-kappa}
+```{r get-updates-nu-smaller-kappa, eval=FALSE}
 d.updates <-  
   bind_rows(get_IBBU_updates(condition = 10, test = x, kappa = 10000),
             get_IBBU_updates(condition = 20, test = x, kappa = 10000),
@@ -2472,7 +2539,7 @@ tibble(VOT = seq(10, 90)) %>%
     y = .5)
 ```
 
-```{r}
+```{r, eval=FALSE}
 m <- readRDS("../models/IBBU-Tan-Jaeger2022-Experiment2-scaled.RDS")
 summary(m)
 ```
@@ -2497,7 +2564,7 @@ All stimuli are available as part of the OSF repository for this article. We cre
 In addition to the critical minimal pair continua we also recorded three words that did not did not contain any stop consonant sounds ("flare", "share", and "rare"). These word recordings were used as catch trials. Stimulus intensity was set to 70 dB sound pressure level for all recordings.
 
 ### Procedure
-The code for the experiment is available as part of the OSF repository for this article. A live version is available at (https://www.hlp.rochester.edu//experiments/DLVOT/series-A/experiment-A.html?list_test=NORM-A-forward-test). The first page of the experiment informed participants of their rights and the requirements for the experiment: that they had to be native listeners of English, wear headphones for the entire duration of the experiment, and be in a quiet room without distractions. Participants had to pass a headphone test, and were asked to keep the volume unchanged throughout the experiment. Participants could only advance to the start of the experiment by acknowledging each requirement and consenting to the guidelines of the Research Subjects Review Board of the University of Rochester.
+The code for the experiment is available as part of the OSF repository for this article. A live version is available at (https://www.hlp.rochester.edu/experiments/DLVOT/series-A/experiment-A.html?list_test=NORM-A-forward-test). The first page of the experiment informed participants of their rights and the requirements for the experiment: that they had to be native listeners of English, wear headphones for the entire duration of the experiment, and be in a quiet room without distractions. Participants had to pass a headphone test, and were asked to keep the volume unchanged throughout the experiment. Participants could only advance to the start of the experiment by acknowledging each requirement and consenting to the guidelines of the Research Subjects Review Board of the University of Rochester.
 
 On the next page, participants were informed about the task for the remainder of the experiment. They were informed that they would hear a female talker speak a single word on each trial, and had to select which word they heard. Participants were instructed to listen carefully and answer as quickly and as accurately as possible. They were also alerted to the fact that the recordings were subtly different and therefore may sound repetitive. This was done to encourage their full attention.
 
@@ -2513,7 +2580,7 @@ d.test <- read_csv("../data/d.test.Exp1.csv", show_col_types = F)
 
 # load f0-5ms-into-vowel measurements of stimuli
 d.f0.5ms <-
-  read_csv("../data/AEDLVOT_stimuli_f0_5ms.csv", show_col_types = F) %>%
+  read_csv("../data/exposure_stimuli_f0_5ms.csv", show_col_types = F) %>%
   dplyr::select(filename, VOT, f0_5ms_into_vowel) %>%
   # This is the F0 measured in the same way as Chodroff & Wilson (2018)
         # (i.e., 5ms into the vowel)
@@ -2814,17 +2881,14 @@ estimate_minpair <- fit %>% spread_draws(r_Item.MinimalPair__mu2[Item.MinimalPai
 ```
 
 The lapse rate was estimated to be on the slightly larger side, but within the expected range
-(`r print_CI(fit, "theta1_Intercept", "theta1_Intercept < 0")`). Maximum a posteriori (MAP) estimates of by-participant lapse rates ranged from XX . Very high lapse rates were estimated for four of the participants with one in particular whose CI indicated exceptionally high uncertainty. These lapse rates might reflect data quality issues with Mechanical Turk that started to emerge over recent years [see @REFS; and, specifically for experiments on speech perception, @cummings-theodore2023], and we return to this issue in Experiment 2.
+($`r get_bf(fit, "theta1_Intercept < 0")`$). Maximum a posteriori (MAP) estimates of by-participant lapse rates ranged from XX . Very high lapse rates were estimated for four of the participants with one in particular whose CI indicated exceptionally high uncertainty. These lapse rates might reflect data quality issues with Mechanical Turk that started to emerge over recent years [see @REFS; and, specifically for experiments on speech perception, @cummings-theodore2023], and we return to this issue in Experiment 2.
 
-The response bias were estimated to slightly favor "t"-responses (`r print_CI(fit, "mu1_Intercept", "mu1_Intercept > 0")`), as also visible in Figure \@ref(fig:fitted-categorisation-plots) (left).
+The response bias were estimated to slightly favor "t"-responses ($`r get_bf(fit, "mu1_Intercept > 0")`$), as also visible in Figure \@ref(fig:fitted-categorisation-plots) (left).
 Unsurprisingly, the psychometric model suggests high uncertainty about the participant-specific response biases, as it is difficult to reliably estimate participant-specific biases while also accounting for trial and VOT effects (range of by-participant MAP estimates: XX). For all but four participants, the 95% CI includes the hypothesis that responses were unbiased. Of the remaining four participants, three were biased towards "t"-responses and one was biased toward "d"-responses.
 
-There was no convincing evidence of a main effect of trial ($\hat{\beta} =$ `r get_CI(fit, "mu2_sTrial", "mu2_sTrial < 0")`). Given the slight overall bias towards "t"-responses, the direction of this effect indicates that participants converged towards a 50/50 bias as the test phase proceeded. This is also evident in Figure \@ref(fig:fitted-categorisation-plots) (right). In contrast, there was clear evidence for a positive main effect of VOT on the proportion of "t"-responses ($\hat{\beta} =$ `r get_CI(fit, "mu2_sVOT", "mu2_sVOT > 0")`). The effect of VOT was consistent across all minimal pair words as evident from the slopes of the fitted lines by minimal pair \@ref(fig:fitted-categorisation-plots) (left). MAP estimates of by minimal pair slopes ranged from . The by minimal-pair intercepts were more varied (MAP estimates: ) with one of the pairs, dim/tim having a slightly lower intercept resulting in fewer 't'-responses on average. In all, this justifies our assumptions that word pair would not have a substantial effect on categorisation behaviour. From the parameter estimates of the overall fit we obtained the category boundary from the point of subjective equality (PSE) `r( descale(-(summary(fit)$fixed["mu2_Intercept", 1] / summary(fit)$fixed["mu2_sVOT", 1]), VOT.mean_exp1, VOT.sd_exp1) ms)` which we use for the design of Experiment 2.
+There was no convincing evidence of a main effect of trial ($`r get_bf(fit, "mu2_sTrial < 0")`$). Given the slight overall bias towards "t"-responses, the direction of this effect indicates that participants converged towards a 50/50 bias as the test phase proceeded. This is also evident in Figure \@ref(fig:fitted-categorisation-plots) (right). In contrast, there was clear evidence for a positive main effect of VOT on the proportion of "t"-responses ($`r get_bf(fit, "mu2_sVOT > 0")`$). The effect of VOT was consistent across all minimal pair words as evident from the slopes of the fitted lines by minimal pair \@ref(fig:fitted-categorisation-plots) (left). MAP estimates of by minimal pair slopes ranged from . The by minimal-pair intercepts were more varied (MAP estimates: ) with one of the pairs, dim/tim having a slightly lower intercept resulting in fewer 't'-responses on average. In all, this justifies our assumptions that word pair would not have a substantial effect on categorisation behaviour. From the parameter estimates of the overall fit we obtained the category boundary from the point of subjective equality (PSE) (`r descale(-(summary(fit)$fixed["mu2_Intercept", 1] / summary(fit)$fixed["mu2_sVOT", 1]), VOT.mean_exp1, VOT.sd_exp1)` ms) which we use for the design of Experiment 2.
 
-Finally to accomplish the first goal of experiment 1, we look at the interaction between VOT and trial. There was weak evidence that the effect of VOT decreased across trials ($\hat{\beta} =$ `r get_CI(fit, "mu2_sVOT:sTrial", "mu2_sVOT:sTrial < 0")`). The direction of this change---towards more shallow VOT slopes as the experiment progressed---makes sense since the test stimuli were not informative about the talker's pronunciation. Similar changes throughout prolonged testing have been reported in previous work. [@liu-jaeger2018; @liu-jaeger2019; @REFS].
-
-Overall, there was little evidence that participants substantially changed their categorisation behaviour as the experiment progressed. Still, to err on the cautious side, Experiment 2 employs shorter test phases.
-
+Finally to accomplish the first goal of experiment 1, we look at the interaction between VOT and trial. There was weak evidence that the effect of VOT decreased across trials ($`r get_bf(fit, "mu2_sVOT:sTrial < 0")`$). The direction of this change---towards more shallow VOT slopes as the experiment progressed---makes sense since the test stimuli were not informative about the talker's pronunciation. Similar changes throughout prolonged testing have been reported in previous work. [@liu-jaeger2018; @liu-jaeger2019; @REFS]. Overall, there was little evidence that participants substantially changed their categorisation behaviour as the experiment progressed. 
 
 
 # Session Info

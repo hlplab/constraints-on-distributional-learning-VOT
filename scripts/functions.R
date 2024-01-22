@@ -345,13 +345,13 @@ get_lapse_hypothesis <- function(contrast_row = 1) {
     "theta1_Intercept +", 
     paste(
       paste(
-        unname(attr(lapse_by_block$data$Block, "contrasts")[contrast_row, 1:7]), 
+        unname(attr(fit.lapse_by_block$data$Block, "contrasts")[contrast_row, 1:7]), 
         "*", 
-        rownames(fixef(lapse_by_block))[56:62], "+", collapse = " "), 
+        rownames(fixef(fit.lapse_by_block))[56:62], "+", collapse = " "), 
       paste(
-        unname(attr(lapse_by_block$data$Block, "contrasts")[contrast_row, 8]), 
+        unname(attr(fit.lapse_by_block$data$Block, "contrasts")[contrast_row, 8]), 
         "*", 
-        rownames(fixef(lapse_by_block))[63])), 
+        rownames(fixef(fit.lapse_by_block))[63])), 
     "< 0")
 }
 

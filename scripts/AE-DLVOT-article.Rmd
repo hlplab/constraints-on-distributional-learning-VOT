@@ -139,6 +139,6 @@ INCLUDE_TODO = F           # switch on/off to get to do list.
 \renewcommand{\thesection}{\S \arabic{section}}
 \renewcommand{\theHsection}{sisection. \arabic{section}}
 
-```{r, child="supplementary-information.Rmd", eval=FALSE}
+```{r, child="supplementary-information.Rmd"}
 ```
 
