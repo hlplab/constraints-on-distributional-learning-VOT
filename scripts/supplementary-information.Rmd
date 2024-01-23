@@ -28,7 +28,7 @@ Both the main text and these supplementary information (SI) are derived from the
 \changelocaltocdepth{-10}
 
 # Required software {#sec:software}
-The document was compiled using \texttt{knitr} [@xie2021] in RStudio with R:
+The document was compiled using \texttt{knitr} in RStudio with R:
 
 ```{r}
 version
@@ -51,19 +51,19 @@ Four /d-t/ minimal pairs (dill-till, din-tin, dim-tim, dip-tip) were recorded to
 All critical pairs of the talker's recordings were annotated. Durational measurements of voicing lead, VOT, and vowel were taken in addition to the mean F0 of the first 25% of the vowel duration. Annotations were made with a combination of listening to the audio file and inspection of the waveform and spectrogram. The annotation boundaries were made according to the following principles:
 
   * pre-voicing (voicing during closure)
-      +**start:** the first sign of periodicity in the waveform before closure release.
-      +**End:** the point of closure release
+      * **start:** the first sign of periodicity in the waveform before closure release.
+      * **End:** the point of closure release
 
   * VOT
-      +**start:** the point of closure release.
-      +**End:** the beginning of clearly defined periodicity in the waveform and at the appearance of low frequency energy in the spectrogram.
+      + **start:** the point of closure release.
+      + **End:** the beginning of clearly defined periodicity in the waveform and at the appearance of low frequency energy in the spectrogram.
 
   * Vowel
-      +**start:** the beginning of clearly defined periodicity in the waveform and at the appearance of low frequency energy in the spectrogram.
-      +**End:** if before a stop, when periodicity becomes irregular or at closure onset; if before a lateral, when formant transition approaches steady state; if before a nasal, at point where formants show a step-wise shift and when intensity shows a steep decline.
+      + **start:** the beginning of clearly defined periodicity in the waveform and at the appearance of low frequency energy in the spectrogram.
+      + **End:** if before a stop, when periodicity becomes irregular or at closure onset; if before a lateral, when formant transition approaches steady state; if before a nasal, at point where formants show a step-wise shift and when intensity shows a steep decline.
 
-  *F0 at vowel onset
-      +the average pitch measurement estimated at the beginning of the vowel.
+  * F0 at vowel onset
+      + the average pitch measurement estimated at vowel onset.
 
 ## Resynthesis
 The stimuli was created using the "progressive cutback and replacement method" by [@winn2020] implemented in Praat [@boersma2022]. This automates and greatly simplifies the process for generating highly natural sounding stimuli. Users of the script need only specify certain parameters to produce desired stimuli. Stimuli with pre-voicing were created separately from stimuli with positive VOT. This was because the script was not coded to automate the creation of tokens with pre-voicing that are natural sounding ^[It can however, produce pre-voicing sufficiently well for demonstration purposes, see video demo at https://www.youtube.com/watch?v=-QaQCsyKQyo.] As such, the pre-voicing stimuli were created by prepending pre-voicing generated from naturally produced tokens (described below) that were edited with a separate process.
@@ -99,11 +99,14 @@ p.stimuli.VOT_f0
 # Additional information on participant exclusions {#sec:exclusions}
 We provide additional information on participants' performance during catch trials and on labelled trials (for which there is a clearly correct response). Both of these measures were used to exclude participants.
 
-## Performance on catch trials
+## Performance on catch and labelled trials
 
-Of the 122 participants, 1 committed more than 3 errors (< 84% accuracy)
+Of the 122 participants, 1 committed more than 3 errors (< 84% accuracy).
+Labelled trials provided another measure to check participant attention during the experiment. Performance on labelled trials was good across all exposure conditions with participants in the +40 condition committing the most errors. This is not unexpected as the +40 condition had the furthest shifted with the most unexpected cue-category mappings. 
 
-```{r plot-catch-trial-performance, fig.height=4, fig.width=6}
+
+(ref:plot-catch-labeled-trial-performance) Performance of catch and labelled trials. 
+```{r plot-catch-labeled-trial-performance, fig.height=4, fig.width=6, fig.cap="(ref:plot-catch-labeled-trial-performance)", message=F}
 p.catch <- d %>%
   group_by(ParticipantID) %>%
   summarise(Total_errors = 18 - sum(CatchTrial.Correct, na.rm = T)) %>%
@@ -111,14 +114,7 @@ p.catch <- d %>%
   geom_bar(width = .5) +
   scale_x_continuous("Total catch trial errors", breaks = seq(0, 6, 1)) +
   scale_y_continuous("Number of participants", breaks = seq(0, 120, 10))
-```
 
-## Performance on labelled exposure trials
-Labelled trials provided another measure to check participant attention during the experiment. Performance on labelled trials was good across all exposure conditions with participants in the +40 condition committing the most errors. This is not unexpected as the +40 condition had the furthest shifted with the most unexpected cue-category mappings. 
-
-
-(ref:plot-catch-labeled-trial-performance) Performance of catch and labelled trials. 
-```{r plot-catch-labeled-trial-performance, fig.height=4, fig.width=6, fig.cap="(ref:plot-catch-labeled-trial-performance)", message=F}
 p.labelled.group <- d %>%
   filter(Phase == "exposure" & Item.Labeled == T) %>%
   group_by(ParticipantID, Condition.Exposure, Block) %>%
@@ -142,7 +138,7 @@ p.catch | p.labelled.group
 ```
 
 
-
+## Analysis of reaction time
 
 
 ```{r fig,width=8, fig.height=5, fig.width=6}
@@ -241,7 +237,7 @@ rm(fit.lapse_by_block)
 
 
 
-We fit the psychometric model using the package \texttt{brms} [@R-brms_a] in R [@R; @RStudio]. To faciltiate comparison of effect sizes across predictors, we standardized continuous predictors (VOT) by dividing through twice their standard deviation [@gelman2008]. Following previous work from our lab [@horberg-jager2021; @xie2021] we used weakly regularizing priors to facilitate model convergence. For fixed effect parameters, we used Student priors centered around zero with a scale of 2.5 units [following @gelman-prior2008] and 3 degrees of freedom. For random effect standard deviations, we used a Cauchy prior with location 0 and scale 2, and for random effect correlations, we used an uninformative LKJ-Correlation prior with its only parameter set to 1, describing a uniform prior over correlation matrices [@lewandowski2009]. Four chains with 2000 warm-up samples and 2000 posterior samples each were fit. No divergent transitions after warm-up were observed, and all $1 < \hat{R} < 1.01$.
+We fit the psychometric model using the package \texttt{brms} [@R-brms_a] in R [@R; @RStudio]. To faciltiate comparison of effect sizes across predictors, we standardized continuous predictors (VOT) by dividing through twice their standard deviation [@gelman2008]. Following previous work from our lab [@horberg-jager2021; @xie2021jep] we used weakly regularizing priors to facilitate model convergence. For fixed effect parameters, we used Student priors centered around zero with a scale of 2.5 units [following @gelman-prior2008] and 3 degrees of freedom. For random effect standard deviations, we used a Cauchy prior with location 0 and scale 2, and for random effect correlations, we used an uninformative LKJ-Correlation prior with its only parameter set to 1, describing a uniform prior over correlation matrices [@lewandowski2009]. Four chains with 2000 warm-up samples and 2000 posterior samples each were fit. No divergent transitions after warm-up were observed, and all $1 < \hat{R} < 1.01$.
 
 # Obtaining predictions of idealized listeners
 In the main text, we employ ideal observers [specifically, the ASP framework described in @xie2023] to relate our results to those expected from idealized listeners. This includes predictions based on a 'typical' listener's prior experience and predictions based on idealized learners for each exposure condition that have fully learned the exposure distributions. The former provides a baseline against which to compare listeners' behavior at the start of the experiment. The latter provides a baseline against which to compare changes in listeners' behavior as a function of exposure. In this section, we describe how we derived those predictions.
@@ -256,7 +252,7 @@ Committing to a database is, however, not a *sufficient* assumption. Estimates o
 
 The two approaches have different trade-offs. When cues are not talker-normalized, the resulting category representations inherit not only within-category variability but also variability across talker, over-estimating the actual category covariances for any given talker. Normalizing cues addresses this problem. It does, however, remove potentially useful information about the correlation between cues from the signal: compared to unnormalized cues in Panel A, the talker-normalized cues in Panel B contain less information about the covariance of VOT, f0, and vowel duration.
 
-The two approaches also share potentially important shortcomings. Specifically, neither approach is well-suited if the correlation between cues *within* talkers differs from the correlation between talker means of those cues. The /d/ and /t/ categories in Panel A conflate the two source of covariance; the categories in Panel B completely removed any information about covariance in talker means. This is problematic, as there is strong evidence that such correlations exists [@chodroff-wilson2017; @chodroff-wilson2019; @theodore2009; @sonderegger2020], and that listeners have strong expectations about, at least some types of, correlations between talker means [@idemaru-holt2011; @idemaru-holt2020; @schertz; @OTHERs].^[Additionally, the category means for /d/ and /t/ (solid points) for unnormalized cues are simply the weighted average of the talkers available in the data. If talkers contribute different amounts of data to the database, this means that the category means might disproportionately depend on a subset of the data.]. This issue is illustrated in Figure XXX, which shows that correlation between phonetic cues *within* talkers (Panel A) and the correlations of talker means of the phonetic cues *across* talkers (Panel B).<!-- TO DO: add figure. think about visualization -->  XXX <!-- TO DO: add description . NOTE that even when those two types of correlations are similar, one would have to somehow USE that knowledge when generalizing prior expectations to a new talker. --> For the same reasons, neither of the two approaches considered above captures correlations between talkers' category means and category (co)variances. Both approaches would, for example, miss if category variance generally increases for larger category means (or vice versa).
+The two approaches also share potentially important shortcomings. Specifically, neither approach is well-suited if the correlation between cues *within* talkers differs from the correlation between talker means of those cues. The /d/ and /t/ categories in Panel A conflate the two source of covariance; the categories in Panel B completely removed any information about covariance in talker means. This is problematic, as there is strong evidence that such correlations exists [@chodroff-wilson2017; @chodroff-wilson2018; @theodore2009; @sonderegger2020], and that listeners have strong expectations about, at least some types of, correlations between talker means [@idemaru-holt2011; @idemaru-holt2020; @schertz; @OTHERs].^[Additionally, the category means for /d/ and /t/ (solid points) for unnormalized cues are simply the weighted average of the talkers available in the data. If talkers contribute different amounts of data to the database, this means that the category means might disproportionately depend on a subset of the data.]. This issue is illustrated in Figure XXX, which shows that correlation between phonetic cues *within* talkers (Panel A) and the correlations of talker means of the phonetic cues *across* talkers (Panel B).<!-- TO DO: add figure. think about visualization -->  XXX <!-- TO DO: add description . NOTE that even when those two types of correlations are similar, one would have to somehow USE that knowledge when generalizing prior expectations to a new talker. --> For the same reasons, neither of the two approaches considered above captures correlations between talkers' category means and category (co)variances. Both approaches would, for example, miss if category variance generally increases for larger category means (or vice versa).
 
 ```{r}
 p.database <- d.chodroff_wilson %>% 
@@ -771,7 +767,7 @@ d.io.categorization <-
   mutate(across(c(Phase, Condition.Exposure, Block), factor)) 
 ```
 (ref:plot-IO-logistic-regression-fit) The expected categorization functions predicted by the logistic regression of responses by idealized listeners by exposure condition and phase (solid lines). The ideal listeners' proportion of "t"-responses (dashed lines) converge with the logistic regression fit along the assessed VOT region and are therefore partially obscured by the logistic regression fitted lines. Grey arrows point to expected PSEs of the logistic regression fit. 
-```{r plot-IO-logistic-regression-fit, fig.height=base.height*3+1/2, fig.width=base.width*4}
+```{r plot-IO-logistic-regression-fit, fig.height=base.height*3+1/2, fig.width=base.width*4, fig.cap="(ref:plot-IO-logistic-regression-fit)"}
 tokens <- 
   bind_rows(
       d.for_analysis %>%  
@@ -1091,8 +1087,6 @@ table.interactions.condition_block_VOT
 We performed the same hypotheses tests on the exposure phase model which was fitted separately from test. Analogous to test, we fitted models in standard and nested formulations to obtain interactions and simple effects using the same weakly regularizing priors. While the standard formulation of the model converged (Tables \@ref(tab:hypothesis-table-exposure-interaction-condition-block) and \@ref(tab:hypothesis-table-exposure-interaction-condition-block-VOT)) the nested formulations from which we obtain simple effects, returned several divergent transitions during sampling. Divergent transitions signal the need for caution in model interpretation because it indicates unreliability of the posterior estimate (see https://mc-stan.org/misc/warnings.html#runtime-warnings for explanation of warning types). 
 A possible solution to eliminating divergent transitions in this model would be to relax the variance of the prior distribution assumed for the slope parameter (*VOT_gs* in the model formula). Indeed, in earlier fits of the test phase data we faced convergence issues when we used the recommended weakly regularising prior (student-t distribution with SD = 2.5; @gelman-prior2008) for the slope parameter. Diagnostic plots revealed a slight bi-modality in the posterior distribution which may have been an impediment to smooth sampling; this was solved by increasing the prior distribution's variance to 15 units which allowed the inclusion of data points that were further from the mean. However, fitting the nested exposure models here with yet more accommodating priors would detract from having an identical set of priors across all models fitted for test and exposure. Given that both the simple effects models returned only a few divergent transitions (3 in the nested block and 9 in the nested condition model) and showed fairly good $\hat{R}$ values (all 1.0 except for one parameter) and ESS values we opted not to explore further solutions for them at this point.  
 
-
-### PSE: Simple effects of exposure condition within each block
 
 ```{r fit-exposure-simple-effects-condition, results='hide'}
 my_priors <- c(
@@ -2640,7 +2634,7 @@ The goal of our behavioral analyses was to address three methodological question
 
 To address these questions, we fit a single Bayesian mixed-effects psychometric model to participants' categorization responses on critical trials [e.g., @prins2011]. The *lapsing model* only contained an intercept (the response bias in log-odds) and by-participant random intercepts. Similarly, the *model for the lapse rate* only had an intercept (the lapse rate) and by-participants random intercepts. No by-item random effects were included for the lapse rate nor lapsing model since these parts of the analysis---by definition---describe stimulus-*in*dependent behavior. The *perceptual model* included an intercept and VOT, as well as the full random effect structure by participants and items (the four minimal pair continua), including random intercepts and random slopes by participant and minimal pair. We did not model the random effects of trial to reduce model complexity. This potentially makes our analysis of trials in the model anti-conservative. Finally, the models included the covariance between by-participant random effects across the three linear predictors for the lapsing model, lapse rate model, and perceptual model. This allows us to capture whether participants who lapse more often have, for example, different response biases or different sensitivity to VOT (after accounting for lapsing).
 
-We fit the model using the package \texttt{brms} [@R-brms_a] in R [@R; @RStudio]. Following previous work from our lab [@horberg2021; @xie2021cross], we used weakly regularizing priors to facilitate model convergence. For fixed effect parameters, we standardized continuous predictors (VOT) by dividing through twice their standard deviation [@gelman2008], and used Student priors centered around zero with a scale of 2.5 units [following @gelman-prior2008] and 3 degrees of freedom. For random effect standard deviations, we used a Cauchy prior with location 0 and scale 2, and for random effect correlations, we used an uninformative LKJ-Correlation prior with its only parameter set to 1, describing a uniform prior over correlation matrices [@lewandowski2009]. Four chains with 2000 warm-up samples and 2000 posterior samples each were fit. No divergent transitions after warm-up were observed, and all $\hat{R}$ were close to 1.
+We fit the model using the package \texttt{brms} [@R-brms_a] in R [@R; @RStudio]. Following previous work from our lab [@horberg-jaeger2021; @xie2021jep], we used weakly regularizing priors to facilitate model convergence. For fixed effect parameters, we standardized continuous predictors (VOT) by dividing through twice their standard deviation [@gelman2008], and used Student priors centered around zero with a scale of 2.5 units [following @gelman-prior2008] and 3 degrees of freedom. For random effect standard deviations, we used a Cauchy prior with location 0 and scale 2, and for random effect correlations, we used an uninformative LKJ-Correlation prior with its only parameter set to 1, describing a uniform prior over correlation matrices [@lewandowski2009]. Four chains with 2000 warm-up samples and 2000 posterior samples each were fit. No divergent transitions after warm-up were observed, and all $\hat{R}$ were close to 1.
 
 ### Expectations
 Based on previous experiments, we expected a strong positive effect of VOT, with increasing proportions of "t"-responses for increasing VOTs. We did not have clear expectations for the effect of trial other than that responses should become more uniformed (i.e move towards 50-50 "d"/"t"-bias or 0-log-odds) as the experiment progressed [@liu-jaeger2018] due to the un-informativeness of the stimuli.
@@ -2821,7 +2815,7 @@ p.vot <-
 
 (ref:fitted-categorisation-plots) Categorisation functions and points of subjective equality (PSE) derived from the Bayesian mixed-effects psychometric model fit to listeners' responses in Experiment 1. The categorization functions include lapse rates and biases. The PSEs correct for lapse rates and lapse biases (i.e., they are the PSEs of the perceptual component of the psychometric model).\protect\footnote{Here and in Experiment 2, lapse biases were close to uniform (.5/.5). For such scenarios, bias-corrected PSEs will be very similar to uncorrected PSEs. This is also evident in Figure \ref{fig:fitted-categorisation-plots}.} **Left:** Effects of VOT, lapse rate, and lapse bias, while marginalizing over trial effects as well as all random effects. Vertical point ranges represent the mean proportion and 95% bootstrapped CIs of participants' "t"-responses at each VOT step. Horizontal point ranges denote the mean and 95% quantile interval of the points of subjective equality (PSE), derived from the 8000 posterior samples of the population parameters. **Right:** The same but showing the fitted categorization functions for each of the four minimal pair continua. Participants' responses are omitted to avoid clutter.   
 
-```{r fitted-categorisation-plots, warning=FALSE, fig.width=base.width*3, fig.height = base.height*2.5, fig.cap="(ref:fitted-categorisation-plots)"}
+```{r fitted-categorisation-plots, warning=FALSE, fig.width=base.width*2+1/2, fig.height = base.height*2.5, fig.cap="(ref:fitted-categorisation-plots)"}
 MinPair_plot <- MinPair_plot + labs(x = "VOT (ms)")
 
 xlab <- p.vot$labels$x
