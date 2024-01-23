@@ -51,16 +51,21 @@ myGplot.defaults = function(
   }
 }
 
-remove_all_axes <-
-theme(axis.title.y = element_blank(),
+remove_all_axes <- 
+  theme(axis.title.y = element_blank(),
       axis.title.x = element_blank(),
       axis.text.y = element_blank(),
       axis.ticks.y = element_blank())
-remove_axes_titles <-
-theme(axis.title.x = element_blank(),
+
+remove_axes_titles <- 
+  theme(axis.title.x = element_blank(),
       axis.title.y = element_blank())
-remove_x_guides <-
-theme(axis.text.x = element_blank(),
+
+remove_y_title <- 
+  theme(axis.title.y = element_blank())
+
+remove_x_guides <- 
+  theme(axis.text.x = element_blank(),
       axis.ticks.x = element_blank(),
       axis.title.x = element_blank())
 
@@ -327,6 +332,7 @@ get_intercepts_and_slopes <-
   relocate(c(Condition.Exposure, Block, Intercept, slope, .chain, .iteration, .draw))
 
 get_conditional_effects <- function(model, data, phase) {
+  
   conditional_effects(
     x = model,
     effects = "VOT_gs:Condition.Exposure",
@@ -372,6 +378,7 @@ get_bf <- function(model, hypothesis) {
 
 # Function to get identity CI of a model summary
 get_CI <- function(model, term, hypothesis) {
+  
   paste0(round(as.numeric(summary(model)$fixed[term, 1]), 1), " 95%-CI: ",
          paste(round(as.numeric(summary(model)$fixed[term, 3:4]), 1), collapse = " to "),
          "; ",
@@ -379,12 +386,14 @@ get_CI <- function(model, term, hypothesis) {
 }
 
 print_CI <- function(model, term) {
+  
   paste0(round(plogis(as.numeric(summary(model)$fixed[term, 1])) * 100, 1),
          "%, 95%-CI: ",
          paste0(round(plogis(as.numeric(summary(model)$fixed[term, 3:4])) * 100, 1), collapse = " to "), "%")
 }
 
-# pipes and functions for plotting the Bayesian psychometric fit
+# Pipes and functions for plot and table aesthetics -----------------------------------------------------------
+
 relabel_blocks <-
   . %>% mutate(
     Block.plot_label = factor(case_when(
@@ -430,6 +439,7 @@ geom_linefit <- function(data, x, y, fill, legend.position, legend.justification
 
 ### function for Formatting hypothesis tables
 align_tab <- function(hyp) {
+  
   map_chr(hyp, ~ ifelse(class(.x) == "numeric", "r","l"))
 }
 
