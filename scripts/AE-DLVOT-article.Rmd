@@ -21,11 +21,10 @@ affiliation:
     institution   : "Computer Science, University of Rochester"
 
 authornote: |
-  We are grateful to ### ommitted for review ###
-
+  We are grateful to ### ommitted for review ### Earlier versions of this work were presented at the Center for Bilingualism at the Stockholm University, ASA 2023 in Chicago, and the 2023 Experimental Linguistics conference in Paris. The authors are grateful to these audiences, as well as Anna Persson, Chigusa Kurumada, Shawn Cummings, Rachel Sabatello, and Iva Savic for helpful discussions that affected experiment design and interpretation. Parts of this work were supported by the Stockholm University Board of Human Science, a Kvalitatessäkrande medel grant, and the Helge Ax:son Johnsons foundation to TFJ as well as XXX to MT. <!-- TO DO: please check, fill in, and correct --> 
 
 abstract: |
-  Human speech perception is hard---automatic speech recognition systems trained on more words than most humans will experience in their lifetime are just beginning to approach the robustness listeners effortlessly exhibit in everyday language understanding. Now recognized as critical to this human ability is its adaptivity: one to two minutes of exposure can significantly reduce the processing difficulty listeners might experience during initial encounters with an unfamiliar accent. Despite substantial progress in understanding this ability and its limits, basic predictions by theories of adaptive speech perception remain untested. We present a novel distributional learning paradigm that investigates how adaptive changes in speech perception accumulate incrementally with exposure. We use this paradigm to test predictions about how listeners' expectations based on previous experience adapt towards the statistics of the speech input, and whether this process is subject to hard limits. As this is the first study of this type, we intentionally focus on a simple case of distinguishing a two-way sound contrast, sacrificing ecological validity for experimental control. We characterize changes in listeners categorization behavior with increasing exposure in a novel Bayesian mixed-effects psychometric model. Then we show that a state-of-the-art Bayesian inference model of adaptive speech perception provides a good qualitative and quantitative fit against these behavioral changes ($R^2 = 96.6%$). Despite this fit, the model exhibits deficiencies that point the way towards future research.
+  Human speech perception is a computational feat---automatic speech recognition systems trained on more words than most humans will experience in their lifetime are just beginning to approach the robustness listeners effortlessly exhibit in everyday language understanding. Now recognized as critical to this human ability is adaptivity: one to two minutes of exposure can significantly reduce the processing difficulty listeners might experience during initial encounters with an unfamiliar accent. Despite substantial progress in understanding this ability and its limits, basic predictions by theories of adaptive speech perception remain untested. We present a novel distributional learning paradigm that investigates how adaptive changes in speech perception accumulate incrementally with exposure. We use this paradigm to test predictions about how listeners' expectations based on previous experience adapt towards the statistics of the speech input, and whether this process is subject to hard limits. As this is the first study of its type, we intentionally focus on a simple case of distinguishing a two-way sound contrast, sacrificing ecological validity for experimental control. We characterize changes in listeners categorization behavior with increasing exposure in a novel Bayesian mixed-effects psychometric model. Then we show that a state-of-the-art Bayesian inference model of adaptive speech perception provides a good qualitative and quantitative fit against these behavioral changes ($R^2 = 96.6%$). Despite this fit, the model exhibits deficiencies that point the way towards future research.
   
 keywords          : "speech perception; adaptation; incremental changes; distributional learning"
 wordcount         : "X"
@@ -118,6 +117,14 @@ INCLUDE_TODO = F           # switch on/off to get to do list.
 \newpage 
 \setcounter{page}{1}
 \setcounter{section}{0}
+
+\newcommand{\changelocaltocdepth}[1]{%
+  \addtocontents{toc}{\protect\setcounter{tocdepth}{#1}}%
+  \setcounter{tocdepth}{#1}%
+}
+\setcounter{tocdepth}{-10}
+\changelocaltocdepth{-10}
+
 
 ```{r sec-intro, child="section-1-introduction.Rmd"}
 ```
