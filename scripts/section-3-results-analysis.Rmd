@@ -227,6 +227,15 @@ p.slope_1to7 <-
   # (remove _unscaled to switch to slopes over Gelman-scaled VOT)
   aes(y = slope_unscaled_median, ymin = slope_unscaled_lower, ymax = slope_unscaled_upper) +
   # These are the slopes of the ideal observers
+    geom_rect(
+    data = d.io.categorization %>% 
+      group_by(Condition.Exposure) %>% 
+      summarise(slope_unscaled = mean(slope_unscaled)) %>% 
+      filter(!Condition.Exposure %in% c("Shift0", "Shift10", "Shift40", "prior")),
+    mapping = aes(xmin = -Inf, ymin = min(slope_unscaled), ymax = max(slope_unscaled), xmax = Inf),
+    fill = "#d2d4dc",
+    alpha = .08, 
+    inherit.aes = F) +
   geom_hline(
     data = d.io.categorization %>% 
       mutate(slope_unscaled = ifelse(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40"), .237, slope_unscaled)) %>% 
@@ -237,15 +246,7 @@ p.slope_1to7 <-
     linetype = 2, 
     linewidth = .8, 
     alpha = 0.5) +
-  geom_rect(
-    data = d.io.categorization %>% 
-      group_by(Condition.Exposure) %>% 
-      summarise(slope_unscaled = mean(slope_unscaled)) %>% 
-      filter(!Condition.Exposure %in% c("Shift0", "Shift10", "Shift40", "prior")),
-    mapping = aes(xmin = -Inf, ymin = min(slope_unscaled), ymax = max(slope_unscaled), xmax = Inf),
-    fill = "#d2d4dc",
-    alpha = .07, 
-    inherit.aes = F) +
+
   scale_y_continuous("slope (log-odds/ms VOT)")
 
 # get the relative distance of the IO-predicted PSEs from the starting point PSE at test 1
@@ -290,6 +291,15 @@ p.PSE_1to7 <-
   p.across_blocks +  
   scale_y_continuous("PSE (ms VOT)") +
   aes(y = PSE_median, ymin = PSE_lower, ymax = PSE_upper) +
+      geom_rect(
+    data = d.io.categorization %>% 
+      group_by(Condition.Exposure) %>% 
+      summarise(PSE = mean(PSE)) %>% 
+      filter(!Condition.Exposure %in% c("Shift0", "Shift10", "Shift40", "prior")),
+    mapping = aes(xmin = -Inf, ymin = min(PSE), ymax = max(PSE), xmax = Inf),
+    fill = "#d2d4dc",
+    alpha = .08, 
+    inherit.aes = F) +
   geom_linerange(linewidth = .6, position = position_dodge(.3), alpha = .5) +
   geom_label(
     data = d.true_shift %>% 
@@ -306,15 +316,6 @@ p.PSE_1to7 <-
     linetype = 2, 
     linewidth = .8, 
     alpha = 0.4) +
-  geom_rect(
-    data = d.io.categorization %>% 
-      group_by(Condition.Exposure) %>% 
-      summarise(PSE = mean(PSE)) %>% 
-      filter(!Condition.Exposure %in% c("Shift0", "Shift10", "Shift40", "prior")),
-    mapping = aes(xmin = -Inf, ymin = min(PSE), ymax = max(PSE), xmax = Inf),
-    fill = "#d2d4dc",
-    alpha = .07, 
-    inherit.aes = F) +
   geom_text(
     data = d.true_shift %>% 
       filter(Phase == "exposure") %>% 
