@@ -197,6 +197,7 @@ p.matrix_connected <- p.database %+%
         strip.text.y = element_blank())
 ```
 
+
 ```{r}
 # make a normalised version of the plots 
 d.chodroff_wilson.connected.norm <-
@@ -809,6 +810,7 @@ hyp_interaction.condition_block <-
 
 table.interaction.condition_block <-
   make_hyp_table(
+    fit_test,
     hyp_interaction.condition_block,
     rep(c(
   # Comparing differences in +10 vs. baseline between blocks
@@ -858,6 +860,7 @@ hyp.simple_slopes_condition <-
   dplyr::select(-Star)
 
 make_hyp_table(
+  fit_test.simple_effects_condition, 
   hyp.simple_slopes_condition, 
   c("+10 vs. baseline = 0", "+40 vs. +10 = 0", "+40 vs. baseline = 0", rep(c("+10 vs. baseline", "+40 vs. +10", "+40 vs. baseline"), 5)), 
     caption = "Did exposure condition affect the slope of categorization responses? This table summarizes the differences in slopes between the exposure conditions within each test block.") %>% 
@@ -907,6 +910,7 @@ hyp.simple_slopes_block <-
 
 table.simple_slopes_block <- 
 make_hyp_table(
+  fit_test.simple_effects_block,
     hyp.simple_slopes_block,
     c(rep(c(
   # Comparing differences blocks within conditions
@@ -971,6 +975,7 @@ hyp_interaction.condition_block_VOT <-
 
 table.interactions.condition_block_VOT <-
   make_hyp_table(
+    fit_test,
     hyp_interaction.condition_block_VOT,
     rep(c(
   # Comparing slope differences in +10 vs. baseline between blocks
@@ -987,7 +992,7 @@ table.interactions.condition_block_VOT <-
   pack_rows("Difference in slopes: +40 vs. baseline", 15, 21)
 table.interactions.condition_block_VOT
 ```
-\newpage
+
 
 ## Results for exposure blocks {#sec:SI-exposure-block-analysis}
 We performed the same hypotheses tests on the exposure phase model which was fitted separately from test. Analogous to test, we fitted models in standard and nested formulations to obtain interactions and simple effects using the same weakly regularizing priors. While the standard formulation of the model converged (Tables \@ref(tab:hypothesis-table-exposure-interaction-condition-block) and \@ref(tab:hypothesis-table-exposure-interaction-condition-block-VOT)) the nested formulations from which we obtain simple effects, returned several divergent transitions during sampling. Divergent transitions signal the need for caution in model interpretation because it indicates unreliability of the posterior estimate (see https://mc-stan.org/misc/warnings.html#runtime-warnings for explanation of warning types). 
@@ -1032,7 +1037,7 @@ brm(
 Consistent with the trend observed in test blocks, categorization boundaries were clearly separated between the conditions in all exposure blocks and grew progressively larger with more exposure (Table \@ref(tab:hypothesis-table-exposure-simple-effects-condition)). Evidence for the effect was stronger in the +40 vs. +10 comparison 
 ($24.7 \leq BFs\leq 100.3$) with the difference in PSE reaching its maximum in the final exposure block ($`r get_bf(fit_exposure.simple_effects_condition, "mu2_Block6:Condition.Exposure_Shift40vs.Shift10 < 0")`$). The difference between +10 and baseline widened in exposure block 2 ($`r get_bf(fit_exposure.simple_effects_condition, "mu2_Block4:Condition.Exposure_Shift10vs.Shift0 < 0")`$) but narrowed in the final block where evidence in support of the difference also fell substantially ($`r get_bf(fit_exposure.simple_effects_condition, "mu2_Block6:Condition.Exposure_Shift10vs.Shift0 < 0")`$). The smaller difference in PSE between the +10 and baseline conditions reflected the pattern in test blocks. 
 
-Evidence for boundary shifts between exposure blocks was weak across all conditions ($0.9 \leq BFs \leq 2.1$ Table \@ref(tab:hypothesis-table-exposure-simple-effect-condition-slope)). This pattern was similar to test for block comparisons within the baseline and +10 conditions but less so in the +40 condition where evidence for incremental adaptation was stronger during test. One explanation for the weak evidence in the exposure blocks is found in the CI of the estimated differences, all of which were wide and included 0. It was during exposure where participants in the +40 condition encountered the most unexpected trials. Stimuli with high VOT values, typically classified as "t" would have to be treated as "d"; this may have caused greater uncertainty on the part of participants and therefore a wider interval for the boundary estimate. 
+Evidence for boundary shifts between exposure blocks was weak across all conditions ($0.9 \leq BFs \leq 2.1$ Table \@ref(tab:hypothesis-table-exposure-simple-effects-block)). This pattern was similar to test for block comparisons within the baseline and +10 conditions but less so in the +40 condition where evidence for incremental adaptation was stronger during test. One explanation for the weak evidence in the exposure blocks is found in the CI of the estimated differences, all of which were wide and included 0. It was during exposure where participants in the +40 condition encountered the most unexpected trials. Stimuli with high VOT values, typically classified as "t" would have to be treated as "d"; this may have caused greater uncertainty on the part of participants and therefore a wider interval for the boundary estimate. 
 
 The effects of VOT (slope) did not change significantly between conditions within exposure block (Table \@ref(tab:hypothesis-table-exposure-simple-slopes-condition)) and between blocks within exposure condition (Table \@ref(tab:hypothesis-table-exposure-simple-slopes-block)). This conforms to the trend found in slope analysis for test blocks as well as the predictions of the ideal observers.
 Table \@ref(tab:hypothesis-table-exposure-interaction-condition-block) and Table \@ref(tab:hypothesis-table-exposure-interaction-condition-block-VOT) report the effects of interaction between exposure condition and block (PSE); and exposure, condition, block and VOT respectively (slope). With respect to PSE changes, the difference between +10 and baseline remained unchanged between exposure blocks as observed in the comparison between test blocks ($0.06\leq estimates \leq 0.34$; $0.5\leq BFs \leq0.86$). Comparisons between the +40 and baseline conditions between exposure blocks were in the similar direction as test but failed to achieve sufficient evidential support ($2.1\leq BFs \leq 3.6$).  
@@ -1060,6 +1065,7 @@ hyp.exposure_simple_effects_condition <-
 
 table.exposure_simple_effects_condition <- 
 make_hyp_table(
+  fit_exposure.simple_effects_condition,
   hyp.exposure_simple_effects_condition, 
   rep(c("+10 vs. baseline < 0", "+40 vs. +10 < 0", "+40 vs. baseline < 0"), 3), 
     caption = "This table summarizes the simple effects of the exposure conditions for each exposure block. Note that rightward shifts of the categorization function (and its PSE) correspond to negative estimates (lower intercepts in predicting the log-odds of \`\`t\'\'-responses).") %>% 
@@ -1131,6 +1137,7 @@ hyp.exposure_simple_effects_block <-
 
 table.exposure_simple_effects_block <- 
 make_hyp_table(
+  fit_exposure.simple_effects_block,
     hyp.exposure_simple_effects_block,
    c(rep(c(
   # Comparing differences blocks within conditions
@@ -1173,6 +1180,7 @@ hyp.exposure_simple_slopes_condition <-
 
 table.exposure_simple_slopes_condition <- 
 make_hyp_table(
+  fit_exposure.simple_effects_condition,
   hyp.exposure_simple_slopes_condition, 
   rep(c("+10 vs. baseline < 0", "+40 vs. +10 < 0", "+40 vs. baseline < 0"), 3), 
     caption = "Did exposure affect the slope of categorization responses? This table summarizes the differences in slopes between the exposure conditions for each exposure block.") %>% 
@@ -1208,6 +1216,7 @@ hyp.exposure_simple_slopes_block <-
 
 table.exposure_simple_slopes_block <- 
 make_hyp_table(
+  fit_exposure.simple_effects_block,
   hyp.exposure_simple_slopes_condition, 
   rep(c("Block 1 to 2", "Block 2 to 3", "Block 1 to 3"), 3), 
     caption = "Did exposure affect the slope of categorization responses? This table summarizes the differences in slopes between the blocks for each exposure condition") %>% 
@@ -1224,7 +1233,7 @@ rm(fit_exposure.simple_effects_block)
 ### PSE: Differences in the rate of change between exposure conditions and block
 
 ```{r include=FALSE}
-fit.exposure <-
+fit_exposure <-
   fit_model(
     data = d.for_analysis,
     phase = "exposure",
@@ -1236,7 +1245,7 @@ fit.exposure <-
 ```{r hypothesis-table-exposure-interaction-condition-block, results='asis'}
 hyp.interaction.exposure.condition_block <- 
   hypothesis(
-    fit.exposure, 
+    fit_exposure, 
     c(
       "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 < 0",
       "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure3vs.Exposure2  < 0",
@@ -1255,6 +1264,7 @@ hyp.interaction.exposure.condition_block <-
 
 table.interaction.exposure.condition_block <-
   make_hyp_table(
+    fit_exposure,
     hyp.interaction.exposure.condition_block,
     rep(c(
   # Comparing differences in +10 vs. baseline between blocks
@@ -1275,7 +1285,7 @@ table.interaction.exposure.condition_block
 ```{r hypothesis-table-exposure-interaction-condition-block-VOT, results='asis'}
 hyp.interaction.exposure.condition_block_VOT <- 
   hypothesis(
-    fit.exposure, 
+    fit_exposure, 
     c(
       "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 < 0",
       "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Exposure3vs.Exposure2  < 0",
@@ -1294,6 +1304,7 @@ hyp.interaction.exposure.condition_block_VOT <-
 
 table.interaction.exposure.condition_block_VOT <-
   make_hyp_table(
+    fit_exposure,
     hyp.interaction.exposure.condition_block_VOT,
     rep(c(
   # Comparing differences in +10 vs. baseline between blocks
@@ -1306,14 +1317,14 @@ table.interaction.exposure.condition_block_VOT <-
   pack_rows("Difference in +40 vs. baseline", 7, 9)
 
 table.interaction.exposure.condition_block_VOT
-rm(fit.exposure)
+rm(fit_exposure)
 ```
 
 
 ## Lapse rates by exposure and test blocks {#sec:analysis-lapse}
 
 ```{r fit-lapse-by-block, message=FALSE}
-fit.lapse_by_block <- 
+fit_lapse_by_block <- 
   fit_model(
     data = d.for_analysis,
     phase = "all",
@@ -1322,32 +1333,27 @@ fit.lapse_by_block <-
     adapt_delta = .999)
 ```
 
-All analyses presented in the main text and in the preceding SI sections assume a constant lapse rate across exposure and test blocks. These analyses found lapse rates of `r logit_to_prob(fit_test, "theta1_Intercept")` (95%-CI: XXX-XXX%) during test blocks and XXX% (95%-CI: XXX-XXX%) during exposure blocks, much smaller than in previous work [@clayards2008; @kleinschmidt-jaeger2016; @kleinschmidt2020]. The decision to assume constant lapse rates seems to be supported by Figures \@ref(fig:plot-fit-intercept-slope-PSE)A-B, which show that participants' responses (the point ranges) in all exposure and test blocks approach 0 and 100% "t"-responses for small and large VOTs, respectively. Still, to explore changes in lapse rates we refitted the same psychometric mixed-effects model with a lapse model that included block as a predictor (sliding-difference coded from the first to the ninth block). Priors in this model were the same as that in the constant-lapse model including the prior for lapse rates which was the `r brms` default of a logistic prior centered around 0 with a scale of 1 unit. This assumes uniformity for $0 < lapse rates < 1$ while down-weighting the extreme values. 
+All analyses presented in the main text and in the preceding SI sections assume a constant lapse rate across exposure and test blocks. These analyses found lapse rates of 
+`r logit_to_prob(fit_test, "theta1_Intercept")` (95%-CI: XXX-XXX%) during test blocks and XXX% (95%-CI: XXX-XXX%) during exposure blocks, much smaller than in previous work [@clayards2008; @kleinschmidt-jaeger2016; @kleinschmidt2020]. The decision to assume constant lapse rates seems to be supported by Figures \@ref(fig:plot-fit-slope-PSE)A-B, which show that participants' responses (the point ranges) in all exposure and test blocks approach 0 and 100% "t"-responses for small and large VOTs, respectively. Still, to explore changes in lapse rates we refitted the same psychometric mixed-effects model with a lapse model that included block as a predictor (sliding-difference coded from the first to the ninth block). Priors in this model were the same as that in the constant-lapse model including the prior for lapse rates which was the \texttt{brms} [@R-brms_a] default of a logistic prior centered around 0 with a scale of 1 unit. This assumes uniformity for $0 < lapse rates < 1$ while down-weighting the extreme values. 
 
 The estimated lapse rate (in log-odds) for each block is shown in Table \@ref(tab:hypothesis-table-lapse-by-block). Lapse rates were at their highest in the first block ($1.5\%$) but fell sharply up to the fifth block ($\leq.0011\%$) before rising in the sixth ($0.07\%$) and seventh block ($0.04\%$). Where estimates were especially low, we note the accompanying wide confidence intervals partly resulting from our use of a uniform prior. Overall, these results show some evidence of familiarization with the task. However, unlike previous work, lapse rates were very low even during the first 12 trials (the first test block). For comparison, a post-hoc analysis reported in @kleinschmidt2020 estimated lapse rates as high as 12% during the first 37 trials of his experiment. Lapse rates reduced to XXX to XXX% over the remaining XXX trials. <!-- TO DO: fill in XXX throughout this paragraph; where appropriate please use code --> 
 
 ```{r hypothesis-table-lapse-by-block, results='asis'}
 hyp.lapse <- 
-hypothesis(fit.lapse_by_block, 
-           map_chr(.x = c(1:9), ~ c(get_lapse_hypothesis(.x)))) %>% 
+hypothesis(fit_lapse_by_block, 
+           map_chr(.x = c(1:9), ~ c(get_lapse_hypothesis(fit_lapse_by_block, .x)))) %>% 
   .$hypothesis %>% 
-  dplyr::select(-Star)
+  dplyr::select(-Star) 
 
 table.lapse <- 
 make_hyp_table(
+  fit_lapse_by_block,
   hyp.lapse, 
-  paste(rep("Block", 9), c(1:9), "< 0"), 
-    caption = "This table summarizes estimated lapse rates in each block of the experiment.") %>% 
+  paste(rep("Block", 9), c(1:9), "< .5"), 
+    caption = "This table summarizes the estimated proportion of lapse trials in each block of the experiment.") %>% 
   pack_rows("Estimated lapse rate", 1, 9)  
 table.lapse
-rm(fit.lapse_by_block)
-
-hyp.lapse %>% 
-  mutate(Block = factor(c(1:9))) %>% 
-  ggplot(aes(x = Block, y = Estimate)) +
-  geom_point() +
-  geom_linerange(aes(ymin = CI.Lower, ymax = CI.Upper)) +
-  labs(y = "Estimated lapse rate")
+rm(fit_lapse_by_block)
 ```
 
 One possible explanation for the consistently small lapse rate in the present experiment is that we recruited participants from the Prolific crowdsourcing platform rather than Mechanical Turk [@kleinschmidt-jaeger2016; @kleinschmidt2020]. Prolific has been found to deliver higher data quality than the Amazon's Mechanical Turk crowd-sourcing platform [@peer2017; @adams2020; @albert-smilek2023]. Another possibility is that the use of natural-, rather than robotic-sounding, stimuli engaged participants attention in the present experiment.
@@ -1658,6 +1664,7 @@ d_for_ASP <-
     ExposureGroup, Phase, ParticipantID, Block, Trial, x,
     VOT, f0_Mel, vowel_duration, Response.Category, Item.ExpectedResponse.Category)
 ```
+
 
 ```{r set-subsample-proportion}
 set.seed(1976)

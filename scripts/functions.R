@@ -346,18 +346,18 @@ get_conditional_effects <- function(model, data, phase) {
     re_formula = NA)
 }
 
-get_lapse_hypothesis <- function(contrast_row = 1) {
+get_lapse_hypothesis <- function(model, contrast_row = 1) {
   paste(
     "theta1_Intercept +", 
     paste(
       paste(
-        unname(attr(fit.lapse_by_block$data$Block, "contrasts")[contrast_row, 1:7]), 
+        unname(attr(model$data$Block, "contrasts")[contrast_row, 1:7]), 
         "*", 
-        rownames(fixef(fit.lapse_by_block))[56:62], "+", collapse = " "), 
+        rownames(fixef(model))[56:62], "+", collapse = " "), 
       paste(
-        unname(attr(fit.lapse_by_block$data$Block, "contrasts")[contrast_row, 8]), 
+        unname(attr(model$data$Block, "contrasts")[contrast_row, 8]), 
         "*", 
-        rownames(fixef(fit.lapse_by_block))[63])), 
+        rownames(fixef(model))[63])), 
     "< 0")
 }
 
@@ -443,7 +443,12 @@ align_tab <- function(hyp) {
   map_chr(hyp, ~ ifelse(class(.x) == "numeric", "r","l"))
 }
 
-make_hyp_table <- function(hypothesis, hypothesis_names, caption, col1_width = "15em", digits = 2) {
+make_hyp_table <- function(model, hypothesis, hypothesis_names, caption, col1_width = "15em", digits = 2) {
+    n.posterior_samples <-
+      ((map(model$fit@stan_args, ~ .x$iter) %>% reduce(`+`)) -
+         (map(model$fit@stan_args, ~ .x$warmup) %>% reduce(`+`))) /
+      (first(map(model$fit@stan_args, ~ .x$thin)))
+
   bind_cols(tibble(Hypothesis = hypothesis_names), hypothesis) %>%
     dplyr::select(-2) %>%
     mutate(
@@ -452,7 +457,8 @@ make_hyp_table <- function(hypothesis, hypothesis_names, caption, col1_width = "
         ~ round(., digits = digits)),
       across(
         c(Post.Prob),
-        ~ round(., digits = 3)),
+        ~ round(., digits = 3)), 
+      Evid.Ratio = ifelse(is.infinite(Evid.Ratio), paste("$\\geq$", n.posterior_samples), Evid.Ratio),
       CI = paste0("[", CI.Lower, ", ", CI.Upper, "]")) %>%
     dplyr::select(-c(CI.Upper, CI.Lower)) %>%
     relocate(CI, .before = "Evid.Ratio") %>%

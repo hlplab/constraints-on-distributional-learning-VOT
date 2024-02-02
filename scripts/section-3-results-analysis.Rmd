@@ -505,6 +505,7 @@ hyp.simple_effects_condition <-
   dplyr::select(-Star)
 
 make_hyp_table(
+  fit_test.simple_effects_condition,
   hyp.simple_effects_condition, 
   c("+10 vs. baseline = 0", "+40 vs. +10 = 0", "+40 vs. baseline = 0", rep(c("+10 vs. baseline", "+40 vs. +10", "+40 vs. baseline"), 5)), 
     caption = "When did exposure begin to affect participants' categorization responses? When, if ever, were these changes undone with repeated testing? This table summarizes the simple effects of the exposure conditions for each test block. Note that rightward shifts of the categorization function (and its PSE) correspond to negative estimates (lower intercepts in predicting the log-odds of \`\`t\'\'-responses).") %>% 
@@ -589,6 +590,7 @@ hyp.simple_effects_block <-
   dplyr::select(-Star)
 
 make_hyp_table(
+  fit_test.simple_effects_block,
     hyp.simple_effects_block,
     c(rep(c(
   # Comparing differences blocks within conditions
@@ -674,8 +676,8 @@ d.exposure_surprisal <-
   filter(Phase == "exposure", Item.Labeled) %>%
   cross_join(
     io %>%
-      filter(io %in% c("Shift0", "Shift10", "Shift40", "prior")) %>% 
-      select(-x) %>%
+      filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40", "prior")) %>% 
+      select(-x, fold) %>%
       rename(IO.Type = Condition.Exposure)) %>%
   # For each labeled exposure stimulus, calculate the surprisal of seeing the category label
   # (this is not quite parallel to what we did for test tokens, which was looking at the
@@ -743,7 +745,7 @@ d.test_surprisal <-
   d.for_analysis %>%
   filter(Phase == "test") %>%
   distinct(Item.VOT) %>%
-  cross_join(io) %>%
+  cross_join(io %>% select(-c(x, fold))) %>%
   filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")) %>%
   # For each test stimulus, calculate the sum of densities of /d/ and /t/ over
   # that VOT (i.e., the density of the marginal VOT distribution)
