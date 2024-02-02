@@ -4,6 +4,8 @@
 
 <!-- TO DO: if we integrate model, cite Martin; yarkoni-westfall2017 -->
 
+<!-- discuss: failure of predicting slopes, possible reasons. mostly in SI but should be acknowledge in GD -->
+
 # General discussion
 Over the last 20+ years, landmark studies in adaptive speech perception have demonstrated that listeners' interpretation of speech is not static. Instead, it can change with recent exposure, accommodating differences in pronunciation across talkers. Even a single session of exposure can be sufficient to substantially reduce losses in processing speed or accuracy that listeners might initially experience when exposed to unfamiliar speech patterns. Research on accent adaptation [AA, @eisner2013; @schertz2016; @xie2016] and perceptual recalibration [VGPL/LGPL, @eisner-mcqueen2005; @kraljic-samuel2006; @kurumada2018; @norris2003; @reinisch-holt2014; @vroomen2007] has found that this flexibility is achieved through changes in listeners' *categorization functions*---the mapping from acoustic or phonetic cues to the phonological categories that form the input to spoken language understanding. These changes in listeners' categorization functions seem to depend on the statistics of the exposure input in ways qualitatively expected under the hypothesis that adaptive speech perception involves distributional learning [DL, @clayards2008; @idemaru-holt2011; @idemaru-holt2020; @kleinschmidt-jaeger2015; @kleinschmidt2020; @mcmurray-jongman2011; @nixon2016; @theodore-monto2019].
 
