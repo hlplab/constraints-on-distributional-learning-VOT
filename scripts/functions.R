@@ -51,20 +51,20 @@ myGplot.defaults = function(
   }
 }
 
-remove_all_axes <- 
+remove_all_axes <-
   theme(axis.title.y = element_blank(),
       axis.title.x = element_blank(),
       axis.text.y = element_blank(),
       axis.ticks.y = element_blank())
 
-remove_axes_titles <- 
+remove_axes_titles <-
   theme(axis.title.x = element_blank(),
       axis.title.y = element_blank())
 
-remove_y_title <- 
+remove_y_title <-
   theme(axis.title.y = element_blank())
 
-remove_x_guides <- 
+remove_x_guides <-
   theme(axis.text.x = element_blank(),
       axis.ticks.x = element_blank(),
       axis.title.x = element_blank())
@@ -245,7 +245,7 @@ fit_model <- function(data, phase, formulation = "standard", priorSD = 2.5, adap
       filter(Phase == phase & Item.Labeled == F) %>%
       prepVars(test_mean = VOT.mean_test, levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type)
   }
-  
+
   prior_overwrite <- if (phase == "exposure" & formulation == "nested_slope") {
     c(set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x2:VOT_gs", dpar = "mu2"),
       set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x4:VOT_gs", dpar = "mu2"),
@@ -332,7 +332,7 @@ get_intercepts_and_slopes <-
   relocate(c(Condition.Exposure, Block, Intercept, slope, .chain, .iteration, .draw))
 
 get_conditional_effects <- function(model, data, phase) {
-  
+
   conditional_effects(
     x = model,
     effects = "VOT_gs:Condition.Exposure",
@@ -348,16 +348,16 @@ get_conditional_effects <- function(model, data, phase) {
 
 get_lapse_hypothesis <- function(model, contrast_row = 1) {
   paste(
-    "theta1_Intercept +", 
+    "theta1_Intercept +",
     paste(
       paste(
-        unname(attr(model$data$Block, "contrasts")[contrast_row, 1:7]), 
-        "*", 
-        rownames(fixef(model))[56:62], "+", collapse = " "), 
+        unname(attr(model$data$Block, "contrasts")[contrast_row, 1:7]),
+        "*",
+        rownames(fixef(model))[56:62], "+", collapse = " "),
       paste(
-        unname(attr(model$data$Block, "contrasts")[contrast_row, 8]), 
-        "*", 
-        rownames(fixef(model))[63])), 
+        unname(attr(model$data$Block, "contrasts")[contrast_row, 8]),
+        "*",
+        rownames(fixef(model))[63])),
     "< 0")
 }
 
@@ -378,7 +378,7 @@ get_bf <- function(model, hypothesis) {
 
 # Function to get identity CI of a model summary
 get_CI <- function(model, term, hypothesis) {
-  
+
   paste0(round(as.numeric(summary(model)$fixed[term, 1]), 1), " 95%-CI: ",
          paste(round(as.numeric(summary(model)$fixed[term, 3:4]), 1), collapse = " to "),
          "; ",
@@ -386,7 +386,7 @@ get_CI <- function(model, term, hypothesis) {
 }
 
 print_CI <- function(model, term) {
-  
+
   paste0(round(plogis(as.numeric(summary(model)$fixed[term, 1])) * 100, 1),
          "%, 95%-CI: ",
          paste0(round(plogis(as.numeric(summary(model)$fixed[term, 3:4])) * 100, 1), collapse = " to "), "%")
@@ -439,15 +439,15 @@ geom_linefit <- function(data, x, y, fill, legend.position, legend.justification
 
 ### function for Formatting hypothesis tables
 align_tab <- function(hyp) {
-  
+
   map_chr(hyp, ~ ifelse(class(.x) == "numeric", "r","l"))
 }
 
 make_hyp_table <- function(model, hypothesis, hypothesis_names, caption, col1_width = "15em", digits = 2) {
-    n.posterior_samples <-
-      ((map(model$fit@stan_args, ~ .x$iter) %>% reduce(`+`)) -
-         (map(model$fit@stan_args, ~ .x$warmup) %>% reduce(`+`))) /
-      (first(map(model$fit@stan_args, ~ .x$thin)))
+  n.posterior_samples <-
+    ((map(model$fit@stan_args, ~ .x$iter) %>% reduce(`+`)) -
+       (map(model$fit@stan_args, ~ .x$warmup) %>% reduce(`+`))) /
+    (first(map(model$fit@stan_args, ~ .x$thin)))
 
   bind_cols(tibble(Hypothesis = hypothesis_names), hypothesis) %>%
     dplyr::select(-2) %>%
@@ -457,7 +457,7 @@ make_hyp_table <- function(model, hypothesis, hypothesis_names, caption, col1_wi
         ~ round(., digits = digits)),
       across(
         c(Post.Prob),
-        ~ round(., digits = 3)), 
+        ~ round(., digits = 3)),
       Evid.Ratio = ifelse(is.infinite(Evid.Ratio), paste("$\\geq$", n.posterior_samples), Evid.Ratio),
       CI = paste0("[", CI.Lower, ", ", CI.Upper, "]")) %>%
     dplyr::select(-c(CI.Upper, CI.Lower)) %>%
@@ -467,7 +467,8 @@ make_hyp_table <- function(model, hypothesis, hypothesis_names, caption, col1_wi
         booktabs = TRUE,
         escape = FALSE,
         col.names = c("Hypothesis", "Estimate", "SE", "90\\%-CI", "BF", "$p_{posterior}$")) %>%
-    kable_styling(full_width = FALSE) %>%
+    # HOLD_position for latex table placement H and hold_position for latex h!, neither if placement is left to latex
+    kable_styling(latex_options = "hold_position", full_width = FALSE) %>%
     column_spec(1, width = col1_width)
 }
 
