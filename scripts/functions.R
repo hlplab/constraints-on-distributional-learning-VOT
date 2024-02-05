@@ -89,7 +89,7 @@ get_ChodroffWilson_data <- function(
   require(magrittr)
   require(diptest)
 
-  # Standardizing variable names and values to confirm to what we usually use.
+  # Standardizing variable names and values to conform to what we usually use.
   d <-
     read_csv(database_filename, show_col_types = FALSE) %>%
     rename(
@@ -153,7 +153,7 @@ get_ChodroffWilson_data <- function(
     ungroup() %>%
     filter(n_per_category > min.n_per_talker_and_category)
 
-  # Get Mel and Semitones, then C-CuRE
+  # Get Mel and Semitones
   d %<>%
     group_by(Talker) %>%
     mutate(f0_semitones = 12 * log(f0 / mean(f0)) / log(2)) %>%
