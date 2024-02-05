@@ -64,7 +64,9 @@ Our results replicate those general findings. Among the left-shifted conditions,
 
 Constrained adaptation should not be surprising since the need for perception to strike a balance between stability and flexibility has long been recognised. Constrained adaption is a logical result of a rational perceiver.
 
- 
+## Psychometric mixed-effects models
+
+# Conclusions
 
 
 
