@@ -361,14 +361,19 @@ get_lapse_hypothesis <- function(model, contrast_row = 1) {
     "< 0")
 }
 
-get_bf <- function(model, hypothesis) {
+get_nsamples <- function(model) {
   n.posterior_samples <-
     ((map(model$fit@stan_args, ~ .x$iter) %>% reduce(`+`)) -
-    (map(model$fit@stan_args, ~ .x$warmup) %>% reduce(`+`))) /
+       (map(model$fit@stan_args, ~ .x$warmup) %>% reduce(`+`))) /
     (first(map(model$fit@stan_args, ~ .x$thin)))
+  
+  return(n.posterior_samples)
+}
+  
 
+get_bf <- function(model, hypothesis) {
   h <- hypothesis(model, hypothesis)[[1]]
-  BF <- if (is.infinite(h$Evid.Ratio)) paste("\\geq", n.posterior_samples) else paste("=", round(h$Evid.Ratio, 1))
+  BF <- if (is.infinite(h$Evid.Ratio)) paste("\\geq", get_nsamples(model)) else paste("=", round(h$Evid.Ratio, 1))
   paste0(
     "\\hat{\\beta} = ", round(h$Estimate, 2),
     ",\\ 90\\%{\\rm -CI} = [", round(h$CI.Lower, 3), ", ", round(h$CI.Upper, 3),
@@ -443,22 +448,18 @@ align_tab <- function(hyp) {
   map_chr(hyp, ~ ifelse(class(.x) == "numeric", "r","l"))
 }
 
-make_hyp_table <- function(model, hypothesis, hypothesis_names, caption, col1_width = "15em", digits = 2) {
-  n.posterior_samples <-
-    ((map(model$fit@stan_args, ~ .x$iter) %>% reduce(`+`)) -
-       (map(model$fit@stan_args, ~ .x$warmup) %>% reduce(`+`))) /
-    (first(map(model$fit@stan_args, ~ .x$thin)))
+make_hyp_table <- function(hypothesis, hypothesis_names, caption, col1_width = "15em", digits = 2) {
 
   bind_cols(tibble(Hypothesis = hypothesis_names), hypothesis) %>%
     dplyr::select(-2) %>%
     mutate(
       across(
-        c(Estimate, Est.Error, CI.Lower, CI.Upper, Evid.Ratio),
+        c(Estimate, Est.Error, CI.Lower, CI.Upper),
         ~ round(., digits = digits)),
       across(
         c(Post.Prob),
         ~ round(., digits = 3)),
-      Evid.Ratio = ifelse(is.infinite(Evid.Ratio), paste("$\\geq$", n.posterior_samples), round(Evid.Ratio, 1)),
+      Evid.Ratio = ifelse(is.numeric(Evid.Ratio), round(Evid.Ratio, 1), Evid.Ratio),
       CI = paste0("[", CI.Lower, ", ", CI.Upper, "]")) %>%
     dplyr::select(-c(CI.Upper, CI.Lower)) %>%
     relocate(CI, .before = "Evid.Ratio") %>%
