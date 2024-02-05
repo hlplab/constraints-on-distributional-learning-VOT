@@ -458,7 +458,7 @@ make_hyp_table <- function(model, hypothesis, hypothesis_names, caption, col1_wi
       across(
         c(Post.Prob),
         ~ round(., digits = 3)),
-      Evid.Ratio = ifelse(is.infinite(Evid.Ratio), paste("$\\geq$", n.posterior_samples), Evid.Ratio),
+      Evid.Ratio = ifelse(is.infinite(Evid.Ratio), paste("$\\geq$", n.posterior_samples), round(Evid.Ratio, 1)),
       CI = paste0("[", CI.Lower, ", ", CI.Upper, "]")) %>%
     dplyr::select(-c(CI.Upper, CI.Lower)) %>%
     relocate(CI, .before = "Evid.Ratio") %>%

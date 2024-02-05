@@ -3,6 +3,28 @@
 # TO-DO
 
 ## Highest priority
+ * FLORIAN: edits
+   * Introduction: 
+     * clarify what we mean by "stronger tests": e.g., absence/presence vs. relative direction and order of effects vs. specific magnitudes (not yet the goal). 
+     * Ultimately, we'd like to develop predictive frameworks -- models with fully specified linking hypotheses. But this requires the development of paradigms that can guide the development of such frameworks.
+     * in the present work, we are *not* aiming to test a predictive framework (though we present some such tests). Rather, we are aiming to develop a paradigm that is suitable for such tests. As we shown, this allows stronger tests than previously. While still largely qualitative, the paradigm and analyses we present allows us to assess the *joint* effect of prior expectations, as well as the amount and distributions in the input, and how that incrementally unfolds. 
+     * as a case in point, anticipate that we identify some previously unrecognized or at least under-appreciated properties of adaptive speech perception. This leads us to conduct some exploratory analyses that point towards interesting direction for future work. 
+     
+   * Results:
+     * When talking about incremental tests, be clear which design properties make these possible.
+     
+   * Results or discussion:
+     * Be clear that even conceptual replication goes beyond mere *presence/absence* of adaptation. Rather it's adding to a relative small body of research that has begun to investigate stronger prediction about how the properties of the input shape listeners' behavior. 
+     * By adding incremental testing, we further strengthen these tests, allowing us to assess whether the direction and relative order of shifts is indeed increasing gradiently with the amount of input, and with the amount of shift in the input.
+     * By adding pre-test, it becomes possible to test how exposure changes listeners' behavior relative to their prior behavior, not just relative to each other. This can reveal patterns that would otherwise be missed (as is the case in the present study). 
+     * By comparing these changes to predictions about listeners' prior behavior based on the statistics of previously experienced input, it becomes possible to understand WHY these changes occur.
+     * By comparing the limits of these changes to predictions about idealied learners, it becomes possible to detect limitations in adaptation that would otherwise go unnnoticed. Here, too, doing so incrementally further yields adding insights (IBBU model)
+     
+   * General discussion:
+     * add section on analysis/methods: a single psychometric model. still can be improved. point to extensions in the SI.
+     * either here or as footnote in methods: be clear that other approaches also make assumptions: e.g, logistic regression or anova etc. assume 0 lapse rates. separate tests at different VOT steps weaken power and fail to recognize that the tests are not independent of each other. This approach --- as well as approaches that aggregate over VOT steps--- also fail to include constraints in the analysis that any reasonable theory of adaptive speech perception should arguably include (such that effects of VOT are monotonic --- at least between the two category means).
+
+
  * MARYANN
 
   * Replace 2D density plot with a perspective shot of 3D distribution of cues in chodroff data, and place your test stimuli into that space. @xie2023 contains code for taking such snapshots (but for now you can just do screen shots). Consider two separate plots for isolated and connected speech.
