@@ -504,7 +504,7 @@ hyp.simple_effects_condition <-
 
 make_hyp_table(
   hyp.simple_effects_condition, 
-  c("PSE_+10 = PSE_baseline", "PSE_+40 = PSE_+10", "PSE_+40 = PSE_baseline", rep(c("PSE_+10 vs. PSE_baseline", "PSE_+40 vs. PSE_+10", "PSE_+40 vs. PSE_baseline"), 5)), 
+  c("PSE +10 = PSE baseline", "PSE +40 = PSE +10", "PSE +40 = PSE baseline", rep(c("PSE +10 vs. PSE baseline", "PSE +40 vs. PSE +10", "PSE +40 vs. PSE baseline"), 5)), 
     caption = "When did exposure begin to affect participants' categorization responses? When, if ever, were these changes undone with repeated testing? This table summarizes the simple effects of the exposure conditions for each test block. Note that rightward shifts of the categorization function (and its PSE) correspond to negative estimates (lower intercepts in predicting the log-odds of \`\`t\'\'-responses).") %>% 
   pack_rows("Test block 1 (pre-exposure)", 1, 3) %>%
   pack_rows("Test block 2", 4, 6) %>% 
