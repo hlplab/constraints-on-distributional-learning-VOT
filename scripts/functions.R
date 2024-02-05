@@ -459,7 +459,7 @@ make_hyp_table <- function(hypothesis, hypothesis_names, caption, col1_width = "
       across(
         c(Post.Prob),
         ~ round(., digits = 3)),
-      Evid.Ratio = ifelse(is.numeric(Evid.Ratio), round(Evid.Ratio, 1), Evid.Ratio),
+      Evid.Ratio = if (is.numeric(Evid.Ratio)) round(Evid.Ratio, digits = 1) else (Evid.Ratio),
       CI = paste0("[", CI.Lower, ", ", CI.Upper, "]")) %>%
     dplyr::select(-c(CI.Upper, CI.Lower)) %>%
     relocate(CI, .before = "Evid.Ratio") %>%

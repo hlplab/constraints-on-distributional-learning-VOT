@@ -5,7 +5,7 @@ if (!exists("PREAMBLE_LOADED")) source("preamble.R")
 fit_test.simple_effects_condition <- readRDS("../models/test-nested-condition.rds")
 fit_test.simple_effects_block <- readRDS("../models/test-nested-block.rds")
 fit_test <- readRDS("../models/test-standard-priorSD15-0.995.rds")
-
+fit_exposure <- readRDS("../models/exposure-standard-priorSD15-0.999.rds")
 ```
 
 <!-- Do NOT knit this document. It is part of a larger document. Instead knit the main document (my-apa-formatted-article)
@@ -913,7 +913,6 @@ hyp.exposure_simple_effects_condition <-
 
 table.exposure_simple_effects_condition <- 
 make_hyp_table(
-  #fit_exposure.simple_effects_condition,
   hyp.exposure_simple_effects_condition, 
   rep(c("+10 vs. baseline < 0", "+40 vs. +10 < 0", "+40 vs. baseline < 0"), 3), 
     caption = "This table summarizes the simple effects of the exposure conditions for each exposure block. Note that rightward shifts of the categorization function (and its PSE) correspond to negative estimates (lower intercepts in predicting the log-odds of \`\`t\'\'-responses).") %>% 
@@ -981,7 +980,6 @@ hyp.exposure_simple_effects_block <-
 
 table.exposure_simple_effects_block <- 
   make_hyp_table(
-    #fit_exposure.simple_effects_block,
     hyp.exposure_simple_effects_block,
     c(rep(c(
       # Comparing differences blocks within conditions
@@ -1001,15 +999,6 @@ table.exposure_simple_effects_block <-
 
 ### PSE: Differences in the rate of change between exposure conditions and block
 
-```{r include=FALSE}
-fit_exposure <-
-  fit_model(
-    data = d.for_analysis,
-    phase = "exposure",
-    formulation = "standard",
-    priorSD = 15, 
-    adapt_delta = .999)
-```
 
 ```{r hypothesis-table-exposure-interaction-condition-block, results='asis'}
 hyp.interaction.exposure.condition_block <- 
@@ -1033,7 +1022,6 @@ hyp.interaction.exposure.condition_block <-
 
 table.interaction.exposure.condition_block <-
   make_hyp_table(
-    #fit_exposure,
     hyp.interaction.exposure.condition_block,
     rep(c(
   # Comparing differences in +10 vs. baseline between blocks
@@ -1102,7 +1090,6 @@ hyp.simple_slopes_condition <-
   dplyr::select(-Star)
 
 make_hyp_table(
-  #fit_test.simple_effects_condition,
   hyp.simple_slopes_condition, 
   c("+10 vs. baseline = 0", "+40 vs. +10 = 0", "+40 vs. baseline = 0", rep(c("+10 vs. baseline = 0", "+40 vs. +10 = 0", "+40 vs. baseline = 0"), 5)), 
     caption = "Did exposure condition affect the slope of categorization responses? This table summarizes the differences in slopes between the exposure conditions within each test block. Since there was little reason to expect differences across conditions, all hypothesis tests contained in this table test the null (using the Savage-Dickey density ratio). We note that such tests depend on the prior.") %>% 
@@ -1156,7 +1143,6 @@ hyp.simple_slopes_block <-
 
 table.simple_slopes_block <- 
   make_hyp_table(
-    #fit_test.simple_effects_block,
     hyp.simple_slopes_block,
     c(rep(c(
       # Comparing differences blocks within conditions
@@ -1223,7 +1209,6 @@ hyp_interaction.condition_block_VOT <-
 
 table.interactions.condition_block_VOT <-
   make_hyp_table(
-    #fit_test,
     hyp_interaction.condition_block_VOT,
     rep(c(
   # Comparing slope differences in +10 vs. baseline between blocks
@@ -1267,7 +1252,6 @@ hyp.exposure_simple_slopes_condition <-
 
 table.exposure_simple_slopes_condition <- 
 make_hyp_table(
-  #fit_exposure.simple_effects_condition,
   hyp.exposure_simple_slopes_condition, 
   rep(c("+10 vs. baseline < 0", "+40 vs. +10 < 0", "+40 vs. baseline < 0"), 3), 
     caption = "Did exposure affect the slope of categorization responses? This table summarizes the differences in slopes between the exposure conditions for each exposure block.") %>% 
@@ -1303,7 +1287,6 @@ hyp.exposure_simple_slopes_block <-
 
 table.exposure_simple_slopes_block <- 
 make_hyp_table(
-  #fit_exposure.simple_effects_block,
   hyp.exposure_simple_slopes_condition, 
   rep(c("Block 1 to 2", "Block 2 to 3", "Block 1 to 3"), 3), 
     caption = "Did exposure affect the slope of categorization responses? This table summarizes the differences in slopes between the blocks for each exposure condition") %>% 
@@ -1340,7 +1323,6 @@ hyp.interaction.exposure.condition_block_VOT <-
 
 table.interaction.exposure.condition_block_VOT <-
   make_hyp_table(
-    #fit_exposure,
     hyp.interaction.exposure.condition_block_VOT,
     rep(c(
   # Comparing differences in +10 vs. baseline between blocks
