@@ -10,7 +10,7 @@
      
    * Results or discussion:
      * By comparing these changes to predictions about listeners' prior behavior based on the statistics of previously experienced input, it becomes possible to understand WHY these changes occur.
-     * By comparing the limits of these changes to predictions about idealied learners, it becomes possible to detect limitations in adaptation that would otherwise go unnnoticed. Here, too, doing so incrementally further yields adding insights (IBBU model)
+     * By comparing the limits of these changes to predictions about idealised learners, it becomes possible to detect limitations in adaptation that would otherwise go unnnoticed. Here, too, doing so incrementally further yields adding insights (IBBU model)
      
    * General discussion:
      * add section on analysis/methods: a single psychometric model. still can be improved. point to extensions in the SI.
@@ -19,26 +19,17 @@
 
  * MARYANN
 
-  * Replace 2D density plot with a perspective shot of 3D distribution of cues in chodroff data, and place your test stimuli into that space. @xie2023 contains code for taking such snapshots (but for now you can just do screen shots). Consider two separate plots for isolated and connected speech.
-
+  * Extract posterior predictions from IBBU fit. Plot the predicted PSE and credible interval by block and category
+  * Logistic regression over the IA predictions (analogous to the logistic regression of the IO predictions)
+  * Make a copy of main figure and place it in the SI; remove panel C from the main figure
+  * Check on how Eleanor Chodroff annotated her corpus data with sonorants as codas -- make note
 
 ## Medium priority
 
  * MARYANN
-  * edit Analysis Approach section in the SI
-  * Clean up functions.R file:
-    * PLEASE DO GET RID OF UNUSED FUNCTIONS. Search files for each function (cmd + shift + f). If it does not exist, remove it from functions.R
-    * Use clearer function names. It often happens as a project develops that functions become ambiguous in their name. E.g., you have several functions that do similar things (like getting or plotting CIs from psychometric or IO models). Extend their names to be clear: e.g., compare get_CI to get_CI_from_ideal_observer; or make_CI to print_CI; or add_PSE_perception_median to add_PSE_median_to_plot (note how I also removed redundancy since PSEs are always about perception); etc. Rename the functions and use CMD + SHIFT + F to search and replace all mentions of those functions across all files. 
-    * Organize functions into sections with headings in functions.R
-  * TIME TO STOP MESSY CODING. Let's have a zero-tolerance policy for that from now on in the main working branch (i.e., you can do what you'd like in branches that aren't the main branch, but you canNOT merge without cleaning up first). It is a real time-sink for everyone else and makes it near impossible for me to effectively help. 
-     * on the main working branch, functions should be in functions.R, in a clearly named section (see existing examples).
-  * Input data file:
-    * Have a script in your other repo (for your thesis) that does all the data importing, variable and value formatting, etc. The input data file experiment-results.csv should already contain all the information you (and others might need) and be in the format that you'd like it to be. That's the only data file that will be in your paper repo. 
-      * Think carefully about how to name variables consistently and create all variants of variables you might need in the paper, e.g., Response, Item.ExpectedResponse, Response.Category, Item.ExpectedResponse.Category, Response.Voiced, Item.ExpectedResponse.Voiced (etc. if you indeed need all of those; we definitely need the first two pairs of these).
-      * Also if you have to consistently rename levels for plotting, please just changed them once in the script that creates the file. E.g., there's various places in which you deal with formatting the conditions and various names floating around (Shift0, 10, etc.; +0, +10, etc.; baseline, + 10 etc.). Pick one, do it at the top of the pipeline (i.e., in the input script). This will reduce the potential for error in your own coding, make your code in the main paper shorter, and it'll be much easier to read for others trying to follow your code (including me).
-      * Remove all data formatting code from the paper Rmd. There should only be a single load line.
-      * I've moved the code loading the chodroff data into the new pre-amble.R file. Consider doing the same for the experiment data. That way the data that we need throughout are available throughout.
-   * Set local constants at top of chunk. e.g., Don't have stuff like empirical_means <- c(17, 62) in the middle of a chunk. 
+  * Continue to fill in blanks (refs, bibs)
+  * Check captions carefully and update.
+
 
 ### Lower Priority
 
