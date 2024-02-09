@@ -766,11 +766,249 @@ rm(arrow_df, tokens)
 
 ## Putting models and listeners on the same scale: equating potential biases in the estimation of intercepts, slopes, and PSEs {#sec:io-bias-correction}
 <!-- TO DO: I added quite a bit of info to this section. Read and then delete comment? -->
-Figure \@ref(fig:plot-fit-slope-PSE)D in the main text shows PSE estimates for the participants in our experiments. These estimates are based on the perceptual model contained in the Bayesian psychometric mixed-effects model we used to analyze participants' responses, and thus reflect PSEs that are corrected for the rate of attentional lapses. Of note, this perceptual model assumes linear effects of VOT on the log-odds of "t"-responses. We made this assumptions for the sake of simplicity, and in order to avoid over-fitting. On the one hand, auxiliary analyses presented in section \@ref(sec:GAMM) replicate all tendencies reported in the main text while relaxing the linearity assumption. On the other hand, it is possible that the linearity assumption introduced biases into the estimation of participants' intercepts, slopes, and PSEs. Critically, the ideal observers that we use to describe idealized listeners before and after exposure predict non-linear effects of VOT [since /d/ and /t/ do *not* have equal variances; for details, see @bicknell2018; @kleinschmidt-jaeger2015; @kronrod2016]. Thus, instead of directly calculating predicted intercepts, slopes, and PSEs from the ideal observers, we estimated their intercepts, slopes, and PSEs paralleling the analysis approach for the human data. This makes sure that any biases in the estimation of human intercepts, slopes, and PSEs that are introduced by our analysis approach are also taken into account for the idealized listeners and learners.
+Figure \@ref(fig:plot-fit-PSE)D in the main text shows PSE estimates for the participants in our experiments. These estimates are based on the perceptual model contained in the Bayesian psychometric mixed-effects model we used to analyze participants' responses, and thus reflect PSEs that are corrected for the rate of attentional lapses. Of note, this perceptual model assumes linear effects of VOT on the log-odds of "t"-responses. We made this assumptions for the sake of simplicity, and in order to avoid over-fitting. On the one hand, auxiliary analyses presented in section \@ref(sec:GAMM) replicate all tendencies reported in the main text while relaxing the linearity assumption. On the other hand, it is possible that the linearity assumption introduced biases into the estimation of participants' intercepts, slopes, and PSEs. Critically, the ideal observers that we use to describe idealized listeners before and after exposure predict non-linear effects of VOT [since /d/ and /t/ do *not* have equal variances; for details, see @bicknell2018; @kleinschmidt-jaeger2015; @kronrod2016]. Thus, instead of directly calculating predicted intercepts, slopes, and PSEs from the ideal observers, we estimated their intercepts, slopes, and PSEs paralleling the analysis approach for the human data. This makes sure that any biases in the estimation of human intercepts, slopes, and PSEs that are introduced by our analysis approach are also taken into account for the idealized listeners and learners.
 
 Specifically, we applied the following procedure to each of the five idealized observers representing idealized listeners prior to exposure (one for each cross-validation fold), and each of the three ideal observers representing idealized learners (one for the three exposure condition). We first sampled XXX posterior responses from the ideal observer at each of the VOT steps. For example, for test blocks, we sampled XXX responses from the model at each of the 12 VOT steps. <!-- TO DO: fill in--> These responses were sampled while assuming a lapse rate of 0 and a uniform response bias. We then fit a logistic regression model---predicting "t"-responses---to the sampled responses, with VOT as the predictor and the sampled responses as the outcome. By emulating a zero lapse rate and using an ordinary logistic regression, we derive estimates of intercepts, slopes, and PSEs for each ideal observer that are directly comparable to the estimates for human listeners (which reflect the *lapse-corrected* PSE of the perceptual model component of the psychometric mixed-effects model fit to listeners' responses). 
 
-Figure \@ref(fig:plot-fit-slope-PSE)D in the main text presents prediction lines that were estimated based on the test blocks. This decision was made since procedure described here produced very similar bias-corrected predictions for exposure and test blocks, and we felt that introducing all complexity described here in the main text would distract from the main message of the paper. Figure XXX shows a version of Figure \@ref(fig:plot-fit-slope-PSE), in which the prediction lines and ribbons have been adjusted separately for each block. In this variant of the figure, we also include an additional panel that shows the block-by-block changes in the *slope* of listeners' categorization functions, as well as the ideal observers' predictions for those slopes (discussed further in sections \@ref(sec:slopes-analyses-test) and \@ref(sec:slopes-analyses-exposure)). <!-- TO DO: fill in, and add figure here --> 
+Figure \@ref(fig:plot-fit-PSE)D in the main text presents prediction lines that were estimated based on the test blocks. This decision was made since procedure described here produced very similar bias-corrected predictions for exposure and test blocks, and we felt that introducing all complexity described here in the main text would distract from the main message of the paper. Figure XXX shows a version of Figure \@ref(fig:plot-fit-PSE), in which the prediction lines and ribbons have been adjusted separately for each block. In this variant of the figure, we also include an additional panel that shows the block-by-block changes in the *slope* of listeners' categorization functions, as well as the ideal observers' predictions for those slopes (discussed further in sections \@ref(sec:slopes-analyses-test) and \@ref(sec:slopes-analyses-exposure)). <!-- TO DO: fill in, and add figure here --> 
+
+```{r prepare-plot-intercepts-slopes-SI}
+p.across_blocks <-
+  d.estimates %>%
+  ggplot(
+    aes(
+      x = Block.plot_label, y = Intercept_median,
+      ymin = Intercept_lower, ymax = Intercept_upper,
+      colour = Condition.Exposure, group = Condition.Exposure)) +
+  geom_rect(
+    data = tibble(
+      xmin = c(seq(0.5, 6.5, 2), seq(7.6, 8.6, 1)),
+      xmax = c(seq(1.5, 7.5, 2), seq(8.5, 9.5, 1))),
+    mapping = aes(xmin = xmin, xmax = xmax),
+    ymin = -Inf, ymax = Inf, fill = "grey", alpha = .1, inherit.aes = F) +
+  geom_point(position = position_dodge(.3), size = 1) +
+  geom_linerange(linewidth = .6, position = position_dodge(.3), alpha = .5) +
+  stat_summary(geom = "line", position = position_dodge(.3)) +
+  scale_x_discrete("Block") +
+  scale_colour_manual("Condition",
+    labels = c("baseline", "+10ms", "+40ms", "prior"),
+    values = c(colours.condition, "darkgray"),
+    aesthetics = "color") +
+  theme(legend.position = "top",
+        axis.text.x = element_text(angle = 22.5, hjust = 1))
+
+p.intercept_1to7 <-
+  p.across_blocks +  
+  geom_hline(
+    data = d.io.categorization,
+    # Using scaled intercept (which is keeping the location at which the intercept is evaluated constant
+    # across exposure and test: it's always the mean VOT of test)
+    aes(yintercept = intercept_scaled, colour = Condition.Exposure, group = Condition.Exposure),
+    linetype = 2,
+    linewidth = .7,
+    alpha = 0.3,
+    inherit.aes = F) +
+  scale_y_continuous("Intercept")
+
+p.slope_1to7 <-
+  # Plotting participants' and ideal observers' slopes. We're transforming both types of slopes back
+  # into the unit ms VOT. This makes sure that the different slopes are actually comparable across
+  # exposure and test blocks (participants) and ideal observers, each of which (might) have different
+  # SDs that were used during the calculation of the scaled slopes.
+  #
+  # (scaled slopes are good for *effect size* comparison but---perhaps confusingly---that's not the
+  # same as making sure that the effects are actually expressed in the same units.)
+  p.across_blocks +  
+  # Using UNscaled slope because slopes are comparable across scales anyway and this is more intuitive
+  # (remove _unscaled to switch to slopes over Gelman-scaled VOT)
+  aes(y = slope_unscaled_median, ymin = slope_unscaled_lower, ymax = slope_unscaled_upper) +
+  # These are the slopes of the ideal observers
+    geom_rect(
+    data = d.io.categorization %>%
+      group_by(Condition.Exposure) %>%
+      summarise(slope_unscaled = mean(slope_unscaled)) %>%
+      filter(!Condition.Exposure %in% c("Shift0", "Shift10", "Shift40", "prior")),
+    mapping = aes(xmin = -Inf, ymin = min(slope_unscaled), ymax = max(slope_unscaled), xmax = Inf),
+    fill = "#d2d4dc",
+    alpha = .08,
+    inherit.aes = F) +
+  geom_hline(
+    data = d.io.categorization %>%
+      mutate(slope_unscaled = ifelse(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40"), .237, slope_unscaled)) %>%
+      filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")),
+    # Using UNscaled slope because slopes are comparable across scales anyway and this is more intuitive
+    # (substitute _unscaled to _scaled to switch to slopes over Gelman-scaled VOT)
+    mapping = aes(yintercept = slope_unscaled, colour = Condition.Exposure, group = Condition.Exposure),
+    linetype = 2,
+    linewidth = .8,
+    alpha = 0.5) +
+
+  scale_y_continuous("slope (log-odds/ms VOT)")
+
+# get the relative distance of the IO-predicted PSEs from the starting point PSE at test 1
+d.true_shift <-
+  d.estimates %>%
+  # Join the PSEs from ideal observers
+  left_join(
+    d.io.categorization %>%
+      dplyr::select(Phase, Condition.Exposure, Block, PSE) %>%
+      mutate(PSE = round(PSE, 1)) %>%
+      rename(PSE.io_predicted = PSE), by = c("Condition.Exposure", "Block")) %>%
+  group_by(Condition.Exposure) %>%
+  mutate(
+    PSE_block1 =
+      case_when(
+        Condition.Exposure == "Shift0" ~ d.estimates$PSE_median[1],
+        Condition.Exposure == "Shift10" ~ d.estimates$PSE_median[10],
+        Condition.Exposure == "Shift40" ~ d.estimates$PSE_median[19]),
+    true_shift = PSE.io_predicted - PSE_block1,
+    proportion_shift = (PSE_median - PSE_block1)/true_shift) %>%
+  relabel_blocks()
+
+# Compute distribution of talker-specific PSEs from Chodroff & Wilson (2018) corpus
+d.talkerPSEs <-
+  # get each talker's boundary estimate
+  get_IO_categorization(
+    data = d.chodroff_wilson.isolated,
+    cues = c("VOT"),
+    groups = c("Talker", "gender"),
+    with_noise = TRUE,
+    VOTs = seq(0, 85, .5)) %>%
+  # center talker PSEs to human PSE at block 1 of experiment
+  mutate(
+    center_constant = mean(d.true_shift$PSE_block1) - mean(PSE),
+    PSE_centered = PSE + center_constant) %>%
+  summarise(
+    lower_PSE = quantile(PSE_centered, probs = .025),
+    mean_PSE = mean(PSE_centered),
+    upper_PSE = quantile(PSE_centered, probs = .975))
+
+p.PSE_1to7 <-     
+  p.across_blocks +  
+  scale_y_continuous("PSE (ms VOT)") +
+  aes(y = PSE_median, ymin = PSE_lower, ymax = PSE_upper) +
+      geom_rect(
+    data = d.io.categorization %>%
+      group_by(Condition.Exposure) %>%
+      summarise(PSE = mean(PSE)) %>%
+      filter(!Condition.Exposure %in% c("Shift0", "Shift10", "Shift40", "prior")),
+    mapping = aes(xmin = -Inf, ymin = min(PSE), ymax = max(PSE), xmax = Inf),
+    fill = "#d2d4dc",
+    alpha = .08,
+    inherit.aes = F) +
+  geom_linerange(linewidth = .6, position = position_dodge(.3), alpha = .5) +
+  geom_label(
+    data = d.true_shift %>%
+      filter(Block != 1),
+    mapping = aes(label = paste(scales::percent(proportion_shift, accuracy = .1))),
+    position = position_dodge(.3),
+    label.size = .15,
+    label.padding = unit(.18, "lines"),
+    size = 2.2,
+    show.legend = F) +
+  geom_hline(
+    data = d.io.categorization %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")),
+    mapping = aes(yintercept = PSE, color = Condition.Exposure, group = Condition.Exposure),
+    linetype = 2,
+    linewidth = .8,
+    alpha = 0.4) +
+  geom_text(
+    data = d.true_shift %>%
+      filter(Phase == "exposure") %>%
+      group_by(Condition.Exposure, true_shift) %>%
+      summarise(),
+    mapping = aes(
+      x = 10.2, y = c(25, 35, 65),
+      label = paste(round(true_shift), "(100%)"),
+      colour = Condition.Exposure),
+    colour = colours.condition,
+    fontface = "bold",
+    size = 3,
+    inherit.aes = F) +
+  annotate(
+    "crossbar",
+    x = 9.7, y = d.talkerPSEs$mean_PSE, ymin = d.talkerPSEs$lower_PSE, ymax = d.talkerPSEs$upper_PSE,
+    colour = "black",
+    width = 0.1,
+    alpha = .6) +
+  coord_cartesian(xlim = c(0.75, 9), clip = "off") +
+  theme(plot.margin = unit(c(1, 3.2, 1, 1), "lines"))
+
+p.estimates_1to7 <-  
+  (p.slope_1to7 | p.PSE_1to7) +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "none", axis.text = element_text(size = 8))
+```
+
+```{r plot-test-exposure-fit2, fig.width=11, fig.height=3, message=FALSE}
+cond_fit_test_exposure <-
+  tibble(
+    full_join(
+      get_conditional_effects(fit_exposure, d.for_analysis, "exposure") %>%
+        .[[1]] %>%
+        mutate(Item.VOT = descale(VOT_gs, VOT.mean_test, VOT.sd_exposure)),
+      get_conditional_effects(fit_test, d.for_analysis, "test") %>%
+        .[[1]] %>%
+        mutate(Item.VOT = descale(VOT_gs, VOT.mean_test, VOT.sd_test)))) %>%
+  arrange(as.numeric(as.character(Block))) %>%
+  mutate(
+    Phase = ifelse(Block %in% c(2, 4, 6), "exposure", "test")) %>%
+  relabel_blocks()
+
+label_colour <-
+  tibble(
+    Block.plot_label = c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3", "Test 4"),
+    Block.colour = c("grey", "white", "grey", "white", "grey", "white", "grey")) %>%
+  mutate(Block.plot_label = factor(Block.plot_label, levels = Block.plot_label, ordered = T))
+
+p.fit_1to7 <-
+  cond_fit_test_exposure %>%
+  filter(Block %in% c(1:7))  %>%
+  ggplot() +
+  geom_rect(
+    data = label_colour,
+    aes(xmin = -Inf, xmax = Inf,
+        ymin = 1.05, ymax = 1.3,
+        fill = Block.colour), show.legend = F) +
+  scale_fill_manual(values = c("grey" = "grey", "white" = "white")) +
+  new_scale_fill() +
+  geom_linefit(data = d.for_analysis %>%
+      group_by(Phase, Condition.Exposure, Block.plot_label) %>%
+      filter(Block %in% c(1:7), Item.Labeled == FALSE),
+      x = Item.VOT,
+      y = estimate__,
+      fill = NA,
+      legend.position = "top",
+      legend.justification = "right") +
+  coord_cartesian(clip = "off", ylim = c(0, 1))
+
+p.fit_7to9 <-
+  cond_fit_test_exposure %>%
+  filter(Block %in% c(7:9)) %>%
+  ggplot() +
+  geom_linefit(data = d.for_analysis %>%
+      group_by(Condition.Exposure, Block) %>%
+      filter(Block %in% c(7:9)),
+      x = Item.VOT,
+      y = estimate__,
+      fill = "grey",
+      legend.position = "none") +
+  theme( axis.title.y = element_blank())
+```
+
+
+```{r plot-fit-slope-PSE, fig.width=12.5, fig.height=8, fig.cap="(ref:plot-fit-slope-PSE)"}
+p.fit_1to7 + p.fit_7to9 + p.estimates_1to7 +
+  plot_layout(
+    design = "
+AAAAAAAAA
+BBB######
+DDDDDDDDD
+",
+heights = c(1, 1, 2)) +
+  plot_annotation(tag_levels = 'A', tag_suffix = ")") &
+  theme(plot.tag = element_text(face = "bold"))
+```
 
 # The Bayesian psychometric mixed-effects model: additional information and hypothesis tests
 We first present some additional information about the psychometric mixed-effects model used for the analysis of participants' categorization responses. Then we present detailed summary tables of the Bayesian hypothesis tests about listeners' *PSE* for the test and exposure blocks, followed by parallel summary tables for the *slope* of listeners' categorization function. Then, we present an auxiliary analysis that assess changes in lapse rates across the exposure and test blocks (the main analyses assumed constant lapse rates within each type of block). These analyses validate our decision to assume constant lapse rates within each type of block. Finally, we present analyses that combined the exposure and test data, while relaxing the linearity assumption for the effects of VOT. All analyses presented in this section are variants of the same psychometric mixed-effects model, which we introduce next.
@@ -1043,7 +1281,7 @@ Our exposure conditions only manipulated the *absolute location* of category mea
 
 This prediction was confirmed both prior to exposure and following exposure. Paralleling PSEs, there was evidence that slopes did not differ prior to exposure (top of Table \@ref(tab:hypothesis-table-simple-slopes-condition)), though the strength of this evidence was at best anecdotal, and thus weaker than for PSEs. The weak support for the null is not particularly surprising given the fact that we used regularizing priors. Such priors have their highest density over the null, weakening the ability to detect support for the null through the Savage-Dickey method (which compare the in/decrease of the posterior, compared to the prior, density over the null). Additionally, there are at least two *a priori* reasons to expect that our paradigm would lead to high estimation uncertainty for the slopes (estimation of which the paradigm was not intended to prioritize). First, the VOT steps during test were at least 5ms apart. For subjects that have highly categorical perception---as was the case for many of our subjects---this makes it difficult to precisely estimate the actual slope. Second, our analysis approach, which assumed *linear* effects of VOT. Contrary to this simplifying assumption, there are reasons to expect quadratic effects of VOT [e.g., @bicknell2024; @bushong-jaeger2019; @bushong-jaeger2024]. It's possible that our simplifying assumption introduced additional estimation uncertainty. 
 
-In contrast to PSEs, there was also little evidence that slopes differed between exposure conditions at any point after exposure (remainder of Table \@ref(tab:hypothesis-table-simple-slopes-condition); see also Figure \@ref(fig:plot-fit-slope-PSE)C in the main text). Compared to the changes in PSEs (Figure \@ref(fig:plot-fit-slope-PSE)D), the *slopes* of listeners' categorization functions were similar across exposure conditions: the 95% CIs of the differences across conditions included 0 for all comparisons and all test blocks. BFs favored the null in all but two comparisons, though support for the null was again never more than anecdotal.
+In contrast to PSEs, there was also little evidence that slopes differed between exposure conditions at any point after exposure (remainder of Table \@ref(tab:hypothesis-table-simple-slopes-condition); see also Figure \@ref(fig:plot-fit-PSE)). Compared to the changes in PSEs (Figure \@ref(fig:plot-fit-slope-PSE)D), the *slopes* of listeners' categorization functions were similar across exposure conditions: the 95% CIs of the differences across conditions included 0 for all comparisons and all test blocks. BFs favored the null in all but two comparisons, though support for the null was again never more than anecdotal.
 
 
 <!-- THIS NEEDS TO STILL BE EDITED AN INTEGRATED. Also consider consolidates slope section for test and exposure
@@ -1353,14 +1591,14 @@ fit_lapse_by_block <-
 
 
 All analyses presented in the main text and in the preceding SI sections assume a constant lapse rate across exposure and test blocks. These analyses found lapse rates of 
-`r logit_to_prob(fit_test, "theta1_Intercept")` (95%-CI: `r logit_to_prob(fit_test, "theta1_Intercept, 3")`- `r logit_to_prob(fit_test, "theta1_Intercept, 4")`) during test blocks and `r logit_to_prob(fit_exposure, "theta1_Intercept")` (95%-CI: `r logit_to_prob(fit_exposure, "theta1_Intercept", 3)`-`r logit_to_prob(fit_exposure, "theta1_Intercept", 4)`) during exposure blocks, much smaller than in previous work [@clayards2008; @kleinschmidt-jaeger2016; @kleinschmidt2020]. The decision to assume constant lapse rates seems to be supported by Figures \@ref(fig:plot-fit-slope-PSE)A-B, which show that participants' responses (the point ranges) in all exposure and test blocks approach 0 and 100% "t"-responses for small and large VOTs, respectively. Still, to explore changes in lapse rates we refitted the same psychometric mixed-effects model with a lapse model that included block as a predictor (sliding-difference coded from the first to the ninth block). Priors in this model were the same as that in the constant-lapse model including the prior for lapse rates which was the \texttt{brms} [@R-brms_a] default of a logistic prior centered around 0 with a scale of 1 unit. This assumes uniformity for $0 < lapse rates < 1$ while down-weighting the extreme values. 
+`r logit_to_prob(fit_test, "theta1_Intercept")` (95%-CI: `r logit_to_prob(fit_test, "theta1_Intercept, 3")`- `r logit_to_prob(fit_test, "theta1_Intercept, 4")`) during test blocks and `r logit_to_prob(fit_exposure, "theta1_Intercept")` (95%-CI: `r logit_to_prob(fit_exposure, "theta1_Intercept", 3)`-`r logit_to_prob(fit_exposure, "theta1_Intercept", 4)`) during exposure blocks, much smaller than in previous work [@clayards2008; @kleinschmidt-jaeger2016; @kleinschmidt2020]. The decision to assume constant lapse rates seems to be supported by Figures \@ref(fig:plot-fit-PSE)A-B, which show that participants' responses (the point ranges) in all exposure and test blocks approach 0 and 100% "t"-responses for small and large VOTs, respectively. Still, to explore changes in lapse rates we refitted the same psychometric mixed-effects model with a lapse model that included block as a predictor (sliding-difference coded from the first to the ninth block). Priors in this model were the same as that in the constant-lapse model including the prior for lapse rates which was the \texttt{brms} [@R-brms_a] default of a logistic prior centered around 0 with a scale of 1 unit. This assumes uniformity for $0 < lapse rates < 1$ while down-weighting the extreme values. 
 
 The estimated lapse rate (in log-odds) for each block is shown in Table \@ref(tab:hypothesis-table-lapse-by-block). Lapse rates were at their highest in the first block ($1.5\%$) but fell sharply up to the fifth block ($\leq.0011\%$) before rising in the sixth ($0.07\%$) and seventh block ($0.04\%$). Where estimates were especially low, we note the accompanying wide confidence intervals partly resulting from our use of a uniform prior. Overall, these results show some evidence of familiarization with the task. However, unlike previous work, lapse rates were very low even during the first 12 trials (the first test block). For comparison, a post-hoc analysis reported in @kleinschmidt2020 estimated lapse rates as high as 12% during the first 37 trials of his experiment. Lapse rates reduced to about 5% over the remaining 185 trials. 
 
 ```{r hypothesis-table-lapse-by-block, results='asis'}
 hyp.lapse <- 
 hypothesis(fit_lapse_by_block, 
-           map_chr(.x = c(1:9), ~ c(get_lapse_hypothesis(fit_lapse_by_block, .x)))) %>% 
+           map_chr(.x = 1:9, ~ c(get_lapse_hypothesis(fit_lapse_by_block, .x)))) %>% 
   .$hypothesis %>% 
   dplyr::select(-Star) %>% 
   mutate(
@@ -1370,7 +1608,7 @@ hypothesis(fit_lapse_by_block,
 table.lapse <- 
 make_hyp_table(
   hyp.lapse, 
-  paste(rep("Block", 9), c(1:9), "< 0 (.5)"), 
+  paste(rep("Block", 9), 1:9, "< 0 (.5)"), 
     caption = "This table summarizes the estimated proportion of lapse trials (in log-odds) in each block of the experiment.") %>% 
   pack_rows("Estimated lapse rate", 1, 9)  
 table.lapse
