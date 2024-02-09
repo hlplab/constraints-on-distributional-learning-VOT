@@ -21,6 +21,7 @@ library(tidyverse)          # keeping things tidy
 library(magrittr)           # pipes
 library(rlang)              # quosures (in functions)
 library(assertthat)         # asserts (in functions)
+library(here)               # convenient console debugging
 
 library(patchwork)          # plot layouts
 library(magick)

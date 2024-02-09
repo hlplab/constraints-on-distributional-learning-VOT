@@ -49,7 +49,7 @@ An L1-US English female talker originally from New Hampshire was recruited for r
 Four /d-t/ minimal pairs (*dill-till*, *din-tin*, *dim-tim*, *dip-tip*) were recorded together with 20 filler words. These fillers were made up of 10 minimal or near minimal pairs with different sounds at onset. The word pairs were separated into two lists so that they would appear in separate blocks during recording. Each critical pair was repeated 8 times while the filler pairs were repeated 5 times. Word presentation was delivered with PsychoPy [@peirce2007] and the presentation was controlled by the researcher from a computer located outside the recording room. The order of each block was randomized such that target words never appeared consecutively. The talker was instructed to speak clearly and confidently, and to maintain a consistent distance from the microphone.
 
 ## Annotation
-All critical pairs of the talker's recordings were annotated. Durational measurements of voicing lead, VOT, and vowel were taken in addition to the mean F0 of the first 25% of the vowel duration. Annotations were made with a combination of listening to the audio file and inspection of the waveform and spectrogram. The annotation boundaries were made according to the following principles:
+All critical pairs of the talker's recordings were annotated. Durational measurements of pre-voicing, VOT, and vowel were taken in addition to the mean F0 of the first 25% of the vowel duration. Annotations were made with a combination of listening to the audio file and inspection of the waveform and spectrogram. The annotation boundaries were made according to the following principles:
 
   * pre-voicing (voicing during closure)
       * **start:** the first sign of periodicity in the waveform before closure release.
@@ -61,10 +61,7 @@ All critical pairs of the talker's recordings were annotated. Durational measure
 
   * Vowel
       + **start:** the beginning of clearly defined periodicity in the waveform and at the appearance of low frequency energy in the spectrogram.
-      + **End:** if before a stop, when periodicity becomes irregular or at closure onset; if before a lateral, when formant transition approaches steady state; if before a nasal, at point where formants show a step-wise shift and when intensity shows a steep decline.
-
-  * F0 at vowel onset
-      + the average pitch measurement estimated over the first 25 per cent of the defined vowel duration.
+      + **End:** if before a stop, when periodicity becomes irregular or at closure onset; if before a lateral, when formant transition approaches steady state; if before a sonorant, at point where formants show a step-wise shift and when intensity shows a steep decline.
 
 ## Resynthesis
 The stimuli was created using the "progressive cutback and replacement method" by [@winn2020] implemented in Praat [@boersma2022]. The process takes a voiced token and progressively deletes its vowel onset and replaces it with an approximately equivalent amount of onset taken from the word's voiceless counterpart. 
@@ -2144,13 +2141,15 @@ plot_predicted_vs_actual_categorization_responses_for_IBBU <- function(
     # so that this matches the analysis of the human responses)
     mutate(
       model_unscaled = map(data, ~ glm(
-        cbind(n_t, n_d) ~ 1 + VOT,
+        # unscaling the VOT here because the VOT from fit is already scaled
+        cbind(n_t, n_d) ~ 1 + I(((VOT* 2 * VOT.sd_test) + VOT.mean_test)),
         family = binomial,
         data = .x)),
       intercept_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[1, 2] %>% pull()),
       slope_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[2, 2] %>% pull()),
       model_scaled = map(data, ~ glm(
-        cbind(n_t, n_d) ~ 1 + I((VOT - VOT.mean_test) / (2 * VOT.sd_test)),
+        # using VOT values as is because the model was fit using scaled VOT
+        cbind(n_t, n_d) ~ 1 + VOT,
         family = binomial,
         data = .x)),
       intercept_scaled = map_dbl(model_scaled, ~ tidy(.x)[1, 2] %>% pull()),

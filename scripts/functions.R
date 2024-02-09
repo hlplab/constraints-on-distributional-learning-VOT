@@ -424,8 +424,7 @@ geom_linefit <- function(data, x, y, fill, legend.position, legend.justification
     stat_summary(
       data = data, fun.data = mean_cl_boot, mapping = aes(x = {{ x }}, y = Response.Voiceless, colour = Condition.Exposure),
       geom = "pointrange", size = 0.1, alpha = 0.7, position = position_dodge2(width = 2), inherit.aes = F),
-    scale_x_continuous("VOT (ms)"),
-    scale_y_continuous("Proportion \"t\"-responses"),
+    labs(x = "VOT (ms)", y = "Proportion \"t\"-responses"),
     scale_color_manual(
       "Condition",
       labels = c("baseline", "+10ms", "+40ms"),
