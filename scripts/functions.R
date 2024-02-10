@@ -677,6 +677,93 @@ get_logistic_parameters_from_model <- function(
 }
 
 
+get_logistic_parameters_fr_IBBU <- function(
+    model,
+    groups = NULL,
+    untransform_cues = F,
+    # target category "/d/" = 1, "/t/" = 2
+    target_category = 2,
+    colors.group = NULL
+) {
+  # Get and summarize posterior draws from fitted model
+  d.pars <-
+    add_ibbu_stanfit_draws(
+      model,
+      groups = groups,
+      summarize = F,
+      wide = F,
+      ndraws = NULL,
+      #seed = 2824,
+      untransform_cues = untransform_cues) %>%
+    filter(group %in% .env$groups)
+  
+  # Prepare test_data
+  cue.labels <- get_cue_levels_from_stanfit(model)
+  data.test <-
+    get_test_data_from_stanfit(model) %>%
+    distinct(!!! syms(cue.labels)) %>%
+    { if (untransform_cues) get_untransform_function_from_stanfit(model)(.) else . } %>%
+    make_vector_column(cols = cue.labels, vector_col = "x", .keep = "all") %>%
+    nest(cues_joint = x, cues_separate = .env$cue.labels)  %>%
+    crossing(group = levels(d.pars$group))
+  
+  # Categorize test data
+  d.pars %<>%
+    group_by(group, .chain, .iteration, .draw) %>%
+    do(f = get_categorization_function_from_grouped_ibbu_stanfit_draws(., logit = F)) %>%
+    right_join(data.test, by = "group") %>%
+    group_by(group, .chain, .iteration, .draw) %>%
+    mutate(
+      Predicted_posterior =
+        pmap(
+          .l = list(f, cues_joint, target_category),
+          .f = ~ exec(..1, x = ..2$x, target_category = target_category))) %>%
+    select(-f) %>%
+    unnest(c(cues_joint, cues_separate, Predicted_posterior)) %>%
+    # Repair estimates that yield infinite posteriors
+    mutate(
+      Predicted_posterior = case_when(
+        is.infinite(Predicted_posterior) & sign(Predicted_posterior) == 1 ~ 1, 
+        is.infinite(Predicted_posterior) & sign(Predicted_posterior) == -1 ~ 0,
+        T ~ Predicted_posterior))
+  
+  # Could feed d.pars into parts of get_logistic_parameters_from_model 
+  # (only the part that samples responses and fits the logistic to it).
+  # That would return a posterior distribution of PSEs (one PSE for each posterior draw of parameters)
+  # that could be compared against listeners' PSEs.
+  resolution <- 10^12
+  d.pars %>%
+    # Prepare data frame for logistic regression
+    mutate(
+      n_d = round((if (target_category == 1) Predicted_posterior else (1 - Predicted_posterior)) * .env$resolution), 
+      n_t = .env$resolution - n_d) %>%
+    group_by(group, .chain, .iteration, .draw) %>%
+    nest() %>%
+    # Fit logistic regression and extract relevant information
+    # (the regression only uses VOT regardless of what cues are used for the categorization
+    # so that this matches the analysis of the human responses)
+    mutate(
+      model_unscaled = map(data, ~ glm(
+        # unscaling the VOT here because in the stanfit the VOT is already scaled
+        cbind(n_t, n_d) ~ 1 + I(((VOT* 2 * 30.9) + 43)),
+        family = binomial,
+        data = .x)),
+      intercept_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[1, 2] %>% pull()),
+      slope_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[2, 2] %>% pull()),
+      model_scaled = map(data, ~ glm(
+        cbind(n_t, n_d) ~ 1 + VOT,
+        family = binomial,
+        data = .x)),
+      intercept_scaled = map_dbl(model_scaled, ~ tidy(.x)[1, 2] %>% pull()),
+      slope_scaled = map_dbl(model_scaled, ~ tidy(.x)[2, 2] %>% pull()),
+      PSE = -intercept_unscaled/slope_unscaled,
+      # collapse over all Latin-square designed lists
+      # (this still keeps all individual predictions but only has one unique combination
+      # of exposure condition and test
+      group = gsub("[ABC]A", "", group))
+}
+
+
 # Get approximate f0 of synthesised stimuli from VOT values
 ############################################################################
 # Get the linear prediction parameters for exposure stimuli based on f0 measurements aligned with Chodroff-Wilson

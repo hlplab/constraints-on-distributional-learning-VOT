@@ -32,7 +32,7 @@
 
 
 ### Lower Priority
-
+  * look into streamlining functions: get_logistic_parameters_from_model and get_logistic_parameters_fr_IBBU
 
 ## To do later
   

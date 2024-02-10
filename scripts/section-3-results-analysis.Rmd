@@ -97,9 +97,9 @@ d.chodroff_wilson.isolated %<>%
   vfold_cv(v = 5)
 # get the folds from each train-test split
 # nested within each row
-d.chodroff_wilson.isolated <- map(.x = c(1:5), ~
+d.chodroff_wilson.isolated <- map(.x = 1:5, ~
       assessment(d.chodroff_wilson.isolated$splits[[.x]]) %>%
-        mutate(fold = .x)) %>%
+        mutate(fit_exposure_nestedfold = .x)) %>%
   list_rbind()
 
 
@@ -177,6 +177,96 @@ d.io.categorization <-
   relabel_blocks() %>%
   mutate(across(c(Phase, Condition.Exposure, Block, Block.plot_label), factor))
 ```
+
+
+```{r fit-IA-inferred-VOT-f0 }
+# Make a data frame that splits the entire data in unique exposure-test combinations.
+# This data frame will be used for adaptive changes in normalization and category
+# representations.
+d_for_ASP <-
+  d.for_analysis %>%
+  ungroup() %>%
+  # Exclude catch trials and the final two test blocks since we expect unlearning during those blocks
+  # (which is not modeled)
+  filter(
+    !(Phase == "exposure" & is.na(Item.ExpectedResponse.Voicing)),
+    as.numeric(Block) <= 7) %>%
+  # Use F0 as intended by generation script. This makes fitting more computationally feasible
+  # (336 instead of 1001 unique combinations of group & test locations), and also removes the
+  # potential that annotation / measurement error perturb the f0 values. It does, however,
+  # make the assumption that f0 is the same across the three minimal pairs. While likely wrong,
+  # this assumption better aligns with the fact that the model doesn't have a way to keep track
+  # of any lexical, phonological, or phonetic context effects on VOT (and thus no way to predict
+  # any potential differences between minimal pairs).
+  # rename(VOT = Item.VOT, f0_Mel = Item.F0_target_for_generation_script) %>%
+  # Create new condition variable that uniquely identifies what participants have seen at any of the
+  # tests and a new block variable that identifies the type and order of blocks. Also create two
+  # convenience variables, x (stimulus) and Response.Category (to make matching with the category
+  # column of ideal observers/adaptors more straightforward).
+  mutate(
+    Condition.for_ASP = paste0(Condition.Exposure, List.ExposureBlockOrder, List.ExposureMaterials),
+    Block.for_ASP = paste0(Phase, Block),
+    x = map2(VOT, f0_Mel, ~ c(.x, .y)),
+    Response.Category = factor(ifelse(Response.Voicing == "voiced", "/d/", "/t/"), levels = c("/d/", "/t/")),
+    Item.ExpectedResponse.Category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"), levels = c("/d/", "/t/"))) %>%
+  slice_into_unique_exposure_test(
+    condition_var = "Condition.for_ASP",
+    block_var = "Block.for_ASP",
+    block_order = c("test1", "exposure2", "test3", "exposure4", "test5", "exposure6", "test7")) %>%
+  mutate(ExposureGroup = factor(ExposureGroup)) %>%
+  select(
+    ExposureGroup, Phase, ParticipantID, Block, Trial, x,
+    VOT, f0_Mel, vowel_duration, Response.Category, Item.ExpectedResponse.Category)
+
+# fit ideal adaptor with uninformative priors
+m_IA_inferred.VOT_f0 <-
+  infer_prior_beliefs(
+    exposure = d_for_ASP %>% filter(Phase == "exposure"),
+    test = d_for_ASP %>% filter(Phase == "test"),
+    cues = c("VOT", "f0_Mel"),  
+    category = "Item.ExpectedResponse.Category",
+    response = "Response.Category",
+    group = "ParticipantID",
+    group.unique = "ExposureGroup",
+    center.observations = T,   
+    scale.observations = T,
+    pca.observations = F,
+    lapse_rate = NULL,
+    mu_0 = NULL,
+    Sigma_0 = NULL,
+    sample = T,
+    file = "../models/IBBU_VOT+f0_uninformative priors.RDS",
+    warmup = 3000, iter = 4000,
+    control = list(adapt_delta = .995, max_treedepth = 15))
+```
+
+```{r, warning=FALSE}
+groups <- get_group_levels_from_stanfit(m_IA_inferred.VOT_f0)
+# get logistic model predictions of the IA's categorisation 
+# then prepare the data for plotting
+d.IA_predicted_PSE <- 
+  if (file.exists("../data/IA_predictedPSE_block.rds")) {
+    readRDS("../data/IA_predictedPSE_block.rds")
+  } else {
+    get_logistic_parameters_fr_IBBU(m_IA_inferred.VOT_f0, groups = groups)
+  }
+
+d.IA_predicted_PSE %>%   
+  group_by(group) %>% 
+  median_hdci(PSE) %>% 
+  # duplicate the no-exposure row; 1 for each condition
+  mutate(rows = ifelse(group == "no exposure", 3, 1)) %>% 
+   uncount(rows) %>% 
+  mutate(
+    Condition.Exposure = factor(c(rep("Shift0", 3), rep("Shift10", 3), rep("Shift40", 3), c("Shift0", "Shift10", "Shift40"))),
+    Block = ifelse(group != "no exposure", str_replace(group, ".*(\\d)", "\\1"), group),
+    Block = factor(ifelse(group == "no exposure", 1, Block))) %>% 
+  relabel_blocks()
+
+rm(m_IA_inferred.VOT_f0)
+```
+
+
 
 ```{r prepare-plot-intercepts-slopes}
 p.across_blocks <-
@@ -302,6 +392,19 @@ p.PSE_1to7 <-
     fill = "#d2d4dc",
     alpha = .08,
     inherit.aes = F) +
+  geom_point(
+    data = d.IA_categorization,
+    mapping = aes(x = Block.plot_label, y = PSE, colour = Condition.Exposure, group = Condition.Exposure),
+    shape = 18,
+    size = 2,
+    position = position_dodge(.5),
+    inherit.aes = F) +
+   geom_ribbon(
+    data = d.IA_categorization,
+    mapping = aes(x = Block.plot_label, ymin = .lower, ymax = .upper, fill = Condition.Exposure, group = Condition.Exposure),
+    alpha = .1,
+    position = position_dodge(.5),
+    inherit.aes = F) +
   geom_linerange(linewidth = .6, position = position_dodge(.3), alpha = .5) +
   geom_label(
     data = d.true_shift %>%
@@ -338,11 +441,15 @@ p.PSE_1to7 <-
   #   width = 0.1,
   #   alpha = .6) +
    coord_cartesian(xlim = c(0.75, 9), clip = "off") +
-   theme(plot.margin = unit(c(1, 3.2, 1, 1), "lines"))
-
-p.PSE_1to7 <- p.PSE_1to7 &
-  theme(legend.position = "none", axis.text = element_text(size = 8))
+   theme(plot.margin = unit(c(1, 3.2, 1, 1), "lines"),
+         legend.position = "none")
 ```
+
+
+
+
+
+
 
 ```{r plot-test-exposure-fit, fig.width=11, fig.height=3, message=FALSE}
 cond_fit_test_exposure <-
