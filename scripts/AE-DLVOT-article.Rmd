@@ -1,5 +1,5 @@
 ---
-title             : "Unravelling the time-course of listener adaptation to an unfamiliar talker"
+title             : "Unravelling incremental adaptation to an unfamiliar talker"
 shorttitle        : "short article draft"
 date              : "`r format(Sys.time(), '%B %d, %Y')`"
 
