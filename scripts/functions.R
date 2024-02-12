@@ -680,7 +680,7 @@ get_logistic_parameters_from_model <- function(
 get_logistic_parameters_fr_IBBU <- function(
     model,
     groups = NULL,
-    untransform_cues = F,
+    untransform_cues = T,
     # target category "/d/" = 1, "/t/" = 2
     target_category = 2,
     colors.group = NULL
@@ -744,14 +744,13 @@ get_logistic_parameters_fr_IBBU <- function(
     # so that this matches the analysis of the human responses)
     mutate(
       model_unscaled = map(data, ~ glm(
-        # unscaling the VOT here because in the stanfit the VOT is already scaled
-        cbind(n_t, n_d) ~ 1 + I(((VOT* 2 * 30.9) + 43)),
+        cbind(n_t, n_d) ~ 1 + VOT,
         family = binomial,
         data = .x)),
       intercept_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[1, 2] %>% pull()),
       slope_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[2, 2] %>% pull()),
       model_scaled = map(data, ~ glm(
-        cbind(n_t, n_d) ~ 1 + VOT,
+        cbind(n_t, n_d) ~ 1 + I((VOT - VOT.mean_test) / (2* VOT.sd_test)),
         family = binomial,
         data = .x)),
       intercept_scaled = map_dbl(model_scaled, ~ tidy(.x)[1, 2] %>% pull()),
