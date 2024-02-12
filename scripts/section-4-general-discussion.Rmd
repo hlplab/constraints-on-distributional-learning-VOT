@@ -56,6 +56,69 @@ If replicated, it would be tempting to interpret these 'diminishing returns' as 
 All of these tests were facilitated by the use of incremental testing, which thereby facilitated stronger---though still qualitative---tests of theories of adaptive speech perception. The use of incremental testing also revealed 
 
 ## Constraints on rapid adaptation?
+
+(ref:plot-IA-human-PSE) Comparison of shifts in listener PSEs over the first four test blocks against that expected by an ideal adaptor (an idealized learner who adapts to talkers by integrating cue statistics of the exposure talker with prior beliefs about category cue means and variances). Ribbons indicate the 95% highest posterior density interval
+
+```{r plot-IA-human-PSE, fig.width=5, fig.height=3, fig.cap="(ref:plot-IA-human-PSE)"}
+d.estimates %>%
+  filter(Block %in% c(1:7)) %>% 
+  ggplot(
+    aes(
+      x = Block.plot_label, y = PSE_median,
+      ymin = PSE_lower, ymax = PSE_upper,
+      colour = Condition.Exposure, group = Condition.Exposure)) +
+  geom_rect(
+    data = tibble(
+      xmin = c(seq(0.5, 6.5, 2)),
+      xmax = c(seq(1.5, 7.5, 2))),
+    mapping = aes(xmin = xmin, xmax = xmax),
+    ymin = -Inf, ymax = Inf, fill = "grey", alpha = .1, inherit.aes = F) +
+  geom_point(position = position_dodge(.3), size = 1.8) +
+  geom_linerange(linewidth = .6, position = position_dodge(.3), alpha = .5) +
+  stat_summary(geom = "line", position = position_dodge(.3)) +
+  geom_ribbon(
+    data = d.IA_predicted_PSE,
+    mapping = aes(x = Block.plot_label, ymin = .lower, ymax = .upper, fill = Condition.Exposure, group = Condition.Exposure),
+    alpha = .1,
+    position = position_dodge(.3),
+    inherit.aes = F) +
+  geom_linerange(linewidth = .6, position = position_dodge(.3), alpha = .5) +
+  geom_hline(
+    data = d.io.categorization %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")),
+    mapping = aes(yintercept = PSE, color = Condition.Exposure, group = Condition.Exposure),
+    linetype = 2,
+    linewidth = .8,
+    alpha = 0.4) +
+  geom_text(
+    data = d.true_shift %>%
+      filter(Phase == "exposure") %>%
+      group_by(Condition.Exposure, true_shift) %>%
+      summarise(),
+    mapping = aes(
+      x = 8, y = c(25, 35, 65),
+      label = paste(round(true_shift), "(100%)"),
+      colour = Condition.Exposure),
+    colour = colours.condition,
+    fontface = "bold",
+    size = 3,
+    inherit.aes = F) +
+  scale_x_discrete("Block") +
+  scale_y_continuous("PSE (ms VOT)") +
+  scale_colour_manual(
+    "Condition",
+    labels = c("baseline", "+10ms", "+40ms", "prior"),
+    values = c(colours.condition, "darkgray"),
+    aesthetics = "color") +
+  coord_cartesian(xlim = c(0.75, 7), clip = "off") +
+  theme(
+    axis.text.x = element_text(angle = 22.5, hjust = 1),
+    plot.margin = unit(c(1, 3.2, 1, 1), "lines"),
+    legend.position = "none")
+```
+
+
+
+
 But neither error-based learning nor Bayesian belief-updating models in their current forms, are sufficient to explain the marked slowdown and lack of convergence on the ideal boundary after the final exposure block.  
 Under the conceptualisation of ideal adaptor models [@kleinschmidt-jaeger2015; @xie2023] the pace of adaptation or belief-updating is a function of confidence in prior expected values of the means and variances of the phonetic categories. The rapid change seen after the first exposure block indicates listeners have low confidence in their prior beliefs about the distributions and are therefore quick to adjust their categorisations---the shifted boundary should be dominated by the observations from the recent input rather than their prior beliefs. But weak prior beliefs under such a model of adaptation implicates sustained rapid shifts as the listener receives more evidence from the input which is not the result we found. For the +40 condition we even saw a retraction of the estimated boundary in test block 4. It is unclear whether this indicates that listeners had completely stopped adapting or if further shifts would have been observed with more exposure input. 
 
