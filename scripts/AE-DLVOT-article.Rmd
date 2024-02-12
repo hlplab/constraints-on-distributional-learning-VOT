@@ -114,7 +114,6 @@ INCLUDE_TODO = F           # switch on/off to get to do list.
 ```{r, child="section-0-TO-DO.Rmd", eval= if (INCLUDE_TODO) TRUE else FALSE}
 ```
 
-\newpage 
 \setcounter{page}{1}
 \setcounter{section}{0}
 
