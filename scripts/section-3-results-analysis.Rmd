@@ -723,10 +723,95 @@ Panel D suggests that listeners did *not* converge against the exposure distribu
 
 If these numbers are taken at face value, they would seem to suggest that participants learned leftward shifts along the VOT continuum more slowly or less well. Indeed, further examination Figure Figure \@ref(fig:plot-fit-PSE)C suggests that the categorization functions of participants in the baseline condition changed very little after the first exposure block (see also Table \@ref(tab:hypothesis-table-simple-effects-block)). It appears that participants in that condition shifted their categorization functions as much as they could after a single block of exposure. This would explain why the distance between the +10 and baseline conditions decreases over the subsequent blocks, as discussed above. In contrast, participants in the +40 condition exhibited more substantial changes in their PSEs until at least Test 3. Even for this exposure condition, however, a visual inspection of Figure Figure \@ref(fig:plot-fit-PSE)C seems to suggest that changes in listeners' PSE might be 'leveling' of after Test 3. 
 
-To further quantify these visual intuitions, we fit a distributional learning model to listeners' data. This allows us to compare changes in listeners' behavior to those expected under an ideal---as opposed to ideal*ized*---learner.^[Following @qian2016, we use the term *idealized* learner for models that are given privileged access to information that listeners have to infer (e.g., the correct exposure statistics of the experiment), and the term *ideal* learner for models that implement a theory of ideal information integration. This notion of ideal is still contingent on the assumptions made in the model [for a list of assumptions made by the ideal adaptor model, see appendix of @kleinschmidt-jaeger2015].] Specifically, we used an ideal adaptor model [@kleinschmidt-jaeger2015; @kleinschmidt-jaeger2016]. <!-- TO DO: fill in --> Univariate instances of this model have previously achieved high accuracy in modeling changes in listeners categorization functions after LGPL/VGPL [e.g., for /s/-/ʃ/, @cummings-theodore2023; /b/-/d/, @kleinschmidt-jaeger2011; @kleinschmidt-jaeger2012] or DL exposure [e.g., for /b/-/p/, @kleinschmidt-jaeger2016; @kleinschmidt2020; /g/-/k/, @theodore-monto2019]. We extended the model to multivariate categories over VOT, f0, and vowel duration, and fit it to listeners' responses in our experiment [for details, see SI \@ref(sec:XXX)]. <!-- TO DO: fill in more info here. Perhaps we should take a model that uses, as priors, the mu_0 and Sigma_0 from the gray ribbon in the result figure -->
+To further quantify these visual intuitions, we fit a distributional learning model to listeners' data. This allows us to compare changes in listeners' behavior to those expected under an ideal---as opposed to ideal*ized*---learner.^[Following @qian2016, we use the term *idealized* learner for models that are given privileged access to information that listeners have to infer (e.g., the correct exposure statistics of the experiment), and the term *ideal* learner for models that implement a theory of ideal information integration [for a list of assumptions made by the ideal adaptor, see appendix of @kleinschmidt-jaeger2015].] Specifically, we used an ideal adaptor model [@kleinschmidt-jaeger2015; @kleinschmidt-jaeger2016]. <!-- TO DO: fill in --> Univariate instances of this model have previously achieved high accuracy in modeling changes in listeners categorization functions after LGPL/VGPL [e.g., for /s/-/ʃ/, @cummings-theodore2023; /b/-/d/, @kleinschmidt-jaeger2011; @kleinschmidt-jaeger2012] or DL exposure [e.g., for /b/-/p/, @kleinschmidt-jaeger2016; @kleinschmidt2020; /g/-/k/, @theodore-monto2019]. We extended the model to multivariate categories over VOT, f0, and vowel duration, and fit it to listeners' responses in our experiment [for details, see SI \@ref(sec:XXX)]. <!-- TO DO: fill in more info here. Perhaps we should take a model that uses, as priors, the mu_0 and Sigma_0 from the gray ribbon in the result figure -->
 Unlike the psychometric model we used for analysis, a distributional learning model specifies how information is integrated across exposure trials. This substantially decreases the degrees of freedom the model has to fit listeners' responses. For example, the ideal adaptor we fit to listeners' responses in the first four test blocks has XXX parameters, compared to XXX fixed and XXX random effect parameters for a psychometric mixed-effect model fit to the same data. <!-- TO DO: calculate these numbers. for psychometric model, it's probably easiest to just count fixed and random effect if model is fit to only first four test data [doesn't have to converge so you can just take 100 samples] --> In the ideal adaptor, listeners' responses during different test blocks and across different exposure conditions jointly constrain the parameters of model (due to assumption of ideal information integration). For the present data, the ideal adaptor model predicts the proportion of listeners' "t"-responses with an $R^2 > .XX$.<!-- TO DO: fill in--> We leave further analysis of this model to future work. Here we focus on what this model can tell us about the incremental build-up of adaptation. 
 
 Figure \@ref(fig:plot-IA-human-PSE) shows the PSEs inferred from the ideal adaptor, along with listeners' PSEs (the same as in Figure Figure \@ref(fig:plot-fit-PSE)C).  
+
+```{r fit-IA-inferred-VOT-f0 }
+# Make a data frame that splits the entire data in unique exposure-test combinations.
+# This data frame will be used for adaptive changes in normalization and category
+# representations.
+d_for_ASP <-
+  d.for_analysis %>%
+  ungroup() %>%
+  # Exclude catch trials and the final two test blocks since we expect unlearning during those blocks
+  # (which is not modeled)
+  filter(
+    !(Phase == "exposure" & is.na(Item.ExpectedResponse.Voicing)),
+    as.numeric(Block) <= 7) %>%
+  # Use F0 as intended by generation script. This makes fitting more computationally feasible
+  # (336 instead of 1001 unique combinations of group & test locations), and also removes the
+  # potential that annotation / measurement error perturb the f0 values. It does, however,
+  # make the assumption that f0 is the same across the three minimal pairs. While likely wrong,
+  # this assumption better aligns with the fact that the model doesn't have a way to keep track
+  # of any lexical, phonological, or phonetic context effects on VOT (and thus no way to predict
+  # any potential differences between minimal pairs).
+  # rename(VOT = Item.VOT, f0_Mel = Item.F0_target_for_generation_script) %>%
+  # Create new condition variable that uniquely identifies what participants have seen at any of the
+  # tests and a new block variable that identifies the type and order of blocks. Also create two
+  # convenience variables, x (stimulus) and Response.Category (to make matching with the category
+  # column of ideal observers/adaptors more straightforward).
+  mutate(
+    Condition.for_ASP = paste0(Condition.Exposure, List.ExposureBlockOrder, List.ExposureMaterials),
+    Block.for_ASP = paste0(Phase, Block),
+    x = map2(VOT, f0_Mel, ~ c(.x, .y)),
+    Response.Category = factor(ifelse(Response.Voicing == "voiced", "/d/", "/t/"), levels = c("/d/", "/t/")),
+    Item.ExpectedResponse.Category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"), levels = c("/d/", "/t/"))) %>%
+  slice_into_unique_exposure_test(
+    condition_var = "Condition.for_ASP",
+    block_var = "Block.for_ASP",
+    block_order = c("test1", "exposure2", "test3", "exposure4", "test5", "exposure6", "test7")) %>%
+  mutate(ExposureGroup = factor(ExposureGroup)) %>%
+  select(
+    ExposureGroup, Phase, ParticipantID, Block, Trial, x,
+    VOT, f0_Mel, vowel_duration, Response.Category, Item.ExpectedResponse.Category)
+
+# fit ideal adaptor with uninformative priors
+m_IA_inferred.VOT_f0 <-
+  infer_prior_beliefs(
+    exposure = d_for_ASP %>% filter(Phase == "exposure"),
+    test = d_for_ASP %>% filter(Phase == "test"),
+    cues = c("VOT", "f0_Mel"),  
+    category = "Item.ExpectedResponse.Category",
+    response = "Response.Category",
+    group = "ParticipantID",
+    group.unique = "ExposureGroup",
+    center.observations = T,   
+    scale.observations = T,
+    pca.observations = F,
+    lapse_rate = NULL,
+    mu_0 = NULL,
+    Sigma_0 = NULL,
+    sample = T,
+    file = "../models/IBBU_VOT+f0_uninformative priors.RDS",
+    warmup = 3000, iter = 4000,
+    control = list(adapt_delta = .995, max_treedepth = 15))
+```
+
+```{r, warning=FALSE}
+groups <- get_group_levels_from_stanfit(m_IA_inferred.VOT_f0)
+# get logistic model predictions of the IA's categorisation 
+# then prepare the data for plotting
+if (file.exists("../models/d.IA_predicted_PSE.csv")) {
+  d.IA_predicted_PSE <- read_csv("../models/d.IA_predicted_PSE.csv", show_col_types = F)
+} else {
+  d.IA_predicted_PSE <-  get_logistic_parameters_fr_IBBU(m_IA_inferred.VOT_f0, groups = groups) %>% 
+    group_by(group) %>% 
+    median_hdci(PSE) %>% 
+    # duplicate the no-exposure row; 1 for each condition
+    mutate(rows = ifelse(group == "no exposure", 3, 1)) %>% 
+    uncount(rows) %>% 
+    mutate(
+      Condition.Exposure = factor(c(rep("Shift0", 3), rep("Shift10", 3), rep("Shift40", 3), c("Shift0", "Shift10", "Shift40"))),
+      Block = ifelse(group != "no exposure", str_replace(group, ".*(\\d)", "\\1"), group),
+      Block = factor(ifelse(group == "no exposure", 1, Block))) %>% 
+    relabel_blocks()
+  write_csv(d.IA_predicted_PSE, "../models/d.IA_predicted_PSE.csv")
+}
+
+rm(m_IA_inferred.VOT_f0)
+```
 
 (ref:plot-IA-human-PSE) Comparison of shifts in listener PSEs over the first four test blocks against that expected by an ideal adaptor (an idealized learner who adapts to talkers by integrating cue statistics of the exposure talker with prior beliefs about category cue means and variances). Ribbons indicate the 95% highest posterior density interval
 
@@ -786,6 +871,7 @@ d.estimates %>%
     plot.margin = unit(c(1, 3.2, 1, 1), "lines"),
     legend.position = "none")
 ```
+
 
 
 We return to these findings in the general discussion.
