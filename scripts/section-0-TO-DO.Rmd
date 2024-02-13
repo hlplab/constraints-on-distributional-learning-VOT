@@ -18,7 +18,8 @@
 
 
  * MARYANN
-
+ 
+## High priority
   * Extract posterior predictions from IBBU fit. Plot the predicted PSE and credible interval by block and category
   * Logistic regression over the IA predictions (analogous to the logistic regression of the IO predictions)
   * Make a copy of main figure and place it in the SI; remove panel C from the main figure
@@ -29,6 +30,7 @@
  * MARYANN
   * Continue to fill in blanks (refs, bibs)
   * Check captions carefully and update.
+  * Remove libraries from preamble that are just meant for debugging and version tracking (latexdiffr)
 
 
 ### Lower Priority

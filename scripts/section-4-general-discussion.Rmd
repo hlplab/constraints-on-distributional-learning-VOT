@@ -148,7 +148,7 @@ rm(m_IA_inferred.VOT_f0)
 
 (ref:plot-IA-human-PSE) Comparison of shifts in listener PSEs over the first four test blocks against that expected by an ideal adaptor (an idealized learner who adapts to talkers by integrating cue statistics of the exposure talker with prior beliefs about category cue means and variances). Ribbons indicate the 95% highest posterior density interval
 
-```{r plot-IA-human-PSE, fig.width=5, fig.height=3, fig.cap="(ref:plot-IA-human-PSE)"}
+```{r plot-IA-human-PSE, fig.width=5.5, fig.height=3, fig.cap="(ref:plot-IA-human-PSE)"}
 d.estimates %>%
   filter(Block %in% c(1:7)) %>% 
   ggplot(
@@ -189,7 +189,7 @@ d.estimates %>%
       colour = Condition.Exposure),
     colour = colours.condition,
     fontface = "bold",
-    size = 3,
+    size = 2.7,
     inherit.aes = F) +
   scale_x_discrete("Block") +
   scale_y_continuous("PSE (ms VOT)") +
