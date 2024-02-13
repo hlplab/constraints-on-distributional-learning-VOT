@@ -93,7 +93,8 @@ knitr::opts_chunk$set(
   echo = FALSE, message = FALSE, warning = FALSE, 
   results = "markup", cache = TRUE,
   interval = .2,
-  fig.align = "center", fig.height = base.height, fig.width = base.width)
+  fig.align = "center", fig.height = base.height, fig.width = base.width,
+  tidy.opts = list(width.cutoff=80), tidy=TRUE)
 
 # Some useful formatting for warnings and error messages, so that they are not easily missed.
 knitr::knit_hooks$set(inline = function(x) { 
