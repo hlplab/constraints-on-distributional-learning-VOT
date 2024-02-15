@@ -526,7 +526,7 @@ make_hyp_table(
 rm(fit_test.simple_effects_condition)
 ```
 
-Figure \@ref(fig:plot-fit-PSE)A suggests that differences between exposure conditions emerged early in the experiment: already in Test 2, listeners in the +10 condition have shifted their categorization functions rightwards relative to the baseline condition, and listeners in the +40 condition have shifted their in categorization functions even further rightwards. This is confirmed by Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-effects-condition). Prior to any exposure, during Test 1, participants' responses did not differ across exposure condition. This result is predicted by models of adaptive speech perception under the assumptions that (a) participants in the different groups have similar prior experiences, and that (b) our sample size is sufficiently large to yield stable estimates of listeners' categorization function.^[Since the test of the null for Test 1 is not of particular importance (every theory of adaptive speech perception would predict it), we used the Savage-Dickey density ratio [@wagenmakers2010] to calculate BFs for the null. This comparatively simple procedure estimates the BF as the ratio of the posterior and prior density over the null. We note that this makes the relatively weak evidence in favor of the null rather unsurprising since the regularizing priors we used have non-negligible density to the null. Rather than to test the null against priors that specify plausible alternative effects, we appeal to readers' intuition: the 95% CIs of the comparisons for Test 1 all are relatively symmetrically centered around zero. This means there is very little evidence in favor of an effect in either direction.]
+Figure \@ref(fig:plot-fit-PSE)A suggests that differences between exposure conditions emerged early in the experiment: already in Test 2, listeners in the +10 condition have shifted their categorization functions rightwards relative to the baseline condition, and listeners in the +40 condition have shifted their in categorization functions even further rightwards. This is confirmed by Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-effects-condition). Prior to any exposure, during Test 1, participants' responses did not differ across exposure condition. This result is predicted by models of adaptive speech perception under the assumptions that (a) participants in the different groups have similar prior experiences, and that (b) our sample size is sufficiently large to yield stable estimates of listeners' categorization function.^[Since the test of the null for Test 1 is not of particular importance (every theory of adaptive speech perception would predict it), we used the Savage-Dickey density ratio [@wagenmakers2010] to calculate BFs for the null. This comparatively simple procedure estimates the BF as the ratio of the posterior and prior density over the null. We note that this makes the relatively weak evidence in favor of the null rather unsurprising since the regularizing priors we used have non-negligible density to the null. Rather than to test the null against priors that specify plausible alternative effects, we appeal to readers' intuition: the 90% CIs of the comparisons for Test 1 all are relatively symmetrically centered around zero. This means there is very little evidence in favor of an effect in either direction.]
 
 During Test 2, after exposure to only 24 /d/ and 24 /t/ stimuli (thereof half labeled), participants' categorization responses already differed between exposure conditions (BFs > 14). All differences between exposure conditions that emerged at this point were in the direction predicted by models of adaptive speech perception. Additional analyses reported in the SI (\@ref(sec:SI-exposure-block-analysis)) found that listeners' categorization functions had already changed *during* the first exposure block, in line with Figure \@ref(fig:plot-fit-PSE)A. This suggests that changes in listeners' categorization responses emerged *quickly* at the earliest point tested---after only a fraction of exposure trials previously tested in similar paradigms.
 
@@ -728,149 +728,7 @@ Unlike the psychometric model we used for analysis, a distributional learning mo
 
 Figure \@ref(fig:plot-IA-human-PSE) shows the PSEs inferred from the ideal adaptor, along with listeners' PSEs (the same as in Figure Figure \@ref(fig:plot-fit-PSE)C). Notably, the ideal adaptor *under*-predicts changes in listeners' PSEs in early blocks---a tendency that is most evident for the exposure conditions with more extreme shifts (baseline and +40). Similarly, though less obvious, the ideal adaptor *over*-predicts listeners' PSE in later blocks (see the baseline and +40 conditions in Test 4). To understand this pattern, it is helpful to recognize that rational models of distributional learning describe listeners' expectations after exposure as the weighted mean of prior expectations and the observed exposure statistics [@kleinschmidt-jaeger2015]. This means that the speed with which a learner adapts at the start of exposure is expected to be predictive of how fast a learner adapts after additional exposure. Put differently, ideal adaptors constrain the rate at which changes in PSEs can change across exposure trials. For the present data, this means that an ideal adaptor can *either* explain the fact that listeners' PSEs changed rapidly at the start of exposure *or* explain the fact that there seem to be little to no changes in listeners' PSE after the second exposure block. But it cannot explain both aspects of our data.  
 
-```{r fit-IA-inferred-VOT-f0 }
-# Make a data frame that splits the entire data in unique exposure-test combinations.
-# This data frame will be used for adaptive changes in normalization and category
-# representations.
-d_for_ASP <-
-  d.for_analysis %>%
-  ungroup() %>%
-  # Exclude catch trials and the final two test blocks since we expect unlearning during those blocks
-  # (which is not modeled)
-  filter(
-    !(Phase == "exposure" & is.na(Item.ExpectedResponse.Voicing)),
-    as.numeric(Block) <= 7) %>%
-  # Use F0 as intended by generation script. This makes fitting more computationally feasible
-  # (336 instead of 1001 unique combinations of group & test locations), and also removes the
-  # potential that annotation / measurement error perturb the f0 values. It does, however,
-  # make the assumption that f0 is the same across the three minimal pairs. While likely wrong,
-  # this assumption better aligns with the fact that the model doesn't have a way to keep track
-  # of any lexical, phonological, or phonetic context effects on VOT (and thus no way to predict
-  # any potential differences between minimal pairs).
-  # rename(VOT = Item.VOT, f0_Mel = Item.F0_target_for_generation_script) %>%
-  # Create new condition variable that uniquely identifies what participants have seen at any of the
-  # tests and a new block variable that identifies the type and order of blocks. Also create two
-  # convenience variables, x (stimulus) and Response.Category (to make matching with the category
-  # column of ideal observers/adaptors more straightforward).
-  mutate(
-    Condition.for_ASP = paste0(Condition.Exposure, List.ExposureBlockOrder, List.ExposureMaterials),
-    Block.for_ASP = paste0(Phase, Block),
-    x = map2(VOT, f0_Mel, ~ c(.x, .y)),
-    Response.Category = factor(ifelse(Response.Voicing == "voiced", "/d/", "/t/"), levels = c("/d/", "/t/")),
-    Item.ExpectedResponse.Category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"), levels = c("/d/", "/t/"))) %>%
-  slice_into_unique_exposure_test(
-    condition_var = "Condition.for_ASP",
-    block_var = "Block.for_ASP",
-    block_order = c("test1", "exposure2", "test3", "exposure4", "test5", "exposure6", "test7")) %>%
-  mutate(ExposureGroup = factor(ExposureGroup)) %>%
-  select(
-    ExposureGroup, Phase, ParticipantID, Block, Trial, x,
-    VOT, f0_Mel, vowel_duration, Response.Category, Item.ExpectedResponse.Category)
 
-# fit ideal adaptor with uninformative priors
-m_IA_inferred.VOT_f0 <-
-  infer_prior_beliefs(
-    exposure = d_for_ASP %>% filter(Phase == "exposure"),
-    test = d_for_ASP %>% filter(Phase == "test"),
-    cues = c("VOT", "f0_Mel"),  
-    category = "Item.ExpectedResponse.Category",
-    response = "Response.Category",
-    group = "ParticipantID",
-    group.unique = "ExposureGroup",
-    center.observations = T,   
-    scale.observations = T,
-    pca.observations = F,
-    lapse_rate = NULL,
-    mu_0 = NULL,
-    Sigma_0 = NULL,
-    sample = T,
-    file = "../models/IBBU_VOT+f0_uninformative priors.RDS",
-    warmup = 3000, iter = 4000,
-    control = list(adapt_delta = .995, max_treedepth = 15))
-```
-
-```{r, warning=FALSE}
-groups <- get_group_levels_from_stanfit(m_IA_inferred.VOT_f0)
-# get logistic model predictions of the IA's categorisation 
-# then prepare the data for plotting
-if (file.exists("../models/d.IA_predicted_PSE.csv")) {
-  d.IA_predicted_PSE <- read_csv("../models/d.IA_predicted_PSE.csv", show_col_types = F)
-} else {
-  d.IA_predicted_PSE <-  get_logistic_parameters_fr_IBBU(m_IA_inferred.VOT_f0, groups = groups) %>% 
-    group_by(group) %>% 
-    median_hdci(PSE) %>% 
-    # duplicate the no-exposure row; 1 for each condition
-    mutate(rows = ifelse(group == "no exposure", 3, 1)) %>% 
-    uncount(rows) %>% 
-    mutate(
-      Condition.Exposure = factor(c(rep("Shift0", 3), rep("Shift10", 3), rep("Shift40", 3), c("Shift0", "Shift10", "Shift40"))),
-      Block = ifelse(group != "no exposure", str_replace(group, ".*(\\d)", "\\1"), group),
-      Block = factor(ifelse(group == "no exposure", 1, Block))) %>% 
-    relabel_blocks()
-  write_csv(d.IA_predicted_PSE, "../models/d.IA_predicted_PSE.csv")
-}
-
-rm(m_IA_inferred.VOT_f0)
-```
-
-(ref:plot-IA-human-PSE) Comparison of shifts in listener PSEs over the first four test blocks against that expected by an ideal adaptor fit to listeners' responses (a distributional learning model that describes ideal information integration). Ribbons indicate the 95% highest posterior density interval.
-
-```{r plot-IA-human-PSE, fig.width=5, fig.height=3, fig.cap="(ref:plot-IA-human-PSE)"}
-d.estimates %>%
-  filter(Block %in% c(1:7)) %>% 
-  ggplot(
-    aes(
-      x = Block.plot_label, y = PSE_median,
-      ymin = PSE_lower, ymax = PSE_upper,
-      colour = Condition.Exposure, group = Condition.Exposure)) +
-  geom_rect(
-    data = tibble(
-      xmin = c(seq(0.5, 6.5, 2)),
-      xmax = c(seq(1.5, 7.5, 2))),
-    mapping = aes(xmin = xmin, xmax = xmax),
-    ymin = -Inf, ymax = Inf, fill = "grey", alpha = .1, inherit.aes = F) +
-  geom_point(position = position_dodge(.3), size = 1.8) +
-  geom_linerange(linewidth = .6, position = position_dodge(.3), alpha = .5) +
-  stat_summary(geom = "line", position = position_dodge(.3)) +
-  geom_ribbon(
-    data = d.IA_predicted_PSE,
-    mapping = aes(x = Block.plot_label, ymin = .lower, ymax = .upper, fill = Condition.Exposure, group = Condition.Exposure),
-    alpha = .1,
-    position = position_dodge(.3),
-    inherit.aes = F) +
-  geom_linerange(linewidth = .6, position = position_dodge(.3), alpha = .5) +
-  geom_hline(
-    data = d.io.categorization %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")),
-    mapping = aes(yintercept = PSE, color = Condition.Exposure, group = Condition.Exposure),
-    linetype = 2,
-    linewidth = .8,
-    alpha = 0.4) +
-  geom_text(
-    data = d.true_shift %>%
-      filter(Phase == "exposure") %>%
-      group_by(Condition.Exposure, true_shift) %>%
-      summarise(),
-    mapping = aes(
-      x = 8, y = c(25, 35, 65),
-      label = paste(round(true_shift), "(100%)"),
-      colour = Condition.Exposure),
-    colour = colours.condition,
-    fontface = "bold",
-    size = 3,
-    inherit.aes = F) +
-  scale_x_discrete("Block") +
-  scale_y_continuous("PSE (ms VOT)") +
-  scale_colour_manual(
-    "Condition",
-    labels = c("baseline", "+10ms", "+40ms", "prior"),
-    values = c(colours.condition, "darkgray"),
-    aesthetics = "color") +
-  coord_cartesian(xlim = c(0.75, 7), clip = "off") +
-  theme(
-    axis.text.x = element_text(angle = 22.5, hjust = 1),
-    plot.margin = unit(c(1, 3.2, 1, 1), "lines"),
-    legend.position = "none")
-```
 
 
 
