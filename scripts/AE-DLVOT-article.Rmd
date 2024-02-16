@@ -97,8 +97,6 @@ knitr::opts_chunk$set(
   tidy.opts = list(width.cutoff=80), tidy=TRUE)
 
 # Some useful formatting for warnings and error messages, so that they are not easily missed.
-knitr::knit_hooks$set(inline = function(x) { 
-  prettyNum(x, big.mark=",") })
 knitr::knit_hooks$set(document = function(x) {
   sub('\\usepackage[]{color}', '\\usepackage{xcolor}', x, fixed = TRUE)})
 color_block = function(color) { 
@@ -106,6 +104,7 @@ color_block = function(color) {
 knitr::knit_hooks$set(error = color_block('red'))
 knitr::knit_hooks$set(warning = color_block('orange'))
 knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
+knitr::knit_hooks$set(inline = function(x) { if (is.numeric(x)) prettyNum(x, big.mark=",") else x })
 ```
 
 ```{r}

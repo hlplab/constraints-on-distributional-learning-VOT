@@ -366,19 +366,19 @@ get_nsamples <- function(model) {
     ((map(model$fit@stan_args, ~ .x$iter) %>% reduce(`+`)) -
        (map(model$fit@stan_args, ~ .x$warmup) %>% reduce(`+`))) /
     (first(map(model$fit@stan_args, ~ .x$thin)))
-  
+
   return(n.posterior_samples)
 }
-  
+
 
 get_bf <- function(model, hypothesis) {
   h <- hypothesis(model, hypothesis)[[1]]
   BF <- if (is.infinite(h$Evid.Ratio)) paste("\\geq", get_nsamples(model)) else paste("=", round(h$Evid.Ratio, 1))
   paste0(
     "\\hat{\\beta} = ", round(h$Estimate, 2),
-    ",\\ 90\\%{\\rm -CI} = [", round(h$CI.Lower, 3), ", ", round(h$CI.Upper, 3),
-    "],\\ BF ", BF,
-    ",\\ p_{posterior} = ", signif(h$Post.Prob, 3))
+    ",  90\\%{\\rm -CI} = [", round(h$CI.Lower, 3), ", ", round(h$CI.Upper, 3),
+    "],  BF ", BF,
+    ",  p_{posterior} = ", signif(h$Post.Prob, 3))
 }
 
 # Function to get identity CI of a model summary
@@ -696,7 +696,7 @@ get_logistic_parameters_fr_IBBU <- function(
       #seed = 2824,
       untransform_cues = untransform_cues) %>%
     filter(group %in% .env$groups)
-  
+
   # Prepare test_data
   cue.labels <- get_cue_levels_from_stanfit(model)
   data.test <-
@@ -706,7 +706,7 @@ get_logistic_parameters_fr_IBBU <- function(
     make_vector_column(cols = cue.labels, vector_col = "x", .keep = "all") %>%
     nest(cues_joint = x, cues_separate = .env$cue.labels)  %>%
     crossing(group = levels(d.pars$group))
-  
+
   # Categorize test data
   d.pars %<>%
     group_by(group, .chain, .iteration, .draw) %>%
@@ -723,11 +723,11 @@ get_logistic_parameters_fr_IBBU <- function(
     # Repair estimates that yield infinite posteriors
     mutate(
       Predicted_posterior = case_when(
-        is.infinite(Predicted_posterior) & sign(Predicted_posterior) == 1 ~ 1, 
+        is.infinite(Predicted_posterior) & sign(Predicted_posterior) == 1 ~ 1,
         is.infinite(Predicted_posterior) & sign(Predicted_posterior) == -1 ~ 0,
         T ~ Predicted_posterior))
-  
-  # Could feed d.pars into parts of get_logistic_parameters_from_model 
+
+  # Could feed d.pars into parts of get_logistic_parameters_from_model
   # (only the part that samples responses and fits the logistic to it).
   # That would return a posterior distribution of PSEs (one PSE for each posterior draw of parameters)
   # that could be compared against listeners' PSEs.
@@ -735,7 +735,7 @@ get_logistic_parameters_fr_IBBU <- function(
   d.pars %>%
     # Prepare data frame for logistic regression
     mutate(
-      n_d = round((if (target_category == 1) Predicted_posterior else (1 - Predicted_posterior)) * .env$resolution), 
+      n_d = round((if (target_category == 1) Predicted_posterior else (1 - Predicted_posterior)) * .env$resolution),
       n_t = .env$resolution - n_d) %>%
     group_by(group, .chain, .iteration, .draw) %>%
     nest() %>%
