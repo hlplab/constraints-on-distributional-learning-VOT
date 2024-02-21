@@ -164,7 +164,12 @@ get_ChodroffWilson_data <- function(
 
 # Prepare variables for regression modelling ---------------------------------------------------
 
-prepVars <- function(d, test_mean = NULL, levels.Condition = NULL, contrast_type) {
+prepVars <- function(
+    d, 
+    test_mean = NULL, 
+    levels.Condition = NULL, 
+    contrast_type
+) {
   d %<>%
     drop_na(Condition.Exposure, Phase, Block, Item.MinimalPair, ParticipantID, Item.VOT, Response)
 
@@ -177,10 +182,8 @@ prepVars <- function(d, test_mean = NULL, levels.Condition = NULL, contrast_type
     mutate(
       Block_n = as.numeric(as.character(Block)),
       across(c(Condition.Exposure, Block, Item.MinimalPair), factor),
-
-      Condition.Exposure = factor(Condition.Exposure, levels = levels.Condition)) %>%
-
-    drop_na(Block, Response, Item.VOT) %>%
+      Condition.Exposure = factor(Condition.Exposure, levels = levels.Condition)) %>% 
+    drop_na(Block, Response, Item.VOT) %>% 
     mutate(VOT_gs = (Item.VOT - test_mean) / (2 * sd(Item.VOT, na.rm = TRUE))) %>%
     droplevels()
 
@@ -189,7 +192,6 @@ prepVars <- function(d, test_mean = NULL, levels.Condition = NULL, contrast_type
   if (all(d$Phase == "test") & n_distinct(d$Block) > 1 & contrast_type == "difference") {
     contrasts(d$Block) <- MASS::fractions(MASS::contr.sdif(6))
     dimnames(contrasts(d$Block))[[2]] <- c("_Test2 vs. Test1", "_Test3 vs. Test2", "_Test4 vs. Test3", "_Test5 vs. Test4", "_Test6 vs. Test5")
-
     message("Condition contrast is:", contrasts(d$Condition.Exposure))
     message("Block contrast is:", contrasts(d$Block))
   } else if (all(d$Phase == "test") & n_distinct(d$Block) > 1 & contrast_type == "helmert") {
@@ -198,14 +200,14 @@ prepVars <- function(d, test_mean = NULL, levels.Condition = NULL, contrast_type
                                 "Test4 vs. Test3_2_1" = c(-1/4, -1/4, -1/4, 3/4, 0, 0),
                                 "_Test5 vs. Test4_3_2_1" = c(-1/5, -1/5, -1/5, -1/5, 4/5, 0),
                                 "_Test6 vs. Test5_4_3_2_1" = c(-1/6, -1/6, -1/6, -1/6, -1/6, 5/6))
-    message(contrasts(d$Condition.Exposure))
-    message(contrasts(d$Block))
+    message("Condition contrast is:", contrasts(d$Condition.Exposure))
+    message("Block contrast is:", contrasts(d$Block))
   } else if (all(d$Phase == "exposure") & n_distinct(d$Block) > 1 & contrast_type == "difference") {
     contrasts(d$Block) <- cbind("_Exposure2 vs. Exposure1" = c(-2/3, 1/3, 1/3),
                                 "_Exposure3 vs. Exposure2" = c(-1/3,-1/3, 2/3))
     message("Condition contrast is:", MASS::fractions(contrasts(d$Condition.Exposure)))
     message("Block contrast is:", MASS::fractions(contrasts(d$Block)))
-  } else if (n_distinct(d$Block) > 1 & contrast_type == "difference"){
+  } else if (n_distinct(d$Block) > 1 & contrast_type == "difference") {
     contrasts(d$Block) <- MASS::fractions(MASS::contr.sdif(9))
     dimnames(contrasts(d$Block))[[2]] <- c("_Exp1 vs. Test1", "_Test2 vs. Exp1", "_Exp2 vs. Test2", "_Test3 vs. Exp2", "_Exp3 vs. Test3", "_Test4 vs. Exp3", "_Test5 vs. Test4", "_Test6 vs. Test5")
     message("Condition contrast is:", MASS::fractions(contrasts(d$Condition.Exposure)))
@@ -217,24 +219,33 @@ prepVars <- function(d, test_mean = NULL, levels.Condition = NULL, contrast_type
 }
 
 
-
-
 # Fit Bayesian model in standard and nested slope formulations---------------------------------------------------
 # priorSD argument refers to the SD for the VOT estimate
-fit_model <- function(data, phase, formulation = "standard", priorSD = 2.5, adapt_delta = .99) {
+fit_model <- function(
+    data, 
+    phase, 
+    formulation = "standard", 
+    priorSD = 2.5,
+    iter = 4000,
+    warmup = 2000,  
+    adapt_delta = .99
+) {
   require(tidyverse)
   require(magrittr)
   require(brms)
 
+  # get the mean VOT at test for centering 
+  # in both test and exposure fitting we center to the mean during test phase
   VOT.mean_test <-
     data %>%
     filter(Phase == "test") %>%
     ungroup() %>%
     summarise(mean = mean(Item.VOT, na.rm = T)) %>%
     pull(mean)
+  
   levels_Condition.Exposure <- c("Shift0", "Shift10", "Shift40")
+  
   contrast_type <- "difference"
-  chains = 4
 
   if (phase == "all") {
     data %<>%
@@ -246,6 +257,7 @@ fit_model <- function(data, phase, formulation = "standard", priorSD = 2.5, adap
       prepVars(test_mean = VOT.mean_test, levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type)
   }
 
+  # specify the prior for beta parameters here if different from the general one
   prior_overwrite <- if (phase == "exposure" & formulation == "nested_slope") {
     c(set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x2:VOT_gs", dpar = "mu2"),
       set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x4:VOT_gs", dpar = "mu2"),
@@ -307,10 +319,10 @@ fit_model <- function(data, phase, formulation = "standard", priorSD = 2.5, adap
     data = data,
     prior = my_priors,
     cores = 4,
-    chains = chains,
+    chains = 4,
     init = 0,
-    iter = 4000,
-    warmup = 2000,
+    iter = iter,
+    warmup = warmup,
     family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
     control = list(adapt_delta = adapt_delta),
     file = paste0("../models/", phase, "-", formulation, "-priorSD", priorSD, "-", adapt_delta, ".rds")
