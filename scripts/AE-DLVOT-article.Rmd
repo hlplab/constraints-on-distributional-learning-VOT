@@ -1,6 +1,6 @@
 ---
 title             : "Unravelling incremental adaptation to an unfamiliar talker"
-shorttitle        : "short article draft"
+shorttitle        : "DRAFT"
 date              : "`r format(Sys.time(), '%B %d, %Y')`"
 
 author: 
