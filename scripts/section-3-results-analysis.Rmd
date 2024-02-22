@@ -83,10 +83,7 @@ d.estimates <-
         VOT.mean_test,
         ifelse(Block %in% c(2, 4, 6), VOT.sd_exposure, VOT.sd_test))) %>%
   group_by(Condition.Exposure, Block) %>%
-  summarise(
-    across(
-      c(Intercept, slope, slope_unscaled, PSE),
-      list(lower = ~ quantile(.x, probs = .025), median = median, upper = ~ quantile(.x, probs = .975)))) %>%
+  median_hdci() %>% 
   relabel_blocks()
 ```
 
@@ -184,8 +181,8 @@ p.across_blocks <-
   d.estimates %>%
   ggplot(
     aes(
-      x = Block.plot_label, y = Intercept_median,
-      ymin = Intercept_lower, ymax = Intercept_upper,
+      x = Block.plot_label, y = Intercept,
+      ymin = Intercept.lower, ymax = Intercept.upper,
       colour = Condition.Exposure, group = Condition.Exposure)) +
   geom_rect(
     data = tibble(
@@ -265,11 +262,11 @@ d.true_shift <-
   mutate(
     PSE_block1 =
       case_when(
-        Condition.Exposure == "Shift0" ~ d.estimates$PSE_median[1],
-        Condition.Exposure == "Shift10" ~ d.estimates$PSE_median[10],
-        Condition.Exposure == "Shift40" ~ d.estimates$PSE_median[19]),
+        Condition.Exposure == "Shift0" ~ d.estimates$PSE[1],
+        Condition.Exposure == "Shift10" ~ d.estimates$PSE[10],
+        Condition.Exposure == "Shift40" ~ d.estimates$PSE[19]),
     true_shift = PSE.io_predicted - PSE_block1,
-    proportion_shift = (PSE_median - PSE_block1)/true_shift) %>%
+    proportion_shift = (PSE - PSE_block1)/true_shift) %>%
   relabel_blocks()
 
 #Compute distribution of talker-specific PSEs from Chodroff & Wilson (2018) corpus
@@ -293,7 +290,7 @@ d.talkerPSEs <-
 p.PSE_1to7 <-     
   p.across_blocks +  
   scale_y_continuous("PSE (ms VOT)") +
-  aes(y = PSE_median, ymin = PSE_lower, ymax = PSE_upper) +
+  aes(y = PSE, ymin = PSE.lower, ymax = PSE.upper) +
       geom_rect(
     data = d.io.categorization %>%
       group_by(Condition.Exposure) %>%
@@ -397,7 +394,7 @@ p.fit_7to9 <-
       y = estimate__,
       fill = "grey",
       legend.position = "none") +
-  theme( axis.title.y = element_blank())
+  theme(axis.title.y = element_blank())
 ```
 
 (ref:plot-fit-PSE) Summary of results. **Panel A:** Changes in listeners psychometric categorization functions as a function of exposure, from Test 1 to Test 4 with all intervening exposure blocks (only unlabeled trials were included in the analysis of exposure blocks since labeled trials provide no information about listeners' categorization function). Point ranges indicate the mean proportion of participants' "t"-responses and their 95% bootstrapped CI. Lines and shaded intervals show the *maximum a posteriori* (MAP) estimates and 95% posterior CIs of a Bayesian mixed-effects psychometric model fit to participants' responses. **Panel B:** Same as Panel A but for the final three test blocks without intervening exposure. Test 4 is shown as part of both Panels A and B. **Panel C:** Changes across blocks and conditions in listeners' point-of-subjective-equality (PSE) of the lapse-corrected categorization functions from Panels A \& B (i.e., the PSE of the perceptual model inferred from listeners' responses; for changes in the slope of that function, see SI, \@ref(sec:io-bias-correction)). Point ranges represent the posterior medians and their 95% CI derived from the psychometric model. Percentage labels indicate the amount of shift as a proportion of the expected shift under an idealized learner. The PSEs expected from such an idealized learner (an ideal observer model that has fully learned the exposure distributions) are indicated for each exposure condition by the horizontal dashed reference lines. Finally, the horizontal shaded ribbons indicate the 95%-CI of the PSEs expected from an idealized listener prior to any exposure while the crossbar indicate the mean and the 95% QI talker-specific PSEs centered on the mean PSE of listeners estimated prior to exposure. See text for further details.
@@ -420,7 +417,7 @@ heights = c(1.1, 1.1, 1.8)) +
 \end{landscape}
 
 ```{r}
-rm(p.across_blocks, p.estimates_1to7, p.PSE_1to7, p.slope_1to7, p.fit_1to7, p.fit_7to9)
+rm(p.across_blocks, p.estimates_1to7, p.PSE_1to7, p.slope_1to7, p.fit_1to7, p.fit_7to9, label_colour)
 ```
 
 ## Conceptual replication (averaging over test blocks)
@@ -529,9 +526,9 @@ Next, we compare how exposure affected listeners' categorization responses from 
 ```{r fit-simple-effects-block, results='hide'}
 my_priors <- c(
   prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),
-  set_prior("student_t(3, 0, 15)", dpar = "mu2", coef = "Condition.ExposureShift0:VOT_gs"),
-  set_prior("student_t(3, 0, 15)", dpar = "mu2", coef = "Condition.ExposureShift10:VOT_gs"),
-  set_prior("student_t(3, 0, 15)", dpar = "mu2", coef = "Condition.ExposureShift40:VOT_gs"),
+  prior(student_t(3, 0, 15), class = "b", dpar = "mu2", coef = "Condition.ExposureShift0:VOT_gs"),
+  prior(student_t(3, 0, 15), class = "b", dpar = "mu2", coef = "Condition.ExposureShift10:VOT_gs"),
+  prior(student_t(3, 0, 15), class = "b", dpar = "mu2", coef = "Condition.ExposureShift40:VOT_gs"),
   prior(cauchy(0, 2.5), class = "sd", dpar = "mu2"),
   prior(lkj(1), class = "cor"))
 
