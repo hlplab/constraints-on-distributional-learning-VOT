@@ -331,7 +331,6 @@ fit_model <- function(
 
 
 # Get info from psychometric model -----------------------------------------------------------
-
 get_intercepts_and_slopes <-
   . %>%
   gather_draws(`b_mu2_IpasteCondition.ExposureBlocksepEQ.*`, regex = TRUE, ndraws = 8000) %>%
@@ -344,7 +343,6 @@ get_intercepts_and_slopes <-
   relocate(c(Condition.Exposure, Block, Intercept, slope, .chain, .iteration, .draw))
 
 get_conditional_effects <- function(model, data, phase) {
-
   conditional_effects(
     x = model,
     effects = "VOT_gs:Condition.Exposure",
