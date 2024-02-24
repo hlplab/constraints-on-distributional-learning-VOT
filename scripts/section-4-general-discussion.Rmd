@@ -20,7 +20,7 @@ Some experiments on LGPL/VGPL have demonstrated effects after even less exposure
 To the best of our knowledge, the present study is the first to assess the joint effects of prior and recent exposure gradiently unfold with increasing exposure, predictions (10 and (2a,b) described in the introduction. While most contemporary theories of adaptive speech perception share these qualitative predictions, relatively few experiments have investigated how listeners' categorization functions change with continued exposure to a phonetic distribution. We briefly review potential reasons for this before we turn to our results.
 
 ### Previous work
-The majority of studies on AA, for example, continue to employ the popular single exposure-test design without incremental testing. In this design, different groups of listeners are exposed to different speech input. The effects of that exposure are then assessed by a single post-exposure test, which typically is held identical across the groups. This design is well suited to assess the qualitative effects of exposure to different types of speech input---for example, whether familiarization with a talker's speech generally leads to improved speech recognition---but it sheds little light on *how* the phonetic properties of the speech input shape changes in listeners' perception. If repeated testing has been been employed in research on AA, it tended to be after considerably longer exposure [e.g., testing on different days, @eisner-mcqueen2006; but see @xie-kurumada2024]. The same largely holds for previous DL studies, which either employed a single batch test following exposure [e.g., @clayards2008; @idemaru-holt2020; @nixon2016; @schertz-REF] or repeated testing over the course of multiple days [e.g., @mcclelland1999]. 
+The majority of studies on AA, for example, continue to employ the popular single exposure-test design without incremental testing. In this design, different groups of listeners are exposed to different speech input. The effects of that exposure are then assessed by a single post-exposure test, which typically is held identical across the groups. This design is well suited to assess the qualitative effects of exposure to different types of speech input---for example, whether familiarization with a talker's speech generally leads to improved speech recognition---but it sheds little light on *how* the phonetic properties of the speech input shape changes in listeners' perception. If repeated testing has been been employed in research on AA, it tended to be after considerably longer exposure [e.g., testing on different days, @eisner-mcqueen2006; but see @xie-kurumada2024]. The same largely holds for previous DL studies, which either employed a single batch test following exposure [e.g., @clayards2008; @idemaru-holt2020; @nixon2016; @schertz2016] or repeated testing over the course of multiple days [e.g., @mcclelland1999]. 
 
 One reason for the relative scarcity of studies on incremental changes during the early stages of exposure might originate in the focus of earlier research. As mentioned in the introduction, the pioneering generation of studies focused on the question of *whether* adaptation is observed, and *under what conditions* [for review, see @cummings-theodore2023]. Now that the existence of adaptive changes in speech perception is no longer in question, paradigms that inform and constrain the functional relation between exposure inputs and changes in listeners' perception have gained in importance. At the minimum, this includes a clearer understanding of how the amount and statistics of the exposure input drive changes in speech perception. Stronger tests of competing computational models will require such data. In a recent review of the field, @xie2023 demonstrated that the signature findings of some of the most popular paradigms in adaptive speech perception do not distinguish between radically different theoretical accounts: qualitative improvements in speech recognition can be explained by mechanisms ranging from early pre-linguistic perceptual normalization, changes in the representations of phonetic categories, or upstream changes in decision-making. Other recent reviews, too, have highlighted the need to develop stronger theories, sufficiently specific to be implemented as predictive computational models [@guest-martin2021; @kleinschmidt-jaeger2015; @norris2017; @yarkoni-westfall2017]. Effective comparisons of these theories will require quantitative data sets that constrain the way in which listeners' categorization behavior changes depending on the amount and nature of the input.
 
@@ -115,11 +115,11 @@ d_for_ASP <-
     VOT, f0_Mel, vowel_duration, Response.Category, Item.ExpectedResponse.Category)
 
 # fit ideal adaptor with uninformative priors
-m_IA_inferred.VOT_f0 <-
+m_IA_inferred.VOT_f0_vowelduration <-
   infer_prior_beliefs(
     exposure = d_for_ASP %>% filter(Phase == "exposure"),
     test = d_for_ASP %>% filter(Phase == "test"),
-    cues = c("VOT", "f0_Mel"),  
+    cues = c("VOT", "f0_Mel", "vowel_duration"),  
     category = "Item.ExpectedResponse.Category",
     response = "Response.Category",
     group = "ParticipantID",
@@ -131,7 +131,7 @@ m_IA_inferred.VOT_f0 <-
     mu_0 = NULL,
     Sigma_0 = NULL,
     sample = T,
-    file = "../models/IBBU_VOT+f0_uninformative priors.RDS",
+    file = "../models/IBBU_VOT+f0+vowelduration_uninformative priors.RDS",
     warmup = 3000, iter = 4000,
     control = list(adapt_delta = .995, max_treedepth = 15))
 ```
@@ -139,14 +139,14 @@ m_IA_inferred.VOT_f0 <-
 
 
 ```{r}
-groups <- get_group_levels_from_stanfit(m_IA_inferred.VOT_f0)
+groups <- get_group_levels_from_stanfit(m_IA_inferred.VOT_f0_vowelduration)
 # get logistic model predictions of the IA's categorisation 
 # then prepare the data for plotting
 d.IA_predicted_PSE <- 
   if (file.exists("../models/d.IA_predicted_PSE.csv")) {
     read_csv("../models/d.IA_predicted_PSE.csv", show_col_types = F)
   } else {
-    get_logistic_parameters_fr_IBBU(m_IA_inferred.VOT_f0, groups = groups) %>% 
+    get_logistic_parameters_fr_IBBU(m_IA_inferred.VOT_f0_vowelduration, groups = groups) %>% 
       group_by(group) %>% 
       median_hdci(PSE) %>% 
       # duplicate the no-exposure row; 1 for each condition

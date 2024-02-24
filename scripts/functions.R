@@ -642,6 +642,30 @@ make_VOT_IOs_from_exposure <- function(data, Sigma_noise = matrix(80, dimnames =
 
 # Estimate the intercept, slope, and PSE that these ideal observers would have
 # were they analyzed the same way the human data is analyzed.
+
+fit_logistic_regression_to_model_categorization <- function(.data) {
+  .data %>% 
+    mutate(
+    model_unscaled = map(data, ~ glm(
+      cbind(n_t, n_d) ~ 1 + VOT,
+      family = binomial,
+      data = .x)),
+    intercept_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[1, 2] %>% pull()),
+    slope_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[2, 2] %>% pull()),
+    model_scaled = map(data, ~ glm(
+      cbind(n_t, n_d) ~ 1 + I((VOT - VOT.mean_test) / (2* VOT.sd_test)),
+      family = binomial,
+      data = .x)),
+    intercept_scaled = map_dbl(model_scaled, ~ tidy(.x)[1, 2] %>% pull()),
+    slope_scaled = map_dbl(model_scaled, ~ tidy(.x)[2, 2] %>% pull()),
+    PSE = -intercept_unscaled/slope_unscaled) %>% 
+    # collapse over all Latin-square designed lists
+    # (this still keeps all individual predictions but only has one unique combination
+    # of exposure condition and test
+    { if ("group" %in% names(.)) mutate(., group = gsub("[ABC]A", "", group)) else (.) }
+}
+
+
 get_logistic_parameters_from_model <- function(
     model,
     model_col = "model",
@@ -670,22 +694,8 @@ get_logistic_parameters_from_model <- function(
     # Fit logistic regression and extract relevant information
     # (the regression only uses VOT regardless of what cues are used for the categorization
     # so that this matches the analysis of the human responses)
-    mutate(
-      model_unscaled = map(data, ~ glm(
-        cbind(n_t, n_d) ~ 1 + VOT,
-        family = binomial,
-        data = .x)),
-      intercept_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[1, 2] %>% pull()),
-      slope_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[2, 2] %>% pull()),
-      model_scaled = map(data, ~ glm(
-        cbind(n_t, n_d) ~ 1 + I((VOT - VOT.mean_test) / (2 * VOT.sd_test)),
-        family = binomial,
-        data = .x)),
-      intercept_scaled = map_dbl(model_scaled, ~ tidy(.x)[1, 2] %>% pull()),
-      slope_scaled = map_dbl(model_scaled, ~ tidy(.x)[2, 2] %>% pull()),
-      PSE = -intercept_unscaled/slope_unscaled)
+    fit_logistic_regression_to_model_categorization()
 }
-
 
 get_logistic_parameters_fr_IBBU <- function(
     model,
@@ -703,7 +713,6 @@ get_logistic_parameters_fr_IBBU <- function(
       summarize = F,
       wide = F,
       ndraws = NULL,
-      #seed = 2824,
       untransform_cues = untransform_cues) %>%
     filter(group %in% .env$groups)
 
@@ -752,24 +761,7 @@ get_logistic_parameters_fr_IBBU <- function(
     # Fit logistic regression and extract relevant information
     # (the regression only uses VOT regardless of what cues are used for the categorization
     # so that this matches the analysis of the human responses)
-    mutate(
-      model_unscaled = map(data, ~ glm(
-        cbind(n_t, n_d) ~ 1 + VOT,
-        family = binomial,
-        data = .x)),
-      intercept_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[1, 2] %>% pull()),
-      slope_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[2, 2] %>% pull()),
-      model_scaled = map(data, ~ glm(
-        cbind(n_t, n_d) ~ 1 + I((VOT - VOT.mean_test) / (2* VOT.sd_test)),
-        family = binomial,
-        data = .x)),
-      intercept_scaled = map_dbl(model_scaled, ~ tidy(.x)[1, 2] %>% pull()),
-      slope_scaled = map_dbl(model_scaled, ~ tidy(.x)[2, 2] %>% pull()),
-      PSE = -intercept_unscaled/slope_unscaled,
-      # collapse over all Latin-square designed lists
-      # (this still keeps all individual predictions but only has one unique combination
-      # of exposure condition and test
-      group = gsub("[ABC]A", "", group))
+    fit_logistic_regression_to_model_categorization()
 }
 
 
