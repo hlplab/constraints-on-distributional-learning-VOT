@@ -165,9 +165,9 @@ get_ChodroffWilson_data <- function(
 # Prepare variables for regression modelling ---------------------------------------------------
 
 prepVars <- function(
-    d, 
-    test_mean = NULL, 
-    levels.Condition = NULL, 
+    d,
+    test_mean = NULL,
+    levels.Condition = NULL,
     contrast_type
 ) {
   d %<>%
@@ -182,8 +182,8 @@ prepVars <- function(
     mutate(
       Block_n = as.numeric(as.character(Block)),
       across(c(Condition.Exposure, Block, Item.MinimalPair), factor),
-      Condition.Exposure = factor(Condition.Exposure, levels = levels.Condition)) %>% 
-    drop_na(Block, Response, Item.VOT) %>% 
+      Condition.Exposure = factor(Condition.Exposure, levels = levels.Condition)) %>%
+    drop_na(Block, Response, Item.VOT) %>%
     mutate(VOT_gs = (Item.VOT - test_mean) / (2 * sd(Item.VOT, na.rm = TRUE))) %>%
     droplevels()
 
@@ -222,19 +222,19 @@ prepVars <- function(
 # Fit Bayesian model in standard and nested slope formulations---------------------------------------------------
 # priorSD argument refers to the SD for the VOT estimate
 fit_model <- function(
-    data, 
-    phase, 
-    formulation = "standard", 
+    data,
+    phase,
+    formulation = "standard",
     priorSD = 2.5,
     iter = 4000,
-    warmup = 2000,  
+    warmup = 2000,
     adapt_delta = .99
 ) {
   require(tidyverse)
   require(magrittr)
   require(brms)
 
-  # get the mean VOT at test for centering 
+  # get the mean VOT at test for centering
   # in both test and exposure fitting we center to the mean during test phase
   VOT.mean_test <-
     data %>%
@@ -242,9 +242,9 @@ fit_model <- function(
     ungroup() %>%
     summarise(mean = mean(Item.VOT, na.rm = T)) %>%
     pull(mean)
-  
+
   levels_Condition.Exposure <- c("Shift0", "Shift10", "Shift40")
-  
+
   contrast_type <- "difference"
 
   if (phase == "all") {
@@ -385,10 +385,10 @@ get_bf <- function(model, hypothesis) {
   h <- hypothesis(model, hypothesis)[[1]]
   BF <- if (is.infinite(h$Evid.Ratio)) paste("\\geq", get_nsamples(model)) else paste("=", round(h$Evid.Ratio, 1))
   paste0(
-    "\\hat{\\beta} = ", round(h$Estimate, 2),
-    ",  90\\%{\\rm -CI} = [", round(h$CI.Lower, 3), ", ", round(h$CI.Upper, 3),
-    "],  BF ", BF,
-    ",  p_{posterior} = ", signif(h$Post.Prob, 3))
+    "\\(\\hat{\\beta} = ", round(h$Estimate, 2),
+    "\\), \\(90\\%{\\rm -CI} = [", round(h$CI.Lower, 3), ", ", round(h$CI.Upper, 3),
+    "]\\), \\(BF ", BF,
+    "\\), \\(p_{posterior} = ", signif(h$Post.Prob, 3), "\\)")
 }
 
 # Function to get identity CI of a model summary

@@ -58,14 +58,20 @@ If replicated, it would be tempting to interpret these 'diminishing returns' as 
 
  Why constrained? Why asymmetric?
 
-+ regularizing priors pulling ...?
-+ some subjects not doing the task (zero adaptors not being modeled separately might pull more extreme conditions more to the mean)
-+ intermittend test undoing effects even within 12 trials? if so, that's interesting. future work can test this by ... 
- + could some form of moving window with historical decay explain the findings? On the one hand if the moving window is very small, that would not explain why we do see some *cumulative* changes across blocks (window must be at least 48 + 12 = 60 trials). on the other hand, the qualitative changes in the PSEs and slopes suggest that 12 trials can be enough to change some aspects of the categorisation function. it's thus *possible* that something that ways recent input much more strongly but also considers less recent input beyond 48 trials might explain the overall pattern.
- + COULD (but maybe not?) discuss potential that observed adaptation maximizes accuracy under the choice rule. use psychometric function fit during unlabeled exposure trials to calculate *accuracy* (not likelihood) on labeled trials under criterion and under proportional matching decision rules. compare against accuracy if ideal observers categorization functions are used instead.
+ + methodological issues that would mean ideal adaptor might still be compatible with data
+  + regularizing priors pulling ...?
+  + some subjects not doing the task and we're not modeling that (zero adaptors not being modeled separately might pull more extreme conditions more to the mean) 
+  + failure to model learning during test: intermittend test undoing effects even within 12 trials? if so, that's interesting. future work can test this by ... 
 
- + difficulty extrapolating to unobserved VOTs? [@kleinschmidt2020, p. 27]
-+ limitations in incremental adaptation (that might potentially be overcome with longer-term exposure, cf. discussion in xie2023)
+ + ideal adaptor but with modification:
+  + talkers are not the relevant context. e.g., could some form of moving window with historical decay explain the findings? On the one hand if the moving window is very small, that would not explain why we do see some *cumulative* changes across blocks (window must be at least 48 + 12 = 60 trials). on the other hand, the qualitative changes in the PSEs and slopes suggest that 12 trials can be enough to change some aspects of the categorisation function. it's thus *possible* that something that ways recent input much more strongly but also considers less recent input beyond 48 trials might explain the overall pattern.
+
+ + DL might be correct but ideal adaptor *model* as used here might be wrong
+  + goal of learning (loss function) is not approximation of distributions (i.e., maximizing likelihood of joint distribution of cues and categories) but e.g., maximization of accuracy under a choice rule.
+   + COULD (but maybe not?) discuss potential that observed adaptation maximizes accuracy under the choice rule. use psychometric function fit during unlabeled exposure trials to calculate *accuracy* (not likelihood) on labeled trials under criterion and under proportional matching decision rules. compare against accuracy if ideal observers categorization functions are used instead.
+  + difficulty extrapolating to unobserved VOTs? [@kleinschmidt2020, p. 27]. 
+  + limitations in incremental adaptation (that might potentially be overcome with longer-term exposure, cf. discussion in xie2023): e.g., reweighting mixture of previously learned talker-models (can't go beyond previous experience).
+   
 
 All of these tests were facilitated by the use of incremental testing, which thereby facilitated stronger---though still qualitative---tests of theories of adaptive speech perception. The use of incremental testing also revealed 
 
