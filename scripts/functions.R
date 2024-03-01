@@ -644,7 +644,7 @@ make_VOT_IOs_from_exposure <- function(data, Sigma_noise = matrix(80, dimnames =
 # were they analyzed the same way the human data is analyzed.
 
 fit_logistic_regression_to_model_categorization <- function(.data) {
-  .data %>% 
+  .data %>%
     mutate(
     model_unscaled = map(data, ~ glm(
       cbind(n_t, n_d) ~ 1 + VOT,
@@ -658,7 +658,7 @@ fit_logistic_regression_to_model_categorization <- function(.data) {
       data = .x)),
     intercept_scaled = map_dbl(model_scaled, ~ tidy(.x)[1, 2] %>% pull()),
     slope_scaled = map_dbl(model_scaled, ~ tidy(.x)[2, 2] %>% pull()),
-    PSE = -intercept_unscaled/slope_unscaled) %>% 
+    PSE = -intercept_unscaled/slope_unscaled) %>%
     # collapse over all Latin-square designed lists
     # (this still keeps all individual predictions but only has one unique combination
     # of exposure condition and test
@@ -697,12 +697,12 @@ get_logistic_parameters_from_model <- function(
     fit_logistic_regression_to_model_categorization()
 }
 
-get_logistic_parameters_fr_IBBU <- function(
+
+get_logistic_parameters_from_IBBU <- function(
     model,
     groups = NULL,
     untransform_cues = T,
-    # target category "/d/" = 1, "/t/" = 2
-    target_category = 2,
+    target_category = 2,      # target category "/d/" = 1, "/t/" = 2
     colors.group = NULL
 ) {
   # Get and summarize posterior draws from fitted model
@@ -741,10 +741,11 @@ get_logistic_parameters_fr_IBBU <- function(
     unnest(c(cues_joint, cues_separate, Predicted_posterior)) %>%
     # Repair estimates that yield infinite posteriors
     mutate(
-      Predicted_posterior = case_when(
-        is.infinite(Predicted_posterior) & sign(Predicted_posterior) == 1 ~ 1,
-        is.infinite(Predicted_posterior) & sign(Predicted_posterior) == -1 ~ 0,
-        T ~ Predicted_posterior))
+      Predicted_posterior =
+        case_when(
+          is.infinite(Predicted_posterior) & sign(Predicted_posterior) == 1 ~ 1,
+          is.infinite(Predicted_posterior) & sign(Predicted_posterior) == -1 ~ 0,
+          T ~ Predicted_posterior))
 
   # Could feed d.pars into parts of get_logistic_parameters_from_model
   # (only the part that samples responses and fits the logistic to it).
@@ -1186,7 +1187,3 @@ conditional_univariate_posterior_t <- function(mu_d, Sigma_d, mu_t, Sigma_t, f0_
     density_t(x) / (density_t(x) + density_d(x))
   }
 }
-
-
-
-
