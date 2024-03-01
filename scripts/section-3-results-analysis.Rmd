@@ -250,7 +250,6 @@ p.slope_1to7 <-
     linetype = 2,
     linewidth = .8,
     alpha = 0.5) +
-
   scale_y_continuous("slope (log-odds/ms VOT)")
 
 # get the relative distance of the IO-predicted PSEs from the starting point PSE at test 1
