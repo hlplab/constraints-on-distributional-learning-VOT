@@ -156,8 +156,8 @@ io <-
       left_join(
         d.for_analysis %>%  
           filter(Phase == "test") %>%
-          distinct(Condition.Exposure, Item.VOT, Item.f0_Mel, Item.vowel_duration) %>%
-          mutate(x = pmap(.l = list(Item.VOT, Item.f0_Mel, Item.vowel_duration), ~ c(..1, ..2, ..3))) %>%
+          distinct(Condition.Exposure, Item.VOT, Item.f0_Mel, Item.VowelDuration) %>%
+          mutate(x = pmap(.l = list(Item.VOT, Item.f0_Mel, Item.VowelDuration), ~ c(..1, ..2, ..3))) %>%
           select(Condition.Exposure, x) %>%
           mutate(Condition.Exposure = "prior") %>%
           nest(x = x)) %>%
@@ -673,7 +673,7 @@ d.exposure_surprisal <-
   # (this is not quite parallel to what we did for test tokens, which was looking at the
   # surprisal of the VOT, rather than the surprisal of the category label)
   mutate(
-    x = ifelse(IO.Type != "prior", Item.VOT, pmap(list(Item.VOT, Item.f0_Mel, Item.vowel_duration), ~ c(...))),
+    x = ifelse(IO.Type != "prior", Item.VOT, pmap(list(Item.VOT, Item.f0_Mel, Item.VowelDuration), ~ c(...))),
     posterior = pmap_dbl(
       .l =
         list(

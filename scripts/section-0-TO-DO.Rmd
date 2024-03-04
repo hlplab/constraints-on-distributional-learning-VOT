@@ -20,10 +20,8 @@
  * MARYANN
  
 ## High priority
-  * Extract posterior predictions from IBBU fit. Plot the predicted PSE and credible interval by block and category
-  * Logistic regression over the IA predictions (analogous to the logistic regression of the IO predictions)
-  * Make a copy of main figure and place it in the SI; remove panel C from the main figure
-  * Check on how Eleanor Chodroff annotated her corpus data with sonorants as codas -- make note
+  * 
+
 
 ## Medium priority
 
@@ -34,7 +32,7 @@
 
 
 ### Lower Priority
-  * look into streamlining functions: get_logistic_parameters_from_model and get_logistic_parameters_from_IBBU
+  * 
 
 ## To do later
   

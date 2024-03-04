@@ -81,13 +81,10 @@ Pre-voicing in 5ms increments were generated from a a clear pre-voicing waveform
 
 ```{r stimuli-cue-measurements, fig.height=base.height*2, fig.width=base.width*2.5, fig.cap="cue measurements of synthesised stimuli"}
 # Annotation information of synthesised stimuli
-d.stimuli <- read_csv("../data/exposure_stimuli_f0_5ms.csv", show_col_types = F)
 
 p.stimuli.VOT_f0 <- 
-  d.stimuli %>%
-  filter(VOT %in% c(-15:130),
-         word != "dimtim") %>% 
-  ggplot(aes(x = VOT, y = f0_5ms_into_vowel, colour = word)) +
+  exposure_stimuli_cue_measurements %>%
+  ggplot(aes(x = Item.VOT, y = f0_5ms_into_vowel, colour = Item.MinimalPair)) +
   geom_point(alpha = .4, size = 2) +
   scale_x_continuous(breaks = seq(-100, 150, 15)) +
   scale_y_continuous("F0", breaks = seq(240, 252, 2)) +
@@ -189,13 +186,6 @@ p.database <-
       filter(Phase == "test") %>% distinct(VOT, f0_Mel, vowel_duration) %>% 
       mutate(category = "test"),
     color = "black", alpha = .5, size = 1, inherit.aes = F) +
-  geom_autopoint(
-    data = d.for_analysis %>%
-      select(-c(VOT, f0_Mel, vowel_duration)) %>%
-      rename(VOT = VOT.CCuRE, f0_Mel = f0_Mel.CCuRE, vowel_duration = vowel_duration.CCuRE) %>%
-      filter(Phase == "test") %>% distinct(VOT, f0_Mel, vowel_duration) %>%
-      mutate(category = "test"),
-    color = "gray", alpha = .5, size = 1, inherit.aes = F) +
   scale_color_manual(
     "Category",
     labels = c("/d/", "/t/"),
@@ -253,17 +243,6 @@ p.database.norm <-
       group = interaction(Talker, category)),
     alpha = .1) +
   stat_ellipse() +
-  # geom_autopoint(
-  #   data = d.for_analysis %>%
-  #     filter(Phase == "test") %>% distinct(VOT, f0_Mel, vowel_duration),
-  #   color = "blue", alpha = .5, size = 1, inherit.aes = F) +
-  geom_autopoint(
-    data = d.for_analysis %>%
-      select(-c(VOT, f0_Mel, vowel_duration)) %>%
-      rename(VOT = VOT.CCuRE, f0_Mel = f0_Mel.CCuRE, vowel_duration = vowel_duration.CCuRE) %>%
-      filter(Phase == "test") %>% distinct(VOT, f0_Mel, vowel_duration) %>%
-      mutate(category = "test"),
-    color = "black", alpha = .5, size = 1, inherit.aes = F) +
   scale_color_manual(
       "Category",
       labels = c("/d/", "/t/"),
@@ -275,12 +254,31 @@ p.database.norm <-
                .cols = c(VOT = "VOT (ms)", f0_Mel = "f0 (Mel)", vowel_duration = "Vowel duration (ms)"))) +
   theme(legend.position = "top") 
 
-p.matrix_isolated.norm <- p.database.norm %+%  
-  subset(d.chodroff_wilson.norm %>% filter(speechstyle == "isolated")) 
-
-p.matrix_connected.norm <- p.database.norm %+%  
+p.matrix_isolated.norm <- 
+  p.database.norm %+%  
+  subset(d.chodroff_wilson.norm %>% filter(speechstyle == "isolated")) + 
+  geom_autopoint(
+    data = d.for_analysis %>% 
+      center_stimuli(database = d.chodroff_wilson.isolated) %>% 
+      select(!c(VOT, f0_Mel, vowel_duration)) %>%
+      rename(VOT = VOT.CCuRE, f0_Mel = f0_Mel.CCuRE, vowel_duration = vowel_duration.CCuRE) %>%
+      filter(Phase == "test") %>% distinct(VOT, f0_Mel, vowel_duration) %>%
+      mutate(category = "test"),
+    color = "black", alpha = .5, size = 1, inherit.aes = F) 
+  
+p.matrix_connected.norm <- 
+  p.database.norm %+%  
   subset(d.chodroff_wilson.norm %>% filter(speechstyle == "connected")) +
-  theme(strip.text.x = element_blank())
+  theme(strip.text.x = element_blank()) +
+    geom_autopoint(
+    data = d.for_analysis %>% 
+      center_stimuli(database = d.chodroff_wilson.connected) %>% 
+      select(!c(VOT, f0_Mel, vowel_duration)) %>%
+      rename(VOT = VOT.CCuRE, f0_Mel = f0_Mel.CCuRE, vowel_duration = vowel_duration.CCuRE) %>%
+      filter(Phase == "test") %>% distinct(VOT, f0_Mel, vowel_duration) %>%
+      mutate(category = "test"),
+    color = "black", alpha = .5, size = 1, inherit.aes = F) 
+
 rm(d.chodroff_wilson.connected.norm, d.chodroff_wilson.isolated.norm)
 ```
 
@@ -640,8 +638,8 @@ io.bias_correct <-
         bind_rows(
           d.for_analysis %>%  
             filter(Phase == "test") %>%
-            distinct(Condition.Exposure, Phase, Item.VOT, Item.f0_Mel, Item.vowel_duration) %>%
-            mutate(x = pmap(.l = list(Item.VOT, Item.f0_Mel, Item.vowel_duration), ~ c(..1, ..2, ..3))) %>%
+            distinct(Condition.Exposure, Phase, Item.VOT, Item.f0_Mel, Item.VowelDuration) %>%
+            mutate(x = pmap(.l = list(Item.VOT, Item.f0_Mel, Item.VowelDuration), ~ c(..1, ..2, ..3))) %>%
             select(Condition.Exposure, Phase, x),
           # get the unlabeled exposure stimuli and their 3 cues
           # Since blocks differ in which VOTs are unlabeled, we include all blocks
@@ -650,8 +648,8 @@ io.bias_correct <-
             filter(Phase == "exposure", Item.Labeled == F) %>%
             group_by(Condition.Exposure) %>%
             filter(ParticipantID == first(ParticipantID)) %>%
-            select(Condition.Exposure, Phase, Item.VOT, Item.f0_Mel, Item.vowel_duration) %>% 
-            mutate(x = pmap(.l = list(Item.VOT, Item.f0_Mel, Item.vowel_duration), ~ c(..1, ..2, ..3))) %>% 
+            select(Condition.Exposure, Phase, Item.VOT, Item.f0_Mel, Item.VowelDuration) %>% 
+            mutate(x = pmap(.l = list(Item.VOT, Item.f0_Mel, Item.VowelDuration), ~ c(..1, ..2, ..3))) %>% 
             select(Condition.Exposure, Phase, x)) %>% 
           mutate(Condition.Exposure = "prior") %>% 
           nest(x = x)) %>%

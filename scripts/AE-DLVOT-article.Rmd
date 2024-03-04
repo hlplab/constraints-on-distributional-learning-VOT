@@ -107,7 +107,7 @@ knitr::knit_hooks$set(inline = function(x) { if (is.numeric(x)) prettyNum(x, big
 ```
 
 ```{r}
-INCLUDE_TODO = F           # switch on/off to get to do list.
+INCLUDE_TODO <- T           # switch on/off to get to do list.
 ```
 
 ```{r, child="section-0-TO-DO.Rmd", eval= if (INCLUDE_TODO) TRUE else FALSE}

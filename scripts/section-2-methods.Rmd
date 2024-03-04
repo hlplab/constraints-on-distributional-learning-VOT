@@ -8,17 +8,14 @@ d <-
   read_csv("../data/experiment-results.csv", show_col_types = F) %>% 
   # load f0 measurements of stimuli
   left_join(
-    read_csv("../data/exposure_stimuli_f0_5ms.csv", show_col_types = F) %>%
-      dplyr::select(filename, VOT, f0_5ms_into_vowel, Item.Vowel_duration) %>%
+    exposure_stimuli_cue_measurements %>%
+      dplyr::select(filename, Item.VOT, Item.MinimalPair, f0_5ms_into_vowel, Item.VowelDuration) %>%
       rename(
-        Item.VOT = VOT,
-        Item.vowel_duration = Item.Vowel_duration,
         # This is the F0 measured in the same way as Chodroff & Wilson (2018)
-        # (i.e., 5ms into the vowel)
         Item.Measured_f0 = f0_5ms_into_vowel,
         Item.Filename = filename) %>%
       mutate(Item.Filename = paste0(Item.Filename, ".wav")),
-    by = c("Item.Filename", "Item.VOT")) %>%
+    by = c("Item.Filename", "Item.VOT", "Item.MinimalPair")) %>%
   mutate(
     Response.Voiceless = ifelse(Response.Voicing == "voiceless", 1, 0),
     across(
@@ -29,9 +26,10 @@ d <-
         Response.ClickPosition, Response.Voicing),
       factor),
     Participant.Sex = str_to_lower(Participant.Sex),
-    Item.f0_Mel = normMel(Item.F0_target_for_generation_script)) %>%
+    Item.f0_Mel = normMel(Item.F0_target_for_generation_script),
+    category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))) %>%
   # Make copies of cue just to make working across the functions, which are not yet standardized a bit easier
-  mutate(VOT = Item.VOT, f0_Mel = Item.f0_Mel, vowel_duration = Item.vowel_duration)
+  mutate(VOT = Item.VOT, f0_Mel = Item.f0_Mel, vowel_duration = Item.VowelDuration)
 ```
 
 # Methods 
@@ -271,19 +269,6 @@ d.for_analysis <-
   ungroup()
 ```
 
-```{r centering}
-# center exposure cues to speech corpus means
-d.for_analysis %<>%
-  mutate(
-    across(
-      c("VOT", "f0_Mel", "vowel_duration"),
-      function(x) apply_ccure(
-        data = d.chodroff_wilson, 
-        newdata = ., 
-        cue = substitute(x)), 
-      .names = "{.col}.CCuRE"),
-    category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))) 
-```
 
 Exclusion criteria were determined prior to analysis. Due to data transfer errors, 4 participants' data were not stored and therefore excluded from analysis. We further excluded from analysis participants who committed more than 3 errors out of the 18 catch trials (<83% accuracy, N = `r d %>% filter(Exclude_participant.due_to_catch_trials == TRUE) %>% group_by(ParticipantID) %>% summarise() %>% tally() %>% pull(n)`), participants who committed more than 4 errors out of the 72 labelled trials (<94% accuracy, N = `r d %>% filter(Exclude_participant.due_to_labeled_trials == TRUE) %>% group_by(ParticipantID) %>% summarise() %>% tally() %>% pull(n)`), participants with an average reaction time more than three standard deviations from the mean of the by-participant means (N = `r excl.RT`),  participants who had atypical categorization functions even prior to exposure (N = `r d %>% filter(Exclude_participant.due_to_VOT_slope == TRUE) %>% group_by(ParticipantID) %>% summarise() %>% tally() %>% pull(n)`, see SI, \@ref(sec:exclusions) for details), and participants who reported not to have used headphones (N = `r d %>% group_by(ParticipantID, audio_type) %>% summarise() %>% filter(!(audio_type %in% c("in-ear", "over-ear"))) %>% nrow()`). This left for analysis `r nrow(d.for_analysis %>% filter(Phase == "exposure"))` exposure and `r nrow(d.for_analysis %>% filter(Phase == "test"))` test observations from `r nrow(d.for_analysis %>% ungroup() %>% distinct(ParticipantID))` participants (94% of total), approximately evenly split across the three exposure conditions. 
 
@@ -292,7 +277,8 @@ rm(
   d.exposure_blocks,
   d.VOT_exclusion,
   d.means,
-  p.histogram_conditions)
+  p.histogram_conditions,
+  temp)
 ```
 
 

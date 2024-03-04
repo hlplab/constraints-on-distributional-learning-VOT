@@ -559,6 +559,16 @@ remove_speechrate_effect_from_cue <- function(data, newdata = NULL, cue = "VOT")
     pull(ccure_current_cue)
 }
 
+center_stimuli <- function(d, database) {
+  d %>% mutate(
+    across(
+      c("VOT", "f0_Mel", "vowel_duration"),
+      function(x) apply_ccure(
+        data = database, 
+        newdata = ., 
+        cue = substitute(x)), 
+      .names = "{.col}.CCuRE"))
+}
 
 # MAKE IDEAL OBSERVERS ----------------------------------------------------
 

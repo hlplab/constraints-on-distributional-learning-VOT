@@ -1,7 +1,7 @@
 # specify directory where concatenated sounds and textgrid are saved
-dir$ = "/Users/mata4004/Desktop/Swedish_BeliefUpdating_VOT/materials/stimuli_SWE/annotations/"
-sound$ = "SW_exposure_stimuli.wav"
-textGrid$ = "SW_exposure_stimuli_annotations.TextGrid"
+dir$ = "/Users/mata4004/Desktop/AEDLVOT-article/materials/stimuli_AE/annotation_files/"
+sound$ = "dintin_f0_annotation.wav"
+textGrid$ = "dintin_f0_annotation.TextGrid"
 
 sound = Read from file: dir$ + sound$
 textgrid = Read from file: dir$ + textGrid$
@@ -15,7 +15,7 @@ nSoundFiles = Count intervals where: 1, "contains", "VOT"
 appendInfoLine: "nSoundFiles_",  nSoundFiles
 
 # Create a table to store results -- change these columns to correspond to annotated segments
-resultsTable = Create Table with column names: "results", 0, "filename vowel f0_5ms_into_vowel f0_10ms_into_vowel f0_15ms_into_vowel f0_20ms_into_vowel f0_25ms_into_vowel"
+resultsTable = Create Table with column names: "results", 0, "filename vowel f0_5ms_into_vowel f0_10ms_into_vowel f0_15ms_into_vowel f0_20ms_into_vowel f0_25ms_into_vowel f0_30ms_into_vowel"
 
 # Loop over each sound file in the textgrid; get the interval label, their start and end times.
 for n to nSoundFiles
@@ -77,7 +77,8 @@ for n to nSoundFiles
 		appendInfoLine: "vowel_20ms_ is", vowel_20ms
 		vowel_25ms = startTime + 0.025
 		appendInfoLine: "vowel_25ms_ is", vowel_25ms
-		#30ms_into_vowel = startTime + 0.030
+		vowel_30ms = startTime + 0.030
+		appendInfoLine: "vowel_30ms_ is", vowel_30ms
 
 		#vowel_quarter_point =  startTime + vowel_quarter
 
@@ -106,6 +107,10 @@ for n to nSoundFiles
 		start = startTime
 		end = vowel_25ms
 		f0_25ms_into_vowel = Get mean: start, end, "Hertz"
+		selectObject: pitch
+		start = startTime
+		end = vowel_30ms
+		f0_30ms_into_vowel = Get mean: start, end, "Hertz"
 		removeObject: pitch
 
 
@@ -124,6 +129,7 @@ for n to nSoundFiles
 	Set numeric value: n, "f0_15ms_into_vowel", f0_15ms_into_vowel
 	Set numeric value: n, "f0_20ms_into_vowel", f0_20ms_into_vowel
 	Set numeric value: n, "f0_25ms_into_vowel", f0_25ms_into_vowel
+	Set numeric value: n, "f0_30ms_into_vowel", f0_30ms_into_vowel
 
 	removeObject: newPart
 	
