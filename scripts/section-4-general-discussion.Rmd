@@ -152,7 +152,7 @@ d.IA_predicted_PSE <-
   if (file.exists("../models/d.IA_predicted_PSE.csv")) {
     read_csv("../models/d.IA_predicted_PSE.csv", show_col_types = F)
   } else {
-    get_logistic_parameters_from_IBBU(m_IA_inferred.VOT_f0, groups = groups) %>%
+    get_logistic_parameters_from_IBBU(m_IA_inferred.VOT_f0_vowelduration, groups = groups) %>%
       group_by(group) %>%
       median_hdci(PSE) %>%
       # duplicate the no-exposure row; 1 for each condition
