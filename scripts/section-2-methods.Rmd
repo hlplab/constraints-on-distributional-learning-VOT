@@ -274,6 +274,7 @@ Exclusion criteria were determined prior to analysis. Due to data transfer error
 
 ```{r}
 rm(
+  d.Participant,
   d.exposure_blocks,
   d.VOT_exclusion,
   d.means,
