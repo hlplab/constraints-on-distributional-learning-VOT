@@ -163,9 +163,8 @@ d.IA_predicted_PSE <-
         Block = ifelse(group != "no exposure", str_replace(group, ".*(\\d)", "\\1"), group),
         Block = factor(ifelse(group == "no exposure", 1, Block))) %>%
       relabel_blocks()
-
-    write_csv(d.IA_predicted_PSE, "../models/d.IA_predicted_PSE.csv")
   }
+write_csv(d.IA_predicted_PSE, "../models/d.IA_predicted_PSE.csv")
 ```
 
 (ref:plot-IA-human-PSE) Comparison of shifts in listener PSEs over the first four test blocks against that expected by an ideal adaptor fit to listeners' responses (a distributional learning model that describes ideal information integration). Ribbons indicate the 95% highest posterior density interval.

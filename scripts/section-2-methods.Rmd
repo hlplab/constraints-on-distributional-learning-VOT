@@ -278,8 +278,7 @@ rm(
   d.exposure_blocks,
   d.VOT_exclusion,
   d.means,
-  p.histogram_conditions,
-  temp)
+  p.histogram_conditions)
 ```
 
 
