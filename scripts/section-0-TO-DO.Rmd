@@ -5,19 +5,18 @@
 ## Highest priority
  * FLORIAN: edits
    * Introduction: 
-     * clarify what we mean by "stronger tests": e.g., absence/presence vs. relative direction and order of effects vs. specific magnitudes (not yet the goal). 
      * as a case in point, anticipate that we identify some previously unrecognized or at least under-appreciated properties of adaptive speech perception. This leads us to conduct some exploratory analyses that point towards interesting direction for future work. 
-     
-   * Results or discussion:
-     * By comparing these changes to predictions about listeners' prior behavior based on the statistics of previously experienced input, it becomes possible to understand WHY these changes occur.
-     * By comparing the limits of these changes to predictions about idealised learners, it becomes possible to detect limitations in adaptation that would otherwise go unnnoticed. Here, too, doing so incrementally further yields adding insights (IBBU model)
-     
-   * General discussion:
-     * add section on analysis/methods: a single psychometric model. still can be improved. point to extensions in the SI.
-     * either here or as footnote in methods: be clear that other approaches also make assumptions: e.g, logistic regression or anova etc. assume 0 lapse rates. separate tests at different VOT steps weaken power and fail to recognize that the tests are not independent of each other. This approach --- as well as approaches that aggregate over VOT steps--- also fail to include constraints in the analysis that any reasonable theory of adaptive speech perception should arguably include (such that effects of VOT are monotonic --- at least between the two category means).
 
 
- * MARYANN
+
+ * MARYANN:
+  * Get accuracies of human responses on *un*labelled trials for each exposure & block combination. Compare that to the accuracies expected under ideal pre-exposure listener (IO), idealized learner (IO), and ideal learner (IA) given a) criterion or b) Luce's choice rule. **This quantifies whether listeners had already converged against maximum accuracy, which is relevant for the GD.** For the IOs and IA, we only want to evaluate each of them against the exposure condition it was actually trained on. (and we compare criterion evaluations against criterion evaluations and Luce against Luce)
+  * Get BFs for the difference in the degree of adaptation ('shrinkage'). Simply do hypothesis test for intercept (or PSE, same as rest of paper) using the psychometric model with simple effects for condition. Use the simple effects during test 4 and test hypothesis that (idealized learner-predicted intercept - simple effect of condition) > or < than the same for another condition. **These BFs quantify whether degree of shrinkage differs between conditions**
+  * Consider using IA fit with mu & Sigma set to mean(mu) and Sigma derived by taking geometric mean of tau (vector of SDs) and mean of omega (correlation matrix) across fived folds. If such a model with just 3 DFs also predicts that data relatively well, we should probably use that simpler model for this paper. That will also pre-empt questions about what the mu and Sigma priors were that the IA model inferred.  
+  **To validate the IA as a decently ok model**, compare IA vs. pyschometric model in terms
+     * R2
+     * LOOIC
+  * Get BFs comparing IA-predicted intercept and psychometric-predicted intercept for each test block. **These BFs quantify whether IA model indeed over/under-predicts.**
  
 ## High priority
   * 
