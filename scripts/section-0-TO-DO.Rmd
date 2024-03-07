@@ -13,13 +13,17 @@
   * Get accuracies of human responses on *un*labelled trials for each exposure & block combination. Compare that to the accuracies expected under ideal pre-exposure listener (IO), idealized learner (IO), and ideal learner (IA) given a) criterion or b) Luce's choice rule. **This quantifies whether listeners had already converged against maximum accuracy, which is relevant for the GD.** For the IOs and IA, we only want to evaluate each of them against the exposure condition it was actually trained on. (and we compare criterion evaluations against criterion evaluations and Luce against Luce)
   * Get BFs for the difference in the degree of adaptation ('shrinkage'). Simply do hypothesis test for intercept (or PSE, same as rest of paper) using the psychometric model with simple effects for condition. Use the simple effects during test 4 and test hypothesis that (idealized learner-predicted intercept - simple effect of condition) > or < than the same for another condition. **These BFs quantify whether degree of shrinkage differs between conditions**
   * Consider using IA fit with mu & Sigma set to mean(mu) and Sigma derived by taking geometric mean of tau (vector of SDs) and mean of omega (correlation matrix) across fived folds. If such a model with just 3 DFs also predicts that data relatively well, we should probably use that simpler model for this paper. That will also pre-empt questions about what the mu and Sigma priors were that the IA model inferred.  
-  **To validate the IA as a decently ok model**, compare IA vs. pyschometric model in terms
+  **To validate the IA as a decently ok model**, compare IA vs. pyschometric model in terms of: 
      * R2
      * LOOIC
+     * Add these measures to Section on "Constraints on (the early moments of) adaptive speech perception?" (see inline comments in R markdown)
   * Get BFs comparing IA-predicted intercept and psychometric-predicted intercept for each test block. **These BFs quantify whether IA model indeed over/under-predicts.**
  
 ## High priority
-  * 
+ * Integrate other distributional learning work. K20 mentions Chládková et al., 2017; Colby et al., 2018; Theodore et al., 2015. Are those studies we should at least cite? What do they find? What about additional work by Volya that Maryann mentioned?
+ * Replot Dave's incremental adaptation figure (figure 9) in GD (search for "Figure 9).
+ * Consider replotting shrinkage figure (but with our aesthetics). this could be the figure that you at some point had added to the introduction, showing individual participants categorization functions, the idealized pre-exposure listeners, and the idealized learner in one panel, and in the other panel the violin shrinkage plot.
+  
 
 
 ## Medium priority
