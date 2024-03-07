@@ -839,7 +839,7 @@ get_IO_categorization <- function(
     lapse_rate = 0,
     with_noise = TRUE,
     VOTs = seq(0, 85, .5),
-    F0s = normMel(predict_f0(VOTs)),
+    F0s = predict_f0(VOTs, Mel = T),
     alpha = .1,
     linewidth = .3
 ) {

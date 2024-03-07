@@ -559,7 +559,7 @@ fit_test.simple_effects_block <-
     file ="../models/test-nested-block.rds")
 ```
 
-```{r hypothesis-table-simple-effects-block, results='asis', fig.cap=""}
+```{r hypothesis-table-simple-effects-block, results='asis'}
 hyp.simple_effects_block <-
   hypothesis(
     fit_test.simple_effects_block,
