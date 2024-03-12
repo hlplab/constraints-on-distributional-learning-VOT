@@ -9,6 +9,7 @@ The present study modified a distributional learning paradigm to investigate the
 
 In the remainder of this article, we discuss these findings in more detail, and consider their implications for theories of adaptive speech perception. We begin with predictions (1) and (2a,b). Then we turn to questions about the speed of changes, and changes in that speed with additional exposure, before considering potential constraints on the initial moments of adaptive speech perception. We close by considering limitations of the present study and how future work can overcome them.
 
+
 ## Incremental adaptation based on the amount and distribution of phonetic evidence (Predictions 1 and 2a,b)
 To the best of our knowledge, the present study is the first to assess the joint effects of prior and recent exposure gradiently unfold with increasing exposure, testing predictions (1) and (2a,b) described in the introduction. While most contemporary theories of adaptive speech perception share these qualitative predictions, few experiments have investigated how listeners' categorization functions change with continued exposure to a phonetic distribution.
 
@@ -26,6 +27,7 @@ We also find supported prediction (2a)---that the magnitude of changes in listen
 
 ### Prediction 2a: Adaptation depends on the phonetic distribution in the exposure input
 Finally, prediction (2b)---that the direction and magnitude of changes in listeners' categorization function should depend on the *phonetic distribution* of the exposure input---received support from the within-block comparisons across exposure conditions: the direction of the shift of the /d/ and /t/ category means in the exposure input correctly predicted the relative ordering of listeners' PSEs in Test 1-4, and shifts in category means of larger magnitude (+40 vs. baseline compared to +10 vs. baseline) yielded larger shifts in listeners' PSE. This extends the findings from previous DL studies [@bejjanki2011; @clayards2008; @kleinschmidt-jaeger2011; @kleinschmidt-jaeger2012; @kleinschmidt-jaeger2016; @nixon2016; @theodore-monto2019] to demonstrate gradient *incremental* adaptation towards the exposure distribution.
+
 
 ## Rapid adaptation with diminishing returns
 Having established that exposure led to gradient changes in participants' categorization behavior, we next asked how quickly these changes occurred, and how the rate of change developed with additional exposure. The former informs how plausible it is that the same mechanisms that drive adaptive behavior in the present DL paradigm also underlie adaptive behavior during everyday speech perception. The latter speaks to the nature of the learning mechanisms.
@@ -65,7 +67,7 @@ For the present data, the ideal adaptor model predicts the proportion of listene
 Despite the decent quantitative fit, the ideal adaptor exhibits a systematic deficiency in explaining participants' responses.  Figure \@ref(fig:plot-IA-human-PSE) shows the PSEs inferred from the ideal adaptor, along with listeners' PSEs (the same as in Figure \@ref(fig:plot-fit-PSE)C). Notably, the ideal adaptor *under*-predicts changes in listeners' PSEs in early blocks---a tendency that is most evident for the exposure conditions with more extreme shifts (baseline and +40). Similarly, though less obvious, the ideal adaptor *over*-predicts listeners' PSE in later blocks (see the baseline and +40 conditions in Test 4). To understand this pattern, it is helpful to recognize that rational models of distributional learning describe listeners' expectations after exposure as the weighted mean of prior expectations and the observed exposure statistics [@kleinschmidt-jaeger2015]. This means that the speed with which a learner adapts at the start of exposure is expected to be predictive of how fast a learner adapts after additional exposure. Put differently, ideal adaptors constrain the rate at which changes in PSEs can change across exposure trials. This means that an ideal adaptor can *either* explain the fact that listeners' PSEs changed rapidly at the start of exposure *or* explain the fact that there seem to be little to no changes in listeners' PSE after the second exposure block. But it cannot explain both aspects of our data. It thus appears that participants indeed converged prematurely in their behavior, relative to what would be expected under the specific model of ideal information integration that we employed.
 
 Next, we discuss possible explanations for such premature convergence and for shrinkage. We do, however, emphasize again that additional studies are necessary to confirm each of the two constraints, and to better characterize their properties. We return to this under future directions.
-
+ 
 ```{r fit-IA-inferred-VOT-f0}
 # Make a data frame that splits the entire data in unique exposure-test combinations.
 # This data frame will be used for adaptive changes in normalization and category
@@ -210,6 +212,9 @@ d.estimates %>%
 ```
 
 ### Potential explanations
+Explanations for the observed patterns of shrinkage and premature convergence can be grouped into three classes. One class of explanations appeals to methodological artifacts. A second class of explanations attributes the observed patterns to a failure to take into account aspects of our design. Under either of the first two types of explanations, the present data do *not* constitute evidence against the hypothesis that adaptive speech perception achieves ideal information integration. A third class of explanations appeals to previously unrecognized constraints on adaptive speech perception. 
+
+...
 
 One explanation of both shrinkage and premature convergence appeals to the priors we used in our psychometric model. Following standards in the literature, we employed a weakly regularizing priors Student $t$ prior for all population-level effects. This prior favors small coefficient estimates, regularizing the estimated shifts in PSEs towards zero. As this regularization is particularly strong for more extreme shifts in the PSE, it is theoretically possible that our priors caused both shrinkage and premature convergence [the same holds for the shrinkage estimates reported in @kleinschmidt2020, which were derived from Bayesian mixed-effect logistic regression with similar priors]. This would make these findings artifacts of our data analysis approach, rather than findings of theoretical interest. 
 
