@@ -653,7 +653,23 @@ make_VOT_IOs_from_exposure <- function(data, Sigma_noise = matrix(80, dimnames =
 # Estimate the intercept, slope, and PSE that these ideal observers would have
 # were they analyzed the same way the human data is analyzed.
 
-fit_logistic_regression_to_model_categorization <- function(.data) {
+fit_logistic_regression_to_model_categorization <- function(.data, resolution = 10^12, groups = NULL) {
+  if ("io" %in% names(.data)) {
+    # Prepare data frame for logistic regression
+    .data %<>% 
+    pivot_wider(names_from = category, values_from = response, names_prefix = "response_") %>%
+      mutate(n_d = round(`response_/d/` * .env$resolution), n_t = .env$resolution - n_d) %>%
+      group_by(!!! syms(groups)) %>%
+      nest()
+  } else {
+    .data %<>%
+      # Prepare data frame for logistic regression
+      mutate(
+        n_d = round((if (target_category == 1) Predicted_posterior else (1 - Predicted_posterior)) * .env$resolution),
+        n_t = .env$resolution - n_d) %>%
+      group_by(group, .chain, .iteration, .draw) %>%
+      nest()
+  }
   .data %>%
     mutate(
     model_unscaled = map(data, ~ glm(
@@ -679,8 +695,7 @@ fit_logistic_regression_to_model_categorization <- function(.data) {
 get_logistic_parameters_from_model <- function(
     model,
     model_col = "model",
-    groups = NULL,
-    resolution = 10^12
+    groups = NULL
 ) {
   f <-
     if (any(map_lgl(model[[model_col]], is.MVG_ideal_observer)))
@@ -695,24 +710,20 @@ get_logistic_parameters_from_model <- function(
              ~ f(
                x = .x$x, model = .y, decision_rule = "proportional") %>%
                mutate(VOT = map_dbl(x, ~ .x[1])))) %>%
-    unnest(cols = categorization, names_repair = "unique") %>%
-    # Prepare data frame for logistic regression
-    pivot_wider(names_from = category, values_from = response, names_prefix = "response_") %>%
-    mutate(n_d = round(`response_/d/` * .env$resolution), n_t = .env$resolution - n_d) %>%
-    group_by(!!! syms(groups)) %>%
-    nest() %>%
+    unnest(cols = categorization, names_repair = "unique") %>% 
     # Fit logistic regression and extract relevant information
     # (the regression only uses VOT regardless of what cues are used for the categorization
     # so that this matches the analysis of the human responses)
-    fit_logistic_regression_to_model_categorization()
+    fit_logistic_regression_to_model_categorization(groups = groups)
 }
 
 
-get_logistic_parameters_from_IBBU <- function(
+get_IBBU_predicted_response <- function(
     model,
     groups = NULL,
     untransform_cues = T,
     target_category = 2,      # target category "/d/" = 1, "/t/" = 2
+    predict_test = T,
     colors.group = NULL
 ) {
   # Get and summarize posterior draws from fitted model
@@ -725,7 +736,7 @@ get_logistic_parameters_from_IBBU <- function(
       ndraws = NULL,
       untransform_cues = untransform_cues) %>%
     filter(group %in% .env$groups)
-
+  
   # Prepare test_data
   cue.labels <- get_cue_levels_from_stanfit(model)
   data.test <-
@@ -735,12 +746,41 @@ get_logistic_parameters_from_IBBU <- function(
     make_vector_column(cols = cue.labels, vector_col = "x", .keep = "all") %>%
     nest(cues_joint = x, cues_separate = .env$cue.labels)  %>%
     crossing(group = levels(d.pars$group))
-
-  # Categorize test data
-  d.pars %<>%
+  # Prepare exposure_data
+  data.exposure <- 
+    d.for_analysis %>% 
+    filter(Phase == "exposure") %>% 
+    group_by(Condition.Exposure) %>% 
+    # get 1 set of exposure trials per condition
+    filter(ParticipantID == first(ParticipantID)) %>% 
+    reframe(Item.VOT, Item.f0_Mel, vowel_duration, category) %>% 
+    rename(VOT = Item.VOT, f0_Mel = Item.f0_Mel) %>% 
+    make_vector_column(cols = cue.labels, vector_col = "x", .keep = "all") %>%
+    nest(cues_joint = x, cues_separate = c(.env$cue.labels, category)) %>% 
+    right_join(
+      tibble(
+        # join with group levels in IA fit then temporarily filter out no-exposure group
+        # and cross it with the three shift conditions. the no-exposure group will 
+        # not update likelihoods but will be tested on each of the exposure stimuli
+        # to see how well it performs based on its prior expectations
+        group = get_group_levels_from_stanfit(m_IA_inferred.VOT_f0_vowelduration)) %T>% 
+        { filter(., group == "no exposure") %>% crossing(Condition.Exposure = c("Shift0", "Shift10", "Shift40")) ->> temp } %>% 
+        # match each IA group with its corresponding shift condition   
+        mutate(.,
+               Condition.Exposure = case_when(
+                 str_detect(group, "Shift0") ~ "Shift0",
+                 str_detect(group, "Shift10") ~ "Shift10",
+                 str_detect(group, "Shift40") ~ "Shift40",
+                 TRUE ~ NA),
+               rows = ifelse(group == "no exposure", 0, 1)) %>%   
+        uncount(rows) %>% 
+        bind_rows(temp))
+  
+  # Categorize data
+  d.pars %<>% 
     group_by(group, .chain, .iteration, .draw) %>%
-    do(f = get_categorization_function_from_grouped_ibbu_stanfit_draws(., logit = F)) %>%
-    right_join(data.test, by = "group") %>%
+    do(f = get_categorization_function_from_grouped_ibbu_stanfit_draws(., logit = F)) %>% 
+    { if (predict_test) right_join(., data.test, by = "group") else right_join(., data.exposure, by = "group") } %>%
     group_by(group, .chain, .iteration, .draw) %>%
     mutate(
       Predicted_posterior =
@@ -755,25 +795,16 @@ get_logistic_parameters_from_IBBU <- function(
         case_when(
           is.infinite(Predicted_posterior) & sign(Predicted_posterior) == 1 ~ 1,
           is.infinite(Predicted_posterior) & sign(Predicted_posterior) == -1 ~ 0,
-          T ~ Predicted_posterior))
-
-  # Could feed d.pars into parts of get_logistic_parameters_from_model
-  # (only the part that samples responses and fits the logistic to it).
-  # That would return a posterior distribution of PSEs (one PSE for each posterior draw of parameters)
-  # that could be compared against listeners' PSEs.
-  resolution <- 10^12
-  d.pars %>%
-    # Prepare data frame for logistic regression
-    mutate(
-      n_d = round((if (target_category == 1) Predicted_posterior else (1 - Predicted_posterior)) * .env$resolution),
-      n_t = .env$resolution - n_d) %>%
-    group_by(group, .chain, .iteration, .draw) %>%
-    nest() %>%
-    # Fit logistic regression and extract relevant information
-    # (the regression only uses VOT regardless of what cues are used for the categorization
-    # so that this matches the analysis of the human responses)
-    fit_logistic_regression_to_model_categorization()
+          T ~ Predicted_posterior)) %>% 
+    # for posterior predictions of exposure stimuli, get categorisations based on proportion and criterion decision rules
+    { if (predict_test) . else mutate(
+      .,
+      Response.Proportion = ifelse(category == "/t/", Predicted_posterior, 1 - Predicted_posterior), 
+      Response.Criterion = ifelse(Predicted_posterior >= .5, "/t/","/d/")
+      ) }
 }
+ 
+
 
 
 # Get approximate f0 of synthesised stimuli from VOT values

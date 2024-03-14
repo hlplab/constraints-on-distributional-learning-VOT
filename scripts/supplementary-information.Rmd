@@ -2445,7 +2445,8 @@ make_all_plots(m_IA_inferred.VOT)
 ```{r, size='tiny', fig.width=12, fig.height=12, warning=FALSE, results='asis', eval=FALSE}
 m_IA_inferred.VOT_f0 <-
   infer_prior_beliefs(
-    exposure = d_for_ASP %>% filter(Phase == "exposure"),
+    exposure = d_for_ASP%>%
+    filter(group %in% .env$groups) %>% filter(Phase == "exposure"),
     test = d_for_ASP %>% filter(Phase == "test"),
     cues = c("VOT", "f0_Mel"),  
     category = "Item.ExpectedResponse.Category",
