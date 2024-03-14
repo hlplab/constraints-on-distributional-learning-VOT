@@ -386,9 +386,9 @@ get_bf <- function(model, hypothesis) {
   BF <- if (is.infinite(h$Evid.Ratio)) paste("\\geq", get_nsamples(model)) else paste("=", round(h$Evid.Ratio, 1))
   paste0(
     "\\(\\hat{\\beta} = ", round(h$Estimate, 2),
-    "\\), \\(90\\%{\\rm -CI} = [", round(h$CI.Lower, 3), ", ", round(h$CI.Upper, 3),
+    "\\), 90\\%-CI = \\([", round(h$CI.Lower, 3), ", ", round(h$CI.Upper, 3),
     "]\\), \\(BF ", BF,
-    "\\), \\(p_{posterior} = ", signif(h$Post.Prob, 3), "\\)")
+    "\\), \\(p_{posterior} = \\) \\(", signif(h$Post.Prob, 3), "\\)")
 }
 
 # Function to get identity CI of a model summary
@@ -564,9 +564,9 @@ center_stimuli <- function(d, database) {
     across(
       c("VOT", "f0_Mel", "vowel_duration"),
       function(x) apply_ccure(
-        data = database, 
-        newdata = ., 
-        cue = substitute(x)), 
+        data = database,
+        newdata = .,
+        cue = substitute(x)),
       .names = "{.col}.CCuRE"))
 }
 
