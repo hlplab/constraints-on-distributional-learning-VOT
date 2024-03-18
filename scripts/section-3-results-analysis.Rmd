@@ -134,23 +134,25 @@ io <-
   # VOT variance than our exposure conditions, which we based on estimates from Kronrod et al.
   # (2016). Uses all three cues; duration and spectral noise taken from Kronrod et al.
   bind_rows(
-  # make sure the IOs to be constructed from database include both folded data and unfolded (all) data  
-    bind_rows(d.chodroff_wilson.isolated %>%
-                group_by(fold) %>%
-                nest(data = -fold),
-              d.chodroff_wilson.isolated %>%
-                ungroup() %>%
-                nest(data = everything()) %>%
-                mutate(fold = NA)) %>%
-      mutate(io = map(
-        data, ~
-          make_MVG_ideal_observer_from_data(
-            data = .x,
-            cues = c("VOT", "f0_Mel", "vowel_duration"),
-            Sigma_noise = matrix(
-              c(80, 0, 0, 0, 878, 0, 0, 0, 80),
-              nrow = 3,
-              dimnames = list(c("VOT", "f0_Mel", "vowel_duration"), c("VOT", "f0_Mel", "vowel_duration")))))) %>%
+    # make sure the IOs to be constructed from database include both folded data and unfolded (all) data  
+    bind_rows(
+      d.chodroff_wilson.isolated %>%
+        group_by(fold) %>%
+        nest(data = -fold),
+      d.chodroff_wilson.isolated %>%
+        ungroup() %>%
+        nest(data = everything()) %>%
+        mutate(fold = NA)) %>%
+      mutate(
+        io = map(
+          data, ~
+            make_MVG_ideal_observer_from_data(
+              data = .x,
+              cues = c("VOT", "f0_Mel", "vowel_duration"),
+              Sigma_noise = matrix(
+                c(80, 0, 0, 0, 878, 0, 0, 0, 80),
+                nrow = 3,
+                dimnames = list(c("VOT", "f0_Mel", "vowel_duration"), c("VOT", "f0_Mel", "vowel_duration")))))) %>%
       mutate(Condition.Exposure = "prior") %>%
       select(-data) %>%
       left_join(
@@ -178,7 +180,6 @@ d.io.categorization <-
   relabel_blocks() %>%
   mutate(across(c(Phase, Condition.Exposure, Block, Block.plot_label), factor))
 ```
-
 
 ```{r prepare-plot-intercepts-slopes}
 p.across_blocks <-
