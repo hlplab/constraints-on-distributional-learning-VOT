@@ -723,8 +723,7 @@ get_IBBU_predicted_response <- function(
     groups = NULL,
     untransform_cues = T,
     target_category = 2,      # target category "/d/" = 1, "/t/" = 2
-    predict_test = T,
-    colors.group = NULL
+    predict_test = T   # predict test data or exposure data
 ) {
   # Get and summarize posterior draws from fitted model
   d.pars <-
@@ -759,11 +758,11 @@ get_IBBU_predicted_response <- function(
     nest(cues_joint = x, cues_separate = c(.env$cue.labels, category)) %>% 
     right_join(
       tibble(
-        # join with group levels in IA fit then temporarily filter out no-exposure group
+        # join with group levels in IA fit then temporarily filter to no-exposure group
         # and cross it with the three shift conditions. the no-exposure group will 
         # not update likelihoods but will be tested on each of the exposure stimuli
         # to see how well it performs based on its prior expectations
-        group = get_group_levels_from_stanfit(m_IA_inferred.VOT_f0_vowelduration)) %T>% 
+        group = get_group_levels_from_stanfit(model)) %T>% 
         { filter(., group == "no exposure") %>% crossing(Condition.Exposure = c("Shift0", "Shift10", "Shift40")) ->> temp } %>% 
         # match each IA group with its corresponding shift condition   
         mutate(.,

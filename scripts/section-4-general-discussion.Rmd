@@ -212,6 +212,8 @@ d.estimates %>%
     plot.margin = unit(c(1, 3.2, 1, 1), "lines"),
     legend.position = "none")
 ```
+
+
 ```{r evaluate-IA-accuracy}
 d.IA_predicted_exposure <-
   if (RESET_MODELS) {
@@ -239,7 +241,7 @@ d.IA_exposure_accuracy <-
     across(c(criterion.accuracy, proportion.accuracy), median_hdci))
 ```
 
-```{r plot-IA-exposure-accuracy, fig.width=6.5, fig.height=3.5, fig.cap="(ref:plot-IA-human-accuracy)"}
+```{r plot-IA-exposure-accuracy, fig.width=6.5, fig.height=3.5, fig.cap="(ref:plot-IA-exposure-accuracy)"}
 d.IA_exposure_accuracy %>% 
   pivot_longer(
     cols = contains(".accuracy"),
@@ -256,14 +258,16 @@ d.IA_exposure_accuracy %>%
         axis.text.x = element_text(angle = 30, vjust = .99, hjust = .99))
 ```
 
-(ref:plot-IO-human-accuracy) Range of mean accuracies of participants during exposure against accuracies of idealised learners (assumed to have perfectly learned the exposure distributions). Point ranges represent the median and 95% quantile interval of participant means. **Top:** horizontal lines are accuracies of ideal observers trained in the respective conditions. **Bottom:** Same as top bu with ideal observer lines represent their recognition accuracy prior to receiving any exposure from the respective exposure conditions.
 
-```{r plot-IO-human-accuracy, fig.width=6.5, fig.height=5.5, fig.cap="(ref:plot-IO-human-accuracy)"}
+
+```{r compute-IO-human-accuracy, }
+# get io accuracy on shift conditions they were trained on
+# prior io gets no training so prior-io-accuracy will be evaluated on all three conditions
 io.accuracy <- 
   io %>% 
   select(-c(fold, x)) %>% 
   filter(., Condition.Exposure == "prior") %>% 
-      # make 3 rows of prior condition then join each prior with the three exposure conditions
+      # make 3 rows of prior io condition then join each prior with one of the three exposure conditions
       mutate(rows = 3) %>% 
       uncount(rows) %>% 
       mutate(match = c("Shift0", "Shift10", "Shift40"), 
@@ -277,7 +281,9 @@ io.accuracy <-
                    unnest(data) %>% 
                    reframe(Item.VOT, Item.f0_Mel, vowel_duration, category) %>% 
                    rename(VOT = Item.VOT, f0_Mel = Item.f0_Mel, intended.category = category) %>% 
+                   # nest the cues into one column
                    mutate(x = pmap(list(VOT, f0_Mel, vowel_duration), ~ c(..1, ..2, ..3)),
+                          # create a temporary variable to enable the join between prior io and each set of exposure from each condition
                           match = Condition.Exposure) %>% 
                    select(c(match, intended.category, x)) %>%  
                    nest(x = c(x, intended.category))) %>% 
@@ -333,7 +339,23 @@ io.accuracy <-
                values_to = "accuracy") %>% 
   mutate(Condition.io = ifelse(str_detect(Condition.io, "prior"), "prior", Condition.io))
 
-# calculate human accuracy on unlabelled exposure trials
+# get of the fitted psychometric model
+fit_exposure <- readRDS("../models/exposure-standard-priorSD15-0.999.rds")
+psych.model_accuracy <- epred_draws(object = fit_exposure,
+            newdata = d.for_analysis %>% 
+              filter(Phase == "exposure", Item.Labeled == F) %>% 
+              prepVars(test_mean = VOT.mean_test, levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
+            ndraws = 1000) %>% 
+  group_by(ParticipantID, Condition.Exposure, Block) %>% 
+  mutate(proportional.rule = ifelse(category == "/t/", .epred, 1 -.epred),
+         criterion.rule = case_when(category == "/t/" & .epred >= .5 ~ 1,
+                                    category == "/d/" & .epred < .5 ~ 1,
+                                    T ~ 0)) %>% 
+  summarise(across(c(proportional.rule, criterion.rule), mean, .names = "{.col}")) %>% 
+  group_by(Condition.Exposure, Block) %>% 
+  median_hdci(proportional.rule, criterion.rule)
+
+# get human accuracy on unlabelled exposure trials
 p.human_accuracy <- 
   d.for_analysis %>%
   filter(Phase == "exposure" & Item.Labeled == F) %>%
@@ -346,16 +368,19 @@ p.human_accuracy <-
             upper = quantile(mean.accuracy, probs = .975)) %>% 
   relabel_blocks() %>% 
   ggplot(aes(x = Block.plot_label, y = median, ymin = lower, ymax = upper, colour = Condition.Exposure)) 
+```
 
-
+(ref:plot-IO-human-accuracy) Range of mean accuracies of participants during exposure phases against accuracies of idealised learners assumed to have perfectly learned the exposure distributions. Point ranges represent the median and 95% quantile interval of participant means. **Top:** horizontal lines are accuracies of ideal observers trained in the respective conditions. **Bottom:** Same as top but ideal observer lines represent their recognition accuracy prior to receiving any exposure from the respective exposure conditions.
+```{r plot-io-human-accuracy, fig.width=6.5, fig.height=5.5, fig.cap="(ref:plot-IO-human-accuracy)"}
 p1 <- p.human_accuracy +
   geom_hline(
-    data = io.accuracy %>% filter(Condition.io != "prior"),
+    data = io.accuracy %>% 
+      filter(Condition.io != "prior"),
     mapping = aes(yintercept = accuracy, color = Condition.Exposure, linetype = decision),
     linewidth = .8,
     alpha = 0.4,
     inherit.aes = F) +
-  geom_pointrange(position = position_dodge2(.3), size = .6) +
+  geom_pointrange(position = position_dodge2(.3), size = .4) +
    labs(y = "Human accuracy on unlabeled exposure trials") +
   scale_colour_manual("Condition", values = colours.condition, labels = c("baseline", "+10", "+40"), guide = F) +
   theme(axis.text.x = element_blank()) + 
@@ -369,7 +394,7 @@ p2 <- p.human_accuracy +
     linewidth = .8,
     alpha = 0.4,
     inherit.aes = F) +
-  geom_pointrange(position = position_dodge2(.3), size = .6) +
+  geom_pointrange(position = position_dodge2(.3), size = .4) +
   labs(x = "Block", y = "Human accuracy on unlabeled exposure trials") +
   scale_colour_manual("Condition", values = colours.condition, labels = c("baseline", "+10", "+40"), guide = F) 
 
