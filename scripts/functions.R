@@ -333,6 +333,8 @@ fit_model <- function(
 # Get info from psychometric model -----------------------------------------------------------
 get_intercepts_and_slopes <-
   . %>%
+  # We are *not* including group-level variability here since this pipe is meant to
+  # capture variability in the population-level parameter estimates.
   gather_draws(`b_mu2_IpasteCondition.ExposureBlocksepEQ.*`, regex = TRUE, ndraws = 8000) %>%
   mutate(
     .variable = gsub("b_mu2_IpasteCondition.ExposureBlocksepEQxShift(\\d{1,2})x(\\d{1}.*$)", "Shift\\1.\\2", .variable),
