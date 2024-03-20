@@ -136,7 +136,9 @@ groups <- get_group_levels_from_stanfit(m_IA_inferred.VOT_f0_vowelduration)
 # get logistic model predictions of the IA's categorisation
 # then prepare the data for plotting
 d.IA_predicted_PSE <-
-  if (RESET_MODELS) {
+  if (file.exists("../models/d.IA_predicted_PSE.rds")) {
+    readRDS("../models/d.IA_predicted_PSE.rds") 
+    } else {
     get_IBBU_predicted_response(m_IA_inferred.VOT_f0_vowelduration, groups = groups) %>%
       fit_logistic_regression_to_model_categorization() %>% 
       group_by(group) %>%
@@ -151,8 +153,6 @@ d.IA_predicted_PSE <-
       relabel_blocks()
     
     saveRDS(d.IA_predicted_PSE, "../models/d.IA_predicted_PSE.rds")
-  } else {
-    readRDS("../models/d.IA_predicted_PSE.rds")
   }
 ```
 
@@ -218,17 +218,16 @@ d.estimates %>%
 
 ```{r evaluate-IA-accuracy}
 d.IA_predicted_exposure <-
-  if (RESET_MODELS) {
-      get_IBBU_predicted_response(
+  if (file.exists("../models/d.IA_predicted_exposure.rds")) {
+    readRDS("../models/d.IA_predicted_exposure.rds")
+    } else {
+    get_IBBU_predicted_response(
         model = m_IA_inferred.VOT_f0_vowelduration,
         groups = get_group_levels_from_stanfit(m_IA_inferred.VOT_f0_vowelduration),
         untransform_cues = T,
         target_category = 2, # target category "/d/" = 1, "/t/" = 2
         predict_test = F)
-    
   saveRDS(d.IA_predicted_exposure, "../models/d.IA_predicted_exposure.rds")
-  } else {
-    readRDS("../models/d.IA_predicted_exposure.rds")
   }
 
 d.IA_exposure_accuracy <- 
