@@ -719,7 +719,6 @@ get_logistic_parameters_from_model <- function(
     fit_logistic_regression_to_model_categorization(groups = groups)
 }
 
-
 get_IBBU_predicted_response <- function(
     model,
     groups = NULL,
@@ -740,6 +739,7 @@ get_IBBU_predicted_response <- function(
   
   # Prepare test_data
   cue.labels <- get_cue_levels_from_stanfit(model)
+  if (predict_test) {
   data.test <-
     get_test_data_from_stanfit(model) %>%
     distinct(!!! syms(cue.labels)) %>%
@@ -747,23 +747,26 @@ get_IBBU_predicted_response <- function(
     make_vector_column(cols = cue.labels, vector_col = "x", .keep = "all") %>%
     nest(cues_joint = x, cues_separate = .env$cue.labels)  %>%
     crossing(group = levels(d.pars$group))
+  } else {
   # Prepare exposure_data
   data.exposure <- 
     d.for_analysis %>% 
     filter(Phase == "exposure") %>% 
-    group_by(Condition.Exposure) %>% 
-    # get 1 set of exposure trials per condition
-    filter(ParticipantID == first(ParticipantID)) %>% 
+    nest(data = -c(ParticipantID, Condition.Exposure, List.ExposureBlockOrder)) %>% 
+    group_by(Condition.Exposure, List.ExposureBlockOrder) %>% 
+    # get 1 set of exposure trials per condition, per list
+    slice_sample(n = 1) %>% 
+    unnest(data) %>% 
     reframe(Item.VOT, Item.f0_Mel, vowel_duration, category) %>% 
     rename(VOT = Item.VOT, f0_Mel = Item.f0_Mel) %>% 
     make_vector_column(cols = cue.labels, vector_col = "x", .keep = "all") %>%
     nest(cues_joint = x, cues_separate = c(.env$cue.labels, category)) %>% 
+    # join with group levels found in IA fit then temporarily filter to no-exposure group
+    # and cross that with the three shift conditions. the no-exposure group will 
+    # not update likelihoods but will be tested on each of the exposure stimuli
+    # to see how well it performs based on its prior expectations
     right_join(
       tibble(
-        # join with group levels in IA fit then temporarily filter to no-exposure group
-        # and cross it with the three shift conditions. the no-exposure group will 
-        # not update likelihoods but will be tested on each of the exposure stimuli
-        # to see how well it performs based on its prior expectations
         group = get_group_levels_from_stanfit(model)) %T>% 
         { filter(., group == "no exposure") %>% crossing(Condition.Exposure = c("Shift0", "Shift10", "Shift40")) ->> temp } %>% 
         # match each IA group with its corresponding shift condition   
@@ -776,6 +779,7 @@ get_IBBU_predicted_response <- function(
                rows = ifelse(group == "no exposure", 0, 1)) %>%   
         uncount(rows) %>% 
         bind_rows(temp))
+  }
   
   # Categorize data
   d.pars %<>% 
@@ -948,6 +952,50 @@ density_quantiles <- function(x, y, quantiles) {
   ret  <- approx(seq_along(ind)/length(ind), vals, xout = quantiles)$y
   replace(ret, is.na(ret), max(r[]))
 }
+
+# Evaluate psychometric model predictions
+# note: predictions are of the whole model which includes the lapse rates
+# this is not strictly-speaking equivalent to the IA/IO models which assume no lapsing
+get_pyschometric_accuracy <- function(
+    model_fit, 
+    newdata, 
+    phase, 
+    sd
+) {
+  blocks <- if (phase == "test") c(1, 3, 5, 7) else (c(2, 4, 6)) 
+  epred_draws(
+    object = model_fit,
+    newdata = newdata %>% 
+      # taking VOTs from exposure phase only because they have intended categories
+      filter(Phase == "exposure", Item.Labeled == F) %>% 
+      group_by(Condition.Exposure) %>% 
+      filter(ParticipantID == first(ParticipantID)) %>% 
+      reframe(Condition.Exposure, Item.VOT, category) %>% 
+      # expand to have 3 test blocks
+      crossing(Block = blocks) %>% 
+      mutate(VOT_gs = (Item.VOT - VOT.mean_test) / (2 * sd)),
+    seed = 928,
+    ndraws = 1000,
+    # ignored group-level variability
+    re_formula = NA) %>%
+    mutate(proportional = ifelse(category == "/t/", .epred, 1 -.epred),
+           criterion = case_when(category == "/t/" & .epred >= .5 ~ 1,
+                                 category == "/d/" & .epred < .5 ~ 1, 
+                                 .default = 0)) %>%
+    group_by(Condition.Exposure, Block, .draw) %>% 
+    summarise(across(c(proportional, criterion), mean, .names = "{.col}_mean")) %>%
+    group_by(Condition.Exposure, Block) %>%
+    median_hdci(proportional_mean, criterion_mean) %>% 
+    pivot_longer(
+      cols = c(3:8),
+      names_to = c("decision", ".value"),
+      names_sep = "_") %>% 
+    rename(median = mean,
+           lower = mean.lower,
+           upper = mean.upper) %>% 
+    select(-c(3:5))
+}
+
 
 
 

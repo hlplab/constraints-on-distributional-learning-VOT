@@ -18,7 +18,7 @@ We used a repeated exposure-test design to assess incremental changes in listene
 ### Prediction 1: Adaptation begins with, and integrates, listeners' prior experience
 The inclusion of a pre-exposure test in our design made it possible to assess prediction (1)---that shifts in listeners' categorization function should depend on how the exposure distributions *relative to listeners' relevant prior experiences*. Two findings of the present study lend support to prediction (1). First, listeners' responses prior to exposure were well approximated based on a database of /d/ and /t/ productions. Second, the direction of changes in listeners' PSEs *relative to pre-exposure* was predicted by the direction of the shift in /d/ and /t/ distributions relative to their distributions in prior experience (Figure \@ref(fig:exposure-means-database-matrix-plot)).
 
-While these effects of prior knowledge are often assumed, this is---to our knowledge---the first time they have been demonstrated for adaptive speech perception. Both findings are predicted by distributional learning accounts that describe adaptive speech perception as incremental interpolation of listeners' prior expectations---based on previously experienced speech input---and the statistics of the exposure input. This includes rational theories of adaptive speech perception [e.g., the ideal adaptor framework, @kleinschmidt-jaeger2015; @kleinschmidt2016], some theories of normalization [e.g., the probabilistic sliding template model, @nearey-assman2007], as well as episodic [@goldinger1997] and exemplar models [@johnson1997]. Other distributional learning accounts are in principle compatible with our finding but would need to be expanded to incorporate prior expectations [e.g., @bejjanki2011; @mcmurray-jongman2011; see discussion in @persson-jaeger2024; @xie2023].
+While these effects of prior knowledge are often assumed, this is---to our knowledge---the first time they have been demonstrated for adaptive speech perception. Both findings are predicted by distributional learning accounts that describe adaptive speech perception as incremental interpolation of listeners' prior expectations---based on previously experienced speech input---and the statistics of the exposure input. This includes rational theories of adaptive speech perception [e.g., the ideal adaptor framework, @kleinschmidt-jaeger2015; @kleinschmidt-jaeger2016], some theories of normalization [e.g., the probabilistic sliding template model, @assmann-nearey2007], as well as episodic [@goldinger1997] and exemplar models [@johnson1997]. Other distributional learning accounts are in principle compatible with our finding but would need to be expanded to incorporate prior expectations [e.g., @bejjanki2011; @mcmurray-jongman2011; see discussion in @persson-jaeger2024; @xie2023].
 
 We emphasize that future tests are necessary to confirm the effects of prior experience observed in the present study. We employed an estimate of participants' prior expectations that is based on a phonetic database of syllable-initial stop productions by speakers of L1-US English. While we chose this database because it matches the speech style of our stimuli, and contained talkers of the same gender (and of relatively similar f0) as the talker used in our experiment, the database is comparatively small. We aimed to remedy this downside by using five-fold cross-validation. This allowed us to express uncertainty about the true range of a typical L1-US English listeners' prior expectations (the gray ribbons in Figure \@ref(fig:plot-fit-PSE)C). It does not, however, remove the need to validate our results based on new participants and larger phonetic databases that are more likely to reflect the prior experience of a 'typical' listener.
 
@@ -290,6 +290,7 @@ io.accuracy <-
                    select(c(match, intended.category, x)) %>%  
                    nest(x = c(x, intended.category))) %>% 
       select(-match) %>% 
+  # get IO categorisation with both decision rules
   mutate(
     categorization.proportional = 
       map2(x, io, ~ 
@@ -302,12 +303,13 @@ io.accuracy <-
   unnest(c(3:5),
          names_sep = "_") %>% 
   select(!ends_with(c("observationID", "_x", "_category"))) %>% 
+  # for all items that are not intended /t/ take 1 minus the posterior of /t/
   mutate(categorization.proportional_response = ifelse(x_intended.category == "/t/", categorization.proportional_response, 1 - categorization.proportional_response),
-         categorization.criterion_response = ifelse(categorization.criterion_response == 1, "/t/", "/d/")) %>% 
-  group_by(Condition.Exposure) %T>% 
-  { summarise(., accuracy.proportional = mean(categorization.proportional_response)) ->> temp } %>% 
-  summarise(., accuracy.criterion = mean(categorization.criterion_response == x_intended.category)) %>% 
-  right_join(temp) %>% 
+         # where criterion rule responds 1 that is a /t/
+         categorization.criterion_response = ifelse(categorization.criterion_response == 1, "/t/", "/d/"),
+         categorization.criterion_response = ifelse(categorization.criterion_response == x_intended.category, T, F)) %>% 
+  group_by(Condition.Exposure) %>% 
+  summarise(across(c(categorization.proportional_response, categorization.criterion_response), mean)) %>% 
   bind_rows(
     io %>% 
   select(-c(fold, x)) %>% 
@@ -328,37 +330,32 @@ io.accuracy <-
   unnest(c(3:5),
          names_sep = "_") %>% 
   select(!ends_with(c("observationID", "_x", "_category"))) %>% 
+  # for all items that are not intended /t/ take 1 minus the posterior of /t/
   mutate(categorization.proportional_response = ifelse(x_intended.category == "/t/", categorization.proportional_response, 1 - categorization.proportional_response),
-         categorization.criterion_response = ifelse(categorization.criterion_response == 1, "/t/", "/d/")) %>% 
-  group_by(Condition.Exposure) %T>% 
-  { summarise(., accuracy.proportional = mean(categorization.proportional_response)) ->> temp } %>% 
-  summarise(., accuracy.criterion = mean(categorization.criterion_response == x_intended.category)) %>% 
-  right_join(temp)) %>% 
+         # where criterion rule responds 1 that is a /t/
+         categorization.criterion_response = ifelse(categorization.criterion_response == 1, "/t/", "/d/"),
+         categorization.criterion_response = ifelse(categorization.criterion_response == x_intended.category, T, F)) %>% 
+  group_by(Condition.Exposure) %>% 
+  summarise(across(c(categorization.proportional_response, categorization.criterion_response), mean))) %>% 
   rename(Condition.io = Condition.Exposure) %>% 
   mutate(Condition.Exposure = factor(rep(c("Shift0", "Shift10", "Shift40"), 2))) %>% 
-  pivot_longer(cols = starts_with("accuracy"),
+  pivot_longer(cols = starts_with("categorization"),
                names_to = "decision",
                values_to = "accuracy") %>% 
-  mutate(Condition.io = ifelse(str_detect(Condition.io, "prior"), "prior", Condition.io))
+  mutate(Condition.io = ifelse(str_detect(Condition.io, "prior"), "prior", Condition.io),
+         decision = str_replace(decision, "categorization\\.(.*)_response", "\\1"))
 
-# get of the fitted psychometric model
+# get predictions of the fitted psychometric model
 fit_exposure <- readRDS("../models/exposure-standard-priorSD15-0.999.rds")
-psych.model_accuracy <- epred_draws(object = fit_exposure,
-            newdata = d.for_analysis %>% 
-              filter(Phase == "exposure", Item.Labeled == F) %>% 
-              prepVars(test_mean = VOT.mean_test, levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
-            ndraws = 1000) %>% 
-  group_by(ParticipantID, Condition.Exposure, Block) %>% 
-  mutate(proportional.rule = ifelse(category == "/t/", .epred, 1 -.epred),
-         criterion.rule = case_when(category == "/t/" & .epred >= .5 ~ 1,
-                                    category == "/d/" & .epred < .5 ~ 1,
-                                    T ~ 0)) %>% 
-  summarise(across(c(proportional.rule, criterion.rule), mean, .names = "{.col}")) %>% 
-  group_by(Condition.Exposure, Block) %>% 
-  median_hdci(proportional.rule, criterion.rule)
+fit_test <- readRDS("../models/test-standard-priorSD15-0.995.rds")
+psych.model_accuracy <- 
+  get_pyschometric_accuracy(fit_exposure, d.for_analysis, "exposure", VOT.sd_exposure) %>% 
+  bind_rows(
+    get_pyschometric_accuracy(fit_test, d.for_analysis, "test", VOT.sd_test)) %>% 
+  relabel_blocks()
 
 # get human accuracy on unlabelled exposure trials
-p.human_accuracy <- 
+human.accuracy <- 
   d.for_analysis %>%
   filter(Phase == "exposure" & Item.Labeled == F) %>%
   group_by(ParticipantID, Condition.Exposure, Block) %>%
@@ -367,46 +364,102 @@ p.human_accuracy <-
   group_by(Condition.Exposure, Block) %>% 
   summarise(lower = quantile(mean.accuracy, probs = .025),
             median = quantile(mean.accuracy, probs = .5),
-            upper = quantile(mean.accuracy, probs = .975)) %>% 
-  relabel_blocks() %>% 
-  ggplot(aes(x = Block.plot_label, y = median, ymin = lower, ymax = upper, colour = Condition.Exposure)) 
+            upper = quantile(mean.accuracy, probs = .975))
+rm(fit_exposure, fit_test)
 ```
 
-(ref:plot-IO-human-accuracy) Range of mean accuracies of participants during exposure phases against accuracies of idealised learners assumed to have perfectly learned the exposure distributions. Point ranges represent the median and 95% quantile interval of participant means. **Top:** horizontal lines are accuracies of ideal observers trained in the respective conditions. **Bottom:** Same as top but ideal observer lines represent their recognition accuracy prior to receiving any exposure from the respective exposure conditions.
-```{r plot-io-human-accuracy, fig.width=6.5, fig.height=5.5, fig.cap="(ref:plot-IO-human-accuracy)"}
-p1 <- p.human_accuracy +
+(ref:plot-IO-human-accuracy) Mean accuracies of participants on unlabeled exposure trials (circle point ranges) against recognition accuracies of idealised learners (dashed horizontal lines) under the proportional choice rule (top panel) and the criterion choice rule (bottom panel), and accuracies of fitted psychometric models (triangle point ranges). Point ranges represent the median and 95% quantile interval of participant means. Coloured dashed lines are accuracies of ideal observers trained in the respective conditions. Grey lines represent ideal observer recognition accuracy *prior* to receiving any exposure in the respective conditions.
+```{r plot-io-human-accuracy, fig.width=7.5, fig.height=5.5, fig.cap="(ref:plot-IO-human-accuracy)"}
+human_io_accuracy <- 
+  human.accuracy %>% 
+  mutate(decision = "human") %>% 
+  bind_rows(
+    tibble(
+      Condition.Exposure = c("Shift0", "Shift10", "Shift40")) %>% 
+        crossing(Block = c(1, 3, 5, 7),
+                 lower = NA,
+                 median = NA,
+                 upper = NA, 
+                 decision = "human")) %>% 
+  relabel_blocks() %>% 
+  full_join(psych.model_accuracy) %>% 
+  group_by(decision, Condition.Exposure) %>% 
+  arrange(Block, .by_group = T) %>% 
+  ungroup() %>% 
+  mutate(top_panel = ifelse(decision == "proportional" | decision == "human", "proportional", NA),
+         bottom_panel = ifelse(decision == "criterion" | decision == "human", "criterion", NA),
+         decision = fct_relevel(decision, c("human", "proportional", "criterion")))
+
+
+p1 <- human_io_accuracy %>% 
+  filter(decision %in% c("human", "proportional")) %>% 
+  ggplot(aes(x = Block.plot_label, y = median, 
+             ymin = lower, ymax = upper, 
+             colour = Condition.Exposure, 
+             shape = decision, 
+             group = decision)) +
   geom_hline(
     data = io.accuracy %>% 
-      filter(Condition.io != "prior"),
-    mapping = aes(yintercept = accuracy, color = Condition.Exposure, linetype = decision),
+      filter(decision == "proportional" & Condition.io != "prior"),
+    mapping = aes(yintercept = accuracy, color = Condition.Exposure),
+    linetype = 2,
     linewidth = .8,
     alpha = 0.4,
-    inherit.aes = F) +
-  geom_pointrange(position = position_dodge2(.3), size = .4) +
-   labs(y = "Human accuracy on unlabeled exposure trials") +
-  scale_colour_manual("Condition", values = colours.condition, labels = c("baseline", "+10", "+40"), guide = F) +
-  theme(axis.text.x = element_blank()) + 
-  remove_axes_titles
-   
-
-p2 <- p.human_accuracy +
+    show.legend = F) +
   geom_hline(
-    data = io.accuracy %>% filter(Condition.io == "prior"),
-    mapping = aes(yintercept = accuracy, color = Condition.Exposure, linetype = decision),
+    data = io.accuracy %>% 
+      filter(decision == "proportional" & Condition.io == "prior"),
+    mapping = aes(yintercept = accuracy),
+    linewidth = .8,
+    colour = "#d2d4dc",
+    alpha = 0.9,
+    inherit.aes = F) +
+  geom_pointrange(position = position_dodge2(.4), size = .4) +
+  stat_summary(geom = "line", position = position_dodge2(.4)) +
+   labs(y = "Accuracy on \n unlabeled exposure trials") +
+  scale_colour_manual("Condition", values = colours.condition, labels = c("baseline", "+10", "+40"), guide = F) +
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) + 
+  coord_cartesian(ylim = c(.5, 1)) +
+  guides(shape = "none") +
+  facet_grid(top_panel ~ Condition.Exposure, 
+             labeller = labeller(Condition.Exposure = c("Shift0" = "baseline", "Shift10" = "+10", "Shift40" = "+40")))
+
+p2 <- human_io_accuracy %>% 
+  filter(decision %in% c("human", "criterion")) %>% 
+  mutate(decision = fct_relevel(decision, "human")) %>% 
+  ggplot(aes(x = Block.plot_label, y = median, 
+             ymin = lower, ymax = upper, 
+             colour = Condition.Exposure, 
+             shape = decision, 
+             group = decision)) +
+  geom_hline(
+    data = io.accuracy %>% 
+      filter(decision == "criterion" & Condition.io != "prior"),
+    mapping = aes(yintercept = accuracy, color = Condition.Exposure),
+    linetype = 2,
     linewidth = .8,
     alpha = 0.4,
-    inherit.aes = F) +
-  geom_pointrange(position = position_dodge2(.3), size = .4) +
-  labs(x = "Block", y = "Human accuracy on unlabeled exposure trials") +
-  scale_colour_manual("Condition", values = colours.condition, labels = c("baseline", "+10", "+40"), guide = F) 
-
-
-(p1 / p2) + 
-  plot_layout(guides = "collect") &
-  theme(legend.position = "top",
-        legend.justification = "right",
-        legend.margin = margin(0, 0, 0, 0, unit = "pt"),
-        plot.tag = element_text(face = "bold")) 
+    show.legend = F) +
+  geom_hline(
+    data = io.accuracy %>% 
+      filter(decision == "criterion" & Condition.io == "prior"),
+    mapping = aes(yintercept = accuracy),
+    linewidth = .8,
+    colour = "#d2d4dc",
+    alpha = 0.9) +
+  geom_pointrange(position = position_dodge2(.4), size = .4) +
+  stat_summary(geom = "line", position = position_dodge2(.4)) +
+   labs(y = "Accuracy on \n unlabeled exposure trials") +
+  scale_colour_manual("Condition", values = colours.condition, labels = c("baseline", "+10", "+40"), guide = F) +
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_text(angle = 30, vjust = .99, hjust = .99)) + 
+  coord_cartesian(ylim = c(.5, 1)) +
+  guides(shape = "none") +
+  facet_grid(bottom_panel ~ Condition.Exposure, 
+             labeller = labeller(Condition.Exposure = c("Shift0" = "baseline", "Shift10" = "+10", "Shift40" = "+40")))
+(p1 / p2) 
 ```
 
 ### Potential explanations
@@ -424,7 +477,7 @@ Another possible explanation that appeals to mismatches between listeners and th
 
 Finally, it is possible that asymmetric shrinkage and/or premature convergence are real, replicable findings that cannot be reduced to methodological artifacts or the most obvious shortcomings of the ideal adaptor model. We discuss three such explanations. The first such explanation is discussed by @kleinschmidt2020: listeners might struggle to extrapolate to phonetic continuum steps that were not observed during exposure. If extrapolation difficulty was to spell out as shrinkage---e.g., because listeners have more uncertainty about how to categorize test tokens further away from the exposure distribution, leading them to upweight prior expectations for such tokens---this might explain *some* of our findings. However, it would fail to fully explain our results, for the same reason that unsupervised learning over the unlabeled test tokens is unlikely to fully explain our findings: while shrinkage was largest in the baseline condition, categorization of test tokens did not require a lot of extrapolation in this condition (see surprisal comparison above, and tickmarks in Figure \@ref(fig::exp2-design-distribution)).
 
-The second explanation refers to the goal of learning, specifically the loss function that learners seek to minimize. In Figure \@ref(fig:changes-in-accuracy), we followed previous work and calculated accuracy based on the assumption of Luce's choice rule [@luce1968]. This is the choice rule implicitly or explicitly assumed in many, perhaps most, models of adaptive speech perception [e.g., the Rescorla-Wagner model in @harmon2019; ideal adaptor, @kleinschmidt-jaeger2015]. 
+The second explanation refers to the goal of learning, specifically the loss function that learners seek to minimize. In Figure \@ref(fig:changes-in-accuracy), we followed previous work and calculated accuracy based on the assumption of Luce's choice rule [@luce1959]. This is the choice rule implicitly or explicitly assumed in many, perhaps most, models of adaptive speech perception [e.g., the Rescorla-Wagner model in @harmon2019; ideal adaptor, @kleinschmidt-jaeger2015]. 
 
 
  + DL might be correct but ideal adaptor *model* as used here might be wrong
@@ -439,11 +492,11 @@ That listeners in the +40 conditioned moved their boundaries more freely corresp
 ## Limitations and future directions
 The present study set out to investigate incremental adaptation to a single talker, whose pronunciations were shifted relative to listeners' prior expectations. The conclusions we have discussed so far should be interpreted in light of several  limitations.
 
-First off, our experiment investigated incremental adaptation to a single female talker's productions of syllable-initial /d/-/t/ by L1-US English listeners. In particular, our exposure conditions shifted the distribution of VOT and, by extension, f0 and vowel duration. As adaptive speech perception---including its generalization across categories, phonetic contexts, and talkers---can depend on the exposure talker, the phonetic contrast or the phonetic cues it involves [e.g., @eisner2005; @kraljic2007; @mitterer; @xie2017; @xie2021], future work is necessary to assess how general the present findings are.
+First off, our experiment investigated incremental adaptation to a single female talker's productions of syllable-initial /d/-/t/ by L1-US English listeners. In particular, our exposure conditions shifted the distribution of VOT and, by extension, f0 and vowel duration. As adaptive speech perception---including its generalization across categories, phonetic contexts, and talkers---can depend on the exposure talker, the phonetic contrast or the phonetic cues it involves [e.g., @eisner2005; @kraljic-samuel2007; @mitterer; @xie2017; @xie2021], future work is necessary to assess how general the present findings are.
 
-Second, the present study shares with other distributional learning paradigms that a small number of minimal pair items was repeated many times, with only minimal phonetic differences embedded in otherwise constant phonetic contexts (e.g., the vowel following /d/-/t/ was always the same), and presented in isolation. This sacrifice of ecological validity was motivated by our goal to test stronger predictions about the direction and relative magnitude of effects (rather than merely the existence of effects). It does, however, mean that the speech input that participants experienced in the experiment differed from everyday encounters with unfamiliar talkers: listeners typically experience *connected* speech from unfamiliar talkers, which tends to be produced with faster speech rates and comes with additional segmentation challenges; while the same phonetic contrast might appear many times, it will not necessarily appear in the same phonetic context, least of all in the same word; and the speech of talkers with unfamiliar accents often deviate from listeners' expectations in more than a single segmental contrast. Comparatively little is known about adaptive speech perception under such condition since only a handful of studies has employed connected speech stimuli beyond isolated sentences [e.g., @reinisch2014; @REFS]. Encouragingly, these studies have replicated the effects found for ecologically less valid exposures. Still, it is possible that, for example, the rapidity of adaptive changes in the present study over-estimates the adaptivity of everyday speech perception. There is evidence, for example, that the repetition of minimal pair recordings can affect listeners categorization responses [@winter-lancia2013; @REFS], perhaps because it helps listeners isolate relevant differences between recordings.
+Second, the present study shares with other distributional learning paradigms that a small number of minimal pair items was repeated many times, with only minimal phonetic differences embedded in otherwise constant phonetic contexts (e.g., the vowel following /d/-/t/ was always the same), and presented in isolation. This sacrifice of ecological validity was motivated by our goal to test stronger predictions about the direction and relative magnitude of effects (rather than merely the existence of effects). It does, however, mean that the speech input that participants experienced in the experiment differed from everyday encounters with unfamiliar talkers: listeners typically experience *connected* speech from unfamiliar talkers, which tends to be produced with faster speech rates and comes with additional segmentation challenges; while the same phonetic contrast might appear many times, it will not necessarily appear in the same phonetic context, least of all in the same word; and the speech of talkers with unfamiliar accents often deviate from listeners' expectations in more than a single segmental contrast. Comparatively little is known about adaptive speech perception under such conditions since only a handful of studies has employed connected speech stimuli beyond isolated sentences [e.g., @reinisch2014]. Encouragingly, these studies have replicated the effects found for ecologically less valid exposures. Still, it is possible that, for example, the rapidity of adaptive changes in the present study over-estimates the adaptivity of everyday speech perception. There is evidence, for example, that the repetition of minimal pair recordings can affect listeners categorization responses [@lancia-winter2013], perhaps because it helps listeners isolate relevant differences between recordings.
 
-Third, as already mentioned, some of tests were conducted post-hoc, and thus require replication. In particular, future experiments with longer exposure would provide more decisive tests of premature convergence and (asymmetric) shrinkage. Additional data from future applications of the incremental exposure-test paradigm with different phonetic shifts will also facilitate stronger quantitative tests of models of adaptive speech perception [in the spirit of @martin2021; @yarkoni-westfall2017; @xie2023]. In a recent review of the field, Xie and colleagues demonstrated that the signature findings of some of the most popular paradigms in adaptive speech perception do not distinguish between radically different theoretical accounts: qualitative improvements in speech recognition can be explained by mechanisms ranging from early pre-linguistic perceptual normalization, changes in the representations of phonetic categories, or upstream changes in decision-making. Xie and colleagues concluded that the effective comparisons of these theories will require quantitative data sets that constrain the way in which listeners' categorization behavior changes depending on the amount and nature of the input. The the use of incremental testing and multiple exposure conditions with different phonetic shifts provides such data.
+Third, as already mentioned, some of tests were conducted post-hoc, and thus require replication. In particular, future experiments with longer exposure would provide more decisive tests of premature convergence and (asymmetric) shrinkage. Additional data from future applications of the incremental exposure-test paradigm with different phonetic shifts will also facilitate stronger quantitative tests of models of adaptive speech perception [in the spirit of @guest-martin2021; @yarkoni-westfall2017; @xie2023]. In a recent review of the field, Xie and colleagues demonstrated that the signature findings of some of the most popular paradigms in adaptive speech perception do not distinguish between radically different theoretical accounts: qualitative improvements in speech recognition can be explained by mechanisms ranging from early pre-linguistic perceptual normalization, changes in the representations of phonetic categories, or upstream changes in decision-making. Xie and colleagues concluded that the effective comparisons of these theories will require quantitative data sets that constrain the way in which listeners' categorization behavior changes depending on the amount and nature of the input. The the use of incremental testing and multiple exposure conditions with different phonetic shifts provides such data.
 
 <!-- A second reason for the relative scarcity of research on incremental changes in speech perception might be that repeated testing comes with its own unique challenges. For example, if test tokens are sampled from natural accents---the most common approach in AA research---these tokens can themselves contain information about the target accent, thereby masking exposure effects [for a particularly clear demonstration, see @xie-kurumada2024]. Even for paradigms that employ synthesized stimuli, or otherwise control the informativity of test tokens [e.g., @chodroff-wilson2020], repeated testing can come with challenges. As already discussed, there is now evidence that repeated testing over unlabeled uniform test continua can reduce the effects of exposure [@scharenborg-janse2013; @cummings-theodore2023; @zheng-samuel2023; @liu-jaeger2018; @liu-jaeger2019; @giovannone-theodore2021; @tzeng2021]. This is compatible with some distributional learning accounts of adaptive speech perception [for discussion, see @kleinschmidt-jaeger2015]: if the same learning mechanisms that operate during labeled and unlabeled exposure trials continue to operate during unlabeled test trials, the unexpected uniform distribution over the VOT continuum during test blocks should begin to undo the effects of preceding exposure.^[The specific predictions depend on the---as of yet unknown---way listeners adapt to unlabeled speech inputs [for an initial comparisons of several candidate models for unsupervised adaptation, see @yan-jaeger2018]. Additionally, it is possible that adaptation to unlabeled inputs involves different mechanisms than adaptation to labeled trials.] In the present study, we replicated this effect of repeated testing for the final three test blocks. -->
 
