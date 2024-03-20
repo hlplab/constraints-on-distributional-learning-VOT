@@ -737,7 +737,7 @@ get_IBBU_predicted_response <- function(
       untransform_cues = untransform_cues) %>%
     filter(group %in% .env$groups)
   
-  # Prepare test_data
+  # Prepare data to predict
   cue.labels <- get_cue_levels_from_stanfit(model)
   if (predict_test) {
   data.test <-
@@ -971,8 +971,8 @@ get_pyschometric_accuracy <- function(
       group_by(Condition.Exposure) %>% 
       filter(ParticipantID == first(ParticipantID)) %>% 
       reframe(Condition.Exposure, Item.VOT, category) %>% 
-      # expand to have 3 test blocks
-      crossing(Block = blocks) %>% 
+      # expand to number of test/exposure blocks
+      expand_grid(Block = blocks) %>% 
       mutate(VOT_gs = (Item.VOT - VOT.mean_test) / (2 * sd)),
     seed = 928,
     ndraws = 1000,

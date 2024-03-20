@@ -243,6 +243,7 @@ d.IA_exposure_accuracy <-
     across(c(criterion.accuracy, proportion.accuracy), median_hdci))
 ```
 
+
 ```{r plot-IA-exposure-accuracy, fig.width=6.5, fig.height=3.5, fig.cap="(ref:plot-IA-exposure-accuracy)"}
 d.IA_exposure_accuracy %>% 
   pivot_longer(
@@ -326,7 +327,7 @@ io.accuracy <-
                nest(x = c(x, intended.category))) %>% 
   mutate(
     categorization.proportional = map2(x, io, ~ get_categorization_from_MVG_ideal_observer(x = .x$x, model = .y, decision_rule = "proportional") %>% filter(category == "/t/")),
-    categorization.criterion = map2(x, io, ~ get_categorization_from_MVG_ideal_observer(x = .x$x, model = .y, decision_rule = "criterion") %>% filter(category == "/t/"))) %>% 
+    categorization.criterion = map2(x, io, ~ get_categorization_from_MVG_ideal_observer(x = .x$x, model = .y, decision_rule = "criterion") %>% filter(category == "/t/"))) %>%
   unnest(c(3:5),
          names_sep = "_") %>% 
   select(!ends_with(c("observationID", "_x", "_category"))) %>% 
@@ -368,19 +369,19 @@ human.accuracy <-
 rm(fit_exposure, fit_test)
 ```
 
-(ref:plot-IO-human-accuracy) Mean accuracies of participants on unlabeled exposure trials (circle point ranges) against recognition accuracies of idealised learners (dashed horizontal lines) under the proportional choice rule (top panel) and the criterion choice rule (bottom panel), and accuracies of fitted psychometric models (triangle point ranges). Point ranges represent the median and 95% quantile interval of participant means. Coloured dashed lines are accuracies of ideal observers trained in the respective conditions. Grey lines represent ideal observer recognition accuracy *prior* to receiving any exposure in the respective conditions.
+(ref:plot-IO-human-accuracy) Mean accuracies of participants on unlabeled exposure trials (circle point ranges) against recognition accuracies of idealised learners (dashed horizontal lines) under proportional and criterion choice rules, and accuracies of fitted psychometric models (triangle point ranges). Point ranges represent the median and 95% quantile interval of participant means. Coloured dashed lines are accuracies of ideal observers trained in the respective conditions. Grey lines represent ideal observer recognition accuracy *prior* to receiving any exposure in the respective conditions.
 ```{r plot-io-human-accuracy, fig.width=7.5, fig.height=5.5, fig.cap="(ref:plot-IO-human-accuracy)"}
 human_io_accuracy <- 
   human.accuracy %>% 
   mutate(decision = "human") %>% 
   bind_rows(
-    tibble(
-      Condition.Exposure = c("Shift0", "Shift10", "Shift40")) %>% 
-        crossing(Block = c(1, 3, 5, 7),
-                 lower = NA,
-                 median = NA,
-                 upper = NA, 
-                 decision = "human")) %>% 
+    crossing(
+      Condition.Exposure = c("Shift0", "Shift10", "Shift40"), 
+      Block = c(1, 3, 5, 7),
+      lower = NA,
+      median = NA,
+      upper = NA, 
+      decision = "human")) %>% 
   relabel_blocks() %>% 
   full_join(psych.model_accuracy) %>% 
   group_by(decision, Condition.Exposure) %>% 
@@ -389,7 +390,6 @@ human_io_accuracy <-
   mutate(top_panel = ifelse(decision == "proportional" | decision == "human", "proportional", NA),
          bottom_panel = ifelse(decision == "criterion" | decision == "human", "criterion", NA),
          decision = fct_relevel(decision, c("human", "proportional", "criterion")))
-
 
 p1 <- human_io_accuracy %>% 
   filter(decision %in% c("human", "proportional")) %>% 
@@ -414,9 +414,10 @@ p1 <- human_io_accuracy %>%
     colour = "#d2d4dc",
     alpha = 0.9,
     inherit.aes = F) +
-  geom_pointrange(position = position_dodge2(.4), size = .4) +
-  stat_summary(geom = "line", position = position_dodge2(.4)) +
+  geom_pointrange(position = position_dodge2(.5), size = .5) +
+  stat_summary(geom = "line", position = position_dodge2(.5)) +
    labs(y = "Accuracy on \n unlabeled exposure trials") +
+  scale_shape_manual(values = c(16, 2), guide = F) +
   scale_colour_manual("Condition", values = colours.condition, labels = c("baseline", "+10", "+40"), guide = F) +
   theme(axis.title.x = element_blank(),
         axis.text.x = element_blank(),
@@ -428,7 +429,6 @@ p1 <- human_io_accuracy %>%
 
 p2 <- human_io_accuracy %>% 
   filter(decision %in% c("human", "criterion")) %>% 
-  mutate(decision = fct_relevel(decision, "human")) %>% 
   ggplot(aes(x = Block.plot_label, y = median, 
              ymin = lower, ymax = upper, 
              colour = Condition.Exposure, 
@@ -449,9 +449,10 @@ p2 <- human_io_accuracy %>%
     linewidth = .8,
     colour = "#d2d4dc",
     alpha = 0.9) +
-  geom_pointrange(position = position_dodge2(.4), size = .4) +
-  stat_summary(geom = "line", position = position_dodge2(.4)) +
+  geom_pointrange(position = position_dodge2(.5), size = .5) +
+  stat_summary(geom = "line", position = position_dodge2(.5)) +
    labs(y = "Accuracy on \n unlabeled exposure trials") +
+  scale_shape_manual(values = c(16, 2), guide = F) +
   scale_colour_manual("Condition", values = colours.condition, labels = c("baseline", "+10", "+40"), guide = F) +
   theme(axis.title.x = element_blank(),
         axis.text.x = element_text(angle = 30, vjust = .99, hjust = .99)) + 
