@@ -59,14 +59,6 @@ If confirmed by additional data, both shrinkage and premature convergence would 
 Two previous studies have reported results that seem to exhibit shrinkage. @kleinschmidt-jaeger2016 exposed five different groups of listeners to VOT distributions for /b/ and /p/ that were shifted to different degrees. The five different exposure conditions were each shifted by 10msecs in VOT relative to the other, but held constant the distance between the /b/ and /p/ mean (always 40ms) and the variance of /b/ and /p/ (both always 8.3ms$^2$). All listeners were exposed to 222 trials of exposure input. Unlike the present study, @kleinschmidt-jaeger2016 did not include a pre-test or incremental intermittent testing. Instead, the effect of exposure was estimated by estimating listeners' categorization functions over the last third of the 222 trials. This revealed adaptation patterns that resemble those of the present study in several ways. First, the further the exposure distributions were shifted relative to the distributions expected from a 'typical' talker, the more listeners' categorization function was shifted in the same direction. Second, an unpublished follow-up analysis of the same data [@kleinschmidt2020] found that larger shifts in the exposure distribution yielded shifts in listeners' categorization functions that were *proportionally smaller* relative to the shifts expected from an idealized learner (shrinkage). Third and finally, the same follow-up analysis found that shrinkage effects were more pronounced for leftward- than rightward-shifted exposure distribution (asymmetric shrinkage).^[@kleinschmidt2020 also presents additional experiments with extreme examples of leftward-shifted exposures. In his Experiment 4, different groups of listeners were exposed to /b/-/p/ distributions for which the /b/ mean was shifted to -20ms, -50ms, or even -80ms, while the /p/ mean remained at 50ms VOT. This experiment replicated the strong shrinkage effects for such leftward shifts: even in the most extreme condition (-80ms), listeners' average PSE was still larger than 20ms. These results should, however, be interpreted with caution since the experiment returned small shifts even for rightward shifts---possibly due to data quality issues with Mechanical Turk.] <!-- TO DO: could put shrinkage figure here that is mentioned as possible addition in the to do. But could wait until submission? --> The present study replicates these findings in an incremental exposure-test paradigm, and for naturalistic stimuli with ecologically more valid cue distributions.
 
 <!-- Unlike the present study, @kleinschmidt-jaeger2016 and @kleinschmidt2020 used synthesized stimuli that sounded robotic, and were not designed to exhibit natural correlations between VOT, f0, and vowel duration. The distribution that listeners were exposed were *not* randomly sampled but rather were perfectly symmetric around the category means, and had identical variance for /b/ and /p/. This follows other DL studies [e.g., @clayards2008; @theodore-monto2019] but deviates from the distributions listeners are familiar with from natural speech. The fact that the present study resulted in 'shrinkage' effects similar to those found in @kleinschmidt2020 suggests that these effects are not an artifact of the lower ecological validity of the stimuli used in previous studies. -->
-
-Unlike for shrinkage, we are not aware of previous evidence for premature convergence. This is largely because the detection of such a pattern requires an incremental exposure-test paradigm, in order to detect a premature 'flattening off' of adaptivity, and such paradigms have been lacking. We therefore conducted an additional test to further quantify whether changes in participants' categorization functions were indeed flatter than one would expect under ideal information integration. To this end, we fit a distributional learning model to listeners' data. This allows us to compare changes in listeners' behavior to those expected under an ideal---as opposed to ideal*ized*---learner.^[Following @qian2016, we use the term *idealized* learner for models that are given privileged access to information that listeners have to infer (e.g., the correct exposure statistics of the experiment), and the term *ideal* learner for models that implement a theory of ideal information integration [for a list of assumptions made by the ideal adaptor, see appendix of @kleinschmidt-jaeger2015].] Specifically, we used an ideal adaptor model [@kleinschmidt-jaeger2015; @kleinschmidt-jaeger2016]. <!-- TO DO: fill in --> Univariate instances of this model have previously achieved high accuracy in modeling changes in listeners categorization functions after LGPL/VGPL [e.g., for /s/-/`r linguisticsdown::cond_cmpl("ʃ")`/, @cummings-theodore2023; /b/-/d/, @kleinschmidt-jaeger2011; @kleinschmidt-jaeger2012] or DL exposure [e.g., for /b/-/p/, @kleinschmidt-jaeger2016; @kleinschmidt2020; /g/-/k/, @theodore-monto2019]. We extended the model to multivariate categories over VOT, f0, and vowel duration, and fit it to listeners' responses in our experiment (for details, see SI \@ref(sec:XXX)). <!-- TO DO: fill in more info here. Perhaps we should take a model that uses, as priors, the mu_0 and Sigma_0 from the gray ribbon in the result figure --> Unlike the psychometric model we used for analysis, a distributional learning model specifies how information is integrated across exposure trials. This substantially decreases the degrees of freedom the model has to fit listeners' responses. For example, the ideal adaptor we fit to listeners' responses in the first four test blocks has 21 parameters, <!-- TO DO: if we end up using a model with prior mu, Sigma, this reduces to 3 DFs! --> compared to 25 population-level ('fixed') and 337 group-level ('random') effect parameters for the psychometric mixed-effect model fit to the same data. <!-- TO DO: substitute with inline r-expression to make clearer where these numbers come from --> In the ideal adaptor, unlike for the psychometric model, listeners' responses during different test blocks and across different exposure conditions jointly constrain the parameters of model (due to assumption of ideal information integration within and across exposure blocks). 
-
-For the present data, the ideal adaptor model predicts the proportion of listeners' "t"-responses with an $R^2 = .XXX$, compared to $R^2 = .XXX$ for the psychometric model. <!-- TO DO: fill in--> Comparison of the two models found that XXX. <!-- TO DO: get LOOICs for both models and compare. --> This suggests that the ideal adaptor model provides a decent explanation for participants' behavior with substantially fewer degrees of freedom. We leave further analysis of this model to future work. Here we focus on what this model can tell us about the incremental build-up of adaptation.
-
-Despite the decent quantitative fit, the ideal adaptor exhibits a systematic deficiency in explaining participants' responses.  Figure \@ref(fig:plot-IA-human-PSE) shows the PSEs inferred from the ideal adaptor, along with listeners' PSEs (the same as in Figure \@ref(fig:plot-fit-PSE)C). Notably, the ideal adaptor *under*-predicts changes in listeners' PSEs in early blocks---a tendency that is most evident for the exposure conditions with more extreme shifts (baseline and +40). Similarly, though less obvious, the ideal adaptor *over*-predicts listeners' PSE in later blocks (see the baseline and +40 conditions in Test 4). To understand this pattern, it is helpful to recognize that rational models of distributional learning describe listeners' expectations after exposure as the weighted mean of prior expectations and the observed exposure statistics [@kleinschmidt-jaeger2015]. This means that the speed with which a learner adapts at the start of exposure is expected to be predictive of how fast a learner adapts after additional exposure. Put differently, ideal adaptors constrain the rate at which changes in PSEs can change across exposure trials. This means that an ideal adaptor can *either* explain the fact that listeners' PSEs changed rapidly at the start of exposure *or* explain the fact that there seem to be little to no changes in listeners' PSE after the second exposure block. But it cannot explain both aspects of our data. It thus appears that participants indeed converged prematurely in their behavior, relative to what would be expected under the specific model of ideal information integration that we employed.
-
-Next, we discuss possible explanations for such premature convergence and for shrinkage. We do, however, emphasize again that additional studies are necessary to confirm each of the two constraints, and to better characterize their properties. We return to this under future directions.
  
 ```{r fit-IA-inferred-VOT-f0}
 # Make a data frame that splits the entire data in unique exposure-test combinations.
@@ -129,8 +121,6 @@ m_IA_inferred.VOT_f0_vowelduration <-
     control = list(adapt_delta = .995, max_treedepth = 15))
 ```
 
-
-
 ```{r summarise-PSE-predictions-of-IA}
 groups <- get_group_levels_from_stanfit(m_IA_inferred.VOT_f0_vowelduration)
 # get logistic model predictions of the IA's categorisation
@@ -150,15 +140,33 @@ d.IA_predicted_PSE <-
         Condition.Exposure = factor(c(rep("Shift0", 3), rep("Shift10", 3), rep("Shift40", 3), c("Shift0", "Shift10", "Shift40"))),
         Block = ifelse(group != "no exposure", str_replace(group, ".*(\\d)", "\\1"), group),
         Block = factor(ifelse(group == "no exposure", 1, Block))) %>%
-      relabel_blocks()
+      add_block_labels()
     
     saveRDS(d.IA_predicted_PSE, "../models/d.IA_predicted_PSE.rds")
   }
 ```
 
-(ref:plot-IA-human-PSE) Comparison of shifts in listener PSEs over the first four test blocks against that expected by an ideal adaptor fit to listeners' responses [a distributional learning model that describes ideal information integration, @kleinschmidt-jaeger2015]. Ribbons indicate the 95% highest posterior density interval.
+(ref:plot-IA-human-PSE) Comparison of shifts in listener PSEs over the first four test blocks against that expected by an ideal adaptor [a distributional learning model that describes ideal information integration, @kleinschmidt-jaeger2015]. Point ranges and dashed horizontal lines are identical to those in Figure \@ref(fig:plot-fit-PSE). Colored ribbons indicate the 95%-CI for the PSEs predicted by the ideal adaptor fit to listeners' responses. The vertical bar to the right of the panel indicates the range of talker-specific PSEs an idealized listener might have experienced in previous exposure: the mean and 2.5%-to-97.5% quantile range of talker-specific PSEs derived from Bayesian ideal observers fit to all talkers in the phonetic database of isolated word productions presented in Figure \@ref(fig:exposure-means-database-matrix-plot). We return to this range when discussing possible explanations for mismatches between the ideal adaptor and participants' responses. <!-- TO DO: remove redundancy between this code and Figure 4c code. It's bad practice to simply copy and paste code. (re: reproducibility) -->
 
-```{r plot-IA-human-PSE, fig.width=6.5, fig.height=3.5, fig.cap="(ref:plot-IA-human-PSE)"}
+```{r plot-IA-human-PSE, fig.width=6.5, fig.height=3.5, fig.cap="(ref:plot-IA-human-PSE)", fig.pos="Ht"}
+# Compute distribution of talker-specific PSEs from Chodroff & Wilson (2018) database against which to compare human behavior
+d.talkerPSEs <-
+  # get each talker's boundary estimate
+  get_IO_categorization(
+    data = d.chodroff_wilson.isolated,
+    cues = c("VOT"),
+    groups = c("Talker", "gender"),
+    with_noise = TRUE,
+    VOTs = seq(0, 85, .5)) %>% 
+  # center talker PSEs to human PSE at block 1 of experiment
+  mutate(
+    center_constant = mean(d.true_shift$PSE_block1) - mean(PSE),
+    PSE_centered = PSE + center_constant) %>%
+  summarise(
+    lower_PSE = quantile(PSE_centered, probs = .025),
+    mean_PSE = mean(PSE_centered),
+    upper_PSE = quantile(PSE_centered, probs = .975))
+
 d.estimates %>%
   filter(Block %in% c(1:7)) %>%
   ggplot(
@@ -201,6 +209,12 @@ d.estimates %>%
     fontface = "bold",
     size = 2.7,
     inherit.aes = F) +
+  annotate(
+    "crossbar",
+    x = 9.7, y = d.talkerPSEs$mean_PSE, ymin = d.talkerPSEs$lower_PSE, ymax = d.talkerPSEs$upper_PSE,
+    colour = "black",
+    width = 0.1,
+    alpha = .6) +
   scale_x_discrete("Block") +
   scale_y_continuous("PSE (ms VOT)") +
   scale_colour_manual(
@@ -215,12 +229,18 @@ d.estimates %>%
     legend.position = "none")
 ```
 
+Unlike for shrinkage, we are not aware of previous evidence for premature convergence. This is largely because the detection of such a pattern requires an incremental exposure-test paradigm, in order to detect a premature 'flattening off' of adaptivity, and such paradigms have been lacking. We therefore conducted an additional test to further quantify whether changes in participants' categorization functions were indeed flatter than one would expect under ideal information integration. To this end, we fit a distributional learning model to listeners' data. This allows us to compare changes in listeners' behavior to those expected under an ideal---as opposed to ideal*ized*---learner.^[Following @qian2016, we use the term *idealized* learner for models that are given privileged access to information that listeners have to infer (e.g., the correct exposure statistics of the experiment), and the term *ideal* learner for models that implement a theory of ideal information integration [for a list of assumptions made by the ideal adaptor, see appendix of @kleinschmidt-jaeger2015].] Specifically, we used an ideal adaptor model [@kleinschmidt-jaeger2015; @kleinschmidt-jaeger2016]. <!-- TO DO: fill in --> Univariate instances of this model have previously achieved high accuracy in modeling changes in listeners categorization functions after LGPL/VGPL [e.g., for /s/-/`r linguisticsdown::cond_cmpl("ʃ")`/, @cummings-theodore2023; /b/-/d/, @kleinschmidt-jaeger2011; @kleinschmidt-jaeger2012] or DL exposure [e.g., for /b/-/p/, @kleinschmidt-jaeger2016; @kleinschmidt2020; /g/-/k/, @theodore-monto2019]. We extended the model to multivariate categories over VOT, f0, and vowel duration, and fit it to listeners' responses in our experiment (for details, see SI \@ref(sec:XXX)). <!-- TO DO: fill in more info here. Perhaps we should take a model that uses, as priors, the mu_0 and Sigma_0 from the gray ribbon in the result figure --> Unlike the psychometric model we used for analysis, a distributional learning model specifies how information is integrated across exposure trials. This substantially decreases the degrees of freedom the model has to fit listeners' responses. For example, the ideal adaptor we fit to listeners' responses in the first four test blocks has 21 parameters, <!-- TO DO: if we end up using a model with prior mu, Sigma, this reduces to 3 DFs! --> compared to 25 population-level ('fixed') and 337 group-level ('random') effect parameters for the psychometric mixed-effect model fit to the same data. <!-- TO DO: substitute with inline r-expression to make clearer where these numbers come from --> In the ideal adaptor, unlike for the psychometric model, listeners' responses during different test blocks and across different exposure conditions jointly constrain the parameters of model (due to assumption of ideal information integration within and across exposure blocks). 
+
+For the present data, the ideal adaptor model predicts the proportion of listeners' "t"-responses with an $R^2 = .XXX$, compared to $R^2 = .XXX$ for the psychometric model. <!-- TO DO: fill in--> Comparison of the two models found that XXX. <!-- TO DO: get LOOICs for both models and compare. --> This suggests that the ideal adaptor model provides a decent explanation for participants' behavior with substantially fewer degrees of freedom. We leave further analysis of this model to future work. Here we focus on what this model can tell us about the incremental build-up of adaptation.
+
+Despite the decent quantitative fit, the ideal adaptor exhibits a systematic deficiency in explaining participants' responses.  Figure \@ref(fig:plot-IA-human-PSE) shows the PSEs inferred from the ideal adaptor, along with listeners' PSEs (the same data as in Figure \@ref(fig:plot-fit-PSE)C but focused on blocks up to Test 4). Notably, the ideal adaptor *under*-predicts changes in listeners' PSEs in early blocks---a tendency that is most evident for the exposure conditions with more extreme shifts (baseline and +40). Similarly, though less obvious, the ideal adaptor *over*-predicts listeners' PSE in later blocks (see the baseline and +40 conditions in Test 4). To understand this pattern, it is helpful to recognize that rational models of distributional learning describe listeners' expectations after exposure as the weighted mean of prior expectations and the observed exposure statistics [@kleinschmidt-jaeger2015]. This means that the speed with which a learner adapts at the start of exposure is expected to be predictive of how fast a learner adapts after additional exposure. Put differently, ideal adaptors constrain the rate at which changes in PSEs can change across exposure trials. This means that an ideal adaptor can *either* explain the fact that listeners' PSEs changed rapidly at the start of exposure *or* explain the fact that there seem to be little to no changes in listeners' PSE after the second exposure block. But it cannot explain both aspects of our data. It thus appears that participants indeed converged prematurely in their behavior, relative to what would be expected under the specific model of ideal information integration that we employed.
+
+Next, we discuss possible explanations for such premature convergence and for shrinkage. We do, however, emphasize again that additional studies are necessary to confirm each of the two constraints, and to better characterize their properties. We return to this under future directions.
 
 
 
 
-
-```{r compute-IO-human-accuracy, }
+```{r compute-IO-human-accuracy}
 # get io accuracy on shift conditions they were trained on
 # prior io gets no training so prior-io-accuracy will be evaluated on all three conditions
 io.accuracy <- 
@@ -310,7 +330,7 @@ psych.model_accuracy <-
   get_pyschometric_accuracy(fit_exposure, d.for_analysis, "exposure", VOT.sd_exposure) %>% 
   bind_rows(
     get_pyschometric_accuracy(fit_test, d.for_analysis, "test", VOT.sd_test)) %>% 
-  relabel_blocks()
+  add_block_labels()
 
 # get human accuracy on unlabelled exposure trials
 human.accuracy <- 
@@ -326,7 +346,8 @@ human.accuracy <-
 rm(fit_exposure, fit_test)
 ```
 
-(ref:plot-IO-human-accuracy) Mean accuracies of participants on unlabeled exposure trials (circle point ranges) against recognition accuracies of idealised learners (dashed horizontal lines) under proportional and criterion choice rules, and accuracies of fitted psychometric models (triangle point ranges). Point ranges represent the median and 95% quantile interval of participant means. Coloured dashed lines are accuracies of ideal observers trained in the respective conditions. Grey lines represent ideal observer recognition accuracy *prior* to receiving any exposure in the respective conditions.
+(ref:plot-IO-human-accuracy) Changes across blocks and conditions in participants' accuracy, as estimated from the psychometric mixed-effects model fit to participants' responses. Accuracies are shown for two different decision rules: Luce's choice rule (responding proportional to posterior probability of category) and the criterion choice rule (always responding the category that has higher posterior probability). As in Figure \@ref(fig:plot-fit-PSE)C, point ranges represent the posterior medians and their 95% CI derived from the psychometric model. Horizontal dashed lines indicate accuracy expected from an idealized learner (an ideal observer model that has fully learned the exposure distributions) and horizontal shaded ribbons indicate the 95%-CI expected from an idealized pre-exposure listener.
+
 ```{r plot-io-human-accuracy, fig.width=7.5, fig.height=5.5, fig.cap="(ref:plot-IO-human-accuracy)"}
 human_io_accuracy <- 
   human.accuracy %>% 
@@ -339,7 +360,7 @@ human_io_accuracy <-
       median = NA,
       upper = NA, 
       decision = "human")) %>% 
-  relabel_blocks() %>% 
+  add_block_labels() %>% 
   full_join(psych.model_accuracy) %>% 
   group_by(decision, Condition.Exposure) %>% 
   arrange(Block, .by_group = T) %>% 
@@ -348,7 +369,8 @@ human_io_accuracy <-
          bottom_panel = ifelse(decision == "criterion" | decision == "human", "criterion", NA),
          decision = fct_relevel(decision, c("human", "proportional", "criterion")))
 
-p1 <- human_io_accuracy %>% 
+p1 <- 
+  human_io_accuracy %>% 
   filter(decision %in% c("human", "proportional")) %>% 
   ggplot(aes(x = Block.plot_label, y = median, 
              ymin = lower, ymax = upper, 
@@ -468,13 +490,14 @@ The second explanation refers to the goal of learning, specifically the loss fun
   + limitations in incremental adaptation (that might potentially be overcome with longer-term exposure, cf. discussion in xie2023): e.g., reweighting mixture of previously learned talker-models (can't go beyond previous experience). @estes1986 (discussed in @massaro-friedman1990) hypothesized "Perhaps people use exemplar-based categorization early in learning before a reliable summary description is developed" (this is quoting @massaro-friedman1990, not estes)
 
 
+
 That listeners in the +40 conditioned moved their boundaries more freely corresponds to the distribution of /t/ tokens in encountered speech. Figure \@ref(fig:exposure-means-database-matrix-plot) shows the widely distributed VOT values for /t/ across two different speech styles indicating that listeners are likely to have encountered a wide range of /t/ tokens in their lifetime. In contrast, the distribution of /d/ tokens is much more narrow in variability. The asymmetry in the distribution of /t/ and /d/ tokens in the input is likely to have resulted in listeners having stronger constraints on movements of the left-shifted conditions since adapting would mean interpreting more /d/s as /t/s under prior expectations that /d/s are much more tightly clustered in the cue space. Furthermore, as the voiced category is shifted further leftwards more negative VOT tokens will be included in exposure. Pre-voicing in L1-US English while quite common, is not a primary cue for identifying the voiced category. While it could reinforce perception of a voiced category research on pre-voicing effects in true-voicing languages suggest it is unlikely to elicit gradient responses in the perception of the voiced category [@vanalphen-mcqueen2006; @vanalphen-smits2004; @clare-schertz2022]. This means that for the voiced category as VOT gets smaller and moves into the negative region there is less information to be gained from attending to the changes. This flip-side to the effect on perception as VOT increases makes sense because there is not a category to the left of the voiced one in a dual-contrast language (it's /d/s all the way down).
 
 
 ## Limitations and future directions
 The present study set out to investigate incremental adaptation to a single talker, whose pronunciations were shifted relative to listeners' prior expectations. The conclusions we have discussed so far should be interpreted in light of several  limitations.
 
-First off, our experiment investigated incremental adaptation to a single female talker's productions of syllable-initial /d/-/t/ by L1-US English listeners. In particular, our exposure conditions shifted the distribution of VOT and, by extension, f0 and vowel duration. As adaptive speech perception---including its generalization across categories, phonetic contexts, and talkers---can depend on the exposure talker, the phonetic contrast or the phonetic cues it involves [e.g., @eisner2005; @kraljic-samuel2007; @mitterer; @xie2017; @xie2021], future work is necessary to assess how general the present findings are.
+First off, our experiment investigated incremental adaptation to a single female talker's productions of syllable-initial /d/-/t/ by L1-US English listeners. In particular, our exposure conditions shifted the distribution of VOT and, by extension, f0 and vowel duration. As adaptive speech perception---including its generalization across categories, phonetic contexts, and talkers---can depend on the exposure talker, the phonetic contrast or the phonetic cues it involves [e.g., @eisner-mcqueen2005; @kraljic-samuel2007; @mitterer; @xie2017; @xie2021jep], future work is necessary to assess how general the present findings are.
 
 Second, the present study shares with other distributional learning paradigms that a small number of minimal pair items was repeated many times, with only minimal phonetic differences embedded in otherwise constant phonetic contexts (e.g., the vowel following /d/-/t/ was always the same), and presented in isolation. This sacrifice of ecological validity was motivated by our goal to test stronger predictions about the direction and relative magnitude of effects (rather than merely the existence of effects). It does, however, mean that the speech input that participants experienced in the experiment differed from everyday encounters with unfamiliar talkers: listeners typically experience *connected* speech from unfamiliar talkers, which tends to be produced with faster speech rates and comes with additional segmentation challenges; while the same phonetic contrast might appear many times, it will not necessarily appear in the same phonetic context, least of all in the same word; and the speech of talkers with unfamiliar accents often deviate from listeners' expectations in more than a single segmental contrast. Comparatively little is known about adaptive speech perception under such conditions since only a handful of studies has employed connected speech stimuli beyond isolated sentences [e.g., @reinisch2014]. Encouragingly, these studies have replicated the effects found for ecologically less valid exposures. Still, it is possible that, for example, the rapidity of adaptive changes in the present study over-estimates the adaptivity of everyday speech perception. There is evidence, for example, that the repetition of minimal pair recordings can affect listeners categorization responses [@lancia-winter2013], perhaps because it helps listeners isolate relevant differences between recordings.
 

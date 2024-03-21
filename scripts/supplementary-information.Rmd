@@ -685,7 +685,7 @@ d.io.categorization <-
       crossing(Block = c(2, 4, 6))) %>%
   select(Condition.Exposure, Phase, data, model_unscaled, Block, intercept_unscaled, slope_unscaled, intercept_scaled, slope_scaled, PSE) %>% 
   mutate(across(c(Phase, Condition.Exposure, Block), factor)) %>% 
-  relabel_blocks()
+  add_block_labels()
 ```
 
 (ref:plot-IO-logistic-regression-fit) The expected categorization functions predicted by the logistic regression of responses by idealized listeners by exposure condition and phase (solid lines). The ideal listeners' proportion of "t"-responses (dashed lines) converge with the logistic regression fit along the assessed VOT region and are therefore partially obscured by the logistic regression fitted lines. Grey arrows point to expected PSEs of the logistic regression fit. 
@@ -810,7 +810,7 @@ p.across_blocks <-
 p.intercept_1to7 <-
   p.across_blocks +  
   geom_step(
-    data = d.io.categorization %>% relabel_blocks(),
+    data = d.io.categorization %>% add_block_labels(),
     # Using scaled intercept (which is keeping the location at which the intercept is evaluated constant
     # across exposure and test: it's always the mean VOT of test)
     aes(x = Block.plot_label, y = intercept_scaled, colour = Condition.Exposure, group = Condition.Exposure),
@@ -924,7 +924,7 @@ cond_fit_test_exposure <-
   arrange(as.numeric(as.character(Block))) %>%
   mutate(
     Phase = ifelse(Block %in% c(2, 4, 6), "exposure", "test")) %>%
-  relabel_blocks()
+  add_block_labels()
 
 label_colour <-
   tibble(
