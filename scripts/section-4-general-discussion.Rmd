@@ -216,49 +216,7 @@ d.estimates %>%
 ```
 
 
-```{r evaluate-IA-accuracy}
-d.IA_predicted_exposure <-
-  if (file.exists("../models/d.IA_predicted_exposure.rds")) {
-    readRDS("../models/d.IA_predicted_exposure.rds")
-    } else {
-    get_IBBU_predicted_response(
-        model = m_IA_inferred.VOT_f0_vowelduration,
-        groups = get_group_levels_from_stanfit(m_IA_inferred.VOT_f0_vowelduration),
-        untransform_cues = T,
-        target_category = 2, # target category "/d/" = 1, "/t/" = 2
-        predict_test = F)
-  saveRDS(d.IA_predicted_exposure, "../models/d.IA_predicted_exposure.rds")
-  }
 
-d.IA_exposure_accuracy <- 
-  d.IA_predicted_exposure %>% 
-  group_by(group, Condition.Exposure, .chain, .iteration, .draw) %>% 
-  summarise(criterion.accuracy = mean(Response.Criterion == category)) %>% 
-  right_join(d.IA_predicted_exposure %>% 
-  group_by(group, Condition.Exposure, .chain, .iteration, .draw) %>% 
-  summarise(proportion.accuracy = mean(Response.Proportion))) %>% 
-  group_by(group, Condition.Exposure) %>% 
-  summarise(
-    across(c(criterion.accuracy, proportion.accuracy), median_hdci))
-```
-
-
-```{r plot-IA-exposure-accuracy, fig.width=6.5, fig.height=3.5, fig.cap="(ref:plot-IA-exposure-accuracy)"}
-d.IA_exposure_accuracy %>% 
-  pivot_longer(
-    cols = contains(".accuracy"),
-    cols_vary = "slowest", 
-    names_to = "decision_rule") %>% 
-  unnest(value) %>% 
-  ggplot(
-    aes(x = group, y = y, ymin = ymin, ymax = ymax, group = decision_rule, shape = decision_rule, colour = Condition.Exposure)) +
-  geom_pointrange(position = position_dodge2(.3)) +
-  labs(y = "Median accuracy", x = "IA Group") +
-  scale_colour_manual("Condition", values = colours.condition, labels = c("baseline", "+10", "+40")) +
-  scale_shape_manual("Decision", values = c(1, 2), labels = c("criterion", "proportion")) +
-  theme(legend.position = "top",
-        axis.text.x = element_text(angle = 30, vjust = .99, hjust = .99))
-```
 
 
 
@@ -461,6 +419,30 @@ p2 <- human_io_accuracy %>%
              labeller = labeller(Condition.Exposure = c("Shift0" = "baseline", "Shift10" = "+10", "Shift40" = "+40")))
 (p1 / p2) 
 ```
+
+```{r testing-shrinkage, results='asis'}
+fit_test.simple_effects_condition <- readRDS("../models/test-nested-condition.rds")
+fit_test_nested <- readRDS("../models/test-nested_slope-priorSD15-0.995.rds")
+hyp.shrinkage <-
+  hypothesis(
+    fit_test.simple_effects_condition,
+    c(
+      "abs(-6.4 - mu2_Block7:Condition.Exposure_Shift40vs.Shift10) > 
+      abs(0.31 - mu2_Block7:Condition.Exposure_Shift40vs.Shift10)",
+      "abs(2.7 - mu2_Block7:Condition.Exposure_Shift10vs.Shift0) > 
+      abs(0.31 - mu2_Block7:Condition.Exposure_Shift10vs.Shift0)"),
+    robust = T) %>%
+  .$hypothesis %>%
+  dplyr::select(-Star)
+
+make_hyp_table(
+  hyp.shrinkage,
+  c("$PSE_{+40_{expected}} - PSE_{+40} vs. PSE_{+10} > PSE_{+10_{expected}} - PSE_{+40} vs. PSE_{+10}$",
+    "$PSE_{baseline_{expected}} - PSE_{+10} vs. PSE_{baseline} > PSE_{+10_{expected}} - PSE_{+10} vs. PSE_{baseline}$"),
+  caption = "Is the distance of the fitted PSE from the idealised learner predicted PSE different between the conditions? This table tests the hypothesis of shrinkage, i.e. the further the distributional shift from listener prior expectations, the greater the distance from the expected boundary.")
+```
+
+
 
 ### Potential explanations
 Explanations for the observed patterns of shrinkage and premature convergence can be grouped into three classes. One class of explanations appeals to methodological artifacts. A second class of explanations attributes the observed patterns to a failure to take into account aspects of our design. Under either of the first two types of explanations, the present data do *not* constitute evidence against the hypothesis that adaptive speech perception achieves ideal information integration. A third class of explanations appeals to previously unrecognized constraints on adaptive speech perception. 
