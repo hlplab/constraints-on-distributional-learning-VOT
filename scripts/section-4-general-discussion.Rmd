@@ -327,7 +327,7 @@ rm(fit_exposure, fit_test)
 ```
 
 (ref:plot-IO-human-accuracy) Mean accuracies of participants on unlabeled exposure trials (circle point ranges) against recognition accuracies of idealised learners (dashed horizontal lines) under proportional and criterion choice rules, and accuracies of fitted psychometric models (triangle point ranges). Point ranges represent the median and 95% quantile interval of participant means. Coloured dashed lines are accuracies of ideal observers trained in the respective conditions. Grey lines represent ideal observer recognition accuracy *prior* to receiving any exposure in the respective conditions.
-```{r plot-io-human-accuracy, fig.width=7.5, fig.height=5.5, fig.cap="(ref:plot-IO-human-accuracy)"}
+```{r plot-io-psychometric-model-accuracy, fig.width=7.5, fig.height=5.5, fig.cap="(ref:plot-IO-human-accuracy)"}
 human_io_accuracy <- 
   human.accuracy %>% 
   mutate(decision = "human") %>% 
@@ -344,12 +344,12 @@ human_io_accuracy <-
   group_by(decision, Condition.Exposure) %>% 
   arrange(Block, .by_group = T) %>% 
   ungroup() %>% 
-  mutate(top_panel = ifelse(decision == "proportional" | decision == "human", "proportional", NA),
-         bottom_panel = ifelse(decision == "criterion" | decision == "human", "criterion", NA),
+  mutate(top_panel = ifelse(decision == "proportional" | decision == "human", "Luce's choice rule", NA),
+         bottom_panel = ifelse(decision == "criterion" | decision == "human", "Criterion choice rule", NA),
          decision = fct_relevel(decision, c("human", "proportional", "criterion")))
 
 p1 <- human_io_accuracy %>% 
-  filter(decision %in% c("human", "proportional")) %>% 
+  filter(decision == "proportional") %>% 
   ggplot(aes(x = Block.plot_label, y = median, 
              ymin = lower, ymax = upper, 
              colour = Condition.Exposure, 
@@ -371,10 +371,9 @@ p1 <- human_io_accuracy %>%
     colour = "#d2d4dc",
     alpha = 0.9,
     inherit.aes = F) +
-  geom_pointrange(position = position_dodge2(.5), size = .5) +
+  geom_pointrange(position = position_dodge2(.4), size = .4) +
   stat_summary(geom = "line", position = position_dodge2(.5)) +
-   labs(y = "Accuracy on \n unlabeled exposure trials") +
-  scale_shape_manual(values = c(16, 2), guide = F) +
+   labs(y = "Accuracy on exposure trials\n(of psychometric model)") +
   scale_colour_manual("Condition", values = colours.condition, labels = c("baseline", "+10", "+40"), guide = F) +
   theme(axis.title.x = element_blank(),
         axis.text.x = element_blank(),
@@ -385,11 +384,10 @@ p1 <- human_io_accuracy %>%
              labeller = labeller(Condition.Exposure = c("Shift0" = "baseline", "Shift10" = "+10", "Shift40" = "+40")))
 
 p2 <- human_io_accuracy %>% 
-  filter(decision %in% c("human", "criterion")) %>% 
+  filter(decision == "criterion") %>% 
   ggplot(aes(x = Block.plot_label, y = median, 
              ymin = lower, ymax = upper, 
              colour = Condition.Exposure, 
-             shape = decision, 
              group = decision)) +
   geom_hline(
     data = io.accuracy %>% 
@@ -406,10 +404,9 @@ p2 <- human_io_accuracy %>%
     linewidth = .8,
     colour = "#d2d4dc",
     alpha = 0.9) +
-  geom_pointrange(position = position_dodge2(.5), size = .5) +
+  geom_pointrange(position = position_dodge2(.4), size = .4) +
   stat_summary(geom = "line", position = position_dodge2(.5)) +
-   labs(y = "Accuracy on \n unlabeled exposure trials") +
-  scale_shape_manual(values = c(16, 2), guide = F) +
+   labs(y = "Accuracy on exposure trials\n(of psychometric model)") +
   scale_colour_manual("Condition", values = colours.condition, labels = c("baseline", "+10", "+40"), guide = F) +
   theme(axis.title.x = element_blank(),
         axis.text.x = element_text(angle = 30, vjust = .99, hjust = .99)) + 
@@ -422,24 +419,22 @@ p2 <- human_io_accuracy %>%
 
 ```{r testing-shrinkage, results='asis'}
 fit_test.simple_effects_condition <- readRDS("../models/test-nested-condition.rds")
-fit_test_nested <- readRDS("../models/test-nested_slope-priorSD15-0.995.rds")
+fit_test_nested_within_condition_and_block <- readRDS("../models/test-nested_slope-priorSD15-0.995.rds")
 hyp.shrinkage <-
   hypothesis(
-    fit_test.simple_effects_condition,
+    fit_test_nested_within_condition_and_block,
     c(
-      "abs(-6.4 - mu2_Block7:Condition.Exposure_Shift40vs.Shift10) > 
-      abs(0.31 - mu2_Block7:Condition.Exposure_Shift40vs.Shift10)",
-      "abs(2.7 - mu2_Block7:Condition.Exposure_Shift10vs.Shift0) > 
-      abs(0.31 - mu2_Block7:Condition.Exposure_Shift10vs.Shift0)"),
+      str_c("abs(", d.io.categorization$intercept_scaled[[79]], "- mu2_IpasteCondition.ExposureBlocksepEQxShift40x7) <", "abs(", d.io.categorization$intercept_scaled[[70]], "- mu2_IpasteCondition.ExposureBlocksepEQxShift10x7)"),       str_c("abs(", d.io.categorization$intercept_scaled[[70]], "- mu2_IpasteCondition.ExposureBlocksepEQxShift10x7) <", "abs(", d.io.categorization$intercept_scaled[[61]], "- mu2_IpasteCondition.ExposureBlocksepEQxShift0x7)")),
     robust = T) %>%
   .$hypothesis %>%
   dplyr::select(-Star)
 
 make_hyp_table(
-  hyp.shrinkage,
-  c("$PSE_{+40_{expected}} - PSE_{+40} vs. PSE_{+10} > PSE_{+10_{expected}} - PSE_{+40} vs. PSE_{+10}$",
-    "$PSE_{baseline_{expected}} - PSE_{+10} vs. PSE_{baseline} > PSE_{+10_{expected}} - PSE_{+10} vs. PSE_{baseline}$"),
-  caption = "Is the distance of the fitted PSE from the idealised learner predicted PSE different between the conditions? This table tests the hypothesis of shrinkage, i.e. the further the distributional shift from listener prior expectations, the greater the distance from the expected boundary.")
+    hyp.shrinkage,
+    c(
+      "$PSE_{+40_{predicted}} vs. PSE_{+40} < PSE_{+10_{predicted}} vs. PSE_{+10}$",
+      "$PSE_{+10_{predicted}} vs. PSE_{+10} < PSE_{baseline_{predicted}} vs. PSE_{baseline}$"),
+    caption = "Is the distance of the fitted PSE from the idealised learner predicted PSE different between the conditions? This table tests the hypothesis of shrinkage, i.e. the further the distributional shift from listener prior expectations, the greater the distance from the expected boundary.")
 ```
 
 

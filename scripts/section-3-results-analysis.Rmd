@@ -49,7 +49,7 @@ The psychometric models for exposure and test blocks each regressed participants
 # Refit the same model, formulated as nesting intercepts and slopes within each unique combination of
 # exposure condition and block. This makes it easier to extract the intercept, slope, and PSE for the
 # large result figure (Panels C and D).
-fit_test_nested <-
+fit_test_nested_within_condition_and_block <-
   fit_model(
     data = d.for_analysis,
     phase = "test",
@@ -69,7 +69,7 @@ fit_exposure_nested <-
 ```{r extract-intercepts-slopes-from-test-and-exposure-models}
 d.estimates <-
   full_join(
-    fit_test_nested %>% get_intercepts_and_slopes(),
+    fit_test_nested_within_condition_and_block %>% get_intercepts_and_slopes(),
     fit_exposure_nested %>% get_intercepts_and_slopes()) %>%
   mutate(
     Block = factor(Block),
@@ -435,7 +435,7 @@ The analysis across all test blocks conceptually replicates previous findings th
 Next, we turn to the questions of primary interest. Incremental changes in participants' categorization responses can be assessed from three mutually complementing perspectives. First, we compare how exposure affects listeners' categorization responses *relative to other exposure conditions*. This is the perspective taken in previous studies, but extended to test *how early* in the experiment differences between exposure conditions begin to emerge. Second, we compare how exposure *incrementally changes* listeners' categorization responses from block to block within each condition, relative to listeners' responses prior to any exposure. Third, we compare changes in listeners' responses to those expected from an ideal observer that has fully learned the exposure distributions. This analysis has the potential to identify *constraints on cumulative adaptation*. As we show, in particular these latter two perspectives---made possible by the incremental exposure-test paradigm---afford stronger tests of the predictions laid out in the introduction, and suggest previously unrecognized constraints on the early moments of adaptive speech perception. For all three analyses, we initially focus on Tests 1-4 with intermittent exposure. Following that, we analyze the effects of repeated testing during Tests 4-6. Though research---including some of our own previous work---tends to interpret tests as passive windows into the effects of exposure, test stimuli constitute part of the exposure input listeners' receive. This has both methodological and theoretical consequences: for example, we show below that analyses like those used in previous work (and our conceptual replication analysis) can underestimate the true effect of exposure.
 
 ```{r}
-rm(fit_test_nested, fit_exposure, fit_exposure_nested, cond_fit_test_exposure)
+rm(fit_test_nested_within_condition_and_block, fit_exposure, fit_exposure_nested, cond_fit_test_exposure)
 ```
 
 ## How quickly does exposure affect listeners' categorization responses? (comparing exposure conditions within each test block)
