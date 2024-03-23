@@ -110,27 +110,26 @@ p.histogram_conditions <-
   d.exposure_blocks %>% 
   na.omit() %>% 
   filter(image_selection == "forward" & list_LSQ_variant == "A") %>%
-    mutate(block = case_when(
-    block == 2 ~ "Block A",
-    block == 4 ~ "Block B",
-    block == 6 ~ "Block C")) %>% bind_rows(
-      d.exposure_blocks %>% na.omit() %>% filter(image_selection == "forward" & list_LSQ_variant == "A") %>% mutate(block = "Block D")) %>%
+  mutate(
+    block = case_when(
+      block == 2 ~ "Block A",
+      block == 4 ~ "Block B",
+      block == 6 ~ "Block C")) %>% 
+  bind_rows(d.exposure_blocks %>% na.omit() %>% filter(image_selection == "forward" & list_LSQ_variant == "A") %>% mutate(block = "Block D")) %>%
   mutate(block = fct_relevel(block, c("Block A", "Block B", "Block C", "Block D"))) %>% 
-  ggplot() +
+  ggplot(aes(x = VOT)) +
   geom_histogram(
-    aes(x = VOT, 
-        fill = paste(condition, category, labelling), 
-        color = paste(condition, category, labelling),
-        linetype = labelling), 
+    aes( 
+      fill = paste(condition, category, labelling), 
+      color = paste(condition, category, labelling)), 
     alpha = .8) +
   geom_text(
     data = d.means,
-    aes(x = -10,  y = 17, 
-        label = label),
+    aes(x = -10, y = 17, label = label),
     parse = T,
     size = 2, hjust = 0, position = position_dodge2v(height = -8),
     inherit.aes = F) +
-  geom_rug(data = d %>% filter(Phase == "test") %>% distinct(VOT)) +
+  geom_rug(data = d %>% filter(Phase == "test") %>% distinct(VOT), sides = "b") +
   guides(
     colour = guide_legend(
       override.aes = list(
@@ -140,9 +139,9 @@ p.histogram_conditions <-
         values = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", 0, 0, 0, 0, 0, 0, 0, 0)), nrow = 2),
     linetype = "none") +
   scale_x_continuous("VOT (ms)", breaks = seq(-50, 150, 50)) +
-  scale_y_continuous("Count") +
+  scale_y_continuous("Count (per participant)") +
   scale_colour_manual(
-    "Labelling",
+    "Stimulus type",
     values = c(
       "baseline /d/ labeled" = "#800000", 
       "baseline /d/ unlabeled" = "#ff9999",
@@ -172,7 +171,8 @@ p.histogram_conditions <-
     legend.key.height = unit(12, "pt"),
     legend.box.spacing = unit(1, "pt"), 
     panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank())
+    panel.grid.minor.x = element_blank(),
+    panel.grid.minor.y = element_blank())
 
 p.histogram_conditions
 ```
