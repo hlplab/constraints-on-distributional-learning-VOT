@@ -265,7 +265,7 @@ d.for_analysis <-
     Exclude_participant.due_to_labeled_trials == FALSE,
     Exclude_participant.due_to_VOT_slope == FALSE) %>% 
   group_by(Block) %>% 
-  relabel_blocks() %>% 
+  add_block_labels() %>% 
   ungroup()
 ```
 

@@ -84,7 +84,7 @@ d.estimates <-
         ifelse(Block %in% c(2, 4, 6), VOT.sd_exposure, VOT.sd_test))) %>%
   group_by(Condition.Exposure, Block) %>%
   median_hdci() %>% 
-  relabel_blocks()
+  add_block_labels()
 ```
 
 ```{r}
@@ -177,7 +177,7 @@ d.io.categorization <-
       crossing(Block = c(1:9)) %>%
   mutate(Phase = ifelse(Block %in% c(2, 4, 6), "exposure", "test")) %>%
   select(Condition.Exposure, Phase, Block, intercept_unscaled, slope_unscaled, intercept_scaled, slope_scaled, PSE) %>%
-  relabel_blocks() %>%
+  add_block_labels() %>%
   mutate(across(c(Phase, Condition.Exposure, Block, Block.plot_label), factor))
 ```
 
@@ -219,40 +219,6 @@ p.intercept_1to7 <-
     inherit.aes = F) +
   scale_y_continuous("Intercept")
 
-p.slope_1to7 <-
-  # Plotting participants' and ideal observers' slopes. We're transforming both types of slopes back
-  # into the unit ms VOT. This makes sure that the different slopes are actually comparable across
-  # exposure and test blocks (participants) and ideal observers, each of which (might) have different
-  # SDs that were used during the calculation of the scaled slopes.
-  #
-  # (scaled slopes are good for *effect size* comparison but---perhaps confusingly---that's not the
-  # same as making sure that the effects are actually expressed in the same units.)
-  p.across_blocks +  
-  # Using UNscaled slope because slopes are comparable across scales anyway and this is more intuitive
-  # (remove _unscaled to switch to slopes over Gelman-scaled VOT)
-  aes(y = slope_unscaled_median, ymin = slope_unscaled_lower, ymax = slope_unscaled_upper) +
-  # These are the slopes of the ideal observers
-    geom_rect(
-    data = d.io.categorization %>%
-      group_by(Condition.Exposure) %>%
-      summarise(slope_unscaled = mean(slope_unscaled)) %>%
-      filter(!Condition.Exposure %in% c("Shift0", "Shift10", "Shift40", "prior")),
-    mapping = aes(xmin = -Inf, ymin = min(slope_unscaled), ymax = max(slope_unscaled), xmax = Inf),
-    fill = "#d2d4dc",
-    alpha = .08,
-    inherit.aes = F) +
-  geom_hline(
-    data = d.io.categorization %>%
-      mutate(slope_unscaled = ifelse(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40"), .237, slope_unscaled)) %>%
-      filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")),
-    # Using UNscaled slope because slopes are comparable across scales anyway and this is more intuitive
-    # (substitute _unscaled to _scaled to switch to slopes over Gelman-scaled VOT)
-    mapping = aes(yintercept = slope_unscaled, colour = Condition.Exposure, group = Condition.Exposure),
-    linetype = 2,
-    linewidth = .8,
-    alpha = 0.5) +
-  scale_y_continuous("slope (log-odds/ms VOT)")
-
 # get the relative distance of the IO-predicted PSEs from the starting point PSE at test 1
 d.true_shift <-
   d.estimates %>%
@@ -271,31 +237,13 @@ d.true_shift <-
         Condition.Exposure == "Shift40" ~ d.estimates$PSE[19]),
     true_shift = PSE.io_predicted - PSE_block1,
     proportion_shift = (PSE - PSE_block1)/true_shift) %>%
-  relabel_blocks()
-
-#Compute distribution of talker-specific PSEs from Chodroff & Wilson (2018) corpus
-d.talkerPSEs <-
-  # get each talker's boundary estimate
-  get_IO_categorization(
-    data = d.chodroff_wilson.isolated,
-    cues = c("VOT"),
-    groups = c("Talker", "gender"),
-    with_noise = TRUE,
-    VOTs = seq(0, 85, .5)) %>% 
-  # center talker PSEs to human PSE at block 1 of experiment
-  mutate(
-    center_constant = mean(d.true_shift$PSE_block1) - mean(PSE),
-    PSE_centered = PSE + center_constant) %>%
-  summarise(
-    lower_PSE = quantile(PSE_centered, probs = .025),
-    mean_PSE = mean(PSE_centered),
-    upper_PSE = quantile(PSE_centered, probs = .975))
+  add_block_labels()
 
 p.PSE_1to7 <-     
   p.across_blocks +  
   scale_y_continuous("PSE (ms VOT)") +
   aes(y = PSE, ymin = PSE.lower, ymax = PSE.upper) +
-      geom_rect(
+  geom_rect(
     data = d.io.categorization %>%
       group_by(Condition.Exposure) %>%
       summarise(PSE = mean(PSE)) %>%
@@ -305,15 +253,6 @@ p.PSE_1to7 <-
     alpha = .08,
     inherit.aes = F) +
   geom_linerange(linewidth = .6, position = position_dodge(.3), alpha = .5) +
-  geom_label(
-    data = d.true_shift %>%
-      filter(Block != 1),
-    mapping = aes(label = paste(scales::percent(proportion_shift, accuracy = .1))),
-    position = position_dodge(.3),
-    label.size = .15,
-    label.padding = unit(.18, "lines"),
-    size = 2.2,
-    show.legend = F) +
   geom_hline(
     data = d.io.categorization %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")),
     mapping = aes(yintercept = PSE, color = Condition.Exposure, group = Condition.Exposure),
@@ -333,17 +272,9 @@ p.PSE_1to7 <-
     fontface = "bold",
     size = 3,
     inherit.aes = F) +
-  annotate(
-    "crossbar",
-    x = 9.7, y = d.talkerPSEs$mean_PSE, ymin = d.talkerPSEs$lower_PSE, ymax = d.talkerPSEs$upper_PSE,
-    colour = "black",
-    width = 0.1,
-    alpha = .6) +
    coord_cartesian(xlim = c(0.75, 9), clip = "off") +
-   theme(plot.margin = unit(c(1, 3.2, 1, 1), "lines"),
-         legend.position = "none")
+   theme(plot.margin = unit(c(1, 3.2, 1, 1), "lines"), legend.position = "none")
 ```
-
 
 ```{r plot-test-exposure-fit, fig.width=11, fig.height=3, message=FALSE}
 cond_fit_test_exposure <-
@@ -358,7 +289,7 @@ cond_fit_test_exposure <-
   arrange(as.numeric(as.character(Block))) %>%
   mutate(
     Phase = ifelse(Block %in% c(2, 4, 6), "exposure", "test")) %>%
-  relabel_blocks()
+  add_block_labels()
 
 label_colour <-
   tibble(
@@ -372,41 +303,55 @@ p.fit_1to7 <-
   ggplot() +
   geom_rect(
     data = label_colour,
-    aes(xmin = -Inf, xmax = Inf,
-        ymin = 1.05, ymax = 1.3,
-        fill = Block.colour), show.legend = F) +
+    aes(
+      xmin = -Inf, xmax = Inf,
+      ymin = 1.05, ymax = 1.3,
+      fill = Block.colour), show.legend = F) +
   scale_fill_manual(values = c("grey" = "grey", "white" = "white")) +
   new_scale_fill() +
-  geom_linefit(data = d.for_analysis %>%
+  geom_linefit(
+    data = d.for_analysis %>%
       group_by(Phase, Condition.Exposure, Block.plot_label) %>%
       filter(Block %in% c(1:7), Item.Labeled == FALSE),
-      x = Item.VOT,
-      y = estimate__,
-      fill = NA,
-      legend.position = "top",
-      legend.justification = "right") +
+    x = Item.VOT,
+    y = estimate__,
+    fill = NA,
+    legend.position = "top",
+    legend.justification = "right") +
   coord_cartesian(clip = "off", ylim = c(0, 1))
 
 p.fit_7to9 <-
   cond_fit_test_exposure %>%
   filter(Block %in% c(7:9)) %>%
   ggplot() +
-  geom_linefit(data = d.for_analysis %>%
+  geom_linefit(
+    data = d.for_analysis %>%
       group_by(Condition.Exposure, Block) %>%
       filter(Block %in% c(7:9)),
-      x = Item.VOT,
-      y = estimate__,
-      fill = "grey",
-      legend.position = "none") +
+    x = Item.VOT,
+    y = estimate__,
+    fill = "grey",
+    legend.position = "none") +
   theme(axis.title.y = element_blank())
 ```
 
-(ref:plot-fit-PSE) Summary of results. **Panel A:** Changes in listeners psychometric categorization functions as a function of exposure, from Test 1 to Test 4 with all intervening exposure blocks (only unlabeled trials were included in the analysis of exposure blocks since labeled trials provide no information about listeners' categorization function). Point ranges indicate the mean proportion of participants' "t"-responses and their 95% bootstrapped CI. Lines and shaded intervals show the *maximum a posteriori* (MAP) estimates and 95% posterior CIs of a Bayesian mixed-effects psychometric model fit to participants' responses. **Panel B:** Same as Panel A but for the final three test blocks without intervening exposure. Test 4 is shown as part of both Panels A and B. **Panel C:** Changes across blocks and conditions in listeners' point-of-subjective-equality (PSE) of the lapse-corrected categorization functions from Panels A \& B (i.e., the PSE of the perceptual model inferred from listeners' responses; for changes in the slope of that function, see SI, \@ref(sec:io-bias-correction)). Point ranges represent the posterior medians and their 95% CI derived from the psychometric model. Percentage labels indicate the amount of shift as a proportion of the expected shift under an idealized learner. The PSEs expected from such an idealized learner (an ideal observer model that has fully learned the exposure distributions) are indicated for each exposure condition by the horizontal dashed reference lines. Finally, the horizontal shaded ribbons indicate the 95%-CI of the PSEs expected from an idealized listener prior to any exposure while the crossbar indicate the mean and the 95% QI talker-specific PSEs centered on the mean PSE of listeners estimated prior to exposure. See text for further details.
+(ref:plot-fit-PSE) Summary of results. **Panel A:** Changes in listeners psychometric categorization functions as a function of exposure, from Test 1 to Test 4 with all intervening exposure blocks (only unlabeled trials were included in the analysis of exposure blocks since labeled trials provide no information about listeners' categorization function). Point ranges indicate the mean proportion of participants' "t"-responses and their 95% bootstrapped CI. Lines and shaded intervals show the *maximum a posteriori* (MAP) estimates and 95% posterior CIs of a Bayesian mixed-effects psychometric model fit to participants' responses. **Panel B:** Same as Panel A but for the final three test blocks without intervening exposure. Test 4 is shown as part of both Panels A and B. **Panel C:** Changes across blocks and conditions in listeners' point-of-subjective-equality (PSE) of the lapse-corrected categorization functions from Panels A \& B (i.e., the PSE of the perceptual model inferred from listeners' responses; for changes in the slope of that function, see SI, \@ref(sec:io-bias-correction)). Point ranges represent the posterior medians and their 95%-CI derived from the psychometric model. Horizontal dashed lines indicate 95%-CI of the PSEs expected from an idealized learner (an ideal observer model that has fully learned the exposure distributions). Percentage labels indicate the amount of shift in PSE exhibited by participants as a proportion of the expected shift under the idealized learners. Horizontal gray ribbons indicate the 95%-CI of the PSEs expected from an idealized listener prior to any exposure.
 
 \begin{landscape}
 
 ```{r plot-fit-PSE, fig.width=12.5, fig.height=7, fig.cap="(ref:plot-fit-PSE)"}
-p.fit_1to7 + p.fit_7to9 + p.PSE_1to7 +
+p.fit_1to7 + 
+  p.fit_7to9 + 
+  (p.PSE_1to7 +
+     geom_label(
+       data = d.true_shift %>%
+         filter(Block != 1),
+       mapping = aes(label = paste(scales::percent(proportion_shift, accuracy = .1))),
+       position = position_dodge(.3),
+       label.size = .15,
+       label.padding = unit(.18, "lines"),
+       size = 2.2,
+       show.legend = F)) +
   plot_layout(
     design = "
 AAAAAAAAA
@@ -421,7 +366,8 @@ heights = c(1.1, 1.1, 1.8)) +
 \end{landscape}
 
 ```{r}
-rm(p.across_blocks, p.estimates_1to7, p.PSE_1to7, p.slope_1to7, p.fit_1to7, p.fit_7to9, label_colour)
+# Not removing the PSE panel since we replot and augment it further down
+rm(p.across_blocks, p.estimates_1to7, p.fit_1to7, p.fit_7to9, label_colour)
 ```
 
 ## Conceptual replication (averaging over test blocks)

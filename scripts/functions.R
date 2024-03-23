@@ -410,9 +410,9 @@ print_CI <- function(model, term) {
 }
 
 # Pipes and functions for plot and table aesthetics -----------------------------------------------------------
-
-relabel_blocks <-
-  . %>% mutate(
+add_block_labels <-
+  . %>%
+  mutate(
     Block.plot_label = factor(case_when(
       Block == 1 ~ "Test 1",
       Block == 3 ~ "Test 2",
@@ -423,7 +423,9 @@ relabel_blocks <-
       Block == 2 ~ "Exposure 1",
       Block == 4 ~ "Exposure 2",
       Block == 6 ~ "Exposure 3")),
-    Block.plot_label = fct_relevel(Block.plot_label, c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3",  "Test 4", "Test 5", "Test 6")))
+    Block.plot_label = fct_relevel(
+      Block.plot_label,
+      c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3",  "Test 4", "Test 5", "Test 6")))
 
 
 geom_linefit <- function(data, x, y, fill, legend.position, legend.justification = NULL) {
@@ -658,7 +660,7 @@ make_VOT_IOs_from_exposure <- function(data, Sigma_noise = matrix(80, dimnames =
 fit_logistic_regression_to_model_categorization <- function(.data, resolution = 10^12, groups = NULL) {
   if ("io" %in% names(.data)) {
     # Prepare data frame for logistic regression
-    .data %<>% 
+    .data %<>%
     pivot_wider(names_from = category, values_from = response, names_prefix = "response_") %>%
       mutate(n_d = round(`response_/d/` * .env$resolution), n_t = .env$resolution - n_d) %>%
       group_by(!!! syms(groups)) %>%
@@ -712,7 +714,7 @@ get_logistic_parameters_from_model <- function(
              ~ f(
                x = .x$x, model = .y, decision_rule = "proportional") %>%
                mutate(VOT = map_dbl(x, ~ .x[1])))) %>%
-    unnest(cols = categorization, names_repair = "unique") %>% 
+    unnest(cols = categorization, names_repair = "unique") %>%
     # Fit logistic regression and extract relevant information
     # (the regression only uses VOT regardless of what cues are used for the categorization
     # so that this matches the analysis of the human responses)
@@ -770,9 +772,10 @@ get_IBBU_predicted_response <- function(
       ndraws = ndraws,
       untransform_cues = untransform_cues) %>%
     filter(group %in% .env$groups)
+
   
   # Categorize data
-  d.pars %<>% 
+  d.pars %<>%
     group_by(group, .chain, .iteration, .draw) %>%
     do(f = get_categorization_function_from_grouped_ibbu_stanfit_draws(., logit = F)) %>% 
     right_join(data, by = "group") %>%
@@ -790,15 +793,15 @@ get_IBBU_predicted_response <- function(
         case_when(
           is.infinite(Predicted_posterior) & sign(Predicted_posterior) == 1 ~ 1,
           is.infinite(Predicted_posterior) & sign(Predicted_posterior) == -1 ~ 0,
-          T ~ Predicted_posterior)) %>% 
+          T ~ Predicted_posterior)) %>%
     # for posterior predictions of exposure stimuli, get categorisations based on proportion and criterion decision rules
     { if (predict_test) . else mutate(
       .,
-      Response.Proportion = ifelse(category == "/t/", Predicted_posterior, 1 - Predicted_posterior), 
+      Response.Proportion = ifelse(category == "/t/", Predicted_posterior, 1 - Predicted_posterior),
       Response.Criterion = ifelse(Predicted_posterior >= .5, "/t/","/d/")
       ) }
 }
- 
+
 
 
 
@@ -947,22 +950,22 @@ density_quantiles <- function(x, y, quantiles) {
 # note: predictions are of the whole model which includes the lapse rates
 # this is not strictly-speaking equivalent to the IA/IO models which assume no lapsing
 get_pyschometric_accuracy <- function(
-    model_fit, 
-    newdata, 
-    phase, 
+    model_fit,
+    newdata,
+    phase,
     sd
 ) {
-  blocks <- if (phase == "test") c(1, 3, 5, 7) else (c(2, 4, 6)) 
+  blocks <- if (phase == "test") c(1, 3, 5, 7) else (c(2, 4, 6))
   epred_draws(
     object = model_fit,
-    newdata = newdata %>% 
+    newdata = newdata %>%
       # taking VOTs from exposure phase only because they have intended categories
-      filter(Phase == "exposure", Item.Labeled == F) %>% 
-      group_by(Condition.Exposure) %>% 
-      filter(ParticipantID == first(ParticipantID)) %>% 
-      reframe(Condition.Exposure, Item.VOT, category) %>% 
+      filter(Phase == "exposure", Item.Labeled == F) %>%
+      group_by(Condition.Exposure) %>%
+      filter(ParticipantID == first(ParticipantID)) %>%
+      reframe(Condition.Exposure, Item.VOT, category) %>%
       # expand to number of test/exposure blocks
-      expand_grid(Block = blocks) %>% 
+      expand_grid(Block = blocks) %>%
       mutate(VOT_gs = (Item.VOT - VOT.mean_test) / (2 * sd)),
     seed = 928,
     ndraws = 1000,
@@ -970,19 +973,19 @@ get_pyschometric_accuracy <- function(
     re_formula = NA) %>%
     mutate(proportional = ifelse(category == "/t/", .epred, 1 -.epred),
            criterion = case_when(category == "/t/" & .epred >= .5 ~ 1,
-                                 category == "/d/" & .epred < .5 ~ 1, 
+                                 category == "/d/" & .epred < .5 ~ 1,
                                  .default = 0)) %>%
-    group_by(Condition.Exposure, Block, .draw) %>% 
+    group_by(Condition.Exposure, Block, .draw) %>%
     summarise(across(c(proportional, criterion), mean, .names = "{.col}_mean")) %>%
     group_by(Condition.Exposure, Block) %>%
-    median_hdci(proportional_mean, criterion_mean) %>% 
+    median_hdci(proportional_mean, criterion_mean) %>%
     pivot_longer(
       cols = c(3:8),
       names_to = c("decision", ".value"),
-      names_sep = "_") %>% 
+      names_sep = "_") %>%
     rename(median = mean,
            lower = mean.lower,
-           upper = mean.upper) %>% 
+           upper = mean.upper) %>%
     select(-c(3:5))
 }
 
