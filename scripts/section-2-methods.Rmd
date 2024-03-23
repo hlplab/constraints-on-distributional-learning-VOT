@@ -132,7 +132,9 @@ p.histogram_conditions <-
     parse = T,
     size = 2, hjust = 0, position = position_dodge2v(height = -8),
     inherit.aes = F) +
-  geom_rug(data = d %>% filter(Phase == "test") %>% distinct(VOT), colour = "black", sides = "b") +
+  geom_rug(
+    data = d %>% filter(Phase == "test") %>% distinct(VOT), 
+    colour = "gray", sides = "b") +
   guides(
     colour = guide_legend(
       override.aes = list(
@@ -272,7 +274,6 @@ d.for_analysis <-
   add_block_labels() %>% 
   ungroup()
 ```
-
 
 Exclusion criteria were determined prior to analysis. Due to data transfer errors, 4 participants' data were not stored and therefore excluded from analysis. We further excluded from analysis participants who committed more than 3 errors out of the 18 catch trials (<83% accuracy, N = `r d %>% filter(Exclude_participant.due_to_catch_trials == TRUE) %>% group_by(ParticipantID) %>% summarise() %>% tally() %>% pull(n)`), participants who committed more than 4 errors out of the 72 labelled trials (<94% accuracy, N = `r d %>% filter(Exclude_participant.due_to_labeled_trials == TRUE) %>% group_by(ParticipantID) %>% summarise() %>% tally() %>% pull(n)`), participants with an average reaction time more than three standard deviations from the mean of the by-participant means (N = `r excl.RT`),  participants who had atypical categorization functions even prior to exposure (N = `r d %>% filter(Exclude_participant.due_to_VOT_slope == TRUE) %>% group_by(ParticipantID) %>% summarise() %>% tally() %>% pull(n)`, see SI, \@ref(sec:exclusions) for details), and participants who reported not to have used headphones (N = `r d %>% group_by(ParticipantID, audio_type) %>% summarise() %>% filter(!(audio_type %in% c("in-ear", "over-ear"))) %>% nrow()`). This left for analysis `r nrow(d.for_analysis %>% filter(Phase == "exposure"))` exposure and `r nrow(d.for_analysis %>% filter(Phase == "test"))` test observations from `r nrow(d.for_analysis %>% ungroup() %>% distinct(ParticipantID))` participants (94% of total), approximately evenly split across the three exposure conditions (baseline: XXX; +10: XXX; +40: XXX). <!-- TO DO: add specific numbers --> 
 
