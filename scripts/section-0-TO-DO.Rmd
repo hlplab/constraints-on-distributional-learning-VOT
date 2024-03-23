@@ -26,7 +26,6 @@
   * Get BFs comparing IA-predicted intercept and psychometric-predicted intercept for each test block. **These BFs quantify whether IA model indeed over/under-predicts.**
  
 ## High priority
- * Integrate other distributional learning work. K20 mentions Chládková et al., 2017; Colby et al., 2018; Theodore et al., 2015. Are those studies we should at least cite? What do they find? What about additional work by Volya that Maryann mentioned? Other work by Meghan Clayards?
  * Change order of possible explanations, starting with theoretically most relevant.
  * Replot Dave's incremental adaptation figure (figure 9) in GD (search for "Figure 9).
  * Consider replotting shrinkage figure (but with our aesthetics). this could be the figure that you at some point had added to the introduction, showing individual participants categorization functions, the idealized pre-exposure listeners, and the idealized learner in one panel, and in the other panel the violin shrinkage plot.

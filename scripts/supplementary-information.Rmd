@@ -1856,7 +1856,7 @@ p.RT_scatter/p.RT_line +
 ```
 
 
-# Comparing predictions of ideal adaptor against participants' responses
+# Comparing predictions of ideal adaptor against participants' responses {sec:ideal-adaptor}
 
 ```{r functions-for-adaptive-changes}
 summarize.NIW_ideal_adaptor_stanfit <- function(
