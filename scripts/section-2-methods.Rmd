@@ -113,8 +113,9 @@ d.means <-
     mu_label = map2(category, mu, ~ bquote(mu[.(.x)]==.(.y))),
     sigma_label = map2(category, sigma, ~ bquote(sigma[.(.x)]==.(round(.y, 1)))),
     label = map2(mu_label, sigma_label, ~ comb_plotmath(.x, ", ", .y)))
-  
 
+
+# GEOM RUG IS NOT SHOWING IN PLOT. HAVEN'T FIGURED OUT WHY  
 p.histogram_conditions <- 
   d.exposure %>% 
   bind_rows(d.exposure %>% group_by(Condition.Exposure) %>% mutate(Block = "Block D")) %>% 
