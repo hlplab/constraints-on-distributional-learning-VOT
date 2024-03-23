@@ -1605,7 +1605,7 @@ human_io_accuracy <-
       median = NA,
       upper = NA, 
       decision = "human")) %>% 
-  relabel_blocks() %>% 
+  add_block_labels() %>% 
   full_join(psych.model_accuracy) %>% 
   group_by(decision, Condition.Exposure) %>% 
   arrange(Block, .by_group = T) %>% 

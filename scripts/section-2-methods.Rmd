@@ -35,7 +35,7 @@ d <-
 # Methods 
 
 ## Participants
-We recruited `r nlevels(d$ParticipantID) + 4` participants from the Prolific crowdsourcing platform. We used Prolific's pre-screening to limit the experiment to participants (1) of US nationality, (2) who reported to be English speaking monolinguals, and (3) had not previously participated in any experiment from our lab on Prolific. Prior to the start of the experiment, participants had to confirm that they (4) had spent the first 10 years of their life in the US, (5) were in a quiet place and free from distractions, and (6) wore in-ear or over-the-ears headphones that cost at least \$15. 
+We recruited `r nlevels(d$ParticipantID) + 4` participants from the Prolific crowdsourcing platform. Participants were randomly assigned to one of three exposure conditions in Figure \@ref(fig:block-design-figure). We used Prolific's pre-screening to limit the experiment to participants (1) of US nationality, (2) who reported to be English speaking monolinguals, and (3) had not previously participated in any experiment from our lab on Prolific. Prior to the start of the experiment, participants had to confirm that they (4) had spent the first 10 years of their life in the US, (5) were in a quiet place and free from distractions, and (6) wore in-ear or over-the-ears headphones that cost at least \$15. 
 
 ```{r prepare-participant-data, include=FALSE}
 d.Participant <- 
@@ -68,7 +68,7 @@ For the two-alternative forced-choice categorization trials, participants were i
 knitr::include_graphics("../figures/trial_example.png")
 ```
 
-*Test blocks. * The experiment started with a test block. Test blocks were identical within and across conditions, always including 12 minimal pair trials assessing participants' categorization at 12 different VOTs (-5, 5, 15, 25, 30, 35, 40, 45, 50, 55, 65, 70 ms). A uniform, rather than bimodal, distribution over VOTs was chosen to maximize the statistical power to determine participants' categorization function. Identical test blocks followed each exposure block to assess the effects of cumulative exposure. As alluded to in the introduction, the use of repeated testing introduces procedural challenges. These informed the decision to keep testing short. First, listeners' attention span is limited. Second, previous experiments within LGPL paradigms have found that repeated testing over uniform test continua can reduce or undo the effects of informative exposure [@cummings-theodore2023; @zheng-samuel2023; @liu-jaeger2018; @liu-jaeger2019; @giovannone-theodore2021; @tzeng2021]. Our design included two additional test blocks without intermittent exposure at the end of the experiment, in order to test whether repeated testing has similar effects in DL paradigms. Third, holding the distribution of test stimuli constant across exposure conditions inevitably means that the relative unexpectedness of these test stimuli differs between the exposure conditions. Under some theories, this is expected to affect the information conveyed by test stimuli [@kleinschmidt-jaeger2015; @sohoglu-davis2016]. By keeping tests short relative to exposure, we aimed to minimize the influence of test trials on adaptation while still being able to estimate changes in listeners categorization function. 
+*Test blocks. * The experiment started with a test block. Test blocks were identical within and across conditions, always including 12 minimal pair trials assessing participants' categorization at 12 different VOTs (-5, 5, 15, 25, 30, 35, 40, 45, 50, 55, 65, 70 ms). <!-- A uniform, rather than bimodal, distribution over VOTs was chosen to maximize the statistical power to determine participants' categorization function.--> Identical test blocks followed each exposure block to assess the effects of cumulative exposure. As alluded to in the introduction, the use of repeated testing introduces procedural challenges. These informed the decision to keep testing short. First, listeners' attention span is limited. Second, previous experiments within LGPL paradigms have found that repeated testing over uniform test continua can reduce or undo the effects of informative exposure [@cummings-theodore2023; @zheng-samuel2023; @liu-jaeger2018; @liu-jaeger2019; @giovannone-theodore2021; @tzeng2021]. Our design included two additional test blocks without intermittent exposure at the end of the experiment, in order to test whether repeated testing has similar effects in DL paradigms. Third, holding the distribution of test stimuli constant across exposure conditions inevitably means that the relative unexpectedness of these test stimuli differs between the exposure conditions. Under some theories, this is expected to affect the information conveyed by test stimuli [@kleinschmidt-jaeger2015; @sohoglu-davis2016]. By keeping tests short relative to exposure, we aimed to minimize the influence of test trials on adaptation while still being able to estimate changes in listeners categorization function. 
 
 The assignment of VOTs to minimal pair continua was randomized for each participant, while counter-balancing it within and across test blocks. Each minimal pair appear equally often within each test block (four times), and each minimal pair appear with each VOT equally often (twice) across all six test blocks (and no more than once per test block). The order of response options---whether the /d/-initial word appeared on the left or right of the screen (see Figure \@ref(fig:example-trial))---was held constant within each participant, and counter-balanced across participants.
 
@@ -82,9 +82,10 @@ The distribution of VOTs across the 48 /d/-/t/ trials depended on the exposure c
 d.exposure_blocks <- 
   read_csv("../data/exposure_conditions_lists.csv", show_col_types = F) %>% 
   mutate(
-    condition = factor(case_when(condition == "Shift0" ~ "baseline",
-                          condition == "Shift10" ~ "+10ms",
-                          condition == "Shift40" ~ "+40ms")),
+    condition = factor(case_when(
+      condition == "Shift0" ~ "baseline",
+      condition == "Shift10" ~ "+10ms",
+      condition == "Shift40" ~ "+40ms")),
     condition = fct_relevel(condition, c("baseline", "+10ms", "+40ms")),
     labelling = as_factor(labelling))
 
@@ -122,6 +123,24 @@ p.histogram_conditions <-
         color = paste(condition, category, labelling),
         linetype = labelling), 
     alpha = .8) +
+  geom_text(
+    data = d.means,
+    aes(x = -10,  y = 17, 
+        label = label),
+    parse = T,
+    size = 2, hjust = 0, position = position_dodge2v(height = -8),
+    inherit.aes = F) +
+  geom_rug(data = d %>% filter(Phase == "test") %>% distinct(VOT)) +
+  guides(
+    colour = guide_legend(
+      override.aes = list(
+        colour = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
+        fill = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
+        linetype = c(2, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0),
+        values = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", 0, 0, 0, 0, 0, 0, 0, 0)), nrow = 2),
+    linetype = "none") +
+  scale_x_continuous("VOT (ms)", breaks = seq(-50, 150, 50)) +
+  scale_y_continuous("Count") +
   scale_colour_manual(
     "Labelling",
     values = c(
@@ -139,44 +158,26 @@ p.histogram_conditions <-
       "+40ms /t/ unlabeled" = "#e6f3ff"),
     aesthetics = c("color", "category", "fill"),
     labels = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", "", "", "", "", "", "", "", "")) +
-  guides(
-    colour = guide_legend(
-      override.aes = list(
-        colour = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
-        fill = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
-        linetype = c(2, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0),
-        values = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", 0, 0, 0, 0, 0, 0, 0, 0)), nrow = 2)) +
-  scale_x_continuous("VOT (ms)", breaks = seq(-50, 150, 50)) +
-  scale_y_continuous("Count") +
-  geom_text(
-    data = d.means,
-    aes(x = -10,  y = 17, 
-        label = label),
-    parse = T,
-    size = 2, hjust = 0, position = position_dodge2v(height = -8),
-    inherit.aes = F) +
   facet_grid(
     condition ~ block, 
     labeller = labeller(block = c("Block A" = "Block A", "Block B" = "Block B", "Block C" = "Block C", "Block D" = "all")), 
     scales = "free_y") +
-  guides(linetype = "none") +
-  theme(legend.position = "top",
-        legend.title.align = 0,
-        legend.text.align = 0,
-        legend.justification = c(.5, .5),
-        legend.box.just = "center",
-        legend.key.width = unit(12, "pt"),
-        legend.key.height = unit(12, "pt"),
-        legend.box.spacing = unit(1, "pt"), 
-        panel.grid.major.x = element_blank(),
-        panel.grid.minor.x = element_blank())
+  theme(
+    legend.position = "top",
+    legend.title.align = 0,
+    legend.text.align = 0,
+    legend.justification = c(.5, .5),
+    legend.box.just = "center",
+    legend.key.width = unit(12, "pt"),
+    legend.key.height = unit(12, "pt"),
+    legend.box.spacing = unit(1, "pt"), 
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank())
 
 p.histogram_conditions
 ```
 
-Half of the /d/ and half of the /t/ trials in each exposure block were labeled, the other half was unlabeled. Earlier distributional learning studies have mostly used fully unlabeled exposure [@clayards2008; @nixon2016; @theodore-monto2019]. This contrasts with visually- or lexically-guided perceptual learning studies, which use labeled exposure [@bertelson2003; @norris2003; @kraljic-samuel2005; @vroomen2007]. Such labeling is known to facilitate adaptation [@burchill2018; @burchill2023; but see @kleinschmidt2015]---indeed, if shifted pronunciations are embedded in minimal pair or nonce-word contexts, listeners do not shift their categorization boundary [@norris2003]. While lexical contexts often disambiguate sounds in everyday speech, that is not *always* the case: especially, when confronted with unfamiliar accents, listeners often have uncertainty about the word they are hearing, and must either use contextual information to label the input or adapt from unlabeled input. Here, we thus struck a compromise between never or always labeling the input.
-
-Unlabeled trials were identical to test trials except that the distribution of VOTs across those trials was bimodal (rather than uniform), and determined by the exposure condition. Labeled trials instead presented two response options with identical stop onsets (e.g., *din* and *dill*). This effectively labeled the input as belonging to the intended category (e.g., /d/).
+Following @kleinschmidt2015, half of the /d/ and half of the /t/ trials in each exposure block were labeled, the other half was unlabeled. Unlabeled trials were identical to test trials except that the distribution of VOTs across those trials was bimodal (rather than uniform), and determined by the exposure condition. Labeled trials instead presented two response options with identical stop onsets (e.g., *din* and *dill*). This effectively labeled the input as belonging to the intended category (e.g., /d/). <!-- Earlier distributional learning studies have mostly used fully unlabeled exposure [@clayards2008; @nixon2016; @theodore-monto2019]. This contrasts with visually- or lexically-guided perceptual learning studies, which use labeled exposure [@bertelson2003; @norris2003; @kraljic-samuel2005; @vroomen2007]. Such labeling is known to facilitate adaptation [@burchill2018; @burchill2023]---indeed, if shifted pronunciations are embedded in minimal pair or nonce-word contexts, listeners do not shift their categorization boundary [@norris2003]. --> While lexical contexts often disambiguate and thus label sounds in everyday speech [facilitating adaptation, @burchill2018; @burchill2023], disambiguating labels are not *always* available: especially, when confronted with unfamiliar accents, listeners often have uncertainty about the word they are hearing, and must either use contextual information to label the input or adapt from unlabeled input. Here, we thus struck a compromise between never or always labeling the input. 
 
 Next, we created the two additional exposure conditions by shifting all VOTs sampled for the baseline condition by +10 or +40 ms (see Figure \@ref(fig:exp2-design-distribution)). This approach exposes participants to heterogeneous approximations of normally distributed VOTs for /d/ and /t/ that varied across blocks, while holding all aspects of the input exactly constant across conditions except for the shift in VOT---including the placement of labeled and unlabeled trials relative to the exposure condition's category means. The order of trials was randomized within each block and participant, with the constraint that no more than two catch trials would occur in a row. Participants were randomly assigned to one of 18 lists, obtained by crossing 3 (exposure condition) x 3 (block order) x 2 (placement of response options during unlabeled test and exposure trials). We note that the naming of conditions (baseline, +10, +40) should be understood as *relative to each other*, rather than relative to listeners' prior experience. 
 
@@ -270,7 +271,7 @@ d.for_analysis <-
 ```
 
 
-Exclusion criteria were determined prior to analysis. Due to data transfer errors, 4 participants' data were not stored and therefore excluded from analysis. We further excluded from analysis participants who committed more than 3 errors out of the 18 catch trials (<83% accuracy, N = `r d %>% filter(Exclude_participant.due_to_catch_trials == TRUE) %>% group_by(ParticipantID) %>% summarise() %>% tally() %>% pull(n)`), participants who committed more than 4 errors out of the 72 labelled trials (<94% accuracy, N = `r d %>% filter(Exclude_participant.due_to_labeled_trials == TRUE) %>% group_by(ParticipantID) %>% summarise() %>% tally() %>% pull(n)`), participants with an average reaction time more than three standard deviations from the mean of the by-participant means (N = `r excl.RT`),  participants who had atypical categorization functions even prior to exposure (N = `r d %>% filter(Exclude_participant.due_to_VOT_slope == TRUE) %>% group_by(ParticipantID) %>% summarise() %>% tally() %>% pull(n)`, see SI, \@ref(sec:exclusions) for details), and participants who reported not to have used headphones (N = `r d %>% group_by(ParticipantID, audio_type) %>% summarise() %>% filter(!(audio_type %in% c("in-ear", "over-ear"))) %>% nrow()`). This left for analysis `r nrow(d.for_analysis %>% filter(Phase == "exposure"))` exposure and `r nrow(d.for_analysis %>% filter(Phase == "test"))` test observations from `r nrow(d.for_analysis %>% ungroup() %>% distinct(ParticipantID))` participants (94% of total), approximately evenly split across the three exposure conditions. 
+Exclusion criteria were determined prior to analysis. Due to data transfer errors, 4 participants' data were not stored and therefore excluded from analysis. We further excluded from analysis participants who committed more than 3 errors out of the 18 catch trials (<83% accuracy, N = `r d %>% filter(Exclude_participant.due_to_catch_trials == TRUE) %>% group_by(ParticipantID) %>% summarise() %>% tally() %>% pull(n)`), participants who committed more than 4 errors out of the 72 labelled trials (<94% accuracy, N = `r d %>% filter(Exclude_participant.due_to_labeled_trials == TRUE) %>% group_by(ParticipantID) %>% summarise() %>% tally() %>% pull(n)`), participants with an average reaction time more than three standard deviations from the mean of the by-participant means (N = `r excl.RT`),  participants who had atypical categorization functions even prior to exposure (N = `r d %>% filter(Exclude_participant.due_to_VOT_slope == TRUE) %>% group_by(ParticipantID) %>% summarise() %>% tally() %>% pull(n)`, see SI, \@ref(sec:exclusions) for details), and participants who reported not to have used headphones (N = `r d %>% group_by(ParticipantID, audio_type) %>% summarise() %>% filter(!(audio_type %in% c("in-ear", "over-ear"))) %>% nrow()`). This left for analysis `r nrow(d.for_analysis %>% filter(Phase == "exposure"))` exposure and `r nrow(d.for_analysis %>% filter(Phase == "test"))` test observations from `r nrow(d.for_analysis %>% ungroup() %>% distinct(ParticipantID))` participants (94% of total), approximately evenly split across the three exposure conditions (baseline: XXX; +10: XXX; +40: XXX). <!-- TO DO: add specific numbers --> 
 
 ```{r}
 rm(
