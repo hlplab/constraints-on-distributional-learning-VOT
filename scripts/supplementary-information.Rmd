@@ -1592,6 +1592,103 @@ rm(fit_exposure)
 One possible explanation for the consistently small lapse rate in the present experiment is that we recruited participants from the Prolific crowdsourcing platform rather than Mechanical Turk [@kleinschmidt-jaeger2016; @kleinschmidt2020]. Prolific has been found to deliver higher data quality than the Amazon's Mechanical Turk crowd-sourcing platform [@peer2017; @adams2020; @albert-smilek2023]. Another possibility is that the use of natural-, rather than robotic-sounding, stimuli engaged participants attention in the present experiment.
 
 
+## Evaluating accuracy of psychometric model, idealised learners against human accuracy
+```{r plot-io-psychometric-model-human-accuracy, fig.width=7.5, fig.height=5.5, fig.cap="(ref:plot-IO-human-accuracy)"}
+human_io_accuracy <- 
+  human.accuracy %>% 
+  mutate(decision = "human") %>% 
+  full_join(
+    crossing(
+      Condition.Exposure = c("Shift0", "Shift10", "Shift40"), 
+      Block = c(1, 3, 5, 7),
+      lower = NA,
+      median = NA,
+      upper = NA, 
+      decision = "human")) %>% 
+  add_block_labels() %>% 
+  full_join(psych.model_accuracy) %>% 
+  group_by(decision, Condition.Exposure) %>% 
+  arrange(Block, .by_group = T) %>% 
+  ungroup() %>% 
+  mutate(top_panel = ifelse(decision == "proportional" | decision == "human", "Luce's choice rule", NA),
+         bottom_panel = ifelse(decision == "criterion" | decision == "human", "Criterion choice rule", NA),
+         decision = fct_relevel(decision, c("human", "proportional", "criterion")))
+
+p1 <- human_io_accuracy %>% 
+  filter(decision %in% c("human", "proportional")) %>% 
+  ggplot(aes(x = Block.plot_label, y = median, 
+             ymin = lower, ymax = upper, 
+             colour = Condition.Exposure, 
+             shape = decision, 
+             group = decision)) +
+  geom_hline(
+    data = io.accuracy %>% 
+      filter(decision == "proportional" & Condition.io != "prior"),
+    mapping = aes(yintercept = accuracy, color = Condition.Exposure),
+    linetype = 2,
+    linewidth = .8,
+    alpha = 0.4,
+    show.legend = F) +
+  geom_hline(
+    data = io.accuracy %>% 
+      filter(decision == "proportional" & Condition.io == "prior"),
+    mapping = aes(yintercept = accuracy),
+    linewidth = .8,
+    colour = "#d2d4dc",
+    alpha = 0.9,
+    inherit.aes = F) +
+  geom_pointrange(position = position_dodge2(.5), size = .5) +
+  stat_summary(geom = "line", position = position_dodge2(.5)) +
+  labs(y = "Accuracy on exposure trials\n(of psychometric model)") +
+  scale_shape_manual(values = c(16, 2), guide = F) +
+  scale_colour_manual("Condition", values = colours.condition, labels = c("baseline", "+10", "+40"), guide = F) +
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) + 
+  coord_cartesian(ylim = c(.5, 1)) +
+  guides(shape = "none") +
+  facet_grid(top_panel ~ Condition.Exposure, 
+             labeller = labeller(Condition.Exposure = c("Shift0" = "baseline", "Shift10" = "+10", "Shift40" = "+40")))
+
+p2 <- human_io_accuracy %>% 
+  filter(decision %in% c("human", "criterion")) %>% 
+  ggplot(aes(x = Block.plot_label, y = median, 
+             ymin = lower, ymax = upper, 
+             colour = Condition.Exposure, 
+             shape = decision, 
+             group = decision)) +
+  geom_hline(
+    data = io.accuracy %>% 
+      filter(decision == "criterion" & Condition.io != "prior"),
+    mapping = aes(yintercept = accuracy, color = Condition.Exposure),
+    linetype = 2,
+    linewidth = .8,
+    alpha = 0.4,
+    show.legend = F) +
+  geom_hline(
+    data = io.accuracy %>% 
+      filter(decision == "criterion" & Condition.io == "prior"),
+    mapping = aes(yintercept = accuracy),
+    linewidth = .8,
+    colour = "#d2d4dc",
+    alpha = 0.9) +
+  geom_pointrange(position = position_dodge2(.5), size = .5) +
+  stat_summary(geom = "line", position = position_dodge2(.5)) +
+   labs(y = "Accuracy on exposure trials\n(of psychometric model)") +
+  scale_shape_manual(values = c(16, 2), guide = F) +
+  scale_colour_manual("Condition", values = colours.condition, labels = c("baseline", "+10", "+40"), guide = F) +
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_text(angle = 30, vjust = .99, hjust = .99)) + 
+  coord_cartesian(ylim = c(.5, 1)) +
+  guides(shape = "none") +
+  facet_grid(bottom_panel ~ Condition.Exposure, 
+             labeller = labeller(Condition.Exposure = c("Shift0" = "baseline", "Shift10" = "+10", "Shift40" = "+40")))
+(p1 / p2) 
+```
+
+
+
+
 ## Relaxing the linearity assumption for VOT {#sec:GAMM}
 The perceptual model of our psychometric mixed-effects analyses assumed linear effects of VOT on the log-odds of "t"-responses. As already mentioned in SI \@ref(sec:io-bias-correction), we made this assumptions for the sake of simplicity, and in order to avoid over-fitting. However, there are reasons to expect that the effects of VOT on listeners' categorizations are non-linear. Specifically, ideal observers with Gaussian categories along a single cue dimension (here: VOT) predict that the posterior log-odds of each category change linearly along that cue dimension if and only if the variance of both Gaussian categories is equal [for details, see @bicknell2024; @kleinschmidt-jaeger2015; @kronrod2016]. For US English /d/ and /t/, this is well-known *not* to be the case, with /t/ having larger variance than /d/ (see also Figure \@ref(fig:exposure-means-database-matrix-plot) in the main text). Under the assumption of Gaussian categories, ideal observer thus predict a quadratic effect along VOT---specifically, the log-odds of "t"-responses are predicted to increase more than linearly with increasing VOT between the two category means (since the /t/ category has larger variance).
 

@@ -721,12 +721,45 @@ get_logistic_parameters_from_model <- function(
     fit_logistic_regression_to_model_categorization(groups = groups)
 }
 
+prep_data_for_IBBU_prediction <- function(
+    model,
+    data = NULL,
+    prep_test = T
+) {
+  cue.labels <- get_cue_levels_from_stanfit(model)
+  if (prep_test) {
+  get_test_data_from_stanfit(model) %>% 
+    distinct(!!! syms(cue.labels)) %>%
+    { if (untransform_cues) get_untransform_function_from_stanfit(model)(.) else . } %>%
+    make_vector_column(cols = cue.labels, vector_col = "x", .keep = "all") %>%
+    nest(cues_joint = x, cues_separate = .env$cue.labels) %>%
+    expand_grid(group = get_group_levels_from_stanfit(model))
+  } else {
+    # Prepare exposure_data    
+    data %>% 
+      filter(Phase == "exposure") %>% 
+      group_by(Condition.Exposure) %>% 
+      # get 1 set of exposure trials per condition, per list
+      filter(ParticipantID == first(ParticipantID)) %>% 
+      reframe(Item.VOT, Item.f0_Mel, vowel_duration, category) %>% 
+      rename(VOT = Item.VOT, f0_Mel = Item.f0_Mel) %>%
+      group_by(Condition.Exposure) %>% 
+      expand_grid(TestBlock = 1:4, LSD = c("A", "B", "C")) %>% 
+      mutate(group = factor(ifelse(TestBlock == 1, "no exposure", paste0("Cond ", Condition.Exposure, LSD, "A", "_Up to test", (TestBlock - 1) * 2 + 1)))) %>% 
+      make_vector_column(cols = cue.labels, vector_col = "x", .keep = "all") %>% 
+      nest(cues_joint = x, cues_separate = c(.env$cue.labels, category))
+  }
+}
+
 get_IBBU_predicted_response <- function(
     model,
+    data,
     groups = NULL,
     untransform_cues = T,
-    target_category = 2,      # target category "/d/" = 1, "/t/" = 2
-    predict_test = T   # predict test data or exposure data
+    target_category = 2, # target category "/d/" = 1, "/t/" = 2
+    predict_test = T,
+    seed = 583,
+    ndraws = 1000
 ) {
   # Get and summarize posterior draws from fitted model
   d.pars <-
@@ -735,59 +768,17 @@ get_IBBU_predicted_response <- function(
       groups = groups,
       summarize = F,
       wide = F,
-      ndraws = NULL,
+      seed = seed,
+      ndraws = ndraws,
       untransform_cues = untransform_cues) %>%
     filter(group %in% .env$groups)
 
-  # Prepare data to predict
-  cue.labels <- get_cue_levels_from_stanfit(model)
-  if (predict_test) {
-  data.test <-
-    get_test_data_from_stanfit(model) %>%
-    distinct(!!! syms(cue.labels)) %>%
-    { if (untransform_cues) get_untransform_function_from_stanfit(model)(.) else . } %>%
-    make_vector_column(cols = cue.labels, vector_col = "x", .keep = "all") %>%
-    nest(cues_joint = x, cues_separate = .env$cue.labels)  %>%
-    crossing(group = levels(d.pars$group))
-  } else {
-  # Prepare exposure_data
-  data.exposure <-
-    d.for_analysis %>%
-    filter(Phase == "exposure") %>%
-    nest(data = -c(ParticipantID, Condition.Exposure, List.ExposureBlockOrder)) %>%
-    group_by(Condition.Exposure, List.ExposureBlockOrder) %>%
-    # get 1 set of exposure trials per condition, per list
-    slice_sample(n = 1) %>%
-    unnest(data) %>%
-    reframe(Item.VOT, Item.f0_Mel, vowel_duration, category) %>%
-    rename(VOT = Item.VOT, f0_Mel = Item.f0_Mel) %>%
-    make_vector_column(cols = cue.labels, vector_col = "x", .keep = "all") %>%
-    nest(cues_joint = x, cues_separate = c(.env$cue.labels, category)) %>%
-    # join with group levels found in IA fit then temporarily filter to no-exposure group
-    # and cross that with the three shift conditions. the no-exposure group will
-    # not update likelihoods but will be tested on each of the exposure stimuli
-    # to see how well it performs based on its prior expectations
-    right_join(
-      tibble(
-        group = get_group_levels_from_stanfit(model)) %T>%
-        { filter(., group == "no exposure") %>% crossing(Condition.Exposure = c("Shift0", "Shift10", "Shift40")) ->> temp } %>%
-        # match each IA group with its corresponding shift condition
-        mutate(.,
-               Condition.Exposure = case_when(
-                 str_detect(group, "Shift0") ~ "Shift0",
-                 str_detect(group, "Shift10") ~ "Shift10",
-                 str_detect(group, "Shift40") ~ "Shift40",
-                 TRUE ~ NA),
-               rows = ifelse(group == "no exposure", 0, 1)) %>%
-        uncount(rows) %>%
-        bind_rows(temp))
-  }
-
+  
   # Categorize data
   d.pars %<>%
     group_by(group, .chain, .iteration, .draw) %>%
-    do(f = get_categorization_function_from_grouped_ibbu_stanfit_draws(., logit = F)) %>%
-    { if (predict_test) right_join(., data.test, by = "group") else right_join(., data.exposure, by = "group") } %>%
+    do(f = get_categorization_function_from_grouped_ibbu_stanfit_draws(., logit = F)) %>% 
+    right_join(data, by = "group") %>%
     group_by(group, .chain, .iteration, .draw) %>%
     mutate(
       Predicted_posterior =

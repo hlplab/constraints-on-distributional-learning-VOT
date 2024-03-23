@@ -49,7 +49,7 @@ The psychometric models for exposure and test blocks each regressed participants
 # Refit the same model, formulated as nesting intercepts and slopes within each unique combination of
 # exposure condition and block. This makes it easier to extract the intercept, slope, and PSE for the
 # large result figure (Panels C and D).
-fit_test_nested <-
+fit_test_nested_within_condition_and_block <-
   fit_model(
     data = d.for_analysis,
     phase = "test",
@@ -69,7 +69,7 @@ fit_exposure_nested <-
 ```{r extract-intercepts-slopes-from-test-and-exposure-models}
 d.estimates <-
   full_join(
-    fit_test_nested %>% get_intercepts_and_slopes(),
+    fit_test_nested_within_condition_and_block %>% get_intercepts_and_slopes(),
     fit_exposure_nested %>% get_intercepts_and_slopes()) %>%
   mutate(
     Block = factor(Block),
@@ -383,7 +383,7 @@ In summary, the analysis across all test blocks conceptually replicates previous
 Next, we turn to the questions of primary interest. Incremental changes in participants' categorization responses can be assessed from three mutually complementing perspectives. First, we compare how exposure affects listeners' categorization responses *relative to other exposure conditions*. This is the perspective taken in previous studies, but extended to test *how early* in the experiment differences between exposure conditions begin to emerge. Second, we compare how exposure *incrementally changes* listeners' categorization responses from block to block within each condition, relative to listeners' responses prior to any exposure. Third, we compare changes in listeners' responses to those expected from an ideal observer that has fully learned the exposure distributions. This analysis has the potential to identify *constraints on cumulative adaptation*. As we show, in particular these latter two perspectives---made possible by the incremental exposure-test paradigm---afford stronger tests of the predictions laid out in the introduction, and suggest previously unrecognized constraints on the early moments of adaptive speech perception. For all three analyses, we initially focus on Tests 1-4 with intermittent exposure. Following that, we analyze the effects of repeated testing during Tests 4-6. Though research---including some of our own previous work---tends to interpret tests as passive windows into the effects of exposure, test stimuli constitute part of the exposure input listeners' receive. This has both methodological and theoretical consequences: for example, we show below that analyses like those used in previous work (and our conceptual replication analysis) can underestimate the true effect of exposure.
 
 ```{r}
-rm(fit_test_nested, fit_exposure, fit_exposure_nested, cond_fit_test_exposure)
+rm(fit_test_nested_within_condition_and_block, fit_exposure, fit_exposure_nested, cond_fit_test_exposure)
 ```
 
 ## How quickly does exposure affect listeners' categorization responses? (comparing exposure conditions within each test block)
@@ -816,13 +816,13 @@ human_io_accuracy <-
   group_by(decision, Condition.Exposure) %>% 
   arrange(Block, .by_group = T) %>% 
   ungroup() %>% 
-  mutate(top_panel = ifelse(decision == "proportional" | decision == "human", "proportional", NA),
-         bottom_panel = ifelse(decision == "criterion" | decision == "human", "criterion", NA),
+  mutate(top_panel = ifelse(decision == "proportional" | decision == "human", "Luce's choice rule", NA),
+         bottom_panel = ifelse(decision == "criterion" | decision == "human", "Criterion choice rule", NA),
          decision = fct_relevel(decision, c("human", "proportional", "criterion")))
 
 p1 <- 
   human_io_accuracy %>% 
-  filter(decision %in% c("human", "proportional")) %>% 
+  filter(decision  == "proportional") %>% 
   ggplot(aes(x = Block.plot_label, y = median, 
              ymin = lower, ymax = upper, 
              colour = Condition.Exposure, 
@@ -846,8 +846,7 @@ p1 <-
     inherit.aes = F) +
   geom_pointrange(position = position_dodge2(.5), size = .5) +
   stat_summary(geom = "line", position = position_dodge2(.5)) +
-   labs(y = "Accuracy on \n unlabeled exposure trials") +
-  scale_shape_manual(values = c(16, 2), guide = F) +
+   labs(y = "Accuracy on exposure trials\n(of psychometric model)") +
   scale_colour_manual("Condition", values = colours.condition, labels = c("baseline", "+10", "+40"), guide = F) +
   theme(axis.title.x = element_blank(),
         axis.text.x = element_blank(),
@@ -859,7 +858,7 @@ p1 <-
 
 p2 <- 
   human_io_accuracy %>% 
-  filter(decision %in% c("human", "criterion")) %>% 
+  filter(decision == "criterion") %>% 
   ggplot(aes(x = Block.plot_label, y = median, 
              ymin = lower, ymax = upper, 
              colour = Condition.Exposure, 
@@ -882,7 +881,7 @@ p2 <-
     alpha = 0.9) +
   geom_pointrange(position = position_dodge2(.5), size = .5) +
   stat_summary(geom = "line", position = position_dodge2(.5)) +
-   labs(y = "Accuracy on \n unlabeled exposure trials") +
+   labs(y = "Accuracy on exposure trials\n(of psychometric model)") +
   scale_shape_manual(values = c(16, 2), guide = F) +
   scale_colour_manual("Condition", values = colours.condition, labels = c("baseline", "+10", "+40"), guide = F) +
   theme(axis.title.x = element_blank(),
