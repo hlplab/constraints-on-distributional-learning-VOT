@@ -119,13 +119,12 @@ p.histogram_conditions <-
   bind_rows(d.exposure %>% group_by(Condition.Exposure) %>% mutate(Block = "Block D")) %>% 
   ungroup() %>% 
   mutate(Block = fct_relevel(Block, c("Block A", "Block B", "Block C", "Block D"))) %>% 
-  ggplot() +
+  ggplot(aes(x = VOT)) +
   geom_histogram(
     aes(
-      x = VOT, 
+      colour = paste(Condition.Exposure, category, labelling),
       fill = paste(Condition.Exposure, category, labelling),
       linetype = labelling), 
-    color = NA,
     alpha = .8) +
   geom_text(
     data = d.means,
@@ -134,18 +133,19 @@ p.histogram_conditions <-
     size = 2, hjust = 0, position = position_dodge2v(height = -8),
     inherit.aes = F) +
   geom_rug(
-    data = d %>% filter(Phase == "test") %>% distinct(VOT), 
-    colour = "gray", sides = "b") +
+    data = d %>% filter(Phase == "test") %>% distinct(VOT), sides = "b") +
   guides(
-    fill = guide_legend(
+    colour = guide_legend(
       override.aes = list(
+        colour = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
         fill = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
+        linetype = c(1, 2, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0),
         values = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", 0, 0, 0, 0, 0, 0, 0, 0)), 
       nrow = 2),
     linetype = "none") +
   scale_x_continuous("VOT (ms)", breaks = seq(-50, 150, 50)) +
   scale_y_continuous("Count (per participant)") +
-  scale_fill_manual(
+  scale_colour_manual(
     "Stimulus type",
     values = c(
       "baseline /d/ labeled" = "#800000", 
@@ -160,7 +160,7 @@ p.histogram_conditions <-
       "+40ms /d/ unlabeled" = "#b4dafe",
       "+40ms /t/ labeled" = "#0481F3", 
       "+40ms /t/ unlabeled" = "#e6f3ff"),
-    aesthetics = c("fill"),
+    aesthetics = c("colour", "category", "fill"),
     labels = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", "", "", "", "", "", "", "", "")) +
   facet_grid(
     Condition.Exposure ~ Block, 
