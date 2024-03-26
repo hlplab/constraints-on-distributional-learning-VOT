@@ -248,11 +248,16 @@ Next, we discuss possible explanations for such premature convergence and for sh
 ```{r testing-shrinkage, results='asis'}
 fit_test.simple_effects_condition <- readRDS("../models/test-nested-condition.rds")
 fit_test_nested_within_condition_and_block <- readRDS("../models/test-nested_slope-priorSD15-0.995.rds")
+io.predicted.intercept <- 
+  d.io.categorization %>% 
+  select(Condition.Exposure, Block, intercept_scaled, PSE, Block.plot_label) %>% 
+  filter(Block %in% c(1, 3, 5, 7))
+
 hyp.shrinkage <-
   hypothesis(
     fit_test_nested_within_condition_and_block,
     c(
-      str_c("abs(", d.io.categorization$intercept_scaled[[79]], "- mu2_IpasteCondition.ExposureBlocksepEQxShift40x7) <", "abs(", d.io.categorization$intercept_scaled[[70]], "- mu2_IpasteCondition.ExposureBlocksepEQxShift10x7)"),       str_c("abs(", d.io.categorization$intercept_scaled[[70]], "- mu2_IpasteCondition.ExposureBlocksepEQxShift10x7) <", "abs(", d.io.categorization$intercept_scaled[[61]], "- mu2_IpasteCondition.ExposureBlocksepEQxShift0x7)")),
+      str_c("abs(", "mu2_IpasteCondition.ExposureBlocksepEQxShift40x1", "- mu2_IpasteCondition.ExposureBlocksepEQxShift40x7)/ (mu2_IpasteCondition.ExposureBlocksepEQxShift40x1 - predicted PSE)" <", "abs(", d.io.categorization$intercept_scaled[[70]], "- mu2_IpasteCondition.ExposureBlocksepEQxShift10x7)"),       str_c("abs(", d.io.categorization$intercept_scaled[[70]], "- mu2_IpasteCondition.ExposureBlocksepEQxShift10x7) <", "abs(", d.io.categorization$intercept_scaled[[61]], "- mu2_IpasteCondition.ExposureBlocksepEQxShift0x7)")),
     robust = T) %>%
   .$hypothesis %>%
   dplyr::select(-Star)
