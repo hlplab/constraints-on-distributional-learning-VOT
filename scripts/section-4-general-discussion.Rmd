@@ -248,16 +248,24 @@ Next, we discuss possible explanations for such premature convergence and for sh
 ```{r testing-shrinkage, results='asis'}
 fit_test.simple_effects_condition <- readRDS("../models/test-nested-condition.rds")
 fit_test_nested_within_condition_and_block <- readRDS("../models/test-nested_slope-priorSD15-0.995.rds")
-io.predicted.intercept <- 
-  d.io.categorization %>% 
-  select(Condition.Exposure, Block, intercept_scaled, PSE, Block.plot_label) %>% 
-  filter(Block %in% c(1, 3, 5, 7))
+predictedPSE_40 <- d.io.categorization %>% 
+  select(Condition.Exposure, Block, intercept_scaled) %>% 
+  filter(Condition.Exposure == "Shift40", Block == 7) %>% pull(intercept_scaled)
+predictedPSE_10 <- d.io.categorization %>% 
+  select(Condition.Exposure, Block, intercept_scaled) %>% 
+  filter(Condition.Exposure == "Shift10", Block == 7) %>% pull(intercept_scaled)
+predictedPSE_0 <- d.io.categorization %>% 
+  select(Condition.Exposure, Block, intercept_scaled) %>% 
+  filter(Condition.Exposure == "Shift0", Block == 7) %>% pull(intercept_scaled)
+
 
 hyp.shrinkage <-
   hypothesis(
     fit_test_nested_within_condition_and_block,
     c(
-      str_c("abs(", "mu2_IpasteCondition.ExposureBlocksepEQxShift40x1", "- mu2_IpasteCondition.ExposureBlocksepEQxShift40x7)/ (mu2_IpasteCondition.ExposureBlocksepEQxShift40x1 - predicted PSE)" <", "abs(", d.io.categorization$intercept_scaled[[70]], "- mu2_IpasteCondition.ExposureBlocksepEQxShift10x7)"),       str_c("abs(", d.io.categorization$intercept_scaled[[70]], "- mu2_IpasteCondition.ExposureBlocksepEQxShift10x7) <", "abs(", d.io.categorization$intercept_scaled[[61]], "- mu2_IpasteCondition.ExposureBlocksepEQxShift0x7)")),
+      str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift40x1 - mu2_IpasteCondition.ExposureBlocksepEQxShift40x7)/ (mu2_IpasteCondition.ExposureBlocksepEQxShift40x1 -", predictedPSE_40, ") > abs(mu2_IpasteCondition.ExposureBlocksepEQxShift10x1 - mu2_IpasteCondition.ExposureBlocksepEQxShift10x7) / (mu2_IpasteCondition.ExposureBlocksepEQxShift10x1 -", predictedPSE_10, ")"),
+      str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift0x1 - mu2_IpasteCondition.ExposureBlocksepEQxShift0x7) / (mu2_IpasteCondition.ExposureBlocksepEQxShift0x1 -", predictedPSE_0, ") < abs(mu2_IpasteCondition.ExposureBlocksepEQxShift10x1 - mu2_IpasteCondition.ExposureBlocksepEQxShift10x7) / (mu2_IpasteCondition.ExposureBlocksepEQxShift10x1 -", predictedPSE_10, ")"),
+      str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift0x1 - mu2_IpasteCondition.ExposureBlocksepEQxShift0x7) / (mu2_IpasteCondition.ExposureBlocksepEQxShift0x1 -", predictedPSE_0, ") < abs(mu2_IpasteCondition.ExposureBlocksepEQxShift40x1 - mu2_IpasteCondition.ExposureBlocksepEQxShift40x7)/ (mu2_IpasteCondition.ExposureBlocksepEQxShift40x1 -", predictedPSE_40, ")")),
     robust = T) %>%
   .$hypothesis %>%
   dplyr::select(-Star)
@@ -265,9 +273,12 @@ hyp.shrinkage <-
 make_hyp_table(
     hyp.shrinkage,
     c(
-      "$PSE_{+40_{predicted}} vs. PSE_{+40} < PSE_{+10_{predicted}} vs. PSE_{+10}$",
-      "$PSE_{+10_{predicted}} vs. PSE_{+10} < PSE_{baseline_{predicted}} vs. PSE_{baseline}$"),
-    caption = "Is the distance of the fitted PSE from the idealised learner predicted PSE different between the conditions? This table tests the hypothesis of shrinkage, i.e. the further the distributional shift from listener prior expectations, the greater the distance from the expected boundary.")
+      "$\\Delta$$PSE_{+40}/$ $\\Delta$$PSE_{+40_{predicted}} >$ \\\\ $\\Delta$$PSE_{+10} /$ $\\Delta$ $PSE_{+10_{predicted}}$",
+      "$\\Delta$$PSE_{baseline} /$$\\Delta$ $PSE_{baseline_{predicted}} <$ \\\\ $\\Delta$$PSE_{+10} /$ $\\Delta$ $PSE_{+10_{predicted}}$",
+      "$\\Delta$$PSE_{baseline} /$$\\Delta$ $PSE_{baseline_{predicted}} <$ \\\\ $\\Delta$$PSE_{+40} /$ $\\Delta$ $PSE_{+40_{predicted}}$"),
+    caption = "Is the distance of the fitted PSE from the idealised learner predicted PSE different between the conditions? This table tests the hypothesis of shrinkage, i.e. the further the distributional shift from listener prior expectations, the greater the distance from the expected boundary.",
+    col1_width = "20em") %>%
+  pack_rows("Test block 4: Change in PSE as a proportion of predicted change", 1, 3)
 ```
 
 
