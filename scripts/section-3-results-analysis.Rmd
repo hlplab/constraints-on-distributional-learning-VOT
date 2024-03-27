@@ -796,7 +796,7 @@ human.accuracy <-
     median = quantile(mean.accuracy, probs = .5),
     upper = quantile(mean.accuracy, probs = .975))
 
-rm(fit_exposure, fit_test)
+rm(fit_exposure)
 ```
 
 ```{r IO-human-accuracy, fig.width=7.5, fig.height=5.5, fig.cap="(ref:IO-human-accuracy)", fig.pos="!ht"}
