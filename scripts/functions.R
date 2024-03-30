@@ -669,7 +669,7 @@ fit_logistic_regression_to_model_categorization <- function(.data, resolution = 
     .data %<>%
       # Prepare IA model predictions data frame
       mutate(
-        n_d = round((if (target_category == 1) Predicted_posterior else (1 - Predicted_posterior)) * .env$resolution),
+        n_d = round((1 - Predicted_posterior) * .env$resolution),
         n_t = .env$resolution - n_d) %>%
       group_by(group, .chain, .iteration, .draw) %>%
       nest()
@@ -724,9 +724,11 @@ get_logistic_parameters_from_model <- function(
 prep_data_for_IBBU_prediction <- function(
     model,
     data = NULL,
+    untransform_cues = T,
     prep_test = T
 ) {
   cue.labels <- get_cue_levels_from_stanfit(model)
+  
   if (prep_test) {
   get_test_data_from_stanfit(model) %>% 
     distinct(!!! syms(cue.labels)) %>%
@@ -858,7 +860,6 @@ get_PSE_from_io <- function(io, io.type = NULL) {
 
   return(o$par)
 }
-
 
 
 get_IO_categorization <- function(
