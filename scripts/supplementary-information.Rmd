@@ -141,7 +141,7 @@ p.catch | p.labelled.group
 # Obtaining predictions of idealized listeners
 In the main text, we employ ideal observers [specifically, the ASP framework described in @xie2023] to relate our results to those expected from idealized listeners. This includes predictions based on a *'typical' listener's prior experience* and predictions based on *idealized learners for each exposure condition* that have fully learned the exposure distributions. The former provides a baseline against which to compare listeners' behavior at the start of the experiment. The latter provides a baseline against which to compare changes in listeners' behavior as a function of exposure. In this section, we describe how we derived those predictions.
 
-## Idealized pre-exposure listeners {#sec:prior-idealized-listeners}
+## Idealized pre-exposure listeners {#sec:idealized-prior-listeners}
 Estimates of listeners' prior expectations about the realization of phonetic categories require at least three ingredients: (1) a database that can be reasonably assumed to approximate the types of previous experiences that listeners in the experiment would draw on to process the stimuli in the experiment; (2) a model that is used to approximate the computational consequences of listeners' representations derived from previously experienced speech stimuli; and (3) a procedure to estimate / parameterize that model based on the database [see also @feldman2009; @kronrod2016; @norris-mcqueen2008; @persson-jaeger2023; @tan2021; for a helpful review, see @schertz-clare2020]. In this section, we describe the decisions we made regarding this three components.
 
 ### A database of L1-US English word-initial /d/ and /t/ productions
@@ -570,7 +570,7 @@ advantages for regression-based approach fitting categories
 
 Following @xie2023, the ideal observers included perceptual noise [estimates taken from @kronrod2016].
 
-## Idealized learners that have fully learned the exposure distribution
+## Idealized learners that have fully learned the exposure distribution {#sec:idealized-learners}
 To construct idealized learners that fully learned the exposure distribution, we followed a similar approach as for the idealized listeners. We again used ideal observers to approximate such a learner's category representations. Unlike for the idealized listeners described above, the idealized learners only consider the only cue that was manipulated in the experiment (VOT). This decision was made since we constructed our stimuli such that the other two cues (f0 and vowel duration) were perfectly correlated with VOT, not providing any additional information. For each exposure condition we constructed ideal observers to simulate a learner that fully learned the exposure distribution (i.e. the cumulative distribution after having experienced all 144 trials). Such an idealized learner would therefore categorize the stimuli at test based purely on the statistics of exposure input.
 
 ```{r IO-predicted-PSE-bias-correction}
@@ -1314,7 +1314,7 @@ make_hyp_table(
 rm(fit_test.simple_effects_condition)
 ```
 
-With regard to how categorization slopes (across all conditions) would change relative to the *pre*-exposure test, our expectations were less clear until we constructed the idealized learner reference lines in Figures \@ref(fig:plot-fit-slope-PSE)C (after the experiment). On the one hand, we had designed the category variances of /d/ and /t/ to be somewhat plausible given the distribution VOT in American English. We did, for example, make sure that /t/ had larger VOT variance than /d/. So, to the extent that we created category variances that successfully resembled those that participants would expected based on their prior experience, exposure should not result in changes in participants' categorization slopes. On the other hand, methodological limitations (see Procedure in main text) kept us from most closely mimicking the distribution of VOTs in the database of American English that guided our design [@chodroff-wilson2018, as described in \@ref(sec:prior-idealized-listeners)]. 
+With regard to how categorization slopes (across all conditions) would change relative to the *pre*-exposure test, our expectations were less clear until we constructed the idealized learner reference lines in Figures \@ref(fig:plot-fit-slope-PSE)C (after the experiment). On the one hand, we had designed the category variances of /d/ and /t/ to be somewhat plausible given the distribution VOT in American English. We did, for example, make sure that /t/ had larger VOT variance than /d/. So, to the extent that we created category variances that successfully resembled those that participants would expected based on their prior experience, exposure should not result in changes in participants' categorization slopes. On the other hand, methodological limitations (see Procedure in main text) kept us from most closely mimicking the distribution of VOTs in the database of American English that guided our design [@chodroff-wilson2018, as described in \@ref(sec:idealized-prior-listeners)]. 
 
 ### Slopes: difference between blocks within exposure condition
 
