@@ -100,7 +100,7 @@ d_for_ASP <-
     VOT, f0_Mel, vowel_duration, Response.Category, Item.ExpectedResponse.Category)
 
 # fit ideal adaptor with uninformative priors
-m_IA.VOT_f0 <-
+m_IA_inferred.VOT_f0 <-
   infer_prior_beliefs(
     exposure = d_for_ASP %>% filter(Phase == "exposure"),
     test = d_for_ASP %>% filter(Phase == "test"),
@@ -126,6 +126,7 @@ m_IA.VOT_f0 <-
 # then prepare the data for plotting
 if (file.exists("../models/d.IA_predicted_PSE.rds")) { 
   d.IA_predicted_PSE <- readRDS("../models/d.IA_predicted_PSE.rds") 
+  d.IA_predicted_test <- read_csv("../models/d.IA_predicted_test.csv")
     } else {
       data.test <- 
         prep_data_for_IBBU_prediction(
@@ -272,6 +273,21 @@ psych.model_prediction <-
   mutate(List = ifelse(Condition == "pre-exposure", "A", List.ExposureBlockOrder)) %>% 
   group_by(Item.VOT, List, Block, Condition) %>% 
   summarise(across(c(predicted_proportion_voiceless, predicted_proportion_voiced, proportion_voiceless, proportion_voiced), mean))
+
+IA.prediction <- 
+  d.IA_predicted_test %>% 
+  group_by(group, VOT) %>%
+    summarise(across(Predicted_posterior, mean)) %>% 
+  mutate(ExposureGroup = ifelse(group == "prior", "no exposure", group)) %>% 
+  left_join(
+    get_test_data_from_stanfit(m_IA_inferred.VOT_f0) %>% get_untransform_function_from_stanfit(m_IA_inferred.VOT_f0)(.)
+  ) %>% mutate(
+      Response = `/t/` / (`/d/` + `/t/`),
+      # Simplify the plot by collapsing over all Latin-square designed lists
+      # (this still keeps all individual predictions but only has one facet per unique combination
+      # of exposure condition and test, rather than also making separate facets for each of the three 
+      # different block orders for each of these unique combinations)
+      group = gsub("[ABC]A", "", group))
 ```
 
 
@@ -280,9 +296,9 @@ psych.model_prediction <-
 
 
 
-Unlike for shrinkage, we are not aware of previous evidence for premature convergence. This is largely because the detection of such a pattern requires an incremental exposure-test paradigm, in order to detect a premature 'flattening off' of adaptivity, and such paradigms have been lacking. We therefore conducted an additional test to further quantify whether changes in participants' categorization functions were indeed flatter than one would expect under ideal information integration. To this end, we fit a distributional learning model to listeners' data. This allows us to compare changes in listeners' behavior to those expected under an ideal---as opposed to ideal*ized*---learner.^[Following @qian2016, we use the term *idealized* learner for models that are given privileged access to information that listeners have to infer (e.g., the correct exposure statistics of the experiment), and the term *ideal* learner for models that implement a theory of ideal information integration [for a list of assumptions made by the ideal adaptor, see appendix of @kleinschmidt-jaeger2015].] Specifically, we used an ideal adaptor model [@kleinschmidt-jaeger2015; @kleinschmidt-jaeger2016]. <!-- TO DO: fill in --> Univariate instances of this model have previously achieved high accuracy in modeling changes in listeners categorization functions after LGPL/VGPL [e.g., for /s/-/`r linguisticsdown::cond_cmpl("ʃ")`/, @cummings-theodore2023; /b/-/d/, @kleinschmidt-jaeger2011; @kleinschmidt-jaeger2012] or DL exposure [e.g., for /b/-/p/, @kleinschmidt-jaeger2016; @kleinschmidt2020; /g/-/k/, @theodore-monto2019]. We extended the model to multivariate categories over VOT, f0, and vowel duration, and fit it to listeners' responses in our experiment (for details, see SI \@ref(sec:XXX)). <!-- TO DO: fill in more info here. Perhaps we should take a model that uses, as priors, the mu_0 and Sigma_0 from the gray ribbon in the result figure --> Unlike the psychometric model we used for analysis, a distributional learning model specifies how information is integrated across exposure trials. This substantially decreases the degrees of freedom the model has to fit listeners' responses. For example, the ideal adaptor we fit to listeners' responses in the first four test blocks has 21 parameters, <!-- TO DO: if we end up using a model with prior mu, Sigma, this reduces to 3 DFs! --> compared to `r sum(str_detect(rownames(fixef(fit_test)), "mu2")) - sum(str_detect(rownames(fixef(fit_test)), "Test5vs.Test4|Test6vs.Test5"))` population-level ('fixed') and `r length(get_variables(fit_test)[38:781]) - sum(str_detect(get_variables(fit_test)[38:781], "Block_Test6vs.Test5|Block_Test5vs.Test4"))` group-level ('random') effect parameters for the psychometric mixed-effect model fit to the same data. In the ideal adaptor, unlike for the psychometric model, listeners' responses during different test blocks and across different exposure conditions jointly constrain the parameters of model (due to assumption of ideal information integration within and across exposure blocks). 
+Unlike for shrinkage, we are not aware of previous evidence for premature convergence. This is largely because the detection of such a pattern requires an incremental exposure-test paradigm, in order to detect a premature 'flattening off' of adaptivity, and such paradigms have been lacking. We therefore conducted an additional test to further quantify whether changes in participants' categorization functions were indeed flatter than one would expect under ideal information integration. To this end, we fit a distributional learning model to listeners' data. This allows us to compare changes in listeners' behavior to those expected under an ideal---as opposed to ideal*ized*---learner.^[Following @qian2016, we use the term *idealized* learner for models that are given privileged access to information that listeners have to infer (e.g., the correct exposure statistics of the experiment), and the term *ideal* learner for models that implement a theory of ideal information integration [for a list of assumptions made by the ideal adaptor, see appendix of @kleinschmidt-jaeger2015].] Specifically, we used an ideal adaptor model [@kleinschmidt-jaeger2015; @kleinschmidt-jaeger2016]. <!-- TO DO: fill in --> Univariate instances of this model have previously achieved high accuracy in modeling changes in listeners categorization functions after LGPL/VGPL [e.g., for /s/-/`r linguisticsdown::cond_cmpl("ʃ")`/, @cummings-theodore2023; /b/-/d/, @kleinschmidt-jaeger2011; @kleinschmidt-jaeger2012] or DL exposure [e.g., for /b/-/p/, @kleinschmidt-jaeger2016; @kleinschmidt2020; /g/-/k/, @theodore-monto2019]. We extended the model to multivariate categories over VOT, and f0, and fit it to listeners' responses in our experiment (for details, see SI \@ref(sec:XXX)). <!-- TO DO: fill in more info here. Perhaps we should take a model that uses, as priors, the mu_0 and Sigma_0 from the gray ribbon in the result figure --> Unlike the psychometric model we used for analysis, a distributional learning model specifies how information is integrated across exposure trials. This substantially decreases the degrees of freedom the model has to fit listeners' responses. For example, the ideal adaptor we fit to listeners' responses in the first four test blocks has 21 parameters, <!-- TO DO: if we end up using a model with prior mu, Sigma, this reduces to 3 DFs! --> compared to `r sum(str_detect(rownames(fixef(fit_test)), "mu2")) - sum(str_detect(rownames(fixef(fit_test)), "Test5vs.Test4|Test6vs.Test5"))` population-level ('fixed') and `r length(get_variables(fit_test)[38:781]) - sum(str_detect(get_variables(fit_test)[38:781], "Block_Test6vs.Test5|Block_Test5vs.Test4"))` group-level ('random') effect parameters for the psychometric mixed-effect model fit to the same data. In the ideal adaptor, unlike for the psychometric model, listeners' responses during different test blocks and across different exposure conditions jointly constrain the parameters of model (due to assumption of ideal information integration within and across exposure blocks). 
 
-For the present data, the ideal adaptor model predicts the proportion of listeners' "t"-responses with an $R^2 = .XXX$, compared to $R^2 =$ `r round(cor(psych.model_prediction$predicted_proportion_voiceless, psych.model_prediction$proportion_voiceless) %>% . ^2, 3) * 100`$\%$ for the psychometric model. <!-- TO DO: fill in--> Comparison of the two models found that XXX. <!-- TO DO: get LOOICs for both models and compare. --> This suggests that the ideal adaptor model provides a decent explanation for participants' behavior with substantially fewer degrees of freedom. We leave further analysis of this model to future work. Here we focus on what this model can tell us about the incremental build-up of adaptation.
+For the present data, the ideal adaptor model predicts the proportion of listeners' "t"-responses with an $R^2 =$ `r round(cor(IA.prediction$Predicted_posterior, IA.prediction$Response) %>% . ^2, 3) * 100`$\%$, compared to $R^2 =$ `r round(cor(psych.model_prediction$predicted_proportion_voiceless, psych.model_prediction$proportion_voiceless) %>% . ^2, 3) * 100`$\%$ for the psychometric model. Comparison of the two models found that XXX. <!-- TO DO: get LOOICs for both models and compare. --> This suggests that the ideal adaptor model provides a decent explanation for participants' behavior with substantially fewer degrees of freedom. We leave further analysis of this model to future work. Here we focus on what this model can tell us about the incremental build-up of adaptation.
 
 Despite the decent quantitative fit, the ideal adaptor exhibits a systematic deficiency in explaining participants' responses.  Figure \@ref(fig:plot-IA-human-PSE) shows the PSEs inferred from the ideal adaptor, along with listeners' PSEs (the same data as in Figure \@ref(fig:plot-fit-PSE)C but focused on blocks up to Test 4). Notably, the ideal adaptor *under*-predicts changes in listeners' PSEs in early blocks---a tendency that is most evident for the exposure conditions with more extreme shifts (baseline and +40). Similarly, though less obvious, the ideal adaptor *over*-predicts listeners' PSE in later blocks (see the baseline and +40 conditions in Test 4). To understand this pattern, it is helpful to recognize that rational models of distributional learning describe listeners' expectations after exposure as the weighted mean of prior expectations and the observed exposure statistics [@kleinschmidt-jaeger2015]. This means that the speed with which a learner adapts at the start of exposure is expected to be predictive of how fast a learner adapts after additional exposure. Put differently, ideal adaptors constrain the rate at which changes in PSEs can change across exposure trials. This means that an ideal adaptor can *either* explain the fact that listeners' PSEs changed rapidly at the start of exposure *or* explain the fact that there seem to be little to no changes in listeners' PSE after the second exposure block. But it cannot explain both aspects of our data. It thus appears that participants indeed converged prematurely in their behavior, relative to what would be expected under the specific model of ideal information integration that we employed.
 
@@ -303,7 +319,6 @@ predictedPSE_10 <- d.io.categorization %>%
 predictedPSE_0 <- d.io.categorization %>% 
   select(Condition.Exposure, Block, intercept_scaled) %>% 
   filter(Condition.Exposure == "Shift0", Block == 7) %>% pull(intercept_scaled)
-
 
 hyp.shrinkage <-
   hypothesis(
