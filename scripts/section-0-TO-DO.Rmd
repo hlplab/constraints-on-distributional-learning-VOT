@@ -5,7 +5,7 @@
 ## Highest priority
  * FLORIAN: edits
    * Introduction: 
-     * as a case in point, anticipate that we identify some previously unrecognized or at least under-appreciated properties of adaptive speech perception. This leads us to conduct some exploratory analyses that point towards interesting direction for future work. 
+     * Re-integrate cut parts from intro into general discussion
 
 
 

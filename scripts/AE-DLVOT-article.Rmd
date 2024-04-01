@@ -128,23 +128,23 @@ INCLUDE_TODO <- F           # switch on/off to get to do list.
 ```{r sec-intro, child="section-1-introduction.Rmd"}
 ```
 
-<!-- ```{r sec-methods, child="section-2-methods.Rmd"} -->
-<!-- ``` -->
+```{r sec-methods, child="section-2-methods.Rmd"}
+```
 
-<!-- ```{r sec-results, child="section-3-results-analysis.Rmd"} -->
-<!-- ``` -->
+```{r sec-results, child="section-3-results-analysis.Rmd"}
+```
 
-<!-- ```{r sec-discussion, child="section-4-general-discussion.Rmd"} -->
-<!-- ``` -->
+```{r sec-discussion, child="section-4-general-discussion.Rmd"}
+```
 
 ```{r sec-references, child="section-5-references.Rmd"}
 ```
 
-<!-- \newpage -->
-<!-- \setcounter{page}{1} -->
-<!-- \renewcommand{\thesection}{\S \arabic{section}} -->
-<!-- \renewcommand{\theHsection}{sisection. \arabic{section}} -->
+\newpage
+\setcounter{page}{1}
+\renewcommand{\thesection}{\S \arabic{section}}
+\renewcommand{\theHsection}{sisection. \arabic{section}}
 
-<!-- ```{r, child="supplementary-information.Rmd"} -->
-<!-- ``` -->
+```{r, child="supplementary-information.Rmd"}
+```
 
