@@ -687,7 +687,7 @@ A similar pattern of premature convergence is evident for the +40 condition: cha
 # prior io gets no training so prior-io-accuracy will be evaluated on all three conditions
 io.accuracy <- 
   io %>% 
-  select(-c(fold, x)) %>% 
+  select(-fold, -x) %>% 
   filter(., Condition.Exposure == "prior") %>% 
   # make 3 rows of prior io condition then join each prior with one of the three exposure conditions
   mutate(rows = 3) %>% 
@@ -735,7 +735,7 @@ io.accuracy <-
   summarise(across(c(categorization.proportional_response, categorization.criterion_response), mean)) %>% 
   bind_rows(
     io %>% 
-      select(-c(fold, x)) %>% 
+      select(-fold, -x) %>% 
       filter(Condition.Exposure != "prior") %>% 
       right_join(
         d.for_analysis %>% 
@@ -800,7 +800,7 @@ human.accuracy <-
     median = quantile(mean.accuracy, probs = .5),
     upper = quantile(mean.accuracy, probs = .975))
 
-rm(fit_exposure, fit_test)
+rm(fit_exposure)
 ```
 
 ```{r IO-human-accuracy, fig.width=7.5, fig.height=5.5, fig.cap="(ref:IO-human-accuracy)", fig.pos="!ht"}

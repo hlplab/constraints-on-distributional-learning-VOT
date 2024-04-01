@@ -1304,3 +1304,47 @@ if (RESET_MODELS || !file.exists(filename)) {
 }
 ```
 
+## Fit IA with 3-cue prior
+
+```{r}
+cues <- c("VOT", "f0_Mel", "vowel_duration")
+
+m_MVG.VOT_f0_vowel <-
+  make_MVG_from_data(
+  data = d.chodroff_wilson.isolated,
+  category = "category",
+  cues = cues)
+
+m_IO.VOT_f0_vowel <-
+  m_MVG.VOT_f0_vowel %>%
+  lift_MVG_to_MVG_ideal_observer(
+      Sigma_noise = matrix(c(80, 0, 0, 0, 878, 0, 0, 0, 80), ncol = 3, dimnames = list(names(first(.$mu)), names(first(.$mu)))),
+      prior = c("/d/" = .5, "/t/" = .5),
+      # TO DO: set to lapse rate inferred in psychometric model fit to participants
+      lapse_rate = plogis(fixef(fit_test)[[2]]),
+      lapse_bias = c("/d/" = .5, "/t/" = .5))
+
+
+# fit ideal adaptor with 3 cues priors
+m_IA.VOT_f0_vowelduration_test <-
+  infer_prior_beliefs(
+    exposure = d_for_ASP %>% filter(Phase == "exposure"),
+    test = d_for_ASP %>% filter(Phase == "test"),
+    cues = c("VOT", "f0_Mel", "vowel_duration"),  
+    category = "Item.ExpectedResponse.Category",
+    response = "Response.Category",
+    group = "ParticipantID",
+    group.unique = "ExposureGroup",
+    center.observations = T,   
+    scale.observations = T,
+    pca.observations = F,
+    lapse_rate = NULL,
+    mu_0 = m_IO.VOT_f0_vowel$mu,
+    Sigma_0 = m_IO.VOT_f0_vowel$Sigma,
+    sample = T,
+    file = "../models/IBBU_VOT+f0+vowelduration_test_priors.RDS",
+    warmup = 3000, iter = 4000,
+    control = list(adapt_delta = .995, max_treedepth = 15))
+
+```
+

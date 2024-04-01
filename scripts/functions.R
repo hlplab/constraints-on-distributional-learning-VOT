@@ -659,7 +659,7 @@ make_VOT_IOs_from_exposure <- function(data, Sigma_noise = matrix(80, dimnames =
 
 fit_logistic_regression_to_model_categorization <- function(.data, resolution = 10^12, groups = NULL) {
   if ("io" %in% names(.data)) {
-    # Prepare data frame for logistic regression
+    # Prepare IO model predictions data frame
     .data %<>%
     pivot_wider(names_from = category, values_from = response, names_prefix = "response_") %>%
       mutate(n_d = round(`response_/d/` * .env$resolution), n_t = .env$resolution - n_d) %>%
@@ -667,9 +667,9 @@ fit_logistic_regression_to_model_categorization <- function(.data, resolution = 
       nest()
   } else {
     .data %<>%
-      # Prepare data frame for logistic regression
+      # Prepare IA model predictions data frame
       mutate(
-        n_d = round((if (target_category == 1) Predicted_posterior else (1 - Predicted_posterior)) * .env$resolution),
+        n_d = round((1 - Predicted_posterior) * .env$resolution),
         n_t = .env$resolution - n_d) %>%
       group_by(group, .chain, .iteration, .draw) %>%
       nest()
@@ -689,7 +689,7 @@ fit_logistic_regression_to_model_categorization <- function(.data, resolution = 
     intercept_scaled = map_dbl(model_scaled, ~ tidy(.x)[1, 2] %>% pull()),
     slope_scaled = map_dbl(model_scaled, ~ tidy(.x)[2, 2] %>% pull()),
     PSE = -intercept_unscaled/slope_unscaled) %>%
-    # collapse over all Latin-square designed lists
+    # for IA model predictions: collapse over all Latin-square designed lists
     # (this still keeps all individual predictions but only has one unique combination
     # of exposure condition and test
     { if ("group" %in% names(.)) mutate(., group = gsub("[ABC]A", "", group)) else (.) }
@@ -724,9 +724,11 @@ get_logistic_parameters_from_model <- function(
 prep_data_for_IBBU_prediction <- function(
     model,
     data = NULL,
+    untransform_cues = T,
     prep_test = T
 ) {
   cue.labels <- get_cue_levels_from_stanfit(model)
+  
   if (prep_test) {
   get_test_data_from_stanfit(model) %>% 
     distinct(!!! syms(cue.labels)) %>%
@@ -858,7 +860,6 @@ get_PSE_from_io <- function(io, io.type = NULL) {
 
   return(o$par)
 }
-
 
 
 get_IO_categorization <- function(
