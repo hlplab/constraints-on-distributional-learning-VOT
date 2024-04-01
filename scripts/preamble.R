@@ -39,7 +39,7 @@ library(brms)               # fit Bayesian regression models
 library(tidybayes)          # posterior samples and plots in tidy format
 library(broom.mixed)        # extracting effects from lmer models
 library(posterior)
-library(rsample)            # bootstrapping 
+library(rsample)            # bootstrapping
 
 library(phonR)              # normalization of f0
 library(supunsup)           # Kleinschmidt & Jaeger 2016 data
@@ -72,18 +72,41 @@ colours.category <- c("/d/" = "#eb6223", "/t/" = "#522888")
 
 set.seed(42007)
 
-# Load production data ---------------------------------------------------------------------
+# Load cue information about exposure stimuli ------------------------------------------------
+files <- list.files(path = "../materials/stimuli_AE/annotation_files/", pattern = "*_measured.csv")
+exposure_stimuli_cue_measurements <-
+  bind_rows(map(1:4, ~ read_csv(paste0("../materials/stimuli_AE/annotation_files/", files[.x]), show_col_types = F))) %>%
+  mutate(
+    Item.MinimalPair = str_replace(filename, "(.*)_.*_.*$", "\\1"),
+    Item.VOT = str_replace(filename, ".*_VOT(.*)_.*$", "\\1"),
+    target_f0 = str_replace(filename, ".*_VOT.*_F0(.*)$", "\\1"),
+    Item.VowelDuration = vowel * 1000) %>%
+  # filter all minimal pairs to common VOT values and exclude unused minimal pair
+  filter(Item.VOT %in% c(-20:125),
+         Item.MinimalPair != "dimtim") %>%
+  group_by(Item.MinimalPair) %>%
+  arrange(Item.VOT, by_group = T) %>%
+  summarise(across(everything(), list)) %T>%
+  # temporarily store vector of vowel duration
+  { .$Item.VowelDuration[[3]] ->> replacement } %>%
+  # standardise vowel durations to that of diptip measurements
+  # VC segments with sonorant codas are difficult to objectively measure because of coarticulation
+  # since the stimuli were created in the same way we assume the vowel lengths to be the same across minimal pairs
+  mutate(Item.VowelDuration = map(Item.VowelDuration, ~ c(replacement))) %>%
+  unnest_longer(everything()) %>%
+  mutate(across(c(Item.VOT, target_f0), as.numeric))
 
+rm(replacement)
+
+# Load Chodroff & Wilson data used for priors and plots of natural distributions -------------
 n_min_per_talker <- 15
 
-# Get production data for the prior.
-#
-
-# We are reimporting the data because here we are subsetting the Mixer 6 data to
-# talkers that have at least 10 instances each of the relevant stops (we're being
-# conservative here since we're creating ideal observers based on this data that
-# are averaging across talkers, and so we'd like to make sure that each talker-
-# specific IO is based on enough data).
+# We are using a *subset* the Mixer 6 data including only talkers that have at least
+# n_min_per_talker instances each of the relevant stops.
+# (we're being conservative here since we're creating ideal observers based on this
+# data that are averaging across talkers, and so we'd like to make sure that each
+# talker-specific IO is based on enough data). Below we are also subsetting the data
+# in a number of other ways.
 d.chodroff_wilson <-
   get_ChodroffWilson_data(
     database_filename = "../data/chodroff_wilson_speech_db.csv",
@@ -94,51 +117,32 @@ d.chodroff_wilson <-
     # Setting multi-modality exclusion to 0 disables it
     max.p_for_multimodality = 0)
 
-d.chodroff_wilson %<>% 
+# Subset to female talkers and exclude cases with NAs and distributional outliers.
+d.chodroff_wilson %<>%
   mutate(across(c(speechstyle, Talker, category, gender), factor)) %>%
-  # Subset to female talkers and exclude cases with NAs and distributional outliers
-  group_by(Talker) %>% 
+  group_by(Talker) %>%
   filter(
     gender == "female",
     if_all(c("VOT", "f0_Mel", "vowel_duration"), ~ !is.na(.x)),
     if_all(c("VOT", "f0_Mel", "vowel_duration"), ~ abs(scale(.x)) < 3.5))
 
-# We selected an f0_Mel cutoff point based on visual inspection to remove pitch-halving tokens
-# (this truncates the f0 distribution).
-d.chodroff_wilson %>%
-  ggplot(aes(x = f0_Mel)) +
-  geom_density() +
-  geom_vline(xintercept = 200, linetype = "dashed") +
-  facet_wrap(~ Talker, ncol = 5)
-
-# Filter out tokens with pitch-halving
-  d.chodroff_wilson %<>% 
+# Filter out tokens with pitch-halving.We selected an f0_Mel cutoff point based on
+# visual inspection to remove pitch-halving tokens (this truncates the f0 distribution).
+# d.chodroff_wilson %>%
+#   ggplot(aes(x = f0_Mel)) +
+#   geom_density() +
+#   geom_vline(xintercept = 200, linetype = "dashed") +
+#   facet_wrap(~ Talker, ncol = 5)
+d.chodroff_wilson %<>%
   filter(case_when(
     Talker %in% c("113093", "120367", "120426", "120488", "120521", "120562", "120563", "120577", "120585", "120597", "120666", "120685") ~ f0_Mel > 100,
     Talker %in% c("120330", "120425", "120480", "120506", "120565", "120611", "120660", "120684", "120701", "120751", "120826") ~ f0_Mel > 150,
     Talker %in% c("120544", "120882") ~ f0_Mel > 175,
     Talker %in% c("120306", "CVC16", "CVC19", "120503") ~ f0_Mel > 225,
     Talker %in% c("120651", "120707", "120763") ~ f0_Mel > 250,
-    TRUE ~ f0_Mel > 200
-  )) 
+    TRUE ~ f0_Mel > 200))
 
-# This dataframe is used whenever we reference overall stats from Chodroff & Wilson,
-# prior to excluding any talkers, or subsetting the data. Not all of the quantities
-# were reported in the paper.
-d.chodroff_wilson.talker_stats <-
-  d.chodroff_wilson %>%
-  group_by(speechstyle, Talker, category) %>%
-  summarise(
-    across(
-      c("VOT", "f0_Mel", "vowel_duration"),
-      list(mean = mean, sd = sd, var = var))) %>%
-  group_by(speechstyle, category) %>%
-  summarise(
-    across(
-      ends_with(c("_mean", "_sd", "_var")),
-      list(mean = mean, sd = sd, var = var)))
-
-# SUBSET TO DATA THAT WE USE TO CREATE PRIORS FOR THE PRESENT PROJECT
+# Subset data to what we use to create priors
 d.chodroff_wilson %<>%
   group_by(speechstyle, Talker, category) %>%
   # Subset the data to be balanced, so that each talker provides an equal number of
@@ -155,20 +159,6 @@ d.chodroff_wilson %<>%
   group_by(speechstyle, Talker, category) %>%
   sample_n(size = unique(n_min.for_category_and_talker)) %>%
   ungroup()
-
-d.chodroff_wilson.talker_stats <-
-  d.chodroff_wilson %>%
-  group_by(speechstyle, Talker, category) %>%
-  summarise(
-    across(
-      c("VOT", "f0_Mel", "vowel_duration"),
-      list(mean = mean, sd = sd, var = var))) %>%
-  group_by(speechstyle, category) %>%
-  summarise(
-    across(
-      ends_with(c("_mean", "_sd", "_var")),
-      list(mean = mean, sd = sd, var = var)))
-
 
 d.chodroff_wilson.connected <-
   d.chodroff_wilson %>%
@@ -188,33 +178,28 @@ d.chodroff_wilson.isolated <-
   #     function(x) apply_ccure(data = ., cue = substitute(x)))) %>%
   ungroup()
 
-
-# Load exposure stimuli ---------------------------------------------------------------------
-
-files <- list.files(path = "../materials/stimuli_AE/annotation_files/", pattern = "*_measured.csv")
-exposure_stimuli_cue_measurements <- 
-  bind_rows(map(1:4, ~ read_csv(paste0("../materials/stimuli_AE/annotation_files/", files[.x]), show_col_types = F))) %>% 
-  mutate(
-    Item.MinimalPair = str_replace(filename, "(.*)_.*_.*$", "\\1"),
-    Item.VOT = str_replace(filename, ".*_VOT(.*)_.*$", "\\1"),
-    target_f0 = str_replace(filename, ".*_VOT.*_F0(.*)$", "\\1"),
-    Item.VowelDuration = vowel * 1000) %>% 
-  # filter all minimal pairs to common VOT values and exclude unused minimal pair
-  filter(Item.VOT %in% c(-20:125),
-         Item.MinimalPair != "dimtim") %>% 
-  group_by(Item.MinimalPair) %>% 
-  arrange(Item.VOT, by_group = T) %>% 
-  summarise(across(everything(), list)) %T>%
-  # temporarily store vector of vowel duration
-  { .$Item.VowelDuration[[3]] ->> replacement } %>% 
-  # standardise vowel durations to that of diptip measurements
-  # VC segments with sonorant codas are difficult to objectively measure because of coarticulation 
-  # since the stimuli were created in the same way we assume the vowel lengths to be the same across minimal pairs
-  mutate(Item.VowelDuration = map(Item.VowelDuration, ~ c(replacement))) %>% 
-  unnest_longer(everything()) %>% 
-  mutate(across(c(Item.VOT, target_f0), as.numeric))
-  
-rm(replacement)
+# This dataframe is used whenever we reference overall stats from Chodroff & Wilson,
+# prior to excluding any talkers, or subsetting the data. Not all of the quantities
+# were reported in the paper.
+d.chodroff_wilson.talker_stats <-
+  get_ChodroffWilson_data(
+    database_filename = "../data/chodroff_wilson_speech_db.csv",
+    categories = c("/d/", "/t/"),
+    min.n_per_talker_and_category = 0,
+    limits.VOT = c(-Inf, Inf),
+    limits.f0 = c(-Inf, Inf),
+    # Setting multi-modality exclusion to 0 disables it
+    max.p_for_multimodality = 0) %>%
+  group_by(speechstyle, Talker, category) %>%
+  summarise(
+    across(
+      c("VOT", "f0_Mel", "vowel_duration"),
+      list(mean = mean, sd = sd, var = var))) %>%
+  group_by(speechstyle, category) %>%
+  summarise(
+    across(
+      ends_with(c("_mean", "_sd", "_var")),
+      list(mean = mean, sd = sd, var = var)))
 
 PREAMBLE_LOADED <- TRUE
 
