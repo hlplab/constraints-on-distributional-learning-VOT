@@ -162,8 +162,8 @@ p.histogram_conditions <-
     scales = "free_y") +
   theme(
     legend.position = "top",
-    legend.title = element_text("hjust"),
-    legend.text = element_text("hjust"),
+    legend.title = element_text(hjust = 0),
+    legend.text = element_text(hjust = 0),
     legend.justification = c(.5, .5),
     legend.box.just = "center",
     legend.key.width = unit(12, "pt"),
