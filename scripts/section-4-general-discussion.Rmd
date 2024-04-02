@@ -157,7 +157,7 @@ if (file.exists("../models/d.IA_predicted_PSE.rds")) {
 
 ```{r plot-IA-human-PSE, fig.width=6.5, fig.height=3.5, fig.cap="(ref:plot-IA-human-PSE)", fig.pos="ht"}
 # Compute distribution of talker-specific PSEs from Chodroff & Wilson (2018) database against which to compare human behavior
-prior.PSE_mean <- d.io.categorization %>% 
+prior.PSE_mean <- d_IO.intercept_slope_PSE %>% 
   filter(Condition.Exposure %in% c("prior1", "prior2", "prior3", "prior4", "prior5"), Block == 1) %>% 
   summarise(mean = mean(PSE)) %>% pull(mean)
 
@@ -178,7 +178,7 @@ d.talkerPSEs <-
     mean_PSE = mean(PSE_centered),
     upper_PSE = quantile(PSE_centered, probs = .975))
 
-d.estimates %>%
+d_psychometric.intercept_slope_PSE %>%
   filter(Block %in% c(1:7)) %>%
   ggplot(
     aes(
@@ -199,10 +199,10 @@ d.estimates %>%
     mapping = aes(x = Block.plot_label, ymin = .lower, ymax = .upper, fill = Condition.Exposure, group = Condition.Exposure),
     alpha = .1,
     position = position_dodge(.3),
-    inherit.aes = F) +
+    inherit.aes = F) + 
   geom_linerange(linewidth = .6, position = position_dodge(.3), alpha = .5) +
   geom_hline(
-    data = d.io.categorization %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40"), Block == 7),
+    data = d_IO.intercept_slope_PSE %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40"), Block == 7),
     mapping = aes(yintercept = PSE, color = Condition.Exposure, group = Condition.Exposure),
     linetype = 2,
     linewidth = .8,
@@ -226,8 +226,7 @@ d.estimates %>%
     colour = "black",
     width = 0.1,
     alpha = .6) +
-  scale_x_discrete("Block") +
-  scale_y_continuous("PSE (ms VOT)") +
+  labs(y = "PSE (ms VOT)", x = "Block") +
   scale_colour_manual(
     "Condition",
     labels = c("baseline", "+10ms", "+40ms", "prior"),
@@ -310,13 +309,13 @@ Next, we discuss possible explanations for such premature convergence and for sh
 ```{r testing-shrinkage, results='asis'}
 fit_test.simple_effects_condition <- readRDS("../models/test-nested-condition.rds")
 fit_test_nested_within_condition_and_block <- readRDS("../models/test-nested_slope-priorSD15-0.995.rds")
-predictedPSE_40 <- d.io.categorization %>% 
+predictedPSE_40 <- d_IO.intercept_slope_PSE %>% 
   select(Condition.Exposure, Block, intercept_scaled) %>% 
   filter(Condition.Exposure == "Shift40", Block == 7) %>% pull(intercept_scaled)
-predictedPSE_10 <- d.io.categorization %>% 
+predictedPSE_10 <- d_IO.intercept_slope_PSE %>% 
   select(Condition.Exposure, Block, intercept_scaled) %>% 
   filter(Condition.Exposure == "Shift10", Block == 7) %>% pull(intercept_scaled)
-predictedPSE_0 <- d.io.categorization %>% 
+predictedPSE_0 <- d_IO.intercept_slope_PSE %>% 
   select(Condition.Exposure, Block, intercept_scaled) %>% 
   filter(Condition.Exposure == "Shift0", Block == 7) %>% pull(intercept_scaled)
 
