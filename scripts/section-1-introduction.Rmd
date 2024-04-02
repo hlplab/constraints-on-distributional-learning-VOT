@@ -57,7 +57,7 @@ Prediction 4 ({\bf diminishing returns}) & \\
 
 \hline
 \end{tabular}
-\caption{Predictions of distributional learning models about incremental adaptation to an unfamiliar talker. Also listed are examples of previous work that provide some initial, almost always qualitative, evidence for these predictions. To the best of our knowledge, prediction (2a) is the only that has been tested against {\em incremental} changes in listeners' behavior.}
+\caption{Predictions of distributional learning models about incremental adaptation to an unfamiliar talker. Also listed are examples of previous work that provide some initial, almost always qualitative, evidence for these predictions (AA = adaptation to natural accents; DL = distributional learning; LGPL/VGPL = lexically- or visually-guided perceptual learning). To the best of our knowledge, prediction (2a) is the only that has been tested against {\em incremental} changes in listeners' behavior.}
 \label{tab:predictions}
 \end{small}
 \end{table}
