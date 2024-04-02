@@ -120,10 +120,8 @@ p.histogram_conditions <-
   mutate(Block = fct_relevel(Block, c("Block A", "Block B", "Block C", "Block D"))) %>% 
   ggplot(aes(x = VOT)) +
   geom_histogram(
-    aes(
-      colour = paste(Condition.Exposure, category, labelling),
-      fill = paste(Condition.Exposure, category, labelling),
-      linetype = labelling), 
+    aes(fill = paste(Condition.Exposure, category, labelling)), 
+    color = NA,
     alpha = .8) +
   geom_text(
     data = d.means,
@@ -131,14 +129,11 @@ p.histogram_conditions <-
     parse = T,
     size = 2, hjust = 0, position = position_dodge2v(height = -8),
     inherit.aes = F) +
-  geom_rug(
-    data = d %>% filter(Phase == "test") %>% distinct(VOT), sides = "b") +
+  geom_rug(data = d %>% filter(Phase == "test") %>% distinct(VOT), sides = "b") +
   guides(
     colour = guide_legend(
       override.aes = list(
-        colour = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
         fill = c("#383838", "#C0C0C0", "#606060", "#F0F0F0", 0, 0, 0, 0, 0, 0, 0, 0),
-        linetype = c(1, 2, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0),
         values = c("/d/ labeled", "/d/ unlabeled", "/t/ labeled", "/t/ unlabeled", 0, 0, 0, 0, 0, 0, 0, 0)), 
       nrow = 2),
     linetype = "none") +
@@ -167,8 +162,8 @@ p.histogram_conditions <-
     scales = "free_y") +
   theme(
     legend.position = "top",
-    legend.title.align = 0,
-    legend.text.align = 0,
+    legend.title = element_text("hjust"),
+    legend.text = element_text("hjust"),
     legend.justification = c(.5, .5),
     legend.box.just = "center",
     legend.key.width = unit(12, "pt"),
