@@ -914,7 +914,7 @@ d.test_surprisal <-
   distinct(Item.VOT) %>%
   cross_join(io %>% select(-c(x, fold))) %>%
   filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")) %>%
-  # For each test stimulus, calculate the sum of densities of /d/ and /t/ over
+  # For each test stimulus, calculate the sum densities of /d/ and /t/ over
   # that VOT (i.e., the density of the marginal VOT distribution)
   mutate(
     density = map2_dbl(
