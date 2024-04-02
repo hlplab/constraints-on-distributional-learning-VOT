@@ -126,35 +126,39 @@ m_IA_inferred.VOT_f0 <-
 ```
 
 ```{r summarise-PSE-predictions-of-IA}
-# get logistic model predictions of the IA's categorisation
+# Get logistic model predictions of the IA's categorisation
 # then prepare the data for plotting
+if (file.exists("../models/d.IA_predicted_test.csv")) {
+  d.IA_predicted_test <- read_csv("../models/d.IA_predicted_test.csv")
+} else {
+  data.test <- prep_data_for_IBBU_prediction(m_IA_inferred.VOT_f0)
+  d.IA_predicted_test <-
+    get_IBBU_predicted_response(
+      m_IA_inferred.VOT_f0,
+      data = data.test,
+      groups = get_group_levels_from_stanfit(m_IA_inferred.VOT_f0))
+
+  write_csv(d.IA_predicted_test, "../models/d.IA_predicted_test.csv")
+}
+
 if (file.exists("../models/d.IA_predicted_PSE.rds")) {
   d.IA_predicted_PSE <- readRDS("../models/d.IA_predicted_PSE.rds")
-  d.IA_predicted_test <- read_csv("../models/d.IA_predicted_test.csv")
-    } else {
-      data.test <-
-        prep_data_for_IBBU_prediction(
-          m_IA_inferred.VOT_f0)
-      d.IA_predicted_test <-
-        get_IBBU_predicted_response(
-          m_IA_inferred.VOT_f0,
-          data = data.test,
-          groups = get_group_levels_from_stanfit(m_IA_inferred.VOT_f0))
-      d.IA_predicted_PSE <- fit_logistic_regression_to_model_categorization(d.IA_predicted_test) %>%
-        group_by(group) %>%
-        median_hdci(PSE) %>%
-        # duplicate the no-exposure row; 1 for each condition
-        mutate(rows = ifelse(group == "no exposure", 3, 1)) %>%
-        uncount(rows) %>%
-        mutate(
-          Condition.Exposure = factor(c(rep("Shift0", 3), rep("Shift10", 3), rep("Shift40", 3), c("Shift0", "Shift10", "Shift40"))),
-          Block = ifelse(group != "no exposure", str_replace(group, ".*(\\d)", "\\1"), group),
-          Block = factor(ifelse(group == "no exposure", 1, Block))) %>%
-        add_block_labels()
-
-    saveRDS(d.IA_predicted_PSE, "../models/d.IA_predicted_PSE.rds")
-    write_csv(d.IA_predicted_test, "../models/d.IA_predicted_test.csv")
-    }
+} else {
+  d.IA_predicted_PSE <-
+    fit_logistic_regression_to_model_categorization(d.IA_predicted_test) %>%
+    group_by(group) %>%
+    median_hdci(PSE) %>%
+    # duplicate the no-exposure row; 1 for each condition
+    mutate(rows = ifelse(group == "no exposure", 3, 1)) %>%
+    uncount(rows) %>%
+    mutate(
+      Condition.Exposure = factor(c(rep("Shift0", 3), rep("Shift10", 3), rep("Shift40", 3), c("Shift0", "Shift10", "Shift40"))),
+      Block = ifelse(group != "no exposure", str_replace(group, ".*(\\d)", "\\1"), group),
+      Block = factor(ifelse(group == "no exposure", 1, Block))) %>%
+    add_block_labels()
+  
+  saveRDS(d.IA_predicted_PSE, "../models/d.IA_predicted_PSE.rds")
+}
 ```
 
 (ref:plot-IA-human-PSE) Comparison of shifts in listener PSEs over the first four test blocks against that expected by an ideal adaptor [a distributional learning model that describes ideal information integration, @kleinschmidt-jaeger2015]. Point ranges and dashed horizontal lines are identical to those in Figure \@ref(fig:plot-fit-PSE)C. Colored ribbons indicate the 95%-CI for the PSEs predicted by the ideal adaptor fit to listeners' responses. The vertical bar to the right of the panel indicates the range of talker-specific PSEs an idealized listener might have experienced in previous exposure: the mean and 2.5%-to-97.5% quantile range of talker-specific PSEs derived from Bayesian ideal observers fit to all talkers in the phonetic database of isolated word productions presented in Figure \@ref(fig:exposure-means-database-matrix-plot). We return to this range when discussing possible explanations for mismatches between the ideal adaptor and participants' responses. <!-- TO DO: remove redundancy between this code and Figure 4c code. It's bad practice to simply copy and paste code. (re: reproducibility) -->

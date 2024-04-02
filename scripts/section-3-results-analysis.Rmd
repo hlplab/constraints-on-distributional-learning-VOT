@@ -805,7 +805,7 @@ human.accuracy <-
 rm(fit_exposure)
 ```
 
-```{r IO-human-accuracy, fig.width=7.5, fig.height=5.5, fig.cap="(ref:IO-human-accuracy)", fig.pos="!ht"}
+```{r IO-human-accuracy, fig.width=7.5, fig.height=base.height*2, fig.cap="(ref:IO-human-accuracy)", fig.pos="!ht"}
 human_io_accuracy <- 
   human.accuracy %>% 
   mutate(decision = "human") %>% 
@@ -822,18 +822,21 @@ human_io_accuracy <-
   group_by(decision, Condition.Exposure) %>% 
   arrange(Block, .by_group = T) %>% 
   ungroup() %>% 
-  mutate(top_panel = ifelse(decision == "proportional" | decision == "human", "Luce's choice rule", NA),
-         bottom_panel = ifelse(decision == "criterion" | decision == "human", "Criterion choice rule", NA),
-         decision = fct_relevel(decision, c("human", "proportional", "criterion")))
+  mutate(
+    top_panel = ifelse(decision == "proportional" | decision == "human", "Luce's choice rule", NA),
+    bottom_panel = ifelse(decision == "criterion" | decision == "human", "Criterion choice rule", NA),
+    decision = fct_relevel(decision, c("human", "proportional", "criterion")))
 
+# TO DO: this is a terrible mess. Just clean up stuff above and use facet_grid to make this plot
 p1 <- 
   human_io_accuracy %>% 
   filter(decision  == "proportional") %>% 
-  ggplot(aes(x = Block.plot_label, y = median, 
-             ymin = lower, ymax = upper, 
-             colour = Condition.Exposure, 
-             shape = decision, 
-             group = decision)) +
+  ggplot(
+    aes(x = Block.plot_label, y = median, 
+        ymin = lower, ymax = upper, 
+        colour = Condition.Exposure, 
+        shape = decision, 
+        group = decision)) +
   geom_hline(
     data = io.accuracy %>% 
       filter(decision == "proportional" & Condition.io != "prior"),
@@ -896,6 +899,7 @@ p2 <-
   guides(shape = "none") +
   facet_grid(bottom_panel ~ Condition.Exposure, 
              labeller = labeller(Condition.Exposure = c("Shift0" = "baseline", "Shift10" = "+10", "Shift40" = "+40")))
+
 (p1 / p2) 
 ```
 
