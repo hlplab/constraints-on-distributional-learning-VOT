@@ -67,7 +67,7 @@ fit_exposure_nested <-
 ```
 
 ```{r extract-intercepts-slopes-from-test-and-exposure-models}
-d.estimates <-
+d_psychometric.intercept_slope_PSE <-
   full_join(
     fit_test_nested_within_condition_and_block %>% get_intercepts_and_slopes(),
     fit_exposure_nested %>% get_intercepts_and_slopes()) %>%
@@ -165,10 +165,10 @@ io <-
           nest(x = x)) %>%
       mutate(Condition.Exposure = ifelse(is.na(fold), "prior", str_c("prior", fold))))
 
-# Get logistic parameter estimates for a simulated ideal observer listener.
+# Get logistic parameter estimates for a simulated ideal listener.
 # Unlike for the analysis of participants' responses, there is no need to use a psychometric
 # model since ideal observers have no attentional lapses (i.e., lambda = 0).
-d.io.categorization <-
+d_IO.intercept_slope_PSE <-
     # Assess the ideal observers at the exact same locations used during test blocks
     get_logistic_parameters_from_model(
       model = io,
@@ -183,7 +183,7 @@ d.io.categorization <-
 
 ```{r prepare-plot-intercepts-slopes}
 p.across_blocks <-
-  d.estimates %>%
+  d_psychometric.intercept_slope_PSE %>%
   ggplot(
     aes(
       x = Block.plot_label, y = Intercept,
@@ -209,7 +209,7 @@ p.across_blocks <-
 p.intercept_1to7 <-
   p.across_blocks +  
   geom_hline(
-    data = d.io.categorization,
+    data = d_IO.intercept_slope_PSE,
     # Using scaled intercept (which is keeping the location at which the intercept is evaluated constant
     # across exposure and test: it's always the mean VOT of test)
     aes(yintercept = intercept_scaled, colour = Condition.Exposure, group = Condition.Exposure),
@@ -221,10 +221,10 @@ p.intercept_1to7 <-
 
 # get the relative distance of the IO-predicted PSEs from the starting point PSE at test 1
 d.true_shift <-
-  d.estimates %>%
+  d_psychometric.intercept_slope_PSE %>%
   # Join the PSEs from ideal observers
   left_join(
-    d.io.categorization %>%
+    d_IO.intercept_slope_PSE %>%
       dplyr::select(Phase, Condition.Exposure, Block, PSE) %>%
       mutate(PSE = round(PSE, 1)) %>%
       rename(PSE.io_predicted = PSE), by = c("Condition.Exposure", "Block")) %>%
@@ -232,9 +232,9 @@ d.true_shift <-
   mutate(
     PSE_block1 =
       case_when(
-        Condition.Exposure == "Shift0" ~ d.estimates$PSE[1],
-        Condition.Exposure == "Shift10" ~ d.estimates$PSE[10],
-        Condition.Exposure == "Shift40" ~ d.estimates$PSE[19]),
+        Condition.Exposure == "Shift0" ~ d_psychometric.intercept_slope_PSE$PSE[1],
+        Condition.Exposure == "Shift10" ~ d_psychometric.intercept_slope_PSE$PSE[10],
+        Condition.Exposure == "Shift40" ~ d_psychometric.intercept_slope_PSE$PSE[19]),
     true_shift = PSE.io_predicted - PSE_block1,
     proportion_shift = (PSE - PSE_block1)/true_shift) %>%
   add_block_labels()
@@ -244,7 +244,7 @@ p.PSE_1to7 <-
   scale_y_continuous("PSE (ms VOT)") +
   aes(y = PSE, ymin = PSE.lower, ymax = PSE.upper) +
   geom_rect(
-    data = d.io.categorization %>%
+    data = d_IO.intercept_slope_PSE %>%
       group_by(Condition.Exposure) %>%
       summarise(PSE = mean(PSE)) %>%
       filter(!Condition.Exposure %in% c("Shift0", "Shift10", "Shift40", "prior")),
@@ -254,7 +254,7 @@ p.PSE_1to7 <-
     inherit.aes = F) +
   geom_linerange(linewidth = .6, position = position_dodge(.3), alpha = .5) +
   geom_hline(
-    data = d.io.categorization %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")),
+    data = d_IO.intercept_slope_PSE %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")),
     mapping = aes(yintercept = PSE, color = Condition.Exposure, group = Condition.Exposure),
     linetype = 2,
     linewidth = .8,
@@ -275,6 +275,8 @@ p.PSE_1to7 <-
    coord_cartesian(xlim = c(0.75, 9), clip = "off") +
    theme(plot.margin = unit(c(1, 3.2, 1, 1), "lines"), legend.position = "none")
 ```
+
+
 
 ```{r plot-test-exposure-fit, fig.width=11, fig.height=3, message=FALSE}
 cond_fit_test_exposure <-
@@ -576,7 +578,7 @@ make_hyp_table(
 
 First, while the PSEs for the +40 and +10 conditions were shifted rightwards compared to the baseline condition, both the +10 and the baseline condition seem to shift *left*wards relative to their pre-exposure starting point in Test 1. This is supported by Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-effects-block). The evidence for the leftward shifts is quite weak for the +10 condition (BF = 3.5 for changes from Test 1 to 4), indicating only small changes in PSE across tests. But it is stronger for the baseline condition (BF = 7.6). In contrast, the +40 condition is clearly shifted rightwards relative to pre-exposure (BF = 45.2). To understand this pattern, it is helpful to relate the three exposure conditions to the distribution of phonetic cues in listeners' prior experience. Figure \@ref(fig:exposure-means-database-matrix-plot) shows the exposure means for /d/ and /t/ relative to the distributions of three important cues to the word-initial /d/-/t/ contrast in L1-US English [based on databases of isolated and connected speech, @chodroff-wilson2018]. This comparison offers an explanation as to why the baseline condition (and to some extent the +10 condition) shift leftwards with increasing exposure, whereas the +40 condition shifts rightwards: relative to the distribution of VOT for /d/ and /t/ in listeners' prior experience, only the +40 condition presents larger-than-expected category means, whereas the baseline condition and, to some extent, the +10 condition presented lower-than-expected category means. That is, once we take into account how our exposure conditions relate to listeners' prior experience (prediction 1), both the direction of changes from Test 1 to 4 *within* each exposure condition (Table \@ref(tab:hypothesis-table-simple-effects-block)), and the direction of differences *between* exposure conditions receive an explanation (Table \@ref(tab:hypothesis-table-simple-effects-condition)). To further illustrate this point, the horizontal gray ribbon in  \@ref(fig:plot-fit-PSE)C shows the range of PSEs predicted by Bayesian ideal observers trained on the distribution of VOT, f0, and vowel duration for isolated word productions in Figure \@ref(fig:exposure-means-database-matrix-plot) (for details, see SI, \@ref(sec:idealized-prior-listeners)).
 
-(ref:exposure-means-database-matrix-plot) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for `r nrow(d.chodroff_wilson)` word-initial /d/ and /t/ productions by `r length(unique(d.chodroff_wilson$Talker))` female L1 talkers of US English in @chodroff-wilson2018. After voice onset time, f0 and vowel duration are two of the most informative cues to word-initial /d/-/t/ in L1 US English. For details, see SI \@ref(sec:idealized-prior-listeners). Colored labels show the category means of the exposure conditions. <!-- TO DO: the number of talkers do not seem to match those that we report in the SI. -->
+(ref:exposure-means-database-matrix-plot) Placement of exposure stimuli relative to an estimate of typical phonetic distributions for `r nrow(d.chodroff_wilson)` word-initial /d/ and /t/ productions by `r length(unique(d.chodroff_wilson$Talker))` female L1 talkers of US English in @chodroff-wilson2018. After voice onset time, f0 and vowel duration are two of the most informative cues to word-initial /d/-/t/ in L1 US English. For details, see SI \@ref(sec:idealized-prior-listeners). Colored labels show the category means of the exposure conditions. 
 
 ```{r exposure-means-database-matrix-plot, fig.width=base.width*4, fig.height=base.height*2.5+1, fig.cap="(ref:exposure-means-database-matrix-plot)", fig.pos="!h"}
 d.chodroff_wilson %>%
@@ -912,7 +914,7 @@ d.test_surprisal <-
   distinct(Item.VOT) %>%
   cross_join(io %>% select(-c(x, fold))) %>%
   filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")) %>%
-  # For each test stimulus, calculate the sum of densities of /d/ and /t/ over
+  # For each test stimulus, calculate the sum densities of /d/ and /t/ over
   # that VOT (i.e., the density of the marginal VOT distribution)
   mutate(
     density = map2_dbl(

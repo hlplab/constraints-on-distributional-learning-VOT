@@ -282,7 +282,6 @@ rm(
   d.exposure,
   d.VOT_exclusion,
   d.means,
-  d.exposure,
   p.histogram_conditions)
 ```
 

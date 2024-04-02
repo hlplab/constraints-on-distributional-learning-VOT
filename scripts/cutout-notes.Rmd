@@ -929,7 +929,7 @@ m_IO.VOT_f0 <-
   lift_MVG_to_MVG_ideal_observer(
       Sigma_noise = matrix(c(80, 0, 0, 878), ncol = 2, dimnames = list(names(first(.$mu)), names(first(.$mu)))),
       prior = c("/d/" = .5, "/t/" = .5),
-      # TO DO: set to lapse rate inferred in psychometric model fit to participants
+      # set to lapse rate inferred in psychometric model fit to participants
       lapse_rate = plogis(fixef(fit_test)[[2]]),
       lapse_bias = c("/d/" = .5, "/t/" = .5))
 
@@ -937,6 +937,8 @@ m_IA.VOT_f0 <-
   m_IO.VOT_f0 %>%
   lift_MVG_ideal_observer_to_NIW_ideal_adaptor(kappa = 10, nu = 10)
 ```
+
+
 
 ```{r prepare-data-for-adaptive-changes}
 # Make a data frame that splits the entire data in unique exposure-test combinations.
@@ -1326,7 +1328,7 @@ m_IO.VOT_f0_vowel <-
 
 
 # fit ideal adaptor with 3 cues priors
-m_IA.VOT_f0_vowelduration_test <-
+m_IA.VOT_f0_vowelduration_informedpriors <-
   infer_prior_beliefs(
     exposure = d_for_ASP %>% filter(Phase == "exposure"),
     test = d_for_ASP %>% filter(Phase == "test"),

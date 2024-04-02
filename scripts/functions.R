@@ -921,14 +921,7 @@ get_IO_categorization <- function(
           x, io,
           ~ get_categorization_from_MVG_ideal_observer(x = .x$x, model = .y, decision_rule = "proportional") %>%
             filter(category == "/t/") %>%
-            mutate(VOT = map(x, ~ .x[1]) %>% unlist())),
-      line = map2(categorization, gender,
-                  ~ geom_line(data = .x,
-                              aes(x = VOT,
-                                  y =  response,
-                                  color = .y),
-                              alpha = alpha,
-                              linewidth = linewidth)))
+            mutate(VOT = map(x, ~ .x[1]) %>% unlist())))
 }
 
 

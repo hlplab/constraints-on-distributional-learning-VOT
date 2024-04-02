@@ -144,7 +144,7 @@ We considered two databases to approximate listeners' prior expectations about t
 
 We filtered both databases to only the /d/ and /t/ tokens. From the connected speech database we kept talkers that had at least 15 tokens of each category. We excluded three talkers who did not have any f0 measurements from the isolated speech database. For both databases we kept only female talkers to match the gender of our test talker and removed tokens with anomalous f0 measurements; this included those that showed pitch-halving which we identified through examining individual pitch plots, as well as those whose measurements were below 150 Hz (as advised by Eleanor Chodroff, these were likely due to measurement error). Of the remaining talkers we ensured that an equal number of /d/ and /t/ tokens were sampled from each individual. The sample size was determined by first counting the number of tokens available for each talker and category, and then taking the lower of the two. 
 
-This left us with a total of `r nrow(d.chodroff_wilson)` tokens from `r length(unique(d.chodroff_wilson.connected$Talker))` female talkers: `r nrow(d.chodroff_wilson.connected)` tokens by `r length(unique(d.chodroff_wilson.connected$Talker))` female talkers from the connected speech database and `r nrow(d.chodroff_wilson.isolated)` tokens by `r length(unique(d.chodroff_wilson.isolated$Talker))` female talkers from the isolated speech database. This is the data shown in Figure \@ref(fig:exposure-means-database-matrix-plot) in the main text. 
+This left us with a total of `r nrow(d.chodroff_wilson)` tokens from `r length(unique(d.chodroff_wilson$Talker))` female talkers: `r nrow(d.chodroff_wilson.connected)` tokens by `r length(unique(d.chodroff_wilson.connected$Talker))` female talkers from the connected speech database and `r nrow(d.chodroff_wilson.isolated)` tokens by `r length(unique(d.chodroff_wilson.isolated$Talker))` female talkers from the isolated speech database. This is the data shown in Figure \@ref(fig:exposure-means-database-matrix-plot) in the main text. 
 
 For the predictions for idealized pre-exposure listeners, we decided to focus on the isolated speech data. While this database is substantially smaller (`r length(unique(d.chodroff_wilson.isolated$Talker))` female talkers), the conditions under which the recordings were elicited more closely resemble the conditions used to record our stimuli from which the test stimuli were created. Both recordings were sampled from a similar population pool, i.e. undergraduate native L1-US English speakers and both were recordings of isolated utterances. Nonetheless there were differences in the way talkers were instructed to produce the tokens that may have contributed to differences we see between our stimuli and the database's. The database tokens were produced as CVC syllables ending in /t/ and in the context of a carrier phrase "*Say ______ again.*". The participants were told to speak at a normal rate and to make a slight pause after "Say" and before "again" [@chodroff-wilson2014]. This may have encouraged hyper-articulation of the syllables. In our recordings we aimed to discourage hyper-articulation by instructing our talker to speak clearly and confidently without placing greater stress than necessary on each word. 
 
@@ -659,7 +659,7 @@ io.bias_correct <-
 # 
 # Unlike for the analysis of participants' responses, there is no need to use a psychometric
 # model since ideal observers have not attentional lapses (i.e., lambda = 0). 
-d.io.categorization <- 
+d_IO.intercept_slope_PSE <- 
   rbind(
   # Assess the ideal observers at the exact same locations used during test blocks
     get_logistic_parameters_from_model(
@@ -705,14 +705,14 @@ tokens <-
   select(Condition.Exposure, Phase, VOT)
 
 arrow_df <- 
-  d.io.categorization %>% 
+  d_IO.intercept_slope_PSE %>% 
   filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")) %>% 
   select(Condition.Exposure, Phase, PSE) %>%
   group_by(Condition.Exposure, Phase) %>% 
   slice_head(n = 1) %>% 
   mutate(x = PSE, xend = PSE, y = .5, yend = .01)  
 
-d.io.categorization %>% 
+d_IO.intercept_slope_PSE %>% 
   filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")) %>% 
   select(Condition.Exposure, Phase, model_unscaled) %>% 
   group_by(Condition.Exposure, Phase) %>% 
@@ -780,7 +780,7 @@ Figure \@ref(fig:plot-fit-PSE)C in the main text presents prediction lines that 
 
 ```{r prepare-plot-intercepts-slopes-SI}
 p.across_blocks <-
-  d.estimates %>%
+  d_psychometric.intercept_slope_PSE %>%
   ggplot(
     aes(
       x = Block.plot_label, y = Intercept,
@@ -806,7 +806,7 @@ p.across_blocks <-
 p.intercept_1to7 <-
   p.across_blocks +  
   geom_step(
-    data = d.io.categorization %>% add_block_labels(),
+    data = d_IO.intercept_slope_PSE %>% add_block_labels(),
     # Using scaled intercept (which is keeping the location at which the intercept is evaluated constant
     # across exposure and test: it's always the mean VOT of test)
     aes(x = Block.plot_label, y = intercept_scaled, colour = Condition.Exposure, group = Condition.Exposure),
@@ -830,7 +830,7 @@ p.slope_1to7 <-
   aes(y = slope_unscaled, ymin = slope_unscaled.lower, ymax = slope_unscaled.upper) +
   # These are the slopes of the ideal observers
     geom_rect(
-    data = d.io.categorization %>%
+    data = d_IO.intercept_slope_PSE %>%
       group_by(Condition.Exposure) %>% 
       summarise(slope_unscaled = mean(slope_unscaled)) %>%
       filter(!Condition.Exposure %in% c("Shift0", "Shift10", "Shift40", "prior")),
@@ -839,7 +839,7 @@ p.slope_1to7 <-
     alpha = .08,
     inherit.aes = F) +
   geom_step(
-    data = d.io.categorization %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")), 
+    data = d_IO.intercept_slope_PSE %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")), 
     # Using UNscaled slope because slopes are comparable across scales anyway and this is more intuitive
     # (substitute _unscaled to _scaled to switch to slopes over Gelman-scaled VOT)
     mapping = aes(x = Block.plot_label, y = slope_unscaled, colour = Condition.Exposure, group = Condition.Exposure),
@@ -854,7 +854,7 @@ p.PSE_1to7 <-
   scale_y_continuous("PSE (ms VOT)") +
   aes(y = PSE, ymin = PSE.lower, ymax = PSE.upper) +
       geom_rect(
-    data = d.io.categorization %>%
+    data = d_IO.intercept_slope_PSE %>%
       group_by(Condition.Exposure) %>%
       summarise(PSE = mean(PSE)) %>%
       filter(!Condition.Exposure %in% c("Shift0", "Shift10", "Shift40", "prior")),
@@ -873,7 +873,7 @@ p.PSE_1to7 <-
     size = 2.2,
     show.legend = F) +
   geom_step(
-    data = d.io.categorization %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")),
+    data = d_IO.intercept_slope_PSE %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")),
     mapping = aes(x = Block.plot_label, y = PSE, color = Condition.Exposure, group = Condition.Exposure),
     linetype = 2,
     linewidth = .8,
