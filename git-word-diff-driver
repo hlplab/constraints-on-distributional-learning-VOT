@@ -1,0 +1,6 @@
+#! /bin/sh
+#
+# args are:
+# path old-file old-hex old-mode new-file new-hex new-mode
+git diff --word-diff $2 $5
+exit 0
