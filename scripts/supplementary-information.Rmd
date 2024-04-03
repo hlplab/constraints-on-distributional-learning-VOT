@@ -1649,10 +1649,6 @@ human_psychometric_accuracy %>%
         x = "Block") +
   scale_colour_manual("Condition", values = colours.condition, labels = c("baseline", "+10", "+40"), guide = F) +
   scale_shape_manual("Model", values = c(16, 17), labels = c("psychometric model", "human", "")) +
-  # guides(
-  #   shape = guide_legend(
-  #     override.aes = list(shape = c(16, 17, 0),
-  #                         values = c("psychometric model", "human", 0)))) +
   theme(axis.text.x = element_text(angle = 30, vjust = 1, hjust = 1),
         legend.position = "top") + 
   coord_cartesian(ylim = c(.5, 1)) +

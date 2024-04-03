@@ -89,6 +89,7 @@ d_psychometric.intercept_slope_PSE <-
 
 ```{r}
 # divide database into k-folds
+set.seed(2000)
 d.chodroff_wilson.isolated %<>%
   group_by(Talker) %>%
   vfold_cv(v = 5)
