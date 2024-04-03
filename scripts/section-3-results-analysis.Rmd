@@ -476,7 +476,7 @@ rm(fit_test.simple_effects_condition)
 
 Figure \@ref(fig:plot-fit-PSE)A suggests that differences between exposure conditions emerged early in the experiment: already in Test 2, listeners in the +10 condition have shifted their categorization functions rightwards relative to the baseline condition, and listeners in the +40 condition have shifted their in categorization functions even further rightwards. This is confirmed by Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-effects-condition). 
 
-Prior to any exposure, during Test 1, participants' responses did not differ across exposure condition. This result is predicted by models of adaptive speech perception under the assumptions that (a) participants in the different groups have similar prior experiences, and that (b) our sample size is sufficiently large to yield stable estimates of listeners' categorization function.^[Since the test of the null for Test 1 is not of particular importance (every theory of adaptive speech perception would predict it), we used the Savage-Dickey density ratio [@wagenmakers2010] to calculate BFs for the null. This comparatively simple procedure estimates the BF as the ratio of the posterior and prior density over the null. We note that this makes the relatively weak evidence in favor of the null rather unsurprising since the regularizing priors we used have non-negligible density to the null. Rather than to test the null against priors that specify plausible alternative effects, we appeal to readers' intuition: the 90% CIs of the comparisons for Test 1 all are relatively symmetrically centered around zero. This means there is very little evidence in favor of an effect in either direction.] Equality of pre-exposure behavior across exposure groups is also implicitly assumed---but rarely tested---in the interpretation of most studies on adaptive speech perception [when it is tested, it often turns out that this assumption is *not* necessarily warranted, cf. @kleinschmidt-jaeger2020]. 
+Prior to any exposure, during Test 1, participants' responses did not differ across exposure condition. This result is predicted by models of adaptive speech perception under the assumptions that (a) participants in the different groups have similar prior experiences, and that (b) our sample size is sufficiently large to yield stable estimates of listeners' categorization function.^[Since the test of the null for Test 1 is not of particular importance (every theory of adaptive speech perception would predict it), we used the Savage-Dickey density ratio [@wagenmakers2010] to calculate BFs for the null. This comparatively simple procedure estimates the BF as the ratio of the posterior and prior density over the null. We note that this makes the relatively weak evidence in favor of the null rather unsurprising since the regularizing priors we used have non-negligible density to the null. Rather than to test the null against priors that specify plausible alternative effects, we appeal to readers' intuition: the 90% CIs of the comparisons for Test 1 all are relatively symmetrically centered around zero. This means there is very little evidence in favor of an effect in either direction.] Equality of pre-exposure behavior across exposure groups is also implicitly assumed---but rarely tested---in the interpretation of most studies on adaptive speech perception [when it is tested, it often turns out that this assumption is *not* necessarily warranted, cf. @kleinschmidt2020]. 
 
 During Test 2, after exposure to only 24 /d/ and 24 /t/ stimuli (thereof half labeled), participants' categorization responses already differed between exposure conditions (BFs > 14). All differences between exposure conditions that emerged at this point followed prediction (2b). Additional analyses reported in the SI (\@ref(sec:SI-exposure-block-analysis)) found that listeners' categorization functions had already changed *during* the first exposure block, in line with Figure \@ref(fig:plot-fit-PSE)A. This suggests that changes in listeners' categorization responses emerged *quickly* at the earliest point tested---after only a fraction of exposure trials previously tested in similar paradigms.
 
@@ -777,126 +777,57 @@ io.accuracy <-
     values_to = "accuracy") %>% 
   mutate(
     Condition.io = ifelse(str_detect(Condition.io, "prior"), "prior", Condition.io),
-    decision = str_replace(decision, "categorization\\.(.*)_response", "\\1"))
+    decision = factor(str_replace(decision, "categorization\\.(.*)_response", "\\1"), levels = c("proportional", "criterion"))) 
 
 # get predictions of the fitted psychometric model
 fit_exposure <- readRDS("../models/exposure-standard-priorSD15-0.999.rds")
 fit_test <- readRDS("../models/test-standard-priorSD15-0.995.rds")
+
 psych.model_accuracy <- 
   get_pyschometric_accuracy(fit_exposure, d.for_analysis, "exposure", VOT.sd_exposure) %>% 
   bind_rows(
     get_pyschometric_accuracy(fit_test, d.for_analysis, "test", VOT.sd_test)) %>% 
+  mutate(decision = factor(decision)) %>%
+  ungroup() %>%
+  mutate(decision = fct_relevel(decision, "proportional", "criterion")) %>% 
   add_block_labels()
-
-# get human accuracy on unlabelled exposure trials
-human.accuracy <- 
-  d.for_analysis %>%
-  filter(Phase == "exposure" & Item.Labeled == F) %>%
-  group_by(ParticipantID, Condition.Exposure, Block) %>%
-  summarise(
-    participant.accuracy = mean(Response.Correct),
-    mean.accuracy = mean(participant.accuracy)) %>% 
-  group_by(Condition.Exposure, Block) %>% 
-  summarise(
-    lower = quantile(mean.accuracy, probs = .025),
-    median = quantile(mean.accuracy, probs = .5),
-    upper = quantile(mean.accuracy, probs = .975))
 
 rm(fit_exposure)
 ```
 
-```{r IO-human-accuracy, fig.width=7.5, fig.height=5.5, fig.cap="(ref:IO-human-accuracy)", fig.pos="!ht"}
-human_io_accuracy <- 
-  human.accuracy %>% 
-  mutate(decision = "human") %>% 
-  bind_rows(
-    crossing(
-      Condition.Exposure = c("Shift0", "Shift10", "Shift40"), 
-      Block = c(1, 3, 5, 7),
-      lower = NA,
-      median = NA,
-      upper = NA, 
-      decision = "human")) %>% 
-  add_block_labels() %>% 
-  full_join(psych.model_accuracy) %>% 
+```{r IO-psychometric-accuracy, fig.width=7.5, fig.height=base.height*2, fig.cap="(ref:IO-human-accuracy)", fig.pos="!ht"}
+psych.model_accuracy %>% 
   group_by(decision, Condition.Exposure) %>% 
   arrange(Block, .by_group = T) %>% 
-  ungroup() %>% 
-  mutate(top_panel = ifelse(decision == "proportional" | decision == "human", "Luce's choice rule", NA),
-         bottom_panel = ifelse(decision == "criterion" | decision == "human", "Criterion choice rule", NA),
-         decision = fct_relevel(decision, c("human", "proportional", "criterion")))
-
-p1 <- 
-  human_io_accuracy %>% 
-  filter(decision  == "proportional") %>% 
-  ggplot(aes(x = Block.plot_label, y = median, 
-             ymin = lower, ymax = upper, 
-             colour = Condition.Exposure, 
-             shape = decision, 
-             group = decision)) +
+  ggplot(
+    aes(x = Block.plot_label, y = median, 
+        ymin = lower, ymax = upper, 
+        colour = Condition.Exposure, 
+        group = decision)) +
   geom_hline(
-    data = io.accuracy %>% 
-      filter(decision == "proportional" & Condition.io != "prior"),
+    data = io.accuracy %>% filter(Condition.io != "prior"),
     mapping = aes(yintercept = accuracy, color = Condition.Exposure),
     linetype = 2,
     linewidth = .8,
     alpha = 0.4,
     show.legend = F) +
   geom_hline(
-    data = io.accuracy %>% 
-      filter(decision == "proportional" & Condition.io == "prior"),
+    data = io.accuracy %>% filter(Condition.io == "prior"),
     mapping = aes(yintercept = accuracy),
     linewidth = .8,
     colour = "#d2d4dc",
     alpha = 0.9,
     inherit.aes = F) +
-  geom_pointrange(position = position_dodge2(.5), size = .5) +
-  stat_summary(geom = "line", position = position_dodge2(.5)) +
-   labs(y = "Accuracy on exposure trials\n(of psychometric model)") +
+  geom_pointrange(position = position_dodge2(.5), size = .4) +
+  stat_summary(geom = "line", position = position_dodge2(.4)) +
+   labs(y = "Accuracy on exposure trials\n(of psychometric model)",
+        x = "Block") +
   scale_colour_manual("Condition", values = colours.condition, labels = c("baseline", "+10", "+40"), guide = F) +
-  theme(axis.title.x = element_blank(),
-        axis.text.x = element_blank(),
-        axis.ticks.x = element_blank()) + 
+  theme(axis.text.x = element_text(angle = 30, vjust = 1, hjust = 1)) + 
   coord_cartesian(ylim = c(.5, 1)) +
   guides(shape = "none") +
-  facet_grid(top_panel ~ Condition.Exposure, 
-             labeller = labeller(Condition.Exposure = c("Shift0" = "baseline", "Shift10" = "+10", "Shift40" = "+40")))
-
-p2 <- 
-  human_io_accuracy %>% 
-  filter(decision == "criterion") %>% 
-  ggplot(aes(x = Block.plot_label, y = median, 
-             ymin = lower, ymax = upper, 
-             colour = Condition.Exposure, 
-             shape = decision, 
-             group = decision)) +
-  geom_hline(
-    data = io.accuracy %>% 
-      filter(decision == "criterion" & Condition.io != "prior"),
-    mapping = aes(yintercept = accuracy, color = Condition.Exposure),
-    linetype = 2,
-    linewidth = .8,
-    alpha = 0.4,
-    show.legend = F) +
-  geom_hline(
-    data = io.accuracy %>% 
-      filter(decision == "criterion" & Condition.io == "prior"),
-    mapping = aes(yintercept = accuracy),
-    linewidth = .8,
-    colour = "#d2d4dc",
-    alpha = 0.9) +
-  geom_pointrange(position = position_dodge2(.5), size = .5) +
-  stat_summary(geom = "line", position = position_dodge2(.5)) +
-   labs(y = "Accuracy on exposure trials\n(of psychometric model)") +
-  scale_shape_manual(values = c(16, 2), guide = F) +
-  scale_colour_manual("Condition", values = colours.condition, labels = c("baseline", "+10", "+40"), guide = F) +
-  theme(axis.title.x = element_blank(),
-        axis.text.x = element_text(angle = 30, vjust = .99, hjust = .99)) + 
-  coord_cartesian(ylim = c(.5, 1)) +
-  guides(shape = "none") +
-  facet_grid(bottom_panel ~ Condition.Exposure, 
-             labeller = labeller(Condition.Exposure = c("Shift0" = "baseline", "Shift10" = "+10", "Shift40" = "+40")))
-(p1 / p2) 
+  facet_grid(decision ~ Condition.Exposure,
+             labeller = labeller(decision = c("proportional" = "Luce's choice rule", "criterion" = "Criterion choice rule")))
 ```
 
 If confirmed, this finding of premature convergence would have important theoretical consequences: existing models of adaptive speech perception do not predict this pattern. We postpone further interpretation of this pattern until the general discussion. There, we present additional models, and entertain methodological artifacts, analysis confounds, modifications to existing theories that would explain this pattern. For now, we summarize one additional property of incremental adaptation suggested by the data.

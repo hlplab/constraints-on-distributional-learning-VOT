@@ -1590,96 +1590,74 @@ One possible explanation for the consistently small lapse rate in the present ex
 
 ## Evaluating accuracy of psychometric model, idealised learners against human accuracy
 ```{r plot-io-psychometric-model-human-accuracy, fig.width=7.5, fig.height=5.5, fig.cap="(ref:plot-IO-human-accuracy)"}
-human_io_accuracy <- 
-  human.accuracy %>% 
-  mutate(decision = "human") %>% 
+# get human accuracy on unlabelled exposure trials
+human_psychometric_accuracy <- 
+  d.for_analysis %>%
+  filter(Phase == "exposure" & Item.Labeled == F) %>%
+  group_by(ParticipantID, Condition.Exposure, Block) %>%
+  summarise(
+    participant.accuracy = mean(Response.Correct),
+    mean.accuracy = mean(participant.accuracy)) %>% 
+  group_by(Condition.Exposure, Block) %>% 
+  summarise(
+    lower = quantile(mean.accuracy, probs = .025),
+    median = quantile(mean.accuracy, probs = .5),
+    upper = quantile(mean.accuracy, probs = .975)) %T>% 
+  { . ->> temp } %>% mutate(decision = factor("proportional")) %>% 
+  bind_rows(temp %>% mutate(decision = factor("criterion"))) %>% 
+  ungroup() %>% 
+  mutate(decision = fct_relevel(decision, "proportional")) %>% 
+  mutate(model = factor("human")) %>% 
   full_join(
     crossing(
       Condition.Exposure = c("Shift0", "Shift10", "Shift40"), 
       Block = c(1, 3, 5, 7),
       lower = NA,
       median = NA,
-      upper = NA, 
-      decision = "human")) %>% 
+      upper = NA)) %>% 
   add_block_labels() %>% 
-  full_join(psych.model_accuracy) %>% 
+  full_join(psych.model_accuracy %>% mutate(model = factor("psych"))) %>% 
   group_by(decision, Condition.Exposure) %>% 
-  arrange(Block, .by_group = T) %>% 
-  ungroup() %>% 
-  mutate(top_panel = ifelse(decision == "proportional" | decision == "human", "Luce's choice rule", NA),
-         bottom_panel = ifelse(decision == "criterion" | decision == "human", "Criterion choice rule", NA),
-         decision = fct_relevel(decision, c("human", "proportional", "criterion")))
+  arrange(Block, .by_group = T) 
 
-p1 <- human_io_accuracy %>% 
-  filter(decision %in% c("human", "proportional")) %>% 
-  ggplot(aes(x = Block.plot_label, y = median, 
-             ymin = lower, ymax = upper, 
-             colour = Condition.Exposure, 
-             shape = decision, 
-             group = decision)) +
+human_psychometric_accuracy %>% 
+  na.omit() %>% 
+  mutate(model = fct_relevel(model, "psych")) %>% 
+ ggplot(
+    aes(x = Block.plot_label, y = median, 
+        ymin = lower, ymax = upper, 
+        colour = Condition.Exposure, 
+        shape = model,
+        group = decision)) +
   geom_hline(
-    data = io.accuracy %>% 
-      filter(decision == "proportional" & Condition.io != "prior"),
+    data = io.accuracy %>% filter(Condition.io != "prior"),
     mapping = aes(yintercept = accuracy, color = Condition.Exposure),
     linetype = 2,
     linewidth = .8,
     alpha = 0.4,
     show.legend = F) +
   geom_hline(
-    data = io.accuracy %>% 
-      filter(decision == "proportional" & Condition.io == "prior"),
+    data = io.accuracy %>% filter(Condition.io == "prior"),
     mapping = aes(yintercept = accuracy),
     linewidth = .8,
     colour = "#d2d4dc",
     alpha = 0.9,
     inherit.aes = F) +
-  geom_pointrange(position = position_dodge2(.5), size = .5) +
-  stat_summary(geom = "line", position = position_dodge2(.5)) +
-  labs(y = "Accuracy on exposure trials\n(of psychometric model)") +
-  scale_shape_manual(values = c(16, 2), guide = F) +
+  geom_pointrange(position = position_dodge2(.5), size = .4) +
+  stat_summary(geom = "line", position = position_dodge2(.4)) +
+   labs(y = "Accuracy on exposure trials\n(of psychometric model)",
+        x = "Block") +
   scale_colour_manual("Condition", values = colours.condition, labels = c("baseline", "+10", "+40"), guide = F) +
-  theme(axis.title.x = element_blank(),
-        axis.text.x = element_blank(),
-        axis.ticks.x = element_blank()) + 
+  scale_shape_manual("Model", values = c(16, 17), labels = c("psychometric model", "human", "")) +
+  # guides(
+  #   shape = guide_legend(
+  #     override.aes = list(shape = c(16, 17, 0),
+  #                         values = c("psychometric model", "human", 0)))) +
+  theme(axis.text.x = element_text(angle = 30, vjust = 1, hjust = 1),
+        legend.position = "top") + 
   coord_cartesian(ylim = c(.5, 1)) +
-  guides(shape = "none") +
-  facet_grid(top_panel ~ Condition.Exposure, 
-             labeller = labeller(Condition.Exposure = c("Shift0" = "baseline", "Shift10" = "+10", "Shift40" = "+40")))
-
-p2 <- human_io_accuracy %>% 
-  filter(decision %in% c("human", "criterion")) %>% 
-  ggplot(aes(x = Block.plot_label, y = median, 
-             ymin = lower, ymax = upper, 
-             colour = Condition.Exposure, 
-             shape = decision, 
-             group = decision)) +
-  geom_hline(
-    data = io.accuracy %>% 
-      filter(decision == "criterion" & Condition.io != "prior"),
-    mapping = aes(yintercept = accuracy, color = Condition.Exposure),
-    linetype = 2,
-    linewidth = .8,
-    alpha = 0.4,
-    show.legend = F) +
-  geom_hline(
-    data = io.accuracy %>% 
-      filter(decision == "criterion" & Condition.io == "prior"),
-    mapping = aes(yintercept = accuracy),
-    linewidth = .8,
-    colour = "#d2d4dc",
-    alpha = 0.9) +
-  geom_pointrange(position = position_dodge2(.5), size = .5) +
-  stat_summary(geom = "line", position = position_dodge2(.5)) +
-   labs(y = "Accuracy on exposure trials\n(of psychometric model)") +
-  scale_shape_manual(values = c(16, 2), guide = F) +
-  scale_colour_manual("Condition", values = colours.condition, labels = c("baseline", "+10", "+40"), guide = F) +
-  theme(axis.title.x = element_blank(),
-        axis.text.x = element_text(angle = 30, vjust = .99, hjust = .99)) + 
-  coord_cartesian(ylim = c(.5, 1)) +
-  guides(shape = "none") +
-  facet_grid(bottom_panel ~ Condition.Exposure, 
-             labeller = labeller(Condition.Exposure = c("Shift0" = "baseline", "Shift10" = "+10", "Shift40" = "+40")))
-(p1 / p2) 
+  facet_grid(decision ~ Condition.Exposure,
+             labeller = labeller(decision = c("proportional" = "Luce's choice rule", "criterion" = "Criterion choice rule")))
 ```
 
 
