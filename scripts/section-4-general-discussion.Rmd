@@ -108,7 +108,7 @@ m_IA_inferred.VOT_f0 <-
   infer_prior_beliefs(
     exposure = d_for_ASP %>% filter(Phase == "exposure"),
     test = d_for_ASP %>% filter(Phase == "test"),
-    cues = c("VOT", "f0_Mel", "vowel_duration"),  
+    cues = c("VOT", "f0_Mel"),  
     category = "Item.ExpectedResponse.Category",
     response = "Response.Category",
     group = "ParticipantID",
