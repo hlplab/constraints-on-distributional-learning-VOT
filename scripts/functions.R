@@ -865,13 +865,14 @@ get_PSE_from_io <- function(io, io.type = NULL) {
 get_IO_from_talkers <- function(
     data = d.chodroff_wilson,
     cues,
-    groups,
+    groups = NULL,
     lapse_rate = 0,
-    with_noise = TRUE,
-    VOTs = seq(0, 85, .5),
+    with_noise = F,
+    VOTs = seq(0, 85, .1),
     F0s = predict_f0(VOTs, Mel = T),
-    alpha = .1,
-    linewidth = .3
+    alpha = .3,
+    linetype = 1,
+    linewidth = .5
 ) {
   data %<>%
     make_MVG_from_data(cues = cues, group = groups) %>%
@@ -922,13 +923,20 @@ get_IO_from_talkers <- function(
           ~ get_categorization_from_MVG_ideal_observer(x = .x$x, model = .y, decision_rule = "proportional") %>%
             filter(category == "/t/") %>%
             mutate(VOT = map(x, ~ .x[1]) %>% unlist())),
-      line = map(
-        categorization,
-        ~ geom_line(data = .x,
-                    aes(x = VOT,
-                        y =  response),
-                    alpha = alpha,
-                    linewidth = linewidth)))
+      x = list(VOT = seq(-25, 130, .5)),
+           x = map(x, ~ as_tibble(.x) %>% rename("VOT (ms)" = value))) %>%
+    unnest(io) %>%
+    mutate(
+      gaussian = pmap(
+        list(x, category, mu, Sigma, Sigma_noise),
+        ~ geom_function(
+          data = ..1,
+          aes(x = `VOT (ms)`,
+              colour = ..2),
+          fun = function(x) dnorm(x, mean = ..3[[1]][[1]], sd = sqrt(..4[[1]][[1]])), 
+          alpha = alpha, 
+          linetype = linetype,
+          linewidth = linewidth)))
 }
 
 
