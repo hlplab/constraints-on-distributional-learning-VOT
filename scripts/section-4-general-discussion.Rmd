@@ -171,9 +171,9 @@ prior.PSE_mean <- d_IO.intercept_slope_PSE %>%
 
 d.talkerPSEs <-
   # get each talker's boundary estimate
-  get_IO_categorization(
+  get_IO_from_talkers(
     data = d.chodroff_wilson.isolated,
-    cues = c("VOT"),
+    cues = "VOT",
     groups = c("Talker", "gender"),
     with_noise = TRUE,
     VOTs = seq(0, 85, .5)) %>%

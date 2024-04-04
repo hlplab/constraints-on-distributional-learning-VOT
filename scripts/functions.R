@@ -862,7 +862,7 @@ get_PSE_from_io <- function(io, io.type = NULL) {
 }
 
 
-get_IO_categorization <- function(
+get_IO_from_talkers <- function(
     data = d.chodroff_wilson,
     cues,
     groups,
@@ -911,7 +911,7 @@ get_IO_categorization <- function(
                         !! sym(cues[2]), ~ c(.x, .y))))
   }} %>%
 
-    select(- all_of(cues)) %>%
+    select(-all_of(cues)) %>%
     nest(x = x) %>%
     mutate(
       PSE = map_dbl(
@@ -921,7 +921,14 @@ get_IO_categorization <- function(
           x, io,
           ~ get_categorization_from_MVG_ideal_observer(x = .x$x, model = .y, decision_rule = "proportional") %>%
             filter(category == "/t/") %>%
-            mutate(VOT = map(x, ~ .x[1]) %>% unlist())))
+            mutate(VOT = map(x, ~ .x[1]) %>% unlist())),
+      line = map(
+        categorization,
+        ~ geom_line(data = .x,
+                    aes(x = VOT,
+                        y =  response),
+                    alpha = alpha,
+                    linewidth = linewidth)))
 }
 
 
@@ -940,7 +947,7 @@ density_quantiles <- function(x, y, quantiles) {
   replace(ret, is.na(ret), max(r[]))
 }
 
-# Evaluate psychometric model predictions
+# Evaluate psychometric model predictions ---------------------------------------------------
 # note: predictions are of the whole model which includes the lapse rates
 # this is not strictly-speaking equivalent to the IA/IO models which assume no lapsing
 get_pyschometric_accuracy <- function(
