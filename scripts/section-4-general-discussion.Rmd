@@ -108,7 +108,7 @@ m_IA_inferred.VOT_f0 <-
   infer_prior_beliefs(
     exposure = d_for_ASP %>% filter(Phase == "exposure"),
     test = d_for_ASP %>% filter(Phase == "test"),
-    cues = c("VOT", "f0_Mel", "vowel_duration"),  
+    cues = c("VOT", "f0_Mel"),  
     category = "Item.ExpectedResponse.Category",
     response = "Response.Category",
     group = "ParticipantID",
@@ -171,9 +171,9 @@ prior.PSE_mean <- d_IO.intercept_slope_PSE %>%
 
 d.talkerPSEs <-
   # get each talker's boundary estimate
-  get_IO_categorization(
+  get_IO_from_talkers(
     data = d.chodroff_wilson.isolated,
-    cues = c("VOT"),
+    cues = "VOT",
     groups = c("Talker", "gender"),
     with_noise = TRUE,
     VOTs = seq(0, 85, .5)) %>%
