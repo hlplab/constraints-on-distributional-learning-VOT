@@ -659,7 +659,7 @@ io.bias_correct <-
 # 
 # Unlike for the analysis of participants' responses, there is no need to use a psychometric
 # model since ideal observers have not attentional lapses (i.e., lambda = 0). 
-d_IO.intercept_slope_PSE <- 
+d.IO_intercept.slope.PSE <- 
   rbind(
   # Assess the ideal observers at the exact same locations used during test blocks
     get_logistic_parameters_from_model(
@@ -705,14 +705,14 @@ tokens <-
   select(Condition.Exposure, Phase, VOT)
 
 arrow_df <- 
-  d_IO.intercept_slope_PSE %>% 
+  d.IO_intercept.slope.PSE %>% 
   filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")) %>% 
   select(Condition.Exposure, Phase, PSE) %>%
   group_by(Condition.Exposure, Phase) %>% 
   slice_head(n = 1) %>% 
   mutate(x = PSE, xend = PSE, y = .5, yend = .01)  
 
-d_IO.intercept_slope_PSE %>% 
+d.IO_intercept.slope.PSE %>% 
   filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")) %>% 
   select(Condition.Exposure, Phase, model_unscaled) %>% 
   group_by(Condition.Exposure, Phase) %>% 
@@ -780,7 +780,7 @@ Figure \@ref(fig:plot-fit-PSE)C in the main text presents prediction lines that 
 
 ```{r prepare-plot-intercepts-slopes-SI}
 p.across_blocks <-
-  d_psychometric.intercept_slope_PSE %>%
+  d.psychometric_intercept.slope.PSE %>%
   ggplot(
     aes(
       x = Block.plot_label, y = Intercept,
@@ -806,7 +806,7 @@ p.across_blocks <-
 p.intercept_1to7 <-
   p.across_blocks +  
   geom_step(
-    data = d_IO.intercept_slope_PSE %>% add_block_labels(),
+    data = d.IO_intercept.slope.PSE %>% add_block_labels(),
     # Using scaled intercept (which is keeping the location at which the intercept is evaluated constant
     # across exposure and test: it's always the mean VOT of test)
     aes(x = Block.plot_label, y = intercept_scaled, colour = Condition.Exposure, group = Condition.Exposure),
@@ -830,7 +830,7 @@ p.slope_1to7 <-
   aes(y = slope_unscaled, ymin = slope_unscaled.lower, ymax = slope_unscaled.upper) +
   # These are the slopes of the ideal observers
     geom_rect(
-    data = d_IO.intercept_slope_PSE %>%
+    data = d.IO_intercept.slope.PSE %>%
       group_by(Condition.Exposure) %>% 
       summarise(slope_unscaled = mean(slope_unscaled)) %>%
       filter(!Condition.Exposure %in% c("Shift0", "Shift10", "Shift40", "prior")),
@@ -839,7 +839,7 @@ p.slope_1to7 <-
     alpha = .08,
     inherit.aes = F) +
   geom_step(
-    data = d_IO.intercept_slope_PSE %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")), 
+    data = d.IO_intercept.slope.PSE %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")), 
     # Using UNscaled slope because slopes are comparable across scales anyway and this is more intuitive
     # (substitute _unscaled to _scaled to switch to slopes over Gelman-scaled VOT)
     mapping = aes(x = Block.plot_label, y = slope_unscaled, colour = Condition.Exposure, group = Condition.Exposure),
@@ -854,7 +854,7 @@ p.PSE_1to7 <-
   scale_y_continuous("PSE (ms VOT)") +
   aes(y = PSE, ymin = PSE.lower, ymax = PSE.upper) +
       geom_rect(
-    data = d_IO.intercept_slope_PSE %>%
+    data = d.IO_intercept.slope.PSE %>%
       group_by(Condition.Exposure) %>%
       summarise(PSE = mean(PSE)) %>%
       filter(!Condition.Exposure %in% c("Shift0", "Shift10", "Shift40", "prior")),
@@ -873,7 +873,7 @@ p.PSE_1to7 <-
     size = 2.2,
     show.legend = F) +
   geom_step(
-    data = d_IO.intercept_slope_PSE %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")),
+    data = d.IO_intercept.slope.PSE %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")),
     mapping = aes(x = Block.plot_label, y = PSE, color = Condition.Exposure, group = Condition.Exposure),
     linetype = 2,
     linewidth = .8,

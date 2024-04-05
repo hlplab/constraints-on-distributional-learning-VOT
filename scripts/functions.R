@@ -804,7 +804,12 @@ get_IBBU_predicted_response <- function(
       ) }
 }
 
-
+get_IO_predicted_PSE <- function(condition, block = 7) {
+  d.IO_intercept.slope.PSE %>% 
+    select(Condition.Exposure, Block, intercept_scaled) %>%
+    filter(Condition.Exposure == condition, Block == block) %>% 
+    pull(intercept_scaled)
+}
 
 
 # Get approximate f0 of synthesised stimuli from VOT values
