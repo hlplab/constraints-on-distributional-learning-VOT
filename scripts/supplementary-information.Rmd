@@ -46,10 +46,13 @@ All stimuli are available as part of the OSF repository for this article.
 ## Recordings
 An L1-US English female talker originally from New Hampshire was recruited for recording of the stimuli. She was recorded at the Human Language Processing lab at the Brain & Cognitive Sciences Department, University of Rochester with the help of research assistant (also an L1-US English speaker). She was 23 years old at the time of recording and was judged by the research assistant to have a generic US American accent known as "general American".
 
-Four /d-t/ minimal pairs (*dill-till*, *din-tin*, *dim-tim*, *dip-tip*) were recorded together with 20 filler words. These fillers were made up of 10 minimal or near minimal pairs with different sounds at onset. The word pairs were separated into two lists so that they would appear in separate blocks during recording. Each critical pair was repeated 8 times while the filler pairs were repeated 5 times. Word presentation was delivered with PsychoPy [@peirce2007] and the presentation was controlled by the researcher from a computer located outside the recording room. The order of each block was randomized such that target words never appeared consecutively. The talker was instructed to speak clearly and confidently, and to maintain a consistent distance from the microphone.
+Four /d-t/ minimal pairs (*dill*-*till*, *din*-*tin*, *dim*-*tim*, *dip*-*tip*) were recorded together with 20 filler words. These fillers were made up of 10 minimal or near minimal pairs with different sounds at onset. The word pairs were separated into two lists so that they would appear in separate blocks during recording. Each critical pair was repeated 8 times while the filler pairs were repeated 5 times. Word presentation was delivered with PsychoPy [@peirce2007] and the presentation was controlled by the researcher from a computer located outside the recording room. The order of each block was randomized such that target words never appeared consecutively. The talker was instructed to speak clearly and confidently, and to maintain a consistent distance from the microphone.
 
-## Annotation
-All critical pairs of the talker's recordings were annotated. Durational measurements of pre-voicing, VOT, and vowel were taken in addition to the mean F0 of the first 25% of the vowel duration. Annotations were made with a combination of listening to the audio file and inspection of the waveform and spectrogram. The annotation boundaries were made according to the following principles:
+## Resynthesis
+Separate procedures were used to generate stimuli with positive and negative VOTs. We first describe the annotation of the original recordings required by both procedures. Then we describe the two procedures, followed by the annotation approach used for the resynthesized stimuli.
+
+### Annotation of original recordings
+All critical pairs of the talker's recordings were annotated for the four cues that are known to affect the perception of word-initial stop-voicing in L1-US English. Durational measurements of pre-voicing, VOT, and vowel duration were taken in addition to the mean F0 of the first 25% of the vowel duration. Annotations were based on both listening and inspection of the waveform and spectrogram. The annotation boundaries were set according to the following principles: <!-- TO DO: are these principles based on previous work? Be clear here. cite (incl. personal communication). I can't see a good reason why we wouldn't use the same approach here that you describe below. I assume that was the case? -->
 
   * pre-voicing (voicing during closure)
       * **start:** the first sign of periodicity in the waveform before closure release.
@@ -63,32 +66,35 @@ All critical pairs of the talker's recordings were annotated. Durational measure
       + **start:** the beginning of clearly defined periodicity in the waveform and at the appearance of low frequency energy in the spectrogram.
       + **End:** when periodicity becomes terminates or at closure onset; if before a lateral, when formant transition approaches steady state; if before a sonorant, at point where formants show a step-wise shift and when intensity shows a steep decline.
 
-## Resynthesis
-The stimuli was created using the "progressive cutback and replacement method" (version 31) [@winn2020] implemented in Praat [@boersma2022]. The process takes a voiced token and progressively deletes its vowel onset and replaces it with an approximately equivalent amount of onset taken from the word's voiceless minimal-pair counterpart. 
-With an accompanying GUI, the process automates and greatly simplifies the process for generating highly natural sounding stimuli. Users of the script need only specify certain parameters to produce desired stimuli. Stimuli with pre-voicing were created separately from stimuli with positive VOT. This was because the script was not coded to automate the creation of tokens with pre-voicing that are natural sounding ^[It can however, produce pre-voicing sufficiently well for demonstration purposes, see video demo at https://www.youtube.com/watch?v=-QaQCsyKQyo.] As such, the pre-voicing stimuli were created by prepending pre-voicing generated from naturally produced tokens (described below) that were edited with a separate process.
-
 ### Tokens with positive VOTs
+Stimuli with positive VOTs were created using the "progressive cutback and replacement method" (version 31) [@winn2020] implemented in Praat [@boersma2022]. The process takes a voiced token and progressively deletes its vowel onset and replaces it with an approximately equivalent amount of onset taken from the word's voiceless minimal-pair counterpart. Winn's Praat script provides a GUI that greatly simplifies the generation of highly natural sounding stimuli. 
+
 For each minimal pair a continuum of 31 tokens was generated between 0ms and 130ms with a step-size of 5ms. A token of the voiced category from each pair was selected to be the base sound file to make the continuum. All four minimal pair continua were created using the same aspiration sound which was excised from one of the voiceless tokens produced by the talker.  
 
-We set the fundamental frequency (F0) to covary with VOT according to the natural correlation found in the measurements of our test talker's recorded minimal pair tokens. We first ran a linear regression that predicted the talker's F0 values from the measured VOT values. This gave the expected F0 value at every 5 ms interval of VOT. To produce the expected F0 values as the VOT tokens were generated, the start-point F0 value (where $VOT = 0ms$ and $F0 \approx 246 Hz$)  and the end-point F0 value (where $VOT = 150ms$ and $F0 \approx 252 Hz$) were entered into the Praat script. The resulting F0 values for each token were not identical across the minimal pair words as shown in Figure \@ref(fig:stimuli-cue-measurements) (the f0 measurements were done over 5ms from vowel onset) but were sufficient for our aims to keep F0 positively correlated with VOT.
+We set the fundamental frequency (F0) to covary with VOT according to the natural correlation found in the measurements of our test talker's recorded minimal pair tokens. We first ran a linear regression that predicted the talker's F0 values from the measured VOT values. This gave the expected F0 value at every 5 ms interval of VOT. To produce the expected F0 values as the VOT tokens were generated, the start-point F0 value (where $VOT = 0ms$ and $F0 \approx 246 Hz$)  and the end-point F0 value (where $VOT = 150ms$ and $F0 \approx 252 Hz$) were entered into the Praat script. The resulting F0 values for each token were not identical across the minimal pair words as shown in Figure \@ref(fig:stimuli-cue-measurements) (the f0 measurements were done over 5ms from vowel onset) but were sufficient for our aim to keep F0 positively correlated with VOT. <!-- TO DO: (1) why approximate for F0 but equal for VOT? (2) what does "done over 5ms from vowel onset" mean? reword to be clearer. -->
 
-The vowel cut-back ratio was set at 0.33 which translates into 0.33 ms vowel reduction for every 1ms of (additional) VOT. This ratio followed the estimated vowel duration-VOT trade-off for dip-tip minimal pair tokens reported in @allen-miller1999. The maximum vowel cut-back allowed was 0.5ms to avoid the short vowel in **dip** becoming too short. 
+The vowel cut-back ratio was set at 0.33 which translates into 0.33 ms vowel reduction for every 1ms of additional VOT. This ratio followed the estimated vowel duration-VOT trade-off for dip-tip minimal pair tokens reported in @allen-miller1999. The maximum vowel cut-back allowed was 0.5ms to avoid the short vowel in "dip" becoming too short. 
 
-Aspiration intensity was allowed to covary positively with VOT according to the script's default setting. The script manipulates intensity by attenuating the original aspiration sound by a  user-specified value. For example for a continuum with n steps with the value set to 6 dB (the default) the aspiration sound will be lowered by 6 dB for step 1 (the voiced end of the continuum) and then gradually interpolated to increase in intensity across the continuum so that there will be no attenuation for the nth step. Attenuation of the aspiration continua in this experiment was made over 21 steps (0-100ms) which resulted in a range of 55.5 dB to 60.5 dB. Aspiration for stimuli with over 100 ms VOT was maintained at 60.5 dB.
+Aspiration intensity was allowed to covary positively with VOT according to the script's default setting. The script manipulates intensity by attenuating the original aspiration sound by a  user-specified value. For a continuum with $n$ steps with the value set to 6 dB (the default) the aspiration sound will be lowered by 6 dB for step 1 (the voiced end of the continuum) and then gradually interpolated to increase in intensity across the continuum so that there will be no attenuation for the $n$th step. Attenuation of the aspiration continua in this experiment was made over 21 steps (0-100ms) which resulted in a range of 55.5 dB to 60.5 dB. Aspiration for stimuli with over 100 ms VOT was maintained at 60.5 dB.
 
 ### Tokens with pre-voicing ('negative VOTs')
+Stimuli with pre-voicing required a separate approach because Winn's Praat script does not yet support the creation of tokens with pre-voicing that are natural sounding.^[It can however, produce pre-voicing sufficiently well for demonstration purposes (see video demo at https://www.youtube.com/watch?v=-QaQCsyKQyo).] Pre-voicing stimuli were created by prepending pre-voicing generated from naturally produced tokens (described below) that were edited with a separate process.
+
 Pre-voicing in 5ms increments were generated from a a clear pre-voicing waveform excised from a pre-voiced token produced by the talker. To achieve the desired duration a duration factor was first computed and then converted with the "lengthen (overlap-add)" function in Praat based on the PSOLA algorithm. For example, if the desired amount of pre-voicing was 50ms then the duration factor would be 50ms/length of the original pre-voicing sample. Each pre-voicing step was then pre-pended to a token with 0ms VOT. Each of these 0ms tokens was generated with the same aforementioned progressive-cutback-and-replacement Praat script individually. Each 0 ms VOT token would have an F0 value that corresponded to the amount of pre-voicing duration based on the predictions of the linear model. No vowel-cut back was implemented for pre-voiced tokens.
 
-## Measurements of synthesised stimuli
-The synthesised stimuli used in the exposure and test trials of the experiment were measured for their VOT, f0, and vowel duration for the purposes of constructing the ideal observer or learner models. The annotation of VOT followed the procedure stated in the annotation section but the measurements of F0 and vowel duration differed. Our aims were to a) facilitate the computational tractability of the ideal adaptor model and b) to harmonise the cue measurements as much as possible with the data extracted from the talker database [@chodroff-wilson2017]. For f0 we used the target f0 values associated with each VOT length as determined by linear interpolation. For the vowel duration we followed the procedure used in the isolated speech database analysed in @chodroff-wilson2017 (Eleanor Chodroff, p.c.) all of which were words or syllables ending in /t/. Given however, the difficulty of establishing unambiguous landmarks for the annotation of vowels with sonorant codas the measurements of dintin and dilltill word pairs were less objectively reliable. We therefore took the decision to harmonise the vowel durations of the dintin, dilltill word pairs with that of the diptip pairs. This assumes that listeners perceive the same vowel duration for the different words that have the same VOT duration. This assumption is reasonable given that the stimuli were generated from word recordings that were made in the same context and spoken by the same individual in a similar speech style and rate. Table xx shows the correlation of all the cue measurements which were used as input to the fitting of ideal observers and ideal adaptors.
+### Annotation of resynthesized stimuli (used in visualizations and for ideal observer/adaptor analyses)
+All resynthesized stimuli were annotated for VOT, pre-voicing, vowel duration, and f0 following the same procedure as in the original recordings. In the data shared on OSF, these annotations are stored as \texttt{Item.CUE_NAME.annotated}. <!-- TO DO! --> For reasons we describe next, we corrected and simplified the measurements derived from these annotations. We used these corrected measurements for all visualizations of the stimuli (e.g., in Figure \@ref(fig:exposure-means-database-matrix-plot) in the main text) and in our ideal observer and adaptor analyses. In the data shared on OSF, these corrected measurements are stored as \texttt{Item.CUE_NAME}. <!-- TO DO: check but that's already the case, right? -->
+
+First, we follow previous work on speech perception and combined the pre-voicing and VOT data, treating pre-voicing as negative VOT. This simplifies plotting and analysis. It does, however, make assumptions that we revisit in the general discussion.
+
+Second, we used the *targeted* rather than *measured* f0 and vowel duration values. This removes measurement noise that might have been induced by the annotation procedure, and makes f0 and vowel duration values more akin to our VOT values, which are also targeted. Specifically, the f0 values were linearly interpolated between the f0 values of the voiced and voiceless tokens of the minimal pair. For vowel durations, we used the vowel durations of the *dip*-*tip* pair, which sidesteps the difficulty of annotation the boundary between the vowel and the coda for *din*-*tin* and *dill*-*till* word pairs. This assumes that listeners perceive the same vowel duration for the different words that have the same VOT duration. This assumption is likely a reasonable approximation given that the stimuli were generated from word recordings that were made in the same context and spoken by the same individual in a similar speech style and rate. Figure XXX shows uncorrected and corrected measurements of all stimuli.  <!-- TO DO: (1) check everything in this para. (2) fill in figure reference, (3) use same type of plot as you do for chodroff's data in the main text. plot should show the relationship between VOT, f0, and vowel duration for the stimuli *prior* to adjusting the values of f0 and vowel duration and then after -->
 
 ```{r stimuli-cue-correlations, fig.cap="cue correlations of synthesised stimuli", fig.cap="(ref:cue correlations)"}
 cor(d.for_analysis %>% 
-  distinct(VOT, f0_Mel, vowel_duration)) %>% 
-as.data.frame() %>% 
+      distinct(VOT, f0_Mel, vowel_duration)) %>% 
+  as.data.frame() %>% 
   kable(format = "simple")
 ```
-
 
 # Additional information on participant exclusions {#sec:exclusions}
 Beyond the participants mentioned in the main text, an additional 115 participants previewed the front page of the experiment but did not start or complete it. Our technical setup did not allow us to distinguish between participants who started the experiment and did not complete it, and participants who only previewed the experiment. We suspect though that the clear majority of the 115 participants falls into the latter category: crowdsourcing participants often preview multiple experiments and then select one to complete. Unlike in lab-based experiments, for which participants' right to stop the experiment at any point can be costly---both in terms of effort and perceived social cost---exercising this right in web-based experiments is essentially cost free. One appealing feature of the Prolific platform is that it records these numbers (unlike some other platforms). We report them here in the hope that this will become standard. Viewed across different studies, these data will have the potential to identify unintended biases in participant recruiting.
@@ -98,7 +104,7 @@ Next, we provide additional information on participants' performance during catc
 ## Performance on catch and labelled trials
 Of the 122 participants that completed the experiment, 1 committed more than 3 errors (< 84% accuracy). Labelled trials provided another measure to check participant attention during the experiment. Performance on labelled trials was good across all exposure conditions with participants in the +40 condition committing the most errors. This is not unexpected as the +40 condition had the furthest shifted with the most unexpected cue-category mappings. 
 
-(ref:plot-catch-labeled-trial-performance) Total errors committed on catch trials and labelled trials. <!-- TO DO: something is broken with the caption, and the plot is lacking axis labels etc. -->
+(ref:plot-catch-labeled-trial-performance) Total errors committed on catch trials and labelled trials. <!-- TO DO: Please add percentages above bars? -->
 
 ```{r plot-catch-labeled-trial-performance, fig.height=4, fig.width=6, fig.cap="(ref:plot-catch-labeled-trial-performance)", message=F}
 p.catch <- 
@@ -659,7 +665,7 @@ io.bias_correct <-
 # 
 # Unlike for the analysis of participants' responses, there is no need to use a psychometric
 # model since ideal observers have not attentional lapses (i.e., lambda = 0). 
-d_IO.intercept_slope_PSE <- 
+d.IO_intercept.slope.PSE <- 
   rbind(
   # Assess the ideal observers at the exact same locations used during test blocks
     get_logistic_parameters_from_model(
@@ -705,14 +711,14 @@ tokens <-
   select(Condition.Exposure, Phase, VOT)
 
 arrow_df <- 
-  d_IO.intercept_slope_PSE %>% 
+  d.IO_intercept.slope.PSE %>% 
   filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")) %>% 
   select(Condition.Exposure, Phase, PSE) %>%
   group_by(Condition.Exposure, Phase) %>% 
   slice_head(n = 1) %>% 
   mutate(x = PSE, xend = PSE, y = .5, yend = .01)  
 
-d_IO.intercept_slope_PSE %>% 
+d.IO_intercept.slope.PSE %>% 
   filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")) %>% 
   select(Condition.Exposure, Phase, model_unscaled) %>% 
   group_by(Condition.Exposure, Phase) %>% 
@@ -780,7 +786,7 @@ Figure \@ref(fig:plot-fit-PSE)C in the main text presents prediction lines that 
 
 ```{r prepare-plot-intercepts-slopes-SI}
 p.across_blocks <-
-  d_psychometric.intercept_slope_PSE %>%
+  d.psychometric_intercept.slope.PSE %>%
   ggplot(
     aes(
       x = Block.plot_label, y = Intercept,
@@ -806,7 +812,7 @@ p.across_blocks <-
 p.intercept_1to7 <-
   p.across_blocks +  
   geom_step(
-    data = d_IO.intercept_slope_PSE %>% add_block_labels(),
+    data = d.IO_intercept.slope.PSE %>% add_block_labels(),
     # Using scaled intercept (which is keeping the location at which the intercept is evaluated constant
     # across exposure and test: it's always the mean VOT of test)
     aes(x = Block.plot_label, y = intercept_scaled, colour = Condition.Exposure, group = Condition.Exposure),
@@ -830,7 +836,7 @@ p.slope_1to7 <-
   aes(y = slope_unscaled, ymin = slope_unscaled.lower, ymax = slope_unscaled.upper) +
   # These are the slopes of the ideal observers
     geom_rect(
-    data = d_IO.intercept_slope_PSE %>%
+    data = d.IO_intercept.slope.PSE %>%
       group_by(Condition.Exposure) %>% 
       summarise(slope_unscaled = mean(slope_unscaled)) %>%
       filter(!Condition.Exposure %in% c("Shift0", "Shift10", "Shift40", "prior")),
@@ -839,7 +845,7 @@ p.slope_1to7 <-
     alpha = .08,
     inherit.aes = F) +
   geom_step(
-    data = d_IO.intercept_slope_PSE %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")), 
+    data = d.IO_intercept.slope.PSE %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")), 
     # Using UNscaled slope because slopes are comparable across scales anyway and this is more intuitive
     # (substitute _unscaled to _scaled to switch to slopes over Gelman-scaled VOT)
     mapping = aes(x = Block.plot_label, y = slope_unscaled, colour = Condition.Exposure, group = Condition.Exposure),
@@ -854,7 +860,7 @@ p.PSE_1to7 <-
   scale_y_continuous("PSE (ms VOT)") +
   aes(y = PSE, ymin = PSE.lower, ymax = PSE.upper) +
       geom_rect(
-    data = d_IO.intercept_slope_PSE %>%
+    data = d.IO_intercept.slope.PSE %>%
       group_by(Condition.Exposure) %>%
       summarise(PSE = mean(PSE)) %>%
       filter(!Condition.Exposure %in% c("Shift0", "Shift10", "Shift40", "prior")),
@@ -873,7 +879,7 @@ p.PSE_1to7 <-
     size = 2.2,
     show.legend = F) +
   geom_step(
-    data = d_IO.intercept_slope_PSE %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")),
+    data = d.IO_intercept.slope.PSE %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")),
     mapping = aes(x = Block.plot_label, y = PSE, color = Condition.Exposure, group = Condition.Exposure),
     linetype = 2,
     linewidth = .8,
