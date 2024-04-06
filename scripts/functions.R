@@ -480,7 +480,7 @@ make_hyp_table <- function(hypothesis, hypothesis_names, caption, col1_width = "
         format = "latex",
         booktabs = TRUE,
         escape = FALSE,
-        col.names = c("Hypothesis", "Estimate", "SE", "90\\%-CI", "BF", "$p_{posterior}$")) %>%
+        col.names = c("Hypothesis", "Est.", "SE", "90\\%-CI", "BF", "$p_{post}$")) %>%
     # HOLD_position for latex table placement H and hold_position for latex h!, neither if placement is left to latex
     kable_styling(latex_options = "hold_position", full_width = FALSE) %>%
     column_spec(1, width = col1_width)
@@ -728,27 +728,27 @@ prep_data_for_IBBU_prediction <- function(
     prep_test = T
 ) {
   cue.labels <- get_cue_levels_from_stanfit(model)
-  
+
   if (prep_test) {
-  get_test_data_from_stanfit(model) %>% 
+  get_test_data_from_stanfit(model) %>%
     distinct(!!! syms(cue.labels)) %>%
     { if (untransform_cues) get_untransform_function_from_stanfit(model)(.) else . } %>%
     make_vector_column(cols = cue.labels, vector_col = "x", .keep = "all") %>%
     nest(cues_joint = x, cues_separate = .env$cue.labels) %>%
     expand_grid(group = get_group_levels_from_stanfit(model))
   } else {
-    # Prepare exposure_data    
-    data %>% 
-      filter(Phase == "exposure") %>% 
-      group_by(Condition.Exposure) %>% 
+    # Prepare exposure_data
+    data %>%
+      filter(Phase == "exposure") %>%
+      group_by(Condition.Exposure) %>%
       # get 1 set of exposure trials per condition, per list
-      filter(ParticipantID == first(ParticipantID)) %>% 
-      reframe(Item.VOT, Item.f0_Mel, vowel_duration, category) %>% 
+      filter(ParticipantID == first(ParticipantID)) %>%
+      reframe(Item.VOT, Item.f0_Mel, vowel_duration, category) %>%
       rename(VOT = Item.VOT, f0_Mel = Item.f0_Mel) %>%
-      group_by(Condition.Exposure) %>% 
-      expand_grid(TestBlock = 1:4, LSD = c("A", "B", "C")) %>% 
-      mutate(group = factor(ifelse(TestBlock == 1, "no exposure", paste0("Cond ", Condition.Exposure, LSD, "A", "_Up to test", (TestBlock - 1) * 2 + 1)))) %>% 
-      make_vector_column(cols = cue.labels, vector_col = "x", .keep = "all") %>% 
+      group_by(Condition.Exposure) %>%
+      expand_grid(TestBlock = 1:4, LSD = c("A", "B", "C")) %>%
+      mutate(group = factor(ifelse(TestBlock == 1, "no exposure", paste0("Cond ", Condition.Exposure, LSD, "A", "_Up to test", (TestBlock - 1) * 2 + 1)))) %>%
+      make_vector_column(cols = cue.labels, vector_col = "x", .keep = "all") %>%
       nest(cues_joint = x, cues_separate = c(.env$cue.labels, category))
   }
 }
@@ -775,11 +775,11 @@ get_IBBU_predicted_response <- function(
       untransform_cues = untransform_cues) %>%
     filter(group %in% .env$groups)
 
-  
+
   # Categorize data
   d.pars %<>%
     group_by(group, .chain, .iteration, .draw) %>%
-    do(f = get_categorization_function_from_grouped_ibbu_stanfit_draws(., logit = F)) %>% 
+    do(f = get_categorization_function_from_grouped_ibbu_stanfit_draws(., logit = F)) %>%
     right_join(data, by = "group") %>%
     group_by(group, .chain, .iteration, .draw) %>%
     mutate(
@@ -805,9 +805,9 @@ get_IBBU_predicted_response <- function(
 }
 
 get_IO_predicted_PSE <- function(condition, block = 7) {
-  d.IO_intercept.slope.PSE %>% 
+  d.IO_intercept.slope.PSE %>%
     select(Condition.Exposure, Block, intercept_scaled) %>%
-    filter(Condition.Exposure == condition, Block == block) %>% 
+    filter(Condition.Exposure == condition, Block == block) %>%
     pull(intercept_scaled)
 }
 
@@ -938,8 +938,8 @@ get_IO_from_talkers <- function(
           data = ..1,
           aes(x = `VOT (ms)`,
               colour = ..2),
-          fun = function(x) dnorm(x, mean = ..3[[1]][[1]], sd = sqrt(..4[[1]][[1]])), 
-          alpha = alpha, 
+          fun = function(x) dnorm(x, mean = ..3[[1]][[1]], sd = sqrt(..4[[1]][[1]])),
+          alpha = alpha,
           linetype = linetype,
           linewidth = linewidth)))
 }
