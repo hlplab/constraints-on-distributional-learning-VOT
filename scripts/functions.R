@@ -872,8 +872,8 @@ get_IO_from_talkers <- function(
     cues,
     groups = NULL,
     lapse_rate = 0,
-    with_noise = F,
-    VOTs = seq(0, 85, .1),
+    with_noise = T,
+    VOTs = seq(0, 130, .5),
     F0s = predict_f0(VOTs, Mel = T),
     alpha = .3,
     linetype = 1,
@@ -889,9 +889,9 @@ get_IO_from_talkers <- function(
         ~ lift_MVG_to_MVG_ideal_observer(
           .x,
           group = NULL,
-          prior = c("/d/" = .5, "/t/" = .5),
+          #prior = c("/d/" = .5, "/t/" = .5),
           lapse_rate = lapse_rate,
-          lapse_bias = c("/d/" = .5, "/t/" = .5),
+          #lapse_bias = c("/d/" = .5, "/t/" = .5),
           Sigma_noise =
             if(with_noise == FALSE & length(cues) == 1) {
               matrix(c(0), ncol = 1, dimnames = list(cues, cues))
@@ -929,7 +929,7 @@ get_IO_from_talkers <- function(
             filter(category == "/t/") %>%
             mutate(VOT = map(x, ~ .x[1]) %>% unlist())),
       x = list(VOT = seq(-25, 130, .5)),
-           x = map(x, ~ as_tibble(.x) %>% rename("VOT (ms)" = value))) %>%
+      x = map(x, ~ as_tibble(.x) %>% rename("VOT (ms)" = value))) %>%
     unnest(io) %>%
     mutate(
       gaussian = pmap(
