@@ -28,60 +28,64 @@ d.talker_IO <-
   alpha = .2
 ) 
 
-d.talker_average <- 
+d.talker_types <- 
   d.chodroff_wilson.connected %>% 
   ungroup() %>% 
+  mutate(
+    Talker = "average") %>% 
   get_IO_from_talkers(
     cues = c("VOT"),
+    groups = "Talker",
     alpha = 1,
-    linewidth = .9) 
-
-d.talker_shifted <- 
-  d.chodroff_wilson.connected %>% 
-  mutate(VOT = VOT + 35) %>% 
+    linewidth = 1.2) %>% 
+  bind_rows(
+    d.chodroff_wilson.connected %>% 
   ungroup() %>% 
+  mutate(VOT = VOT + 35,
+         Talker = "shifted") %>% 
   get_IO_from_talkers(
     cues = c("VOT"),
-  linetype = "longdash",
+    groups = "Talker",
+    linetype = "longdash",
   alpha = 1,
-  linewidth = .9) 
+  linewidth = 1.2))
 
 p.gaussian <- 
   ggplot() +
   d.talker_IO$gaussian + 
-  d.talker_average$gaussian +
-  d.talker_shifted$gaussian +
+  (d.talker_types %>% 
+  filter(Talker == "average") %>% .$gaussian) +
+  (d.talker_types %>% 
+  filter(Talker == "shifted") %>% .$gaussian) +
   scale_colour_manual("Category", values = colours.category_greyscale) +
-  labs(y = "Density") +
-  theme(legend.position = "top",
-        axis.title.x = element_blank(),
-        axis.text.x = element_blank()) 
+  labs(x = "VOT (ms)", y = "Density") +
+  theme(legend.position = c(0.85, 0.85)) 
 
-d.cat_demo <- 
+d.talker_cat <- 
   d.chodroff_wilson.connected %>% 
   ungroup() %>% 
   group_by(category) %>% 
   summarise(VOT = mean(VOT)) %>% 
-  mutate(rows = 4) %>% 
+  mutate(rows = 2) %>% 
   uncount(rows) %>% 
-  mutate(Block = factor(rep(c("Block_0", "Block_1", "Block_2", "Block_3"), 2)),
-                Shift = rep(c(-5, 15, 25, 29), 2),
+  mutate(Talker = factor(rep(c("average", "shifted"), 2)),
+                Shift = rep(c(0, 32), 2),
          VOT = VOT + Shift) %>%  
   select(-Shift) %>% 
-  group_by(Block) %>% 
-  nest(data = -Block) %>% 
+  group_by(Talker) %>% 
+  nest(data = -Talker) %>% 
   mutate(io = map(
     data, ~ make_MVG_ideal_observer_from_data(
               data = .x,
               cues = c("VOT"),
-              Sigma_noise = matrix(c(80), ncol = 1, dimnames = list(c("VOT"), c("VOT"))),
+              Sigma_noise = matrix(c(120), ncol = 1, dimnames = list(c("VOT"), c("VOT"))),
       prior = c("/d/" = .5, "/t/" = .5),
       lapse_bias = c("/d/" = .5, "/t/" = .5)) %>% 
-      mutate(Sigma = ifelse(category == "/d/", 9.2, 21)))) %>% 
+      mutate(Sigma = ifelse(category == "/d/", 10, 35)))) %>% 
   left_join(
-    tibble(Block = rep(c("Block_0", "Block_1", "Block_2", "Block_3"), 2)) %>% 
+    tibble(Talker = rep(c("average", "shifted"), 2)) %>% 
            expand_grid(x = seq(-25, 110, .5)) %>% 
-      group_by(Block) %>% 
+      group_by(Talker) %>% 
       nest(x = x)) %>% 
   mutate(
      categorization =
@@ -92,64 +96,72 @@ d.cat_demo <-
             mutate(VOT = map(x, ~ .x[1]) %>% unlist())))
 
 arrow_PSE <- 
-  d.cat_demo %>% 
-  unnest(categorization , names_repair = "unique") %>% 
-  mutate(response = abs(response - .5)) %>% 
-  group_by(Block) %>% 
-  filter(response == min(response)) %>% 
-  slice_sample(n = 1) %>% 
-  rename(PSE = VOT) %>% 
+  d.talker_types %>% 
+  filter(Talker == "shifted") %>% 
   mutate(x = PSE, xend = PSE, y = .5, yend = .01) 
 
 p.cat <- 
-  d.cat_demo %>% 
+  d.talker_cat %>% 
+  select(Talker, categorization) %>% 
+  group_by(Talker) %>% 
   unnest(categorization, names_repair = "unique") %>% 
-  filter(Block %in% c("Block_1", "Block_2")) %>% 
-  ggplot(aes(x = VOT, y = response, group = Block, colour = Block), alpha = .6) +
-  geom_line(
-  data = d.cat_demo %>% 
-  unnest(categorization, names_repair = "unique") %>% 
-  filter(Block == "Block_0"),
-  mapping = aes(x = VOT, y = response),
-  linewidth = 1.5,
-  colour = "#e6e6e6",
-  alpha = .7,
-  inherit.aes = F) +
-  geom_line(linewidth = .8) +
-  scale_colour_manual(values = c("#bfbfb3", "#808080")) +
-  geom_line(
-    data = d.cat_demo %>% 
-  unnest(categorization, names_repair = "unique") %>% 
-  filter(Block == "Block_3"),
-  mapping = aes(x = VOT, y = response),
-  linetype = "longdash",
-  linewidth = .9,
-  colour = "#262626",
-  inherit.aes = F) +
-  scale_x_continuous("VOT (ms)", limits = c(-25, 130), breaks = c(0, 34, 54, 68, 100)) +
-  labs(y = "Response /t/") +
-  guides(alpha = "none", colour = "none") +
+  ggplot(aes(x = VOT, y = response, group = Talker, colour = Talker, linetype = Talker)) +
+  geom_line(linewidth = 1.2) +
+  scale_colour_manual(values = c("#b4dafe", "#02427e")) +
+  scale_linetype_manual(values = c("solid", "longdash")) +
+  scale_x_continuous("VOT (ms)", limits = c(-25, 130), breaks = c(0, 50, 72, 100)) +
+  scale_y_continuous("Proportion 't'-response", breaks = c(0, .5, 1)) +
+  guides(linetype = "none", colour = "none") +
   geom_segment(data = arrow_PSE,
                mapping = aes(x = x, xend = xend, y = y , yend = yend),
                colour = "grey",
                alpha = 0.5,
-               arrow = arrow(type = "open" , length = unit(0.04, "npc"))) 
+               arrow = arrow(type = "open" , length = unit(0.04, "npc")),
+               inherit.aes = F) 
 
-
-p.PSE <- d.cat_demo %>% 
-  unnest(categorization , names_repair = "unique") %>% 
-  mutate(response = abs(response - .5)) %>% 
-  group_by(Block) %>% 
-  filter(response == min(response)) %>% 
-  slice_sample(n = 1) %>% 
-  rename(PSE = VOT) %>% 
-  ggplot(aes(x = Block, y = PSE, colour = Block)) +
-  geom_point() +
-  scale_colour_manual(values = c("#e6e6e6", "#bfbfb3", "#808080", "#262626"), guide = "none") + 
-  scale_x_discrete("Exposure amount", labels = c("0", "1/3 ", "2/3", "all")) +
-  scale_y_continuous("PSE", limits = c(20, 70), breaks = c(34, 54, 64, 68))
+p.PSE <- 
+  d.talker_types %>% 
+  select(Talker, category, PSE) %>% 
+  group_by(Talker) %>% 
+  filter(category == "/t/") %>% 
+  ggplot(aes(x = Talker, y = PSE, colour = Talker)) +
+  geom_point(size = 1.5) +
+  scale_colour_manual(values = c("#b4dafe", "#02427e"), guide = "none") + 
+  scale_x_discrete("Exposure", labels = c("prior", "post")) +
+  scale_y_continuous("PSE (ms VOT)", limits = c(20, 75), breaks = c(37, 72))
   
-p.gaussian/p.cat | p.PSE
+ 
+PSE_change <- expand_grid(
+    PSE = c(),
+    learning_pattern = factor(c("immediate", "linear", "diminished", "plateau")),
+    exposure_amount = factor(c("0", "1/3", "2/3", "all"))) %>%
+  mutate(learning_pattern = fct_relevel(learning_pattern, "immediate", "linear", "diminished", "plateau"),
+         exposure_amount = fct_relevel(exposure_amount, "0", "1/3", "2/3", "all"),
+         PSE = case_when(exposure_amount == "0" ~ 37,
+                         exposure_amount == "all" & learning_pattern != "plateau" ~ 72,
+                         exposure_amount == "1/3" & learning_pattern == "immediate" ~ 72,
+                         exposure_amount == "2/3" & learning_pattern == "immediate" ~ 72,
+                         exposure_amount == "1/3" & learning_pattern == "linear" ~ 37 + ((72 - 37 + 1)/3),
+                         exposure_amount == "2/3" & learning_pattern == "linear" ~ 37 + 12 + ((72 - 37 + 1)/3),
+                         exposure_amount == "1/3" & learning_pattern == "diminished" ~ 37 + ((72 - 37 + 1)/2),
+                         exposure_amount == "2/3" & learning_pattern == "diminished" ~ 37 + 16 + ((72 - 37 + 1)/3),
+                         exposure_amount == "1/3" & learning_pattern == "plateau" ~ 37 + ((72 - 37 + 1)/2),
+                         exposure_amount == "2/3" & learning_pattern == "plateau" ~ 37 + 18 + ((72 - 37 + 1)/3),
+                         exposure_amount == "all" & learning_pattern == "plateau" ~ 37 + 18 + ((72 - 37 + 1)/3)))
+
+p.PSE_change <- 
+  PSE_change %>% 
+  ggplot(aes(exposure_amount, PSE, alpha = exposure_amount, group = 1), colour = "#02427e") +
+  geom_point(size = 1.8, colour = "#02427e") +
+  geom_line(alpha = .5) +
+  geom_hline(aes(yintercept = 72), linetype = 2, alpha = .6, colour = "grey") +
+  scale_x_discrete("Exposure amount", labels = c("prior", "1/3 ", "2/3", "all")) +
+  scale_y_continuous("PSE", limits = c(25, 75), breaks = c(30, 40, 50, 60, 70)) +
+  guides(alpha = "none") +
+  facet_wrap(~learning_pattern, nrow = 1)
+
+
+(p.gaussian | p.cat | p.PSE) / p.PSE_change
 ```
 
 Although predictions (1)-(4) are specific and testable, they remain largely untested. This is in part due to limitations of the designs and paradigms used in research on adaptive speech perception. The most common paradigms expose one group of listeners to one speech pattern, and a second group of listeners to another speech pattern. Following exposure, both groups are tested on their ability to recognize one of the two speech patterns. Such designs were effective in establishing the *existence* of adaptive speech perception [see also @cummings-theodore2023]. They do, however, offer only weak tests of existing theories [for demonstration, see @xie2023].  Put simply, it is one thing to show that differences in exposure lead to differences in behavior; it is another thing to test whether the direction and magnitude of changes in behavior can be consistently explained by existing theories. 
@@ -214,10 +226,12 @@ This study was not publicly pre-registered. The design, participant recruitment,
 ```{r}
 rm(
   d.talker_IO,
-  d.talker_average,
-  d.talker_shifted,
+  d.talker_types,
+  d.talker_cat,
+  arrow_PSE,
   p.cat,
   p.PSE,
+  p.PSE_change,
   p.gaussian
 )
 ```
