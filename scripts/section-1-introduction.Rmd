@@ -15,10 +15,9 @@ In contrast to informal hypotheses, some existing theories make precise, quantif
 
 With this shared assumption, distributional learning models also share several critical predictions. Listeners' perception is predicted to change incrementally with exposure. The direction and magnitude of that change should gradiently depend on listeners' prior expectations based on relevant previously experienced speech input from other talkers (**prediction 1 - *prior expectations***), and both the amount (**prediction 2a - *exposure amount***) and distribution of phonetic cues in the exposure input from the unfamiliar talker [**prediction 2b - *exposure distribution* **, for review, see @xie2023]. Specifically, listeners' categorization functions---the mapping from acoustics to phonetic categories and words---should gradually shift from a starting point that reflects the statistics of previously experienced speech towards a target that reflects the statistics of the new talker's speech. Existing models predict that this shift proceeds until the listener has fully learned the statistics of the new talker's speech (**prediction 3 - *learn to convergence***). Finally, some distributional learning models further commit to specific learning mechanisms that constrain how exactly adaptation is expected to accumulate incrementally: both error-driven theories [@harmon2019; @olejarczuk2018; @sohoglu-davis2016] and theories of ideal information integration [@kleinschmidt-jaeger2015; @kleinschmidt2020] predict that adaptation initially proceeds quickly and then slows down as the listener approaches the correct mapping from the acoustic signal to phonetic categories (**prediction 4 - *diminishing returns***).^[Predictions (1)-(4) assume that listeners *know* that they are listening to the same new talker. Talker recognition is itself an active inference process that we do not further discuss here [but see @magnuson-nusbaum2007; @kleinschmidt-jaeger2015].] Figure \@ref(fig:predictions) illustrates these predictions and contrasts them with other possible scenarios.
 
-<!-- TO DO: think about whether two-row or three-row figure is better. Currently, the caption describes the latter but perhaps omitting the top row would be better? -->
-(ref:predictions) Some hypothetical ways in which adaptive changes in listeners perception might unfold incrementally. The highlighted column in the middle and bottom row illustrates the predictions of models that assume error-based learning or ideal information integration. The rightmost column shows a scenario in which learners adapt but do not reach the correct mapping from the acoustic signal to phonetic categories. **Top:** Using US English word-initial /d/ and /t/ as an example (as in "dip" vs. "tip"), we illustrate a hypothetical scenario of encountering an unfamiliar talker. Transparent lines indicate cross-talker variability in the realization of these two categories along the primary cue used to distinguish them (voice onset timing or VOT). Shown are 20 random talkers from a database of connected speech [@chodroff-wilson2018]. The thicker solid lines indicate a 'typical' talker (averaging over all talkers in the database). Dashed lines indicate a hypothetical unfamiliar talker with a noticeably different distribution of VOT values. <!-- TO DO: single panel in top row. use same colors that you use for categories later --> **Bottom-left:** Illustration of different ways in which listeners' categorization functions along the phonetic VOT continuum might change with increasing exposure to the unfamiliar talker (from more transparent to less transparent). The thicker solid line indicate the categorization function expected given the phonetic distributions of the typical talker shown in the top panel (for details, see SI \@ref(sec:idealized-prior-listeners)). Dashed lines indicate the categorization behavior expected from an idealized learner that has fully learned the unfamiliar talker's distribution of VOT (SI \@ref(sec:idealized-learners)). Gray arrows point to the changes in points of subjective equality (PSE) **Right:** The same changes but shown as changes PSE, the point along the phonetic VOT continuum at which listeners are equally likely to identify a sound as an instance of /d/ or /t/. <!-- TO DO: multiple panels in middle and bottom row: immediate convergence, linear to convergence, gradiently *diminishing returns* to convergence, plateau prior to convergence. gray categorization functions, solid black learning target, dashes light gray prior; x-axis "phonetic continuum" from 0 to 85 (middle) "Trial" (bottom), y-axis "Probability of responding category A" from 0 to 1 (top) "PSE" (bottom). Make sure to indicate 0, .5, 1 along y in middle row.-->
+(ref:predictions) Some hypothetical ways in which adaptive changes in listeners perception might unfold incrementally. **Top row:** Using US English word-initial /d/ and /t/ as an example (as in "dip" vs. "tip"), we illustrate a hypothetical scenario of encountering an unfamiliar talker. Transparent lines indicate cross-talker variability in the realization of these two categories along the primary cue used to distinguish them (voice onset timing or VOT). Shown are 20 random talkers from a database of connected speech [@chodroff-wilson2018]. The thicker solid lines indicate a 'typical' talker (averaging over all talkers in the database). Dashed lines indicate a hypothetical unfamiliar talker with a noticeably different distribution of VOT values.  **Top-middle:** Ideal categorization functions along the phonetic VOT continuum of speech from a typical talker and of the unfamiliar talker. Grey arrows point to the points of subjective equality (PSE), the point along the phonetic VOT continuum at which listeners are equally likely to identify a sound as an instance of /d/ or /t/ (for details, see SI \@ref(sec:idealized-prior-listeners)) **Top-right:** Categorizations of typical and unfamiliar talker shown as changes in PSE. **Bottom row:** Illustration of different ways in which listeners' PSEs along the phonetic VOT continuum might change with increasing exposure to the unfamiliar talker (from more transparent to less transparent). The horizontal gray line indicates the ideal PSE expected given the phonetic distributions of the typical talker shown in the top panel. The dashed horizotnal line indicates the PSE expected from an idealized learner that has fully learned the unfamiliar talker's distribution of VOT (SI \@ref(sec:idealized-learners)). 
 
-```{r predictions, fig.height=base.height*3+2/3, fig.width=base.width*4.5, fig.cap="(ref:predictions)", fig.pos="H"}
+```{r predictions, fig.height=base.height*3+2/3, fig.width=base.width*5, fig.cap="(ref:predictions)", fig.pos="H"}
 d.talker_IO <- 
   get_IO_from_talkers(
   data = d.chodroff_wilson.connected %>% 
@@ -47,19 +46,32 @@ d.talker_types <-
     cues = c("VOT"),
     groups = "Talker",
     linetype = "longdash",
-  alpha = 1,
-  linewidth = 1.2))
+    alpha = 1,
+    linewidth = 1.2))
 
 p.gaussian <- 
   ggplot() +
   d.talker_IO$gaussian + 
   (d.talker_types %>% 
   filter(Talker == "average") %>% .$gaussian) +
+  scale_colour_manual(values = c(colours.category_greyscale)) +
+  guides(colour = "none") +
+  new_scale_colour() +
   (d.talker_types %>% 
   filter(Talker == "shifted") %>% .$gaussian) +
-  scale_colour_manual("Category", values = colours.category_greyscale) +
+  scale_colour_manual("Category", values = c("#02427e", "#b4dafe")) +
+  guides(color = guide_legend(override.aes = list(size = 0.5, colour = c(colours.category_greyscale), values = c("/d/", "/t/")))) +
   labs(x = "VOT (ms)", y = "Density") +
-  theme(legend.position = c(0.85, 0.85)) 
+  theme(
+    legend.background = element_rect(fill='transparent'),
+    legend.box.background = element_rect(fill='transparent'),
+    legend.key = element_rect(fill = "transparent"),
+    legend.key.size = unit(0.5, "cm"),
+    legend.key.spacing = unit(0.05, "cm"),
+    legend.key.height = unit(0.01, "cm"),
+    legend.title = element_text(size = 7), 
+    legend.text = element_text(size = 6),
+    legend.position = c(0.79,0.8)) 
 
 d.talker_cat <- 
   d.chodroff_wilson.connected %>% 
@@ -69,7 +81,7 @@ d.talker_cat <-
   mutate(rows = 2) %>% 
   uncount(rows) %>% 
   mutate(Talker = factor(rep(c("average", "shifted"), 2)),
-                Shift = rep(c(0, 31), 2),
+                Shift = rep(c(-2.5, 32), 2),
          VOT = VOT + Shift) %>%  
   select(-Shift) %>% 
   group_by(Talker) %>% 
@@ -97,7 +109,6 @@ d.talker_cat <-
 
 arrow_PSE <- 
   d.talker_types %>% 
-  filter(Talker == "shifted") %>% 
   mutate(x = PSE, xend = PSE, y = .5, yend = .01) 
 
 p.cat <- 
@@ -107,9 +118,9 @@ p.cat <-
   unnest(categorization, names_repair = "unique") %>% 
   ggplot(aes(x = VOT, y = response, group = Talker, colour = Talker, linetype = Talker)) +
   geom_line(linewidth = 1.2) +
-  scale_colour_manual(values = c("#b4dafe", "#02427e")) +
+  scale_colour_manual(values = c("grey", "#02427e")) +
   scale_linetype_manual(values = c("solid", "longdash")) +
-  scale_x_continuous("VOT (ms)", limits = c(-25, 130), breaks = c(0, 50, 72, 100)) +
+  scale_x_continuous("VOT (ms)", limits = c(-25, 130), breaks = c(0, 37, 72, 100)) +
   scale_y_continuous("Proportion 't'-response", breaks = c(0, .5, 1)) +
   guides(linetype = "none", colour = "none") +
   geom_segment(data = arrow_PSE,
@@ -126,39 +137,39 @@ p.PSE <-
   filter(category == "/t/") %>% 
   ggplot(aes(x = Talker, y = PSE, colour = Talker)) +
   geom_point(size = 1.5) +
-  scale_colour_manual(values = c("#b4dafe", "#02427e"), guide = "none") + 
-  scale_x_discrete("Exposure", labels = c("prior", "post")) +
-  scale_y_continuous("PSE (ms VOT)", limits = c(20, 75), breaks = c(37, 72))
+  scale_colour_manual(values = c("grey", "#02427e"), guide = "none") + 
+  scale_x_discrete("Exposure", labels = c("pre", "post")) +
+  scale_y_continuous("PSE (ms VOT)", limits = c(30, 75), breaks = c(37, 72))
   
  
 PSE_change <- expand_grid(
     PSE = c(),
-    learning_pattern = factor(c("immediate", "linear", "diminished", "plateau")),
-    exposure_amount = factor(c("0", "1/3", "2/3", "all"))) %>%
-  mutate(learning_pattern = fct_relevel(learning_pattern, "immediate", "linear", "diminished", "plateau"),
-         exposure_amount = fct_relevel(exposure_amount, "0", "1/3", "2/3", "all"),
-         PSE = case_when(exposure_amount == "0" ~ 37,
-                         exposure_amount == "all" & learning_pattern != "plateau" ~ 72,
-                         exposure_amount == "1/3" & learning_pattern == "immediate" ~ 72,
-                         exposure_amount == "2/3" & learning_pattern == "immediate" ~ 72,
+    learning_pattern = factor(c("immediate", "linear", "diminished", "premature")),
+    exposure_amount = factor(c("none", "1/3", "2/3", "complete"))) %>%
+  mutate(learning_pattern = fct_relevel(learning_pattern, "immediate", "linear", "diminished", "premature"),
+         exposure_amount = fct_relevel(exposure_amount, "none", "1/3", "2/3", "complete"),
+         PSE = case_when(exposure_amount == "none" ~ 37,
+                         exposure_amount == "complete" & learning_pattern != "premature" ~ 72,
+                         exposure_amount %in% c("1/3", "2/3") & learning_pattern == "immediate" ~ 72,
                          exposure_amount == "1/3" & learning_pattern == "linear" ~ 37 + ((72 - 37 + 1)/3),
                          exposure_amount == "2/3" & learning_pattern == "linear" ~ 37 + 12 + ((72 - 37 + 1)/3),
                          exposure_amount == "1/3" & learning_pattern == "diminished" ~ 37 + ((72 - 37 + 1)/2),
                          exposure_amount == "2/3" & learning_pattern == "diminished" ~ 37 + 16 + ((72 - 37 + 1)/3),
-                         exposure_amount == "1/3" & learning_pattern == "plateau" ~ 37 + ((72 - 37 + 1)/2),
-                         exposure_amount == "2/3" & learning_pattern == "plateau" ~ 37 + 18 + ((72 - 37 + 1)/3),
-                         exposure_amount == "all" & learning_pattern == "plateau" ~ 37 + 18 + ((72 - 37 + 1)/3)))
+                         exposure_amount == "1/3" & learning_pattern == "premature" ~ 37 + ((72 - 37 + 1)/2),
+                         exposure_amount %in% c("2/3", "complete") & learning_pattern == "premature" ~ 37 + 25))
 
 p.PSE_change <- 
   PSE_change %>% 
   ggplot(aes(exposure_amount, PSE, alpha = exposure_amount, group = 1), colour = "#02427e") +
   geom_point(size = 1.8, colour = "#02427e") +
-  geom_line(alpha = .5) +
-  geom_hline(aes(yintercept = 72), linetype = 2, alpha = .6, colour = "grey") +
-  scale_x_discrete("Exposure amount", labels = c("prior", "1/3 ", "2/3", "all")) +
+  geom_line(alpha = .3) +
+  geom_hline(aes(yintercept = 37), linetype = 1, alpha = .6, colour = "grey") +
+  geom_hline(aes(yintercept = 72), linetype = 2, alpha = .6, colour = "#02427e") +
+  scale_x_discrete("Exposure amount") +
   scale_y_continuous("PSE (ms VOT)", limits = c(25, 75), breaks = c(30, 40, 50, 60, 70)) +
   guides(alpha = "none") +
-  facet_wrap(~learning_pattern, nrow = 1)
+  theme(axis.text.x = element_text(angle = 25, vjust = 1, hjust = 1)) +
+  facet_wrap(~learning_pattern, nrow = 1, labeller = labeller(learning_pattern = c("immediate" = "immediate", "linear" = "linear", "diminished" = "diminishing \nreturns", "premature" = "premature \nconvergence")))
 
 
 (p.gaussian | p.cat | p.PSE) / p.PSE_change

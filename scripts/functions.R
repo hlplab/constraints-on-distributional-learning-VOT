@@ -428,7 +428,14 @@ add_block_labels <-
       c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3",  "Test 4", "Test 5", "Test 6")))
 
 
-geom_linefit <- function(data, x, y, fill, legend.position, legend.justification = NULL) {
+geom_linefit <- function(
+    data, 
+    x,
+    y,
+    fill,
+    legend.position,
+    legend.justification = NULL
+    ) {
   list(
     geom_ribbon(aes(x = {{ x }}, y = {{ y }}, group = Condition.Exposure,
                     ymin = lower__, ymax = upper__, fill = Condition.Exposure), alpha = .1),
@@ -461,7 +468,7 @@ align_tab <- function(hyp) {
   map_chr(hyp, ~ ifelse(class(.x) == "numeric", "r","l"))
 }
 
-make_hyp_table <- function(hypothesis, hypothesis_names, caption, col1_width = "15em", digits = 2) {
+make_hyp_table <- function(model = NULL, hypothesis, hypothesis_names, caption, col1_width = "15em", digits = 2) {
 
   bind_cols(tibble(Hypothesis = hypothesis_names), hypothesis) %>%
     dplyr::select(-2) %>%
@@ -472,7 +479,7 @@ make_hyp_table <- function(hypothesis, hypothesis_names, caption, col1_width = "
       across(
         c(Post.Prob),
         ~ round(., digits = 3)),
-      Evid.Ratio = if (is.numeric(Evid.Ratio)) round(Evid.Ratio, digits = 1) else (Evid.Ratio),
+      Evid.Ratio = ifelse((is.infinite(Evid.Ratio)), paste("$\\geq", get_nsamples(model), "$"), round(Evid.Ratio, digits = 1)),
       CI = paste0("[", CI.Lower, ", ", CI.Upper, "]")) %>%
     dplyr::select(-c(CI.Upper, CI.Lower)) %>%
     relocate(CI, .before = "Evid.Ratio") %>%
@@ -875,6 +882,7 @@ get_IO_from_talkers <- function(
     with_noise = T,
     VOTs = seq(0, 130, .5),
     F0s = predict_f0(VOTs, Mel = T),
+    plot.colour = colours.category_greyscale,
     alpha = .3,
     linetype = 1,
     linewidth = .5

@@ -454,6 +454,7 @@ hyp.simple_effects_condition <-
   dplyr::select(-Star)
 
 make_hyp_table(
+  fit_test.simple_effects_condition,
   hyp.simple_effects_condition,
   c("$PSE_{+10} = PSE_{baseline}$", 
     "$PSE_{+40} = PSE_{+10}$", 
@@ -551,7 +552,8 @@ hyp.simple_effects_block <-
   dplyr::select(-Star)
 
 make_hyp_table(
-    hyp.simple_effects_block,
+  fit_test.simple_effects_block,
+  hyp.simple_effects_block,
     c(rep(c(
   # Comparing differences blocks within conditions
   "Block 1 to 2: decreased PSE",
@@ -681,7 +683,6 @@ fit_test_nested_within_condition_and_block <- readRDS("../models/test-nested_slo
 predictedPSE_40 <- get_IO_predicted_PSE(condition = "Shift40")
 predictedPSE_10 <- get_IO_predicted_PSE(condition = "Shift10")
 predictedPSE_0 <- get_IO_predicted_PSE(condition = "Shift0")
-# TO DO: store predicted PSE pre-exposure (mean of 5 folds) so that we can take it into consideration apprpriately
 
 hyp.shrinkage <-
   hypothesis(
@@ -699,6 +700,7 @@ hyp.shrinkage <-
   dplyr::select(-Star)
 
 make_hyp_table(
+  fit_test_nested_within_condition_and_block,
   hyp.shrinkage,
   c(
     "$|\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{baseline}})| > 0$",
