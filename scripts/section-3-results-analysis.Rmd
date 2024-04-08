@@ -693,8 +693,8 @@ hyp.shrinkage <-
       str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift0x7 - ", predictedPSE_40, ") > 0" ),
       # TO DO: the next two lines need fixing. Same for the final two statements in the text below
       # See labels below for description of what SHOULD be done
-      str_c("mu2_IpasteCondition.ExposureBlocksepEQxShift0x7 / ", predictedPSE_0, "< mu2_IpasteCondition.ExposureBlocksepEQxShift10x7 /", predictedPSE_10),
-      str_c("mu2_IpasteCondition.ExposureBlocksepEQxShift0x7 / ", predictedPSE_0, "< mu2_IpasteCondition.ExposureBlocksepEQxShift40x7 /", predictedPSE_40)),
+      str_c("(mu2_IpasteCondition.ExposureBlocksepEQxShift10x7  -", predictedPSE_prior, ")/(", predictedPSE_10, "-", predictedPSE_prior, ") >", "(mu2_IpasteCondition.ExposureBlocksepEQxShift0x7  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")"),
+      str_c("(mu2_IpasteCondition.ExposureBlocksepEQxShift40x7  -", predictedPSE_prior, ")/(", predictedPSE_40, "-", predictedPSE_prior, ") >", "(mu2_IpasteCondition.ExposureBlocksepEQxShift0x7  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")")),
     robust = T) %>%
   .$hypothesis %>%
   dplyr::select(-Star)
