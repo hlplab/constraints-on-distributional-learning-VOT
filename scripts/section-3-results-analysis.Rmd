@@ -683,6 +683,7 @@ fit_test_nested_within_condition_and_block <- readRDS("../models/test-nested_slo
 predictedPSE_40 <- get_IO_predicted_PSE(condition = "Shift40")
 predictedPSE_10 <- get_IO_predicted_PSE(condition = "Shift10")
 predictedPSE_0 <- get_IO_predicted_PSE(condition = "Shift0")
+predictedPSE_prior <- get_IO_predicted_PSE(condition = "prior")
 
 hyp.shrinkage <-
   hypothesis(
