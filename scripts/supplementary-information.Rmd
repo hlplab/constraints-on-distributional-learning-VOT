@@ -1602,6 +1602,84 @@ rm(fit_exposure)
 One possible explanation for the consistently small lapse rate in the present experiment is that we recruited participants from the Prolific crowdsourcing platform rather than Mechanical Turk [@kleinschmidt-jaeger2016; @kleinschmidt2020]. Prolific has been found to deliver higher data quality than the Amazon's Mechanical Turk crowd-sourcing platform [@peer2017; @adams2020; @albert-smilek2023]. Another possibility is that the use of natural-, rather than robotic-sounding, stimuli engaged participants attention in the present experiment.
 
 
+## Comparing exposure effects against idealized learner models (all blocks) {#sec:shrinkage-test-all}
+
+```{r hypothesis-table-shrinkage-all, results='asis'}
+
+predictedPSE_40 <- get_IO_predicted_PSE(condition = "Shift40")
+predictedPSE_10 <- get_IO_predicted_PSE(condition = "Shift10")
+predictedPSE_0 <- get_IO_predicted_PSE(condition = "Shift0")
+predictedPSE_prior <- get_IO_predicted_PSE(condition = "prior")
+
+hyp.shrinkage <-
+  hypothesis(
+    fit_test_nested_within_condition_and_block,
+    c(
+      str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift0x1 - ", predictedPSE_0, ") > 0" ),
+      str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift10x1 - ", predictedPSE_10, ") > 0" ),
+      str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift0x1 - ", predictedPSE_40, ") > 0" ),
+      
+      str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift0x3 - ", predictedPSE_0, ") > 0" ),
+      str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift10x3 - ", predictedPSE_10, ") > 0" ),
+      str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift0x3 - ", predictedPSE_40, ") > 0" ),
+      
+      str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift0x5 - ", predictedPSE_0, ") > 0" ),
+      str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift10x5 - ", predictedPSE_10, ") > 0" ),
+      str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift0x5 - ", predictedPSE_40, ") > 0" ),
+      
+      str_c("(mu2_IpasteCondition.ExposureBlocksepEQxShift10x1  -", predictedPSE_prior, ")/(", predictedPSE_10, "-", predictedPSE_prior, ") >", "(mu2_IpasteCondition.ExposureBlocksepEQxShift0x1  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")"),
+      str_c("(mu2_IpasteCondition.ExposureBlocksepEQxShift40x1  -", predictedPSE_prior, ")/(", predictedPSE_40, "-", predictedPSE_prior, ") >", "(mu2_IpasteCondition.ExposureBlocksepEQxShift0x1  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")"),
+      
+      str_c("(mu2_IpasteCondition.ExposureBlocksepEQxShift10x3  -", predictedPSE_prior, ")/(", predictedPSE_10, "-", predictedPSE_prior, ") >", "(mu2_IpasteCondition.ExposureBlocksepEQxShift0x3  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")"),
+      str_c("(mu2_IpasteCondition.ExposureBlocksepEQxShift40x3  -", predictedPSE_prior, ")/(", predictedPSE_40, "-", predictedPSE_prior, ") >", "(mu2_IpasteCondition.ExposureBlocksepEQxShift0x3  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")"),
+      
+      str_c("(mu2_IpasteCondition.ExposureBlocksepEQxShift10x5  -", predictedPSE_prior, ")/(", predictedPSE_10, "-", predictedPSE_prior, ") >", "(mu2_IpasteCondition.ExposureBlocksepEQxShift0x5  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")"),
+      str_c("(mu2_IpasteCondition.ExposureBlocksepEQxShift40x5  -", predictedPSE_prior, ")/(", predictedPSE_40, "-", predictedPSE_prior, ") >", "(mu2_IpasteCondition.ExposureBlocksepEQxShift0x5  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")")),
+    robust = T) %>%
+  .$hypothesis %>%
+  dplyr::select(-Star)
+
+make_hyp_table(
+  fit_test_nested_within_condition_and_block,
+  hyp.shrinkage,
+  c(
+    # test block 1
+    "$|\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{baseline}})| > 0$",
+    "$|\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{+10}})| > 0$",
+    "$|\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{+40}})| > 0$",
+    # test block 2
+    "$|\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{baseline}})| > 0$",
+    "$|\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{+10}})| > 0$",
+    "$|\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{+40}})| > 0$",
+    # test block 3
+    "$|\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{baseline}})| > 0$",
+    "$|\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{+10}})| > 0$",
+    "$|\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{+40}})| > 0$",
+    
+    "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{ideal_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{ideal_{pre}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{ideal_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{ideal_{pre}})}$",
+    
+    "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{ideal_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{ideal_{pre}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{ideal_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{ideal_{pre}})}$",
+    
+    "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{ideal_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{ideal_{pre}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{ideal_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{ideal_{pre}})}$"),
+  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). For identical tests for all test blocks, see SI (\\ref{sec:XXX}).",
+  col1_width = "25em") %>%
+  pack_rows("Have participants converged against the PSE expected from idealized learner?", 1, 9) %>% 
+  pack_rows("Test block 1", 1, 3) %>% 
+  pack_rows("Test block 2", 4, 6) %>% 
+  pack_rows("Test block 3", 7, 9) %>% 
+  pack_rows("Does convergence against ideal PSE differ across conditions (asymmetric shrinkage)?", 10, 15) %>% 
+  pack_rows("Test block 1", 10, 11) %>% 
+  pack_rows("Test block 2", 12, 13) %>% 
+  pack_rows("Test block 3", 14, 15) 
+```
+
+
+
+
+
 ## Evaluating accuracy of psychometric model, idealised learners against human accuracy
 ```{r plot-io-psychometric-model-human-accuracy, fig.width=7.5, fig.height=5.5, fig.cap="(ref:plot-IO-human-accuracy)"}
 # get human accuracy on unlabelled exposure trials

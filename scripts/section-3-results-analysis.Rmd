@@ -677,7 +677,7 @@ This explains the reduction in the difference between the +10 and baseline condi
 
 ## Constraints on cumulative adaptation (comparing exposure effects against idealized learner models)
 
-```{r hypothesis-table-shrinkage, results='asis'}
+```{r hypothesis-table-shrinkage-test4, results='asis'}
 fit_test_nested_within_condition_and_block <- readRDS("../models/test-nested_slope-priorSD15-0.995.rds")
 
 predictedPSE_40 <- get_IO_predicted_PSE(condition = "Shift40")
@@ -692,8 +692,6 @@ hyp.shrinkage <-
       str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift0x7 - ", predictedPSE_0, ") > 0" ),
       str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift10x7 - ", predictedPSE_10, ") > 0" ),
       str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift0x7 - ", predictedPSE_40, ") > 0" ),
-      # TO DO: the next two lines need fixing. Same for the final two statements in the text below
-      # See labels below for description of what SHOULD be done
       str_c("(mu2_IpasteCondition.ExposureBlocksepEQxShift10x7  -", predictedPSE_prior, ")/(", predictedPSE_10, "-", predictedPSE_prior, ") >", "(mu2_IpasteCondition.ExposureBlocksepEQxShift0x7  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")"),
       str_c("(mu2_IpasteCondition.ExposureBlocksepEQxShift40x7  -", predictedPSE_prior, ")/(", predictedPSE_40, "-", predictedPSE_prior, ") >", "(mu2_IpasteCondition.ExposureBlocksepEQxShift0x7  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")")),
     robust = T) %>%
@@ -709,7 +707,7 @@ make_hyp_table(
     "$|\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{+40}})| > 0$",
     "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{ideal_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{ideal_{pre}})}$",
     "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{ideal_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{ideal_{pre}})}$"),
-  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). For identical tests for all test blocks, see SI (\\ref{sec:XXX}).",
+  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). For identical tests for all test blocks, see SI (\\ref{sec:shrinkage-test-all}).",
   col1_width = "25em") %>%
   pack_rows("Have participants converged against the PSE expected from idealized learner?", 1, 3) %>% 
   pack_rows("Does convergence against ideal PSE differ across conditions (asymmetric shrinkage)?", 4, 5)
@@ -917,8 +915,4 @@ Some models of adaptive perception predict that exposure to uniformly distribute
 
 As a consequence of repeated testing, exposure effects were substantially smaller in Test 6 than in Test 4 (see Table \@ref(tab:hypothesis-table-simple-effects-condition): while the effects of the +40 condition relative to the other two exposure conditions were still credible even in Test 6 (BFs > 24), this was no longer the case for the effect of the +10 condition relative to the baseline condition (BF = 1.6). This pattern of results replicates previous findings from LGPL [@scharenborg-janse2013; @giovannone-theodore2021; @cummings-theodore2023; @liu-jaeger2018; @liu-jaeger2019; @zheng-samuel2023], and extends them to distributional learning paradigms [see also @colby2018; @kleinschmidt2020]. One important methodological consequence is that longer test phases do not necessarily increase the statistical power to detect effects of adaptation [unless analyses account for the effects of repeated testing, as done in, e.g., @liu-jaeger2018]. <!-- TO DO: add @cummings2024 once made available online (pen in mouth paper --> Analyses that average across all test tokens---as remains the norm---are bound to systematically underestimate the true adaptivity of human speech perception.<!-- ^[@kraljic-samuel2006 is sometimes cited as finding LGPL exposure effects even after 480 test trials over a uniform test continuum. This is, however, misleading. Kraljic and Samuel used four *different* uniform test continua over two different phonetic contrasts (/b/-/p/ and /d/-/t/). Each test session consisted of 10 randomized repetitions of 6 test trials. Kraljic and Samuel never tested (or made any claims about) whether exposure effects were still detectable during the 10th repetition. Rather they report *average* effects across the 10 repetitions (like other LGPL studies), which is perfectly compatible with the hypothesis that repeated testing reduces the effects of exposure [see @liu-jaeger2018].] -->
 
-
-```{r}
-rm(fit_test_nested_within_condition_and_block)
-```
 
