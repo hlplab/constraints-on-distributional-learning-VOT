@@ -75,6 +75,46 @@ comb_plotmath <- function(...) {
          list(...))
 }
 
+plot_exposure_stim_cues <- function(
+    data,
+    cues = c("VOT", "f0", "VowelDuration"),
+    measurement) 
+{
+  data %>% 
+    filter(measurement == {{ measurement }}) %>% 
+    ggplot(aes(x = .panel_x, y = .panel_y, group = Item.MinimalPair, color = Item.MinimalPair)) +
+    geom_autopoint(alpha = .3) +
+    stat_ellipse(alpha = .3) +
+    facet_matrix(vars(cues),
+                 labeller = labeller(.rows = c(VOT = "VOT (ms)", f0 = str_c(measurement, "\n f0 (Hz)"), VowelDuration = str_c(measurement, "\n Vowel duration (ms)")),
+                                     .cols = c(VOT = "VOT (ms)", f0 = str_c(measurement, "\n f0 (Hz)"), VowelDuration = str_c(measurement, "\n Vowel duration (ms)")))) +
+    guides(colour = guide_legend(title = "Minimal Pair")) +
+    theme(legend.position = "top")
+}
+
+plot_db_cues <- function(
+    data
+) {
+  data %>% 
+    ggplot(aes(x = .panel_x, y = .panel_y, color = category, fill = category)) +
+    geom_autopoint(alpha = .1) +
+    geom_autodensity(aes(), position = "identity", alpha = .4) +
+    stat_ellipse(
+      aes(
+        group = interaction(Talker, category)),
+      alpha = .1) +
+    stat_ellipse() +
+    scale_color_manual(
+      "Category",
+      labels = c("/d/", "/t/"),
+      values = colours.category_greyscale,
+      aesthetics = c("color", "fill")) +
+    facet_matrix(vars(c(VOT, f0_Mel, vowel_duration)), layer.lower = c(3, 4:5), layer.diag = 2,
+                 layer.upper = c(1, 4:5),
+                 labeller = labeller(.rows = c(VOT = "VOT", f0_Mel = "f0 (Mel)", vowel_duration = "Vowel duration"),
+                                     .cols = c(VOT = "VOT (ms)", f0_Mel = "f0 (Mel)", vowel_duration = "Vowel duration (ms)"))) +
+    theme(legend.position = "top")
+}
 
 # Load data --------------------------------------------------------------
 get_ChodroffWilson_data <- function(
@@ -579,6 +619,20 @@ center_stimuli <- function(d, database) {
         newdata = .,
         cue = substitute(x)),
       .names = "{.col}.CCuRE"))
+}
+
+point_overlay <- function(
+    d,
+    database
+) {
+  geom_autopoint(
+    data = d %>% 
+      center_stimuli(database = database) %>% 
+      select(!c(VOT, f0_Mel, vowel_duration)) %>%
+      rename(VOT = VOT.CCuRE, f0_Mel = f0_Mel.CCuRE, vowel_duration = vowel_duration.CCuRE) %>%
+      filter(Phase == "test") %>% distinct(VOT, f0_Mel, vowel_duration) %>%
+      mutate(category = "test"),
+    color = "black", alpha = .5, size = 1, inherit.aes = F)
 }
 
 # MAKE IDEAL OBSERVERS ----------------------------------------------------
