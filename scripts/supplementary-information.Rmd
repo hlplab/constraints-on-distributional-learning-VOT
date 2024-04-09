@@ -52,7 +52,7 @@ Four /d-t/ minimal pairs (*dill*-*till*, *din*-*tin*, *dim*-*tim*, *dip*-*tip*) 
 Separate procedures were used to generate stimuli with positive and negative VOTs. We first describe the annotation of the original recordings required by both procedures. Then we describe the two procedures, followed by the annotation approach used for the resynthesized stimuli.
 
 ### Annotation of original recordings
-All critical pairs of the talker's recordings were annotated for the four cues that are known to affect the perception of word-initial stop-voicing in L1-US English. Durational measurements of pre-voicing, VOT, and vowel duration were taken in addition to the mean F0 of the first 25% of the vowel duration. Annotations were done on Praat and  based on both listening and inspection of the waveform and spectrogram. The annotation boundaries were made following conventions reported in prior studies [e.g. @francis2003; @kibry-ladd2016; @dmitrieva2015; @clayards2017] and through personal communication with trained phoneticians 
+All critical pairs of the talker's recordings were annotated for the four cues that are known to affect the perception of word-initial stop-voicing in L1-US English. Durational measurements of pre-voicing, VOT, and vowel duration were taken in addition to the mean F0 of the first 25% of the vowel duration. Annotations were done on Praat and  based on both listening and inspection of the waveform and spectrogram. The annotation boundaries were made following approaches reported in prior studies [e.g. @francis2003; @kirby-ladd2016; @dmitrieva2015; @clayards2017] and through personal communication with trained phoneticians. 
 
   * pre-voicing (voicing during closure)
       * **start:** the first sign of periodicity in the waveform before closure release.
@@ -64,7 +64,7 @@ All critical pairs of the talker's recordings were annotated for the four cues t
 
   * Vowel
       + **start:** the beginning of clearly defined periodicity in the waveform and at the appearance of low frequency energy in the spectrogram.
-      + **End:** when periodicity terminates or at closure onset; if before a lateral, when formant transition approaches steady state; if before a nasal, at point where formants show a step-wise shift and when intensity shows a steep decline.
+      + **End:** when periodicity terminates or at closure onset; if before a lateral, when formant transition approaches steady state; if before a nasal, at the point where formants show a step-wise shift and when intensity shows a steep decline.
 
 ### Tokens with positive VOTs
 Stimuli with positive VOTs were created using the "progressive cutback and replacement method" (version 31) [@winn2020] implemented in Praat [@boersma2022]. The process takes a voiced token and progressively deletes its vowel onset and replaces it with an approximately equivalent amount of onset taken from the word's voiceless minimal-pair counterpart. Winn's Praat script provides a GUI that greatly simplifies the generation of highly natural sounding stimuli. 
@@ -88,9 +88,11 @@ All resynthesized stimuli were annotated for VOT, pre-voicing, vowel duration, a
 
 First, we follow previous work on speech perception and combined the pre-voicing and VOT data, treating pre-voicing as negative VOT. This simplifies plotting and analysis. It does, however, make assumptions that we revisit in the general discussion.
 
-Second, we used the *targeted* rather than *measured* f0 and vowel duration values. This removes measurement noise that might have been introduced by the annotation procedure, and makes f0 and vowel duration values more akin to our VOT values, which are also targeted. Specifically, the f0 values were linearly interpolated between the f0 values of the voiced and voiceless tokens of the minimal pair. For vowel durations, we used the vowel durations of the *dip*-*tip* pair, which sidesteps the difficulty of annotation the boundary between the vowel and the coda for *din*-*tin* and *dill*-*till* word pairs. This assumes that listeners perceive the same vowel duration for the different words that have the same VOT duration. This assumption is likely a reasonable approximation given that the stimuli were generated from word recordings that were made in the same context and spoken by the same individual in a similar speech style and rate. Figure XXX shows uncorrected and corrected measurements of all stimuli.  
+Second, we used the *targeted* rather than *measured* f0 and vowel duration values. This removes measurement noise that might have been introduced by the annotation procedure, and makes f0 and vowel duration values more akin to our VOT values, which are also targeted. Specifically, the f0 values were linearly interpolated between the f0 values of the voiced and voiceless tokens of the minimal pair. For vowel durations, we used the vowel durations of the *dip*-*tip* pair, which sidesteps the difficulty of annotation the boundary between the vowel and the coda for *din*-*tin* and *dill*-*till* word pairs. This assumes that listeners perceive the same vowel duration for the different words that have the same VOT duration. This assumption is likely a reasonable approximation given that the stimuli were generated from word recordings that were made in the same context and spoken by the same individual in a similar speech style and rate. Figure \@(fig:plot-exposure-stimuli-cues) shows uncorrected and corrected measurements of all stimuli.  
 
-```{r exposure-stimuli-plots, fig.height=5.5, fig.width=10}
+
+(ref:plot-exposure-stimuli-cues) Correlations of VOT, f0 and vowel duration of the synthesized stimuli before (**A**) and after (**B**) adjustments
+```{r plot-exposure-stimuli-cues, fig.height=5.5, fig.width=10, fig.cap="(ref:plot-exposure-stimuli-cues)"}
 cue_measurements <- 
   exposure_stimuli_cue_measurements %>% 
   select(Item.MinimalPair, Item.VOT, f0_5ms_into_vowel, target_f0, vowel, Item.VowelDuration) %>% 
@@ -117,12 +119,16 @@ cue_measurements <-
         plot.tag = element_text(face = "bold"))
 ```
 
-
+(ref:exposure-stimuli-cue-correlations) Cue correlations after measurement adjustments
 ```{r exposure-stimuli-cue-correlations, fig.cap="cue correlations of synthesised stimuli", fig.cap="(ref:cue correlations)"}
 round(cor(d.for_analysis %>% 
-      distinct(VOT, f0_Mel, vowel_duration)), 3) %>% 
+      distinct(VOT, f0_Mel, vowel_duration) %>% 
+        rename(f0 = f0_Mel, `Vowel duration` = vowel_duration)), 3) %>% 
   as.data.frame() %>% 
-  kable(format = "simple")
+  kable(
+    format = "simple",
+    col.names = c("Cues", "VOT", "f0", "Vowel duration"),
+    align = "c")
 ```
 
 # Additional information on participant exclusions {#sec:exclusions}
