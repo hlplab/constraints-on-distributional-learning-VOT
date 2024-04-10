@@ -185,7 +185,9 @@ p.PSE_change <-
   facet_wrap(~learning_pattern, nrow = 1, labeller = labeller(learning_pattern = c("immediate" = "immediate", "linear" = "linear", "diminished" = "diminishing \nreturns", "premature" = "premature \nconvergence")))
 
 
-(p.gaussian | p.cat | p.PSE) / p.PSE_change
+((p.gaussian | p.cat | p.PSE) / p.PSE_change) +
+  plot_annotation(tag_levels = 'A', tag_suffix = ")") &
+  theme(plot.tag = element_text(face = "bold"))
 ```
 
 Although predictions (1)-(4) are specific and testable, they remain largely untested. This is in part due to limitations of the designs and paradigms used in research on adaptive speech perception. The most common paradigms expose one group of listeners to one speech pattern, and a second group of listeners to another speech pattern. Following exposure, both groups are tested on their ability to recognize one of the two speech patterns. Such designs were effective in establishing the *existence* of adaptive speech perception [see also @cummings-theodore2023]. They do, however, offer only weak tests of existing theories [for demonstration, see @xie2023].  Put simply, it is one thing to show that differences in exposure lead to differences in behavior; it is another thing to test whether the direction and magnitude of changes in behavior can be consistently explained by existing theories. 
