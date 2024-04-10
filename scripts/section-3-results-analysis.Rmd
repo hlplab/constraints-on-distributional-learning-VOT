@@ -454,6 +454,7 @@ hyp.simple_effects_condition <-
   dplyr::select(-Star)
 
 make_hyp_table(
+  fit_test.simple_effects_condition,
   hyp.simple_effects_condition,
   c("$PSE_{+10} = PSE_{baseline}$", 
     "$PSE_{+40} = PSE_{+10}$", 
@@ -551,7 +552,8 @@ hyp.simple_effects_block <-
   dplyr::select(-Star)
 
 make_hyp_table(
-    hyp.simple_effects_block,
+  fit_test.simple_effects_block,
+  hyp.simple_effects_block,
     c(rep(c(
   # Comparing differences blocks within conditions
   "Block 1 to 2: decreased PSE",
@@ -675,13 +677,13 @@ This explains the reduction in the difference between the +10 and baseline condi
 
 ## Constraints on cumulative adaptation (comparing exposure effects against idealized learner models)
 
-```{r hypothesis-table-shrinkage, results='asis'}
+```{r hypothesis-table-shrinkage-test4, results='asis'}
 fit_test_nested_within_condition_and_block <- readRDS("../models/test-nested_slope-priorSD15-0.995.rds")
 
 predictedPSE_40 <- get_IO_predicted_PSE(condition = "Shift40")
 predictedPSE_10 <- get_IO_predicted_PSE(condition = "Shift10")
 predictedPSE_0 <- get_IO_predicted_PSE(condition = "Shift0")
-# TO DO: store predicted PSE pre-exposure (mean of 5 folds) so that we can take it into consideration apprpriately
+predictedPSE_prior <- get_IO_predicted_PSE(condition = "prior")
 
 hyp.shrinkage <-
   hypothesis(
@@ -690,15 +692,14 @@ hyp.shrinkage <-
       str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift0x7 - ", predictedPSE_0, ") > 0" ),
       str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift10x7 - ", predictedPSE_10, ") > 0" ),
       str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift0x7 - ", predictedPSE_40, ") > 0" ),
-      # TO DO: the next two lines need fixing. Same for the final two statements in the text below
-      # See labels below for description of what SHOULD be done
-      str_c("mu2_IpasteCondition.ExposureBlocksepEQxShift0x7 / ", predictedPSE_0, "< mu2_IpasteCondition.ExposureBlocksepEQxShift10x7 /", predictedPSE_10),
-      str_c("mu2_IpasteCondition.ExposureBlocksepEQxShift0x7 / ", predictedPSE_0, "< mu2_IpasteCondition.ExposureBlocksepEQxShift40x7 /", predictedPSE_40)),
+      str_c("(mu2_IpasteCondition.ExposureBlocksepEQxShift10x7  -", predictedPSE_prior, ")/(", predictedPSE_10, "-", predictedPSE_prior, ") >", "(mu2_IpasteCondition.ExposureBlocksepEQxShift0x7  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")"),
+      str_c("(mu2_IpasteCondition.ExposureBlocksepEQxShift40x7  -", predictedPSE_prior, ")/(", predictedPSE_40, "-", predictedPSE_prior, ") >", "(mu2_IpasteCondition.ExposureBlocksepEQxShift0x7  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")")),
     robust = T) %>%
   .$hypothesis %>%
   dplyr::select(-Star)
 
 make_hyp_table(
+  fit_test_nested_within_condition_and_block,
   hyp.shrinkage,
   c(
     "$|\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{baseline}})| > 0$",
@@ -706,7 +707,7 @@ make_hyp_table(
     "$|\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{+40}})| > 0$",
     "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{ideal_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{ideal_{pre}})}$",
     "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{ideal_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{ideal_{pre}})}$"),
-  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). For identical tests for all test blocks, see SI (\\ref{sec:XXX}).",
+  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). For identical tests for all test blocks, see SI (\\ref{sec:shrinkage-test-all}).",
   col1_width = "25em") %>%
   pack_rows("Have participants converged against the PSE expected from idealized learner?", 1, 3) %>% 
   pack_rows("Does convergence against ideal PSE differ across conditions (asymmetric shrinkage)?", 4, 5)
@@ -868,9 +869,9 @@ psych.model_accuracy %>%
 
 If confirmed, premature convergence against stable behavior despite only partial adaptation would challenge prediction (3) of existing distributional learning models. Premature convergence is also unexpected under any other model of adaptive speech perception. In the general discussion, we present an extension to distributional learning models that explains premature convergence, and highlights a striking link between adaptive changes in speech perception and second language learning. As part of that discussion, we present additional models, and entertain methodological artifacts, and analysis confounds that would offer alternative explanation of premature convergence. For now, we summarize one additional property of incremental adaptation suggested by the data.
 
-Further comparison of exposure conditions in Figure \@ref(fig:plot-fit-PSE)C reveals that more extreme exposure conditions---conditions that differed more from listeners' pre-exposure expectations---might have resulted in proportionally less adaptation. Consider the two conditions that are shifted leftwards relative to listeners pre-exposure expectations: in the more extreme baseline condition, participants' PSE had shifted `r d.true_shift %>% filter(Condition.Exposure == "Shift0" & Block == 7) %>% summarise(proportion_shift = percent(proportion_shift)) %>% pull()` by Test 4, compared to `r d.true_shift %>% filter(Condition.Exposure == "Shift10" & Block == 7) %>% summarise(proportion_shift = percent(proportion_shift)) %>% pull()` in the less extreme +10 condition (`r str_extract(get_bf(fit_test_nested_within_condition_and_block, str_c("mu2_IpasteCondition.ExposureBlocksepEQxShift0x7 / ", predictedPSE_0, " < mu2_IpasteCondition.ExposureBlocksepEQxShift10x7 /", predictedPSE_10)), "BF = \\d")`). That is, while the absolute changes in listeners' behavior exhibit the pattern expected under predictions (1) and (2b), participants additionally exhibited a pattern of **shrinkage** that is *not* obviously predicted by distributional learning models. 
+Further comparison of exposure conditions in Figure \@ref(fig:plot-fit-PSE)C reveals that more extreme exposure conditions---conditions that differed more from listeners' pre-exposure expectations---might have resulted in proportionally less adaptation. Consider the two conditions that are shifted leftwards relative to listeners pre-exposure expectations: in the more extreme baseline condition, participants' PSE had shifted `r d.true_shift %>% filter(Condition.Exposure == "Shift0" & Block == 7) %>% summarise(proportion_shift = percent(proportion_shift)) %>% pull()` by Test 4, compared to `r d.true_shift %>% filter(Condition.Exposure == "Shift10" & Block == 7) %>% summarise(proportion_shift = percent(proportion_shift)) %>% pull()` in the less extreme +10 condition (BF `r get_bf(fit_test_nested_within_condition_and_block, str_c("(mu2_IpasteCondition.ExposureBlocksepEQxShift10x7  -", predictedPSE_prior, ")/(", predictedPSE_10, "-", predictedPSE_prior, ") >", "(mu2_IpasteCondition.ExposureBlocksepEQxShift0x7  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")"), bf = T)`). That is, while the absolute changes in listeners' behavior exhibit the pattern expected under predictions (1) and (2b), participants additionally exhibited a pattern of **shrinkage** that is *not* obviously predicted by distributional learning models. 
 
-Finally, there is evidence that this shrinkage is asymmetric. The predicted PSEs of an idealized learner for the baseline and +40 conditions are shifted by about the same amount relative to listeners' pre-exposure PSE in Test 1 (+21ms and -18ms VOT, respectively). However, the degree to which listeners converged against these predicted PSEs differed substantially between the two conditions, with cumulative adaptation proceeding almost twice as far in the rightward-shifted +40 condition (in Test 4: `r d.true_shift %>% filter(Condition.Exposure == "Shift40" & Block == 7) %>% summarise(proportion_shift = percent(proportion_shift)) %>% pull()` towards idealized PSE) compared to the leftward-shifted baseline condition (`r d.true_shift %>% filter(Condition.Exposure == "Shift0" & Block == 7) %>% summarise(proportion_shift = percent(proportion_shift)) %>% pull()`; `r str_extract(get_bf(fit_test_nested_within_condition_and_block, str_c("mu2_IpasteCondition.ExposureBlocksepEQxShift0x7 / ", predictedPSE_0, "< mu2_IpasteCondition.ExposureBlocksepEQxShift40x7 /", predictedPSE_40)), "BF = \\d{2}.\\d")`). Taking this **asymmetric shrinkage** at face value (for now), it suggests <!-- revise wording to reflect strength of evidence: anecdotal, moderate, etc. --> that participants adapted to a lesser degree to leftward shifts along the VOT continuum. We return to this point in the general discussion, where we also summarize other recent studies that have found similar asymmetric shrinkage [@kleinschmidt-jaeger2016; @kleinschmidt2020]. Before we do so, we briefly summarize the effects of repeated testing.
+Finally, there is evidence that this shrinkage is asymmetric. The predicted PSEs of an idealized learner for the baseline and +40 conditions are shifted by about the same amount relative to listeners' pre-exposure PSE in Test 1 (+21ms and -18ms VOT, respectively). However, the degree to which listeners converged against these predicted PSEs differed substantially between the two conditions, with cumulative adaptation proceeding almost twice as far in the rightward-shifted +40 condition (in Test 4: `r d.true_shift %>% filter(Condition.Exposure == "Shift40" & Block == 7) %>% summarise(proportion_shift = percent(proportion_shift)) %>% pull()` towards idealized PSE) compared to the leftward-shifted baseline condition (`r d.true_shift %>% filter(Condition.Exposure == "Shift0" & Block == 7) %>% summarise(proportion_shift = percent(proportion_shift)) %>% pull()`; BF `r get_bf(fit_test_nested_within_condition_and_block, str_c("(mu2_IpasteCondition.ExposureBlocksepEQxShift40x7  -", predictedPSE_prior, ")/(", predictedPSE_40, "-", predictedPSE_prior, ") >", "(mu2_IpasteCondition.ExposureBlocksepEQxShift0x7  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")"), bf = T)`). Taking this **asymmetric shrinkage** at face value (for now), it suggests <!-- revise wording to reflect strength of evidence: anecdotal, moderate, etc. --> that participants adapted to a lesser degree to leftward shifts along the VOT continuum. We return to this point in the general discussion, where we also summarize other recent studies that have found similar asymmetric shrinkage [@kleinschmidt-jaeger2016; @kleinschmidt2020]. Before we do so, we briefly summarize the effects of repeated testing.
 
 ## Effects of repeated testing
 
@@ -910,12 +911,8 @@ d.test_surprisal %<>%
   summarise(across(surprisal, list(mean = mean, sd = sd)))
 ```
 
-Some models of adaptive perception predict that exposure to uniformly distributed test tokens will reduce the effect of preceding exposure [@kleinschmidt-jaeger2015; for relevant discussion, see also @lancia-winter2013]. In line with these theories, there is evidence that the effects of exposure reduced from Test 4 to Test 6 (see Tables \@ref(tab:hypothesis-table-simple-effects-condition) and \@ref(tab:hypothesis-table-simple-effects-block)). In Table \@ref(tab:hypothesis-table-simple-effects-block), this is evident in a reversal of the direction of the block-to-block changes for Tests 5-6, compared to Tests 1-4. For the +40 exposure condition, these block-to-block changes went from rightward shifts in Tests 1-4 to leftward shifts in Tests 5-6 (BF = 10.4). For the baseline condition, block-to-block changes went from leftward to rightward shifts (BF = 7.3). The only exposure condition for which no clear reversal was observed is the +10 condition (BF = 1.3). Two factors likely contributed to this. First, this condition exhibited the smallest exposure effects, limiting the power to detect a reversal of those effects. Second, the +10 condition is also the condition, for which the marginal distribution of VOT during test blocks (mean = 35.8 ms, SD = 22.2 ms) most closely resembled the distribution during exposure (mean = 36.5, SD = 25.9), compared to the baseline (mean = 26.5 ms) or +40 condition (mean = 66.5 ms; exposure SDs were identical across conditions).
+Some models of adaptive perception predict that exposure to uniformly distributed test tokens will reduce the effect of preceding exposure [@kleinschmidt-jaeger2015; for relevant discussion, see also @lancia-winter2013]. In line with these theories, there is evidence that the effects of exposure reduced from Test 4 to Test 6 (see Tables \@ref(tab:hypothesis-table-simple-effects-condition) and \@ref(tab:hypothesis-table-simple-effects-block)). In Table \@ref(tab:hypothesis-table-simple-effects-block), this is evident in a reversal of the direction of the block-to-block changes for Tests 5-6, compared to Tests 1-4. For the +40 exposure condition, these block-to-block changes went from rightward shifts in Tests 1-4 to leftward shifts in Tests 5-6 (BF `r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift40:Block_Test5vs.Test4 + mu2_Condition.ExposureShift40:Block_Test6vs.Test5 > 0", bf = T)`). For the baseline condition, block-to-block changes went from leftward to rightward shifts (BF `r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift0:Block_Test5vs.Test4 + mu2_Condition.ExposureShift0:Block_Test6vs.Test5 < 0", bf = T)` ). The only exposure condition for which no clear reversal was observed is the +10 condition (BF = 1.3). Two factors likely contributed to this. First, this condition exhibited the smallest exposure effects, limiting the power to detect a reversal of those effects. Second, the +10 condition is also the condition, for which the marginal distribution of VOT during test blocks (mean = 35.8 ms, SD = 22.2 ms) most closely resembled the distribution during exposure (mean = 36.5, SD = 25.9), compared to the baseline (mean = 26.5 ms) or +40 condition (mean = 66.5 ms; exposure SDs were identical across conditions).
 
 As a consequence of repeated testing, exposure effects were substantially smaller in Test 6 than in Test 4 (see Table \@ref(tab:hypothesis-table-simple-effects-condition): while the effects of the +40 condition relative to the other two exposure conditions were still credible even in Test 6 (BFs > 24), this was no longer the case for the effect of the +10 condition relative to the baseline condition (BF = 1.6). This pattern of results replicates previous findings from LGPL [@scharenborg-janse2013; @giovannone-theodore2021; @cummings-theodore2023; @liu-jaeger2018; @liu-jaeger2019; @zheng-samuel2023], and extends them to distributional learning paradigms [see also @colby2018; @kleinschmidt2020]. One important methodological consequence is that longer test phases do not necessarily increase the statistical power to detect effects of adaptation [unless analyses account for the effects of repeated testing, as done in, e.g., @liu-jaeger2018]. <!-- TO DO: add @cummings2024 once made available online (pen in mouth paper --> Analyses that average across all test tokens---as remains the norm---are bound to systematically underestimate the true adaptivity of human speech perception.<!-- ^[@kraljic-samuel2006 is sometimes cited as finding LGPL exposure effects even after 480 test trials over a uniform test continuum. This is, however, misleading. Kraljic and Samuel used four *different* uniform test continua over two different phonetic contrasts (/b/-/p/ and /d/-/t/). Each test session consisted of 10 randomized repetitions of 6 test trials. Kraljic and Samuel never tested (or made any claims about) whether exposure effects were still detectable during the 10th repetition. Rather they report *average* effects across the 10 repetitions (like other LGPL studies), which is perfectly compatible with the hypothesis that repeated testing reduces the effects of exposure [see @liu-jaeger2018].] -->
 
-
-```{r}
-rm(fit_test_nested_within_condition_and_block)
-```
 
