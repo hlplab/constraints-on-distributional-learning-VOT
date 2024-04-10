@@ -426,7 +426,7 @@ get_nsamples <- function(model) {
 get_bf <- function(model, hypothesis, bf = F) {
   h <- hypothesis(model, hypothesis)[[1]]
   BF <- if (is.infinite(h$Evid.Ratio)) paste("\\geq", get_nsamples(model)) else paste("=", round(h$Evid.Ratio, 1))
-  if (bf) print(BF) else
+  if (bf) paste0("BF ", BF) else
   paste0(
     "\\(\\hat{\\beta} = ", round(h$Estimate, 2),
     "\\), 90\\%-CI = \\([", round(h$CI.Lower, 3), ", ", round(h$CI.Upper, 3),

@@ -1577,7 +1577,6 @@ One possible explanation for the consistently small lapse rate in the present ex
 ## Comparing exposure effects against idealized learner models (all blocks) {#sec:shrinkage-test-all}
 
 ```{r hypothesis-table-shrinkage-all, results='asis'}
-
 predictedPSE_40 <- get_IO_predicted_PSE(condition = "Shift40")
 predictedPSE_10 <- get_IO_predicted_PSE(condition = "Shift10")
 predictedPSE_0 <- get_IO_predicted_PSE(condition = "Shift0")
@@ -1650,8 +1649,6 @@ make_hyp_table(
 
 
 
-
-
 ## Evaluating accuracy of psychometric model, idealised learners against human accuracy
 ```{r plot-io-psychometric-model-human-accuracy, fig.width=7.5, fig.height=5.5, fig.cap="(ref:plot-IO-human-accuracy)"}
 # get human accuracy on unlabelled exposure trials
@@ -1694,21 +1691,24 @@ human_psychometric_accuracy %>%
         shape = model,
         group = decision)) +
   geom_hline(
-    data = io.accuracy %>% filter(Condition.io != "prior"),
+    data = io.accuracy %>% filter(!Condition.io %in% paste0("prior", c(1:5))),
     mapping = aes(yintercept = accuracy, color = Condition.Exposure),
     linetype = 2,
     linewidth = .8,
     alpha = 0.4,
+    inherit.aes = F,
     show.legend = F) +
-  geom_hline(
-    data = io.accuracy %>% filter(Condition.io == "prior"),
-    mapping = aes(yintercept = accuracy),
-    linewidth = .8,
-    colour = "#d2d4dc",
-    alpha = 0.9,
+  geom_rect(
+    data = io.accuracy %>% 
+      filter(Condition.io %in% paste0("prior", c(1:5))) %>% 
+      group_by(Condition.Exposure, decision) %>% 
+      summarise(ymin = min(accuracy), ymax = max(accuracy)),
+    mapping = aes(xmin = -Inf, ymin = ymin, ymax = ymax, xmax = Inf),
+    fill = "#d2d4dc",
+    alpha = 0.5,
     inherit.aes = F) +
   geom_pointrange(position = position_dodge2(.5), size = .4) +
-  stat_summary(geom = "line", position = position_dodge2(.4)) +
+  stat_summary(geom = "line", position = position_dodge2(.5)) +
    labs(y = "Accuracy on exposure trials\n(of psychometric model)",
         x = "Block") +
   scale_colour_manual("Condition", values = colours.condition, labels = c("baseline", "+10", "+40"), guide = F) +
