@@ -15,7 +15,7 @@ In contrast to informal hypotheses, some existing theories make precise, quantif
 
 With this shared assumption, distributional learning models also share several critical predictions. Listeners' perception is predicted to change incrementally with exposure. The direction and magnitude of that change should gradiently depend on listeners' prior expectations based on relevant previously experienced speech input from other talkers (**prediction 1 - *prior expectations***), and both the amount (**prediction 2a - *exposure amount***) and distribution of phonetic cues in the exposure input from the unfamiliar talker [**prediction 2b - *exposure distribution* **, for review, see @xie2023]. Specifically, listeners' categorization functions---the mapping from acoustics to phonetic categories and words---should gradually shift from a starting point that reflects the statistics of previously experienced speech towards a target that reflects the statistics of the new talker's speech. Existing models predict that this shift proceeds until the listener has fully learned the statistics of the new talker's speech (**prediction 3 - *learn to convergence***). Finally, some distributional learning models further commit to specific learning mechanisms that constrain how exactly adaptation is expected to accumulate incrementally: both error-driven theories [@harmon2019; @olejarczuk2018; @sohoglu-davis2016] and theories of ideal information integration [@kleinschmidt-jaeger2015; @kleinschmidt2020] predict that adaptation initially proceeds quickly and then slows down as the listener approaches the correct mapping from the acoustic signal to phonetic categories (**prediction 4 - *diminishing returns***).^[Predictions (1)-(4) assume that listeners *know* that they are listening to the same new talker. Talker recognition is itself an active inference process that we do not further discuss here [but see @magnuson-nusbaum2007; @kleinschmidt-jaeger2015].] Figure \@ref(fig:predictions) illustrates these predictions and contrasts them with other possible scenarios.
 
-(ref:predictions) Some hypothetical ways in which adaptive changes in listeners perception might unfold incrementally. **Top row:** Using US English word-initial /d/ and /t/ as an example (as in "dip" vs. "tip"), we illustrate a hypothetical scenario of encountering an unfamiliar talker. Transparent lines indicate cross-talker variability in the realization of these two categories along the primary cue used to distinguish them (voice onset timing or VOT). Shown are 20 random talkers from a database of connected speech [@chodroff-wilson2018]. The thicker solid lines indicate a 'typical' talker (averaging over all talkers in the database). Dashed lines indicate a hypothetical unfamiliar talker with a noticeably different distribution of VOT values.  **Top-middle:** Ideal categorization functions along the phonetic VOT continuum of speech from a typical talker and of the unfamiliar talker. Grey arrows point to the points of subjective equality (PSE), the point along the phonetic VOT continuum at which listeners are equally likely to identify a sound as an instance of /d/ or /t/ (for details, see SI \@ref(sec:idealized-prior-listeners)) **Top-right:** Categorizations of typical and unfamiliar talker shown as changes in PSE. **Bottom row:** Illustration of different ways in which listeners' PSEs along the phonetic VOT continuum might change with increasing exposure to the unfamiliar talker (from more transparent to less transparent). The horizontal gray line indicates the ideal PSE expected given the phonetic distributions of the typical talker shown in the top panel. The dashed horizotnal line indicates the PSE expected from an idealized learner that has fully learned the unfamiliar talker's distribution of VOT (SI \@ref(sec:idealized-learners)). 
+(ref:predictions) Some hypothetical ways in which adaptive changes in listeners perception might unfold incrementally, using the pronunciation of US English word-initial /d/ and /t/ as an example (as in "dip" vs. "tip"). **Panel A:** Transparent lines indicate cross-talker variability in the realization of /d/ and /t/ along the primary cue used to distinguish them (voice onset timing or VOT). Shown are 20 random talkers from a database of connected speech [@chodroff-wilson2018]. The thicker solid lines indicate a 'typical' talker (averaging over all talkers in the database). Dashed lines indicate a hypothetical unfamiliar talker with a noticeably different distribution of VOT values. **Panel B:** Ideal categorization functions along the phonetic VOT continuum for speech from a typical talker (*idealized pre-exposure listener*, SI \@ref(sec:idealized-prior-listeners)) and speech from the unfamiliar talker (*idealized learner* that has fully learned that talkers distributions, SI \@ref(sec:idealized-learners)). Grey arrows point to the points of subjective equality (PSE), the point along the phonetic VOT continuum at which listeners are equally likely to identify a sound as an instance of /d/ or /t/. **Panel C:** The same as in Panel B but just showing the PSE. **Panel D:** Different ways in which listeners' PSEs along the phonetic VOT continuum might incrementally change with increasing exposure to the unfamiliar talker (from more transparent to less transparent). The horizontal lines indicates the ideal PSEs from Panel C. 
 
 ```{r predictions, fig.height=base.height*3+2/3, fig.width=base.width*5, fig.cap="(ref:predictions)", fig.pos="H"}
 d.talker_IO <- 
@@ -121,14 +121,15 @@ p.cat <-
   scale_colour_manual(values = c("grey", "#02427e")) +
   scale_linetype_manual(values = c("solid", "longdash")) +
   scale_x_continuous("VOT (ms)", limits = c(-25, 130), breaks = c(0, 37, 72, 100)) +
-  scale_y_continuous("Proportion 't'-response", breaks = c(0, .5, 1)) +
+  scale_y_continuous('Proportion "t"-responses', breaks = c(0, .5, 1)) +
   guides(linetype = "none", colour = "none") +
-  geom_segment(data = arrow_PSE,
-               mapping = aes(x = x, xend = xend, y = y , yend = yend),
-               colour = "grey",
-               alpha = 0.5,
-               arrow = arrow(type = "open" , length = unit(0.04, "npc")),
-               inherit.aes = F) 
+  geom_segment(
+    data = arrow_PSE,
+    mapping = aes(x = x, xend = xend, y = y , yend = yend),
+    colour = "grey",
+    alpha = 0.5,
+    arrow = arrow(type = "open" , length = unit(0.04, "npc")),
+    inherit.aes = F) 
 
 p.PSE <- 
   d.talker_types %>% 
@@ -138,9 +139,8 @@ p.PSE <-
   ggplot(aes(x = Talker, y = PSE, colour = Talker)) +
   geom_point(size = 1.5) +
   scale_colour_manual(values = c("grey", "#02427e"), guide = "none") + 
-  scale_x_discrete("Exposure", labels = c("pre", "post")) +
-  scale_y_continuous("PSE (ms VOT)", limits = c(30, 75), breaks = c(37, 72))
-  
+  scale_x_discrete("Talker", labels = c("typical", "unfamiliar")) +
+  scale_y_continuous("Ideal PSE (ms VOT)", limits = c(30, 75), breaks = c(37, 72))
  
 PSE_change <- expand_grid(
     PSE = c(),

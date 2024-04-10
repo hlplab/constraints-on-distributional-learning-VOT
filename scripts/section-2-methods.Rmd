@@ -110,7 +110,7 @@ d.means <-
     mu = c(15, 60, 45, 90, 5, 50),
     sigma = c(80, 270, 80, 270, 80, 270), 
     mu_label = map2(category, mu, ~ bquote(mu[.(.x)]==.(.y))),
-    sigma_label = map2(category, sigma, ~ bquote(sigma^2[.(.x)]==.(round(.y, 1)))),
+    sigma_label = map2(category, sigma, ~ bquote({sigma^2}[.(.x)]==.(round(.y, 1)))),
     label = map2(mu_label, sigma_label, ~ comb_plotmath(.x, ", ", .y)))
 
 p.histogram_conditions <- 
