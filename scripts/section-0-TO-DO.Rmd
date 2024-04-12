@@ -3,11 +3,7 @@
 # TO-DO
 
 ## Highest priority
- * FLORIAN: edits
-   * Introduction: 
-     * Re-integrate cut parts from intro into general discussion
-
-
+ * FLORIAN: 
 
  * MARYANN:
 
@@ -35,8 +31,8 @@
   * Remove libraries from preamble that are just meant for debugging and version tracking (latexdiffr)
 
 
-### Lower Priority
-  * 
+### AFTER submission
+  * refit all models with new MVBeliefUpdatr version so that quantities relevant for looic comparison are stored.
 
 ## To do later
   
