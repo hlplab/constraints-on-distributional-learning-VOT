@@ -171,8 +171,9 @@ if (file.exists("../models/d.IA_predicted_PSE.rds")) {
 # Compute distribution of talker-specific PSEs from Chodroff & Wilson (2018) database against which to compare human behavior
 prior.PSE_mean <- 
   d.IO_intercept.slope.PSE %>%
-  filter(Condition.Exposure %in% paste0("prior", c(1:5)) %>%
-  summarise(mean = mean(PSE)) %>% pull(mean)
+  filter(Condition.Exposure %in% paste0("prior", c(1:5))) %>%
+  summarise(mean = mean(PSE)) %>% 
+  pull(mean)
 
 d.talkerPSEs <-
   # get each talker's boundary estimate
@@ -307,7 +308,7 @@ psych.model_prediction <-
 IA.prediction <-
   d.IA_predicted_test %>%
   group_by(group, VOT) %>%
-    summarise(across(Predicted_posterior, mean)) %>%
+  summarise(across(Predicted_posterior, mean)) %>%
   mutate(ExposureGroup = ifelse(group == "prior", "no exposure", group)) %>%
   left_join(get_test_data_from_stanfit(m_IA_inferred.VOT_f0) %>% get_untransform_function_from_stanfit(m_IA_inferred.VOT_f0)(.)) %>% 
   mutate(
