@@ -75,6 +75,46 @@ comb_plotmath <- function(...) {
          list(...))
 }
 
+plot_exposure_stim_cues <- function(
+    data,
+    cues = c("VOT", "f0", "VowelDuration"),
+    measurement)
+{
+  data %>%
+    filter(measurement == {{ measurement }}) %>%
+    ggplot(aes(x = .panel_x, y = .panel_y, group = Item.MinimalPair, color = Item.MinimalPair)) +
+    geom_autopoint(alpha = .3) +
+    stat_ellipse(alpha = .3) +
+    facet_matrix(vars(cues),
+                 labeller = labeller(.rows = c(VOT = "VOT (ms)", f0 = str_c(measurement, "\n f0 (Hz)"), VowelDuration = str_c(measurement, "\n Vowel duration (ms)")),
+                                     .cols = c(VOT = "VOT (ms)", f0 = str_c(measurement, "\n f0 (Hz)"), VowelDuration = str_c(measurement, "\n Vowel duration (ms)")))) +
+    guides(colour = guide_legend(title = "Minimal Pair")) +
+    theme(legend.position = "top")
+}
+
+plot_db_cues <- function(
+    data
+) {
+  data %>%
+    ggplot(aes(x = .panel_x, y = .panel_y, color = category, fill = category)) +
+    geom_autopoint(alpha = .1) +
+    geom_autodensity(aes(), position = "identity", alpha = .4) +
+    stat_ellipse(
+      aes(
+        group = interaction(Talker, category)),
+      alpha = .1) +
+    stat_ellipse() +
+    scale_color_manual(
+      "Category",
+      labels = c("/d/", "/t/"),
+      values = colours.category_greyscale,
+      aesthetics = c("color", "fill")) +
+    facet_matrix(vars(c(VOT, f0_Mel, vowel_duration)), layer.lower = c(3, 4:5), layer.diag = 2,
+                 layer.upper = c(1, 4:5),
+                 labeller = labeller(.rows = c(VOT = "VOT", f0_Mel = "f0 (Mel)", vowel_duration = "Vowel duration"),
+                                     .cols = c(VOT = "VOT (ms)", f0_Mel = "f0 (Mel)", vowel_duration = "Vowel duration (ms)"))) +
+    theme(legend.position = "top")
+}
 
 # Load data --------------------------------------------------------------
 get_ChodroffWilson_data <- function(
@@ -383,14 +423,18 @@ get_nsamples <- function(model) {
 }
 
 
-get_bf <- function(model, hypothesis) {
+get_bf <- function(model, hypothesis, est = F, bf = F) {
   h <- hypothesis(model, hypothesis)[[1]]
   BF <- if (is.infinite(h$Evid.Ratio)) paste("\\geq", get_nsamples(model)) else paste("=", round(h$Evid.Ratio, 1))
-  paste0(
+  if (bf) { round(hypothesis(model, hypothesis)[[1]][[6]], 1) }
+  else if (est) { h[[2]] }
+  else {
+    paste0(
     "\\(\\hat{\\beta} = ", round(h$Estimate, 2),
     "\\), 90\\%-CI = \\([", round(h$CI.Lower, 3), ", ", round(h$CI.Upper, 3),
     "]\\), \\(BF ", BF,
-    "\\), \\(p_{posterior} = \\) \\(", signif(h$Post.Prob, 3), "\\)")
+    "\\), \\(p_{posterior} = \\) \\(", signif(h$Post.Prob, 3), "\\)") }
+
 }
 
 # Function to get identity CI of a model summary
@@ -428,7 +472,14 @@ add_block_labels <-
       c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3",  "Test 4", "Test 5", "Test 6")))
 
 
-geom_linefit <- function(data, x, y, fill, legend.position, legend.justification = NULL) {
+geom_linefit <- function(
+    data,
+    x,
+    y,
+    fill,
+    legend.position,
+    legend.justification = NULL
+    ) {
   list(
     geom_ribbon(aes(x = {{ x }}, y = {{ y }}, group = Condition.Exposure,
                     ymin = lower__, ymax = upper__, fill = Condition.Exposure), alpha = .1),
@@ -461,7 +512,7 @@ align_tab <- function(hyp) {
   map_chr(hyp, ~ ifelse(class(.x) == "numeric", "r","l"))
 }
 
-make_hyp_table <- function(hypothesis, hypothesis_names, caption, col1_width = "15em", digits = 2) {
+make_hyp_table <- function(model = NULL, hypothesis, hypothesis_names, caption, col1_width = "15em", digits = 2) {
 
   bind_cols(tibble(Hypothesis = hypothesis_names), hypothesis) %>%
     dplyr::select(-2) %>%
@@ -472,7 +523,7 @@ make_hyp_table <- function(hypothesis, hypothesis_names, caption, col1_width = "
       across(
         c(Post.Prob),
         ~ round(., digits = 3)),
-      Evid.Ratio = if (is.numeric(Evid.Ratio)) round(Evid.Ratio, digits = 1) else (Evid.Ratio),
+      Evid.Ratio = ifelse((is.infinite(Evid.Ratio)), paste("$\\geq", get_nsamples(model), "$"), round(Evid.Ratio, digits = 1)),
       CI = paste0("[", CI.Lower, ", ", CI.Upper, "]")) %>%
     dplyr::select(-c(CI.Upper, CI.Lower)) %>%
     relocate(CI, .before = "Evid.Ratio") %>%
@@ -480,7 +531,7 @@ make_hyp_table <- function(hypothesis, hypothesis_names, caption, col1_width = "
         format = "latex",
         booktabs = TRUE,
         escape = FALSE,
-        col.names = c("Hypothesis", "Estimate", "SE", "90\\%-CI", "BF", "$p_{posterior}$")) %>%
+        col.names = c("Hypothesis", "Est.", "SE", "90\\%-CI", "BF", "$p_{post}$")) %>%
     # HOLD_position for latex table placement H and hold_position for latex h!, neither if placement is left to latex
     kable_styling(latex_options = "hold_position", full_width = FALSE) %>%
     column_spec(1, width = col1_width)
@@ -572,6 +623,20 @@ center_stimuli <- function(d, database) {
         newdata = .,
         cue = substitute(x)),
       .names = "{.col}.CCuRE"))
+}
+
+point_overlay <- function(
+    d,
+    database
+) {
+  geom_autopoint(
+    data = d %>%
+      center_stimuli(database = database) %>%
+      select(!c(VOT, f0_Mel, vowel_duration)) %>%
+      rename(VOT = VOT.CCuRE, f0_Mel = f0_Mel.CCuRE, vowel_duration = vowel_duration.CCuRE) %>%
+      filter(Phase == "test") %>% distinct(VOT, f0_Mel, vowel_duration) %>%
+      mutate(category = "test"),
+    color = "black", alpha = .5, size = 1, inherit.aes = F)
 }
 
 # MAKE IDEAL OBSERVERS ----------------------------------------------------
@@ -728,27 +793,27 @@ prep_data_for_IBBU_prediction <- function(
     prep_test = T
 ) {
   cue.labels <- get_cue_levels_from_stanfit(model)
-  
+
   if (prep_test) {
-  get_test_data_from_stanfit(model) %>% 
+  get_test_data_from_stanfit(model) %>%
     distinct(!!! syms(cue.labels)) %>%
     { if (untransform_cues) get_untransform_function_from_stanfit(model)(.) else . } %>%
     make_vector_column(cols = cue.labels, vector_col = "x", .keep = "all") %>%
     nest(cues_joint = x, cues_separate = .env$cue.labels) %>%
     expand_grid(group = get_group_levels_from_stanfit(model))
   } else {
-    # Prepare exposure_data    
-    data %>% 
-      filter(Phase == "exposure") %>% 
-      group_by(Condition.Exposure) %>% 
+    # Prepare exposure_data
+    data %>%
+      filter(Phase == "exposure") %>%
+      group_by(Condition.Exposure) %>%
       # get 1 set of exposure trials per condition, per list
-      filter(ParticipantID == first(ParticipantID)) %>% 
-      reframe(Item.VOT, Item.f0_Mel, vowel_duration, category) %>% 
+      filter(ParticipantID == first(ParticipantID)) %>%
+      reframe(Item.VOT, Item.f0_Mel, vowel_duration, category) %>%
       rename(VOT = Item.VOT, f0_Mel = Item.f0_Mel) %>%
-      group_by(Condition.Exposure) %>% 
-      expand_grid(TestBlock = 1:4, LSD = c("A", "B", "C")) %>% 
-      mutate(group = factor(ifelse(TestBlock == 1, "no exposure", paste0("Cond ", Condition.Exposure, LSD, "A", "_Up to test", (TestBlock - 1) * 2 + 1)))) %>% 
-      make_vector_column(cols = cue.labels, vector_col = "x", .keep = "all") %>% 
+      group_by(Condition.Exposure) %>%
+      expand_grid(TestBlock = 1:4, LSD = c("A", "B", "C")) %>%
+      mutate(group = factor(ifelse(TestBlock == 1, "no exposure", paste0("Cond ", Condition.Exposure, LSD, "A", "_Up to test", (TestBlock - 1) * 2 + 1)))) %>%
+      make_vector_column(cols = cue.labels, vector_col = "x", .keep = "all") %>%
       nest(cues_joint = x, cues_separate = c(.env$cue.labels, category))
   }
 }
@@ -775,11 +840,11 @@ get_IBBU_predicted_response <- function(
       untransform_cues = untransform_cues) %>%
     filter(group %in% .env$groups)
 
-  
+
   # Categorize data
   d.pars %<>%
     group_by(group, .chain, .iteration, .draw) %>%
-    do(f = get_categorization_function_from_grouped_ibbu_stanfit_draws(., logit = F)) %>% 
+    do(f = get_categorization_function_from_grouped_ibbu_stanfit_draws(., logit = F)) %>%
     right_join(data, by = "group") %>%
     group_by(group, .chain, .iteration, .draw) %>%
     mutate(
@@ -804,13 +869,22 @@ get_IBBU_predicted_response <- function(
       ) }
 }
 
-get_IO_predicted_PSE <- function(condition, block = 7) {
-  d.IO_intercept.slope.PSE %>% 
-    select(Condition.Exposure, Block, intercept_scaled) %>%
-    filter(Condition.Exposure == condition, Block == block) %>% 
-    pull(intercept_scaled)
+get_IO_predicted_PSE <- function(condition, block = 7, io.intercept.slope.PSE = d.IO_intercept.slope.PSE) {
+  if (!("Block" %in% names(io.intercept.slope.PSE)))
+    io.intercept.slope.PSE %<>% crossing(Block = 1:9)
+  if (condition == "prior") {
+    io.intercept.slope.PSE %>%
+      select(Condition.Exposure, Block, intercept_scaled) %>%
+      filter(Condition.Exposure %in% paste0("prior", c(1:5)), Block == block) %>%
+      summarise(intercept_scaled = mean(intercept_scaled)) %>%
+      pull(intercept_scaled)
+  } else {
+    io.intercept.slope.PSE %>%
+      select(Condition.Exposure, Block, intercept_scaled) %>%
+      filter(Condition.Exposure == condition, Block == block) %>%
+      pull(intercept_scaled)
+  }
 }
-
 
 # Get approximate f0 of synthesised stimuli from VOT values
 ############################################################################
@@ -872,9 +946,10 @@ get_IO_from_talkers <- function(
     cues,
     groups = NULL,
     lapse_rate = 0,
-    with_noise = F,
-    VOTs = seq(0, 85, .1),
+    with_noise = T,
+    VOTs = seq(0, 130, .5),
     F0s = predict_f0(VOTs, Mel = T),
+    plot.colour = colours.category_greyscale,
     alpha = .3,
     linetype = 1,
     linewidth = .5
@@ -889,9 +964,9 @@ get_IO_from_talkers <- function(
         ~ lift_MVG_to_MVG_ideal_observer(
           .x,
           group = NULL,
-          prior = c("/d/" = .5, "/t/" = .5),
+          #prior = c("/d/" = .5, "/t/" = .5),
           lapse_rate = lapse_rate,
-          lapse_bias = c("/d/" = .5, "/t/" = .5),
+          #lapse_bias = c("/d/" = .5, "/t/" = .5),
           Sigma_noise =
             if(with_noise == FALSE & length(cues) == 1) {
               matrix(c(0), ncol = 1, dimnames = list(cues, cues))
@@ -929,7 +1004,7 @@ get_IO_from_talkers <- function(
             filter(category == "/t/") %>%
             mutate(VOT = map(x, ~ .x[1]) %>% unlist())),
       x = list(VOT = seq(-25, 130, .5)),
-           x = map(x, ~ as_tibble(.x) %>% rename("VOT (ms)" = value))) %>%
+      x = map(x, ~ as_tibble(.x) %>% rename("VOT (ms)" = value))) %>%
     unnest(io) %>%
     mutate(
       gaussian = pmap(
@@ -938,8 +1013,8 @@ get_IO_from_talkers <- function(
           data = ..1,
           aes(x = `VOT (ms)`,
               colour = ..2),
-          fun = function(x) dnorm(x, mean = ..3[[1]][[1]], sd = sqrt(..4[[1]][[1]])), 
-          alpha = alpha, 
+          fun = function(x) dnorm(x, mean = ..3[[1]][[1]], sd = sqrt(..4[[1]][[1]])),
+          alpha = alpha,
           linetype = linetype,
           linewidth = linewidth)))
 }

@@ -8,11 +8,9 @@
  * MARYANN:
 
     * For the figure to parallel Figure 6: This figure will compare human (expected) accuracies against the expected accuracies for an ideal learner (IA). This figure is probably less important than the one described above.
-  * Get BFs for the difference in the degree of adaptation ('shrinkage'). Simply do hypothesis test for intercept (or PSE, same as rest of paper) using the psychometric model with simple effects for condition. Use the simple effects during test 4 and test hypothesis that (idealized learner-predicted intercept - simple effect of condition) > or < than the same for another condition. **These BFs quantify whether degree of shrinkage differs between conditions**
   * Calculate the shrinkage (in Test 4) *predicted* by the IA. In Figure 6, it looks a bit like the IA does, after all, predict the shrinkage pattern. I don't yet see why that would be the case. But let's start by calculating the percentage adaptation that the *IA* has achieved in Test 4 for each of the three exposure conditions (i.e., the shaded intervals in Figure 6).
   * Consider using IA fit with mu & Sigma set to mean(mu) and Sigma derived by taking geometric mean of tau (vector of SDs) and mean of omega (correlation matrix) across five folds. If such a model with just 3 DFs also predicts that data relatively well, we should probably use that simpler model for this paper. That will also pre-empt questions about what the mu and Sigma priors were that the IA model inferred.  
   **To validate the IA as a decently ok model**, compare IA vs. pyschometric model in terms of: 
-     * R2
      * LOOIC
      * Add these measures to Section on "Constraints on (the early moments of) adaptive speech perception?" (see inline comments in R markdown)
   * Get BFs comparing IA-predicted intercept and psychometric-predicted intercept for each test block. **These BFs quantify whether IA model indeed over/under-predicts.**
@@ -21,6 +19,7 @@
  * Change order of possible explanations, starting with theoretically most relevant.
  * Replot Dave's incremental adaptation figure (figure 9) in GD (search for "Figure 9).
  * Consider replotting shrinkage figure (but with our aesthetics). this could be the figure that you at some point had added to the introduction, showing individual participants categorization functions, the idealized pre-exposure listeners, and the idealized learner in one panel, and in the other panel the violin shrinkage plot.
+ * THINK ABOUT MISMATCH BETWEEN FIGURE (PSE), TEXT (PSE) AND HYPOTHESIS TABLES (INTERCEPTS!)
   
 
 

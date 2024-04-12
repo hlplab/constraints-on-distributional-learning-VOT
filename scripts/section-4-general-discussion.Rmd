@@ -171,7 +171,7 @@ if (file.exists("../models/d.IA_predicted_PSE.rds")) {
 # Compute distribution of talker-specific PSEs from Chodroff & Wilson (2018) database against which to compare human behavior
 prior.PSE_mean <- 
   d.IO_intercept.slope.PSE %>%
-  filter(Condition.Exposure %in% c("prior1", "prior2", "prior3", "prior4", "prior5"), Block == 1) %>%
+  filter(Condition.Exposure %in% paste0("prior", c(1:5)) %>%
   summarise(mean = mean(PSE)) %>% pull(mean)
 
 d.talkerPSEs <-
