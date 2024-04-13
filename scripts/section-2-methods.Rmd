@@ -20,7 +20,7 @@ d <-
         Response.ClickPosition, Response.Voicing),
       factor),
     Participant.Sex = str_to_lower(Participant.Sex),
-    Item.f0_Mel = normMel(Item.F0_target_for_generation_script),
+    Item.f0_Mel = normMel(Item.f0),
     category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))) %>%
   # Make copies of cue just to make working across the functions, which are not yet standardized a bit easier
   mutate(VOT = Item.VOT, f0_Mel = Item.f0_Mel, vowel_duration = Item.VowelDuration)
