@@ -1442,24 +1442,22 @@ fit_lapse_by_block <-
 
 All analyses presented in the main text and in the preceding SI sections assume a constant lapse rate across exposure and test blocks. These analyses found lapse rates of `r logit_to_prob(fit_test, "theta1_Intercept")` (95%-CI: `r logit_to_prob(fit_test, "theta1_Intercept, 3")`- `r logit_to_prob(fit_test, "theta1_Intercept, 4")`) during test blocks and `r logit_to_prob(fit_exposure, "theta1_Intercept")` (95%-CI: `r logit_to_prob(fit_exposure, "theta1_Intercept", 3)`-`r logit_to_prob(fit_exposure, "theta1_Intercept", 4)`) during exposure blocks, much smaller than in previous work [@clayards2008; @kleinschmidt-jaeger2016; @kleinschmidt2020]. The decision to assume constant lapse rates seems to be supported by Figures \@ref(fig:plot-fit-PSE)A-B, which show that participants' responses (the point ranges) in all exposure and test blocks approach 0 and 100% "t"-responses for small and large VOTs, respectively. Still, to explore changes in lapse rates we refitted the same psychometric mixed-effects model with a lapse model that included block as a predictor (sliding-difference coded from the first to the ninth block). Priors in this model were the same as that in the constant-lapse model including the prior for lapse rates which was the \texttt{brms} [@R-brms_a] default of a logistic prior centered around 0 with a scale of 1 unit. This prior assigns fairly equal weighting over values of $0 < p < 1$ and lower weighting of the extreme values. 
 
-The estimated lapse rate (in log-odds) for each block is shown in Table \@ref(tab:hypothesis-table-lapse-by-block). Lapse rates were at their highest in the first block ($1.5\%$) but fell sharply up to the fifth block ($\leq.0011\%$) before rising in the sixth ($0.07\%$) and seventh block ($0.04\%$). Where estimates were especially low, we note the accompanying wide confidence intervals partly resulting from our use of a uniform prior. Overall, these results show some evidence of familiarization with the task. However, unlike previous work, lapse rates were very low even during the first 12 trials (the first test block). For comparison, a post-hoc analysis reported in @kleinschmidt2020 estimated lapse rates as high as 12% during the first 37 trials of his experiment. Lapse rates reduced to about 5% over the remaining 185 trials. 
+The estimated lapse rate for each block is shown in Table \@ref(tab:hypothesis-table-lapse-by-block). Lapse rates were at their highest in the first block ($1.5\%$) but fell sharply up to the fifth block ($\leq.0011\%$) before rising in the sixth ($0.07\%$) and seventh block ($0.04\%$). Where estimates were especially low, we note the accompanying wide confidence intervals partly resulting from our use of a uniform prior. Overall, these results show some evidence of familiarization with the task. However, unlike previous work, lapse rates were very low even during the first 12 trials (the first test block). For comparison, a post-hoc analysis reported in @kleinschmidt2020 estimated lapse rates as high as 12% during the first 37 trials of his experiment. Lapse rates reduced to about 5% over the remaining 185 trials. 
 
 ```{r hypothesis-table-lapse-by-block, results='asis'}
 hyp.lapse <- 
-hypothesis(fit_lapse_by_block, 
-           map_chr(.x = 1:9, ~ c(get_lapse_hypothesis(fit_lapse_by_block, .x)))) %>% 
+  hypothesis(fit_lapse_by_block, map_chr(.x = 1:9, ~ c(get_lapse_hypothesis(fit_lapse_by_block, .x)))) %>% 
   .$hypothesis %>% 
   dplyr::select(-Star)
 
 make_hyp_table(
   fit_lapse_by_block, 
   hyp.lapse, 
-  paste(rep("Block", 9), 1:9, "< 0 (.5)"), 
-    caption = "This table summarizes the estimated proportion of lapse trials (in log-odds) in each block of the experiment.") %>% 
-  pack_rows("Estimated lapse rate", 1, 9)  
+  paste(rep("Block", 9), 1:9, ": $\\lambda$ > 0"), 
+  caption = "This table summarizes the estimated proportion of lapses for each block of the experiment.",
+  digits = 3) 
 
-rm(fit_lapse_by_block)
-rm(fit_exposure)
+rm(fit_lapse_by_block, fit_exposure)
 ```
 
 One possible explanation for the consistently small lapse rate in the present experiment is that we recruited participants from the Prolific crowdsourcing platform rather than Mechanical Turk [@kleinschmidt-jaeger2016; @kleinschmidt2020]. Prolific has been found to deliver higher data quality than the Amazon's Mechanical Turk crowd-sourcing platform [@peer2017; @adams2020; @albert-smilek2023]. Another possibility is that the use of natural-, rather than robotic-sounding, stimuli engaged participants attention in the present experiment.
@@ -1468,12 +1466,9 @@ One possible explanation for the consistently small lapse rate in the present ex
 
 ## Comparing exposure effects against idealized learner models (all blocks) {#sec:shrinkage-test-all}
 
-```{r hypothesis-table-shrinkage-all, results='asis'}
-predictedPSE_40 <- get_IO_predicted_PSE(condition = "Shift40")
-predictedPSE_10 <- get_IO_predicted_PSE(condition = "Shift10")
-predictedPSE_0 <- get_IO_predicted_PSE(condition = "Shift0")
-predictedPSE_prior <- get_IO_predicted_PSE(condition = "prior")
+<!-- TO DO: add Test 4 here, too -->
 
+```{r hypothesis-table-shrinkage-all, results='asis'}
 hyp.shrinkage <-
   hypothesis(
     fit_test_nested_within_condition_and_block,
@@ -1527,7 +1522,7 @@ make_hyp_table(
     
     "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{ideal_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{ideal_{pre}})}$",
     "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{ideal_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{ideal_{pre}})}$"),
-  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). For identical tests for all test blocks, see SI (\\ref{sec:XXX}).",
+  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table complements Table \ref{tab:hypothesis-table-shrinkage-test4}.",
   col1_width = "25em") %>%
   pack_rows("Have participants converged against the PSE expected from idealized learner?", 1, 9) %>% 
   pack_rows("Test block 1", 1, 3) %>% 
@@ -1538,7 +1533,6 @@ make_hyp_table(
   pack_rows("Test block 2", 12, 13) %>% 
   pack_rows("Test block 3", 14, 15) 
 ```
-
 
 \pagebreak
 
