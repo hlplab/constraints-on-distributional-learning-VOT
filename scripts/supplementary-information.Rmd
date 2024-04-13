@@ -1572,7 +1572,6 @@ make_hyp_table(
 (ref:plot-IO-psychometric-model-human-accuracy) Same as Figure \@ref(fig:IO-human-accuracy) but also showing listeners' empirical recognition accuracy, as estimated from the unlabeled trials of exposure blocks (triangles). For the empirical accuracy, lineranges show 95% bootstrapped CIs.
 
 ```{r plot-IO-psychometric-model-human-accuracy, fig.width=7.5, fig.height=base.height*2 + .75, fig.cap="(ref:plot-IO-psychometric-model-human-accuracy)"}
-
 p.human_psych_accuracy
 ```
 

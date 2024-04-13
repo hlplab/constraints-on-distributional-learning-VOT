@@ -904,8 +904,9 @@ predict_f0 <- function(VOT, Mel = TRUE) {
 }
 
 predict_vowel_duration <- function(VOT) {
-  # Intercept and slope values are obtained from linear model based on positive VOT values of synthesised diptip stimuli
-  vowel_duration <- 128.7 + -0.32 * (VOT)
+  # Intercept and slope values are obtained from linear model computed separately for positive and negative VOT values
+  vowel_duration <- 
+    ifelse(VOT > 0, (128.7 -0.32 * (VOT)), (122.9 - 0.18 * (VOT)))
   return(vowel_duration)
 }
 
