@@ -87,7 +87,7 @@ Pre-voicing in 5ms increments were generated from a a clear pre-voicing waveform
 
 ### Annotation of resynthesized stimuli (used in visualizations and for ideal observer/adaptor analyses)
 
-All resynthesized stimuli were annotated for VOT, pre-voicing, vowel duration, and f0 following the same procedure as in the original recordings. In the data shared on OSF, these annotations are stored in exposure_stimuli_cue_measurements.csv. For reasons we describe next, we corrected and simplified the measurements derived from these annotations. We used these corrected measurements for all visualizations of the stimuli (e.g., in Figure \@ref(fig:exposure-means-database-matrix-plot) in the main text) and in our ideal observer and adaptor analyses. In the data shared on OSF, the targeted cue values are stored as Item.CUE_NAME.measured and the measured values are stored as Item.CUE_NAME.measured in the file stimuli_cue_corrected.csv. 
+All resynthesized stimuli were annotated for VOT, pre-voicing, vowel duration, and f0 following the same procedure as in the original recordings. In the data shared on OSF, these annotations are stored in exposure_stimuli_cue_measurements.csv. For reasons we describe next, we corrected and simplified the measurements derived from these annotations. We used these corrected measurements for all visualizations of the stimuli (e.g., in Figure \@ref(fig:exposure-means-database-matrix-plot) in the main text) and in our ideal observer and adaptor analyses. In the data shared on OSF, the targeted cue values are stored as Item.CUE_NAME.measured and the measured values are stored as Item.CUE_NAME.measured. 
 
 First, we follow previous work on speech perception and combined the pre-voicing and VOT data, treating pre-voicing as negative VOT. This simplifies plotting and analysis. It does, however, make assumptions that we revisit in the general discussion.
 
@@ -255,7 +255,7 @@ To train ideal observers (or other models of phonetic representations), it is ne
 p.database <- 
   d.chodroff_wilson %>% 
   group_by(category) %>%
-  plot_db_cues()
+  plot_phoneticdb_cues()
 
 p.matrix_isolated <- 
   p.database %+% 
@@ -289,7 +289,7 @@ d.chodroff_wilson %>%
 p.database.norm <- 
   d.chodroff_wilson.norm %>% 
   group_by(category) %>%
-  plot_db_cues()
+  plot_phoneticdb_cues()
 
 p.matrix_isolated.norm <- 
   p.database.norm %+% 

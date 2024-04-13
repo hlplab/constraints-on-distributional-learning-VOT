@@ -92,7 +92,7 @@ plot_exposure_stim_cues <- function(
     theme(legend.position = "top")
 }
 
-plot_db_cues <- function(
+plot_phoneticdb_cues <- function(
     data
 ) {
   data %>%
@@ -896,7 +896,7 @@ get_IO_predicted_PSE <- function(condition, block = 7, io.intercept.slope.PSE = 
 ############################################################################
 
 predict_f0 <- function(VOT, Mel = TRUE) {
-  # Intercept and slope values are obtained from linear model based on original recordings of the exposure talker
+  # Intercept and slope values are obtained from linear model based on original measurements of recordings of the exposure talker
   f0 <- 245.47 + 0.04 * (VOT)
 
   if (Mel) f0 <- phonR::normMel(f0)
@@ -904,8 +904,8 @@ predict_f0 <- function(VOT, Mel = TRUE) {
 }
 
 predict_vowel_duration <- function(VOT) {
-  # TO DO: please fill in the correct function and explain where it comes from
-  vowel_duration <- 200 + -.3 * (VOT)
+  # Intercept and slope values are obtained from linear model based on positive VOT values of synthesised diptip stimuli
+  vowel_duration <- 128.7 + -0.32 * (VOT)
   return(vowel_duration)
 }
 
