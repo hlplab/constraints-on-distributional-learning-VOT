@@ -627,15 +627,20 @@ center_stimuli <- function(d, database) {
 
 point_overlay <- function(
     d,
-    database
+    database,
+    center = F
 ) {
   geom_autopoint(
-    data = d %>% 
-      center_stimuli(database = database) %>% 
-      select(!c(VOT, f0_Mel, vowel_duration)) %>%
-      rename(VOT = VOT.CCuRE, f0_Mel = f0_Mel.CCuRE, vowel_duration = vowel_duration.CCuRE) %>%
-      filter(Phase == "test") %>% distinct(VOT, f0_Mel, vowel_duration) %>%
-      mutate(category = "test"),
+    data =  if (center) { d %>% 
+        center_stimuli(database = database) %>% 
+        select(!c(VOT, f0_Mel, vowel_duration)) %>%
+        rename(VOT = VOT.CCuRE, f0_Mel = f0_Mel.CCuRE, vowel_duration = vowel_duration.CCuRE) %>%
+        filter(Phase == "test") %>% distinct(VOT, f0_Mel, vowel_duration) %>%
+        mutate(category = "test") } else { 
+          d %>% 
+            filter(Phase == "test") %>% 
+            distinct(VOT, f0_Mel, vowel_duration) %>%
+            mutate(category = "test") },
     color = "black", alpha = .5, size = 1, inherit.aes = F)
 }
 

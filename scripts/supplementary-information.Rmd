@@ -84,7 +84,7 @@ Pre-voicing in 5ms increments were generated from a a clear pre-voicing waveform
 
 ### Annotation of resynthesized stimuli (used in visualizations and for ideal observer/adaptor analyses)
 
-All resynthesized stimuli were annotated for VOT, pre-voicing, vowel duration, and f0 following the same procedure as in the original recordings. In the data shared on OSF, these annotations are stored as <!--\texttt{Item.CUE_NAME.annotated}. TO DO! --> For reasons we describe next, we corrected and simplified the measurements derived from these annotations. We used these corrected measurements for all visualizations of the stimuli (e.g., in Figure \@ref(fig:exposure-means-database-matrix-plot) in the main text) and in our ideal observer and adaptor analyses. In the data shared on OSF, these corrected measurements are stored as <!--\texttt{Item.CUE_NAME}. TO DO: check but that's already the case, right? -->
+All resynthesized stimuli were annotated for VOT, pre-voicing, vowel duration, and f0 following the same procedure as in the original recordings. In the data shared on OSF, these annotations are stored in materials/stimuli_AE/annotationfiles. For reasons we describe next, we corrected and simplified the measurements derived from these annotations. We used these corrected measurements for all visualizations of the stimuli (e.g., in Figure \@ref(fig:exposure-means-database-matrix-plot) in the main text) and in our ideal observer and adaptor analyses. In the data shared on OSF, these corrected measurements are stored as Item.CUE_NAME in the file stimuli_cue_corrected.csv. 
 
 First, we follow previous work on speech perception and combined the pre-voicing and VOT data, treating pre-voicing as negative VOT. This simplifies plotting and analysis. It does, however, make assumptions that we revisit in the general discussion.
 
@@ -248,7 +248,7 @@ We used the adaptive speech perception (ASP) framework described in @xie2023 as 
 Given the small number of talkers in the isolated speech database (13), its restriction to University students from a single campus, and the stimuli being limited to selected phonetic contexts this result is unlikely to be representative of a typical listener's exposure to everyday speech. To safeguard against providing a false sense of strength given by this point estimate, we divided the database into five folds by talker and constructed ideal observers from the data in each fold (i.e. data to train each IO never overlapped but each had a fifth of the data points produced by each talker). An alternative would have been to randomly distribute talkers into the folds. With few talkers in the database this would have meant that each prior PSE estimate would have been based on data from only 2-3 talkers. Since the aim is to simulate an adult L1 US English listener's knowledge the prior should ideally be estimated on as many talkers as possible. The first option strikes the best compromise given the small database we had at hand. 
 
 ### A procedure to estimate the parameters of the model from the database of /d/ and /t/ productions
-<!-- TO DO: this might change quite a bit if this isn't actually what we ended up using -->
+
 
 Committing to a database is, however, not a *sufficient* assumption. Estimates of listeners' prior expectations also depend strongly on assumptions about how listeners represent the mapping from phonetic cues to phonetic categories. For example, previous work has often derived estimates under the implicit assumption that listener learn and maintain a *single* representation for each phonetic category across talkers. This assumption typically has taken one of two forms. One approach is to entirely ignore talker identity during the estimation of phonetic categories. This is illustrated in Figure \@ref(fig:plot-database-pairwise-cue-correlations) which shows the distribution of /d/ and /t/ over VOT, f0, and vowel duration in isolated (top left) and connected (bottom left) speech. Ellipses indicate the phonetic category representations that would be estimated from these data. Another approach is to first normalize each cue within each talker---e.g., by subtracting the talker's cue mean from each token [e.g., @mcmurray2011; @mcmurray-jongman2011; for review, see @apfelbaum-mcmurray2015; @weatherholtz-jaeger2016]. Phonetic categories are then estimated over these normalized cues. The resulting representations are shown in Figure \@ref(fig:plot-database-pairwise-cue-correlations)C and \@ref(fig:plot-database-pairwise-cue-correlations)D. 
 
@@ -300,12 +300,12 @@ p.database.norm <-
 p.matrix_isolated.norm <- 
   p.database.norm %+% 
   subset(d.chodroff_wilson.norm %>% filter(speechstyle == "isolated")) +  
-point_overlay(d.for_analysis, d.chodroff_wilson.isolated)
+point_overlay(d.for_analysis, d.chodroff_wilson.isolated, center = T)
 
 p.matrix_connected.norm <- 
   p.database.norm %+% 
   subset(d.chodroff_wilson.norm %>% filter(speechstyle == "connected")) +  
-point_overlay(d.for_analysis, d.chodroff_wilson.connected)
+point_overlay(d.for_analysis, d.chodroff_wilson.connected, center = T)
 ```
 
 (ref:plot-database-pairwise-cue-correlations) Placement of test tokens of our experiment relative to distribution of three important cues to word-initial stop-voicing in L1-US English. **Panel A:** Isolated speech of initial /d/ and /t/ syllables by `r length(unique(d.chodroff_wilson.isolated$Talker)) ` female talkers. **Panel B:** Same as **A** but talker-normalized. **Panel C:** Connected speech of word-initial /d/ and /t/ by `r length(unique(d.chodroff_wilson.connected$Talker)) ` female talkers. **Panel D:** Same as **C** but talker-normalized. Following @xie2023, we added the overall cue mean to all talker-normalized tokens in order to show normalized tokens in the same space as unnormalized tokens (thus keeping the phonetic space constant across panels). 
