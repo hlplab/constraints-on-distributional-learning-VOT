@@ -39,6 +39,9 @@ You will also need to download the IPA font [SIL Doulos](https://software.sil.or
 
 We used the following R packages to create this document: `r cite_r("latex-stuff/r-references.bib", omit = T, pkgs = c("MVBeliefUpdatr", "RJ-2021-048"))`. If opened in RStudio, the top of the R markdown document should alert you to any libraries you will need to download, if you have not already installed them. The full session information is provided at the end of this document.
 
+## Interested in using R markdown do create APA formatted documents that integrate your code with your writing?
+A project template, including R markdown files that result in APA-formatted PDFs is available at [https://github.com/hlplab/template-R-project](https://github.com/hlplab/template-R-project). Feedback welcome. We aim to help others avoid the mistakes and detours we made when first deciding to embrace literal coding to increase transparency in our projects.
+
 
 # Additional information about Materials {#sec:stimulus-generation}
 All stimuli are available as part of the OSF repository for this article.
@@ -1522,7 +1525,7 @@ make_hyp_table(
     
     "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{ideal_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{ideal_{pre}})}$",
     "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{ideal_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{ideal_{pre}})}$"),
-  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table complements Table \ref{tab:hypothesis-table-shrinkage-test4}.",
+  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table complements Table \\ref{tab:hypothesis-table-shrinkage-test4}.",
   col1_width = "25em") %>%
   pack_rows("Have participants converged against the PSE expected from idealized learner?", 1, 9) %>% 
   pack_rows("Test block 1", 1, 3) %>% 
@@ -1539,6 +1542,7 @@ make_hyp_table(
 ## Evaluating accuracy of psychometric model, idealised learners against human accuracy
 
 (ref:plot-IO-psychometric-model-human-accuracy) Figure \@ref(fig:IO-human-accuracy) depicts changes across blocks and conditions in participants' recognition accuracy for the unfamiliar talker's speech. In this version human accuracy of exposure trials are superimposed for comparison.
+
 ```{r plot-IO-psychometric-model-human-accuracy, fig.width=7.5, fig.height=5.5, fig.cap="(ref:plot-IO-psychometric-model-human-accuracy)"}
 # get human accuracy on unlabelled exposure trials
 human_psychometric_accuracy <- 
