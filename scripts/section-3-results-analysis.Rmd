@@ -87,6 +87,61 @@ d.psychometric_intercept.slope.PSE <-
   add_block_labels()
 ```
 
+## Conceptual replication (averaging over test blocks)
+
+```{r fit-simple-effects-condition, results='hide'}
+# Get simple effects of Condition nested under block
+my_priors <- c(
+  prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),  
+  set_prior("student_t(3, 0, 15)", dpar = "mu2", coef = "Block1:VOT_gs"),
+  set_prior("student_t(3, 0, 15)", dpar = "mu2", coef = "Block3:VOT_gs"),
+  set_prior("student_t(3, 0, 15)", dpar = "mu2", coef = "Block5:VOT_gs"),
+  set_prior("student_t(3, 0, 15)", dpar = "mu2", coef = "Block7:VOT_gs"),
+  set_prior("student_t(3, 0, 15)", dpar = "mu2", coef = "Block8:VOT_gs"),
+  set_prior("student_t(3, 0, 15)", dpar = "mu2", coef = "Block9:VOT_gs"),
+  prior(cauchy(0, 2.5), class = "sd", dpar = "mu2"),
+  prior(lkj(1), class = "cor"))
+
+fit_test.simple_effects_condition <-
+  brm(
+  bf(
+    Response.Voiceless ~ 1,
+    mu1 ~ 0 + offset(0),
+    mu2 ~ 0 + Block / (Condition.Exposure * VOT_gs) +
+      (0 + Block / VOT_gs | ParticipantID) +
+      (0 + Block / (Condition.Exposure * VOT_gs) | Item.MinimalPair),
+    theta1 ~ 1),
+    data = d.for_analysis %>%
+      filter(Phase == "test") %>%
+      prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
+    priors = my_priors,
+    cores = 4,
+    chains = chains,
+    init = 0,
+    iter = 4000,
+    warmup = 2000,
+    family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
+    sample_prior = "yes",
+    control = list(adapt_delta = .995),
+    file ="../models/test-nested-condition.rds")
+```
+
+<!-- TO DO: consider a much simpler result plot here that just shows the marginal effects across blocks (a) in terms of the categorization function and (b) in terms of the PSE. Then we could move the main figure and its description into the overview of incremental analyses, closer to where they are actually being discussed. -->
+We first use to the psychometric mixed-effects model to analyze participants' behavior when averaging over all test blocks. This analysis recasts within a psychometric model the type of analysis that remains the most common in the field: it assesses overall changes in listeners' behavior after exposure, without telling us how these changes accumulate, how they relate to listeners' prior expectations, or how they compare to behavior that would be expected from a learner that has fully adapted to the unfamiliar talker. Prediction (2b) states that changes in listeners' categorization function should depend on the distribution of phonetic cues in the exposure input. Specifically, the +10 condition should elicit a rightward shift in the categorization function relative to the baseline condition, and the +40 condition should elicit an even larger rightward shift. This is also what previous work found [@kleinschmidt-jaeger2016].
+
+Across all test blocks, participants were more likely to respond "t" the longer the VOT (`r get_bf(fit_test, "mu2_VOT_gs > 0")`). Exposure affected participants' categorization responses in the predicted direction. Marginalizing over Tests 1-6, participants in the +40 condition were less likely to respond "t" than participants in the +10 condition (`r get_bf(fit_test, "mu2_Condition.Exposure_Shift40vs.Shift10 < 0")`) or the baseline condition (`r get_bf(fit_test, "mu2_Condition.Exposure_Shift40vs.Shift10 + mu2_Condition.Exposure_Shift10vs.Shift0 < 0")`). There was also evidence---albeit less decisive---that participants in the +10 condition were less likely to respond "t" than participants in the baseline condition (`r get_bf(fit_test, "mu2_Condition.Exposure_Shift10vs.Shift0 < 0")`). That is, the +10 and +40 conditions resulted in categorization functions that were shifted rightwards compared to the baseline condition, as also evident in Figure \@ref(fig:plot-fit-PSE)A.^[The perceptual model contained in the our psychometric mixed-effects model describes the effect of VOT on the log-odds of "t"-responses as a line. The main effect of VOT is the average slope of that line across exposure conditions. The $\hat{\beta}$s for the comparisons across conditions indicate differences in the intercept of that line. Negative $\hat{\beta}$s thus indicate a *down*ward shift of that line in one condition, relative to the other. These downward shifts result in *right*ward shifts of the point of subjective equality (PSE), the VOT at which "t" and "d" responses are equally likely. This also shows in Figure \@ref(fig:plot-fit-PSE)A. In this figure, predictions are transformed into proportion "t"-responses and the downward shifts appear visually as a rightward shifts of the S-shaped categorization function (of one condition relative to another).]
+
+Unlike the differences in the relative shift of the categorization function, there was little evidence that the *slopes* of listeners' categorization functions differed between exposure conditions (`r get_bf(fit_test.simple_effects_condition, "mu2_Block3:Condition.Exposure_Shift40vs.Shift10:VOT_gs = 0", bf = T)` < BFs < `r get_bf(fit_test.simple_effects_condition, "mu2_Block5:Condition.Exposure_Shift40vs.Shift10:VOT_gs + mu2_Block5:Condition.Exposure_Shift10vs.Shift0:VOT_gs = 0", bf = T)`; see also Figure \@ref(fig:plot-fit-PSE)A). This lack of notable differences in the slope is precisely what is expected under distributional learning models, since our exposure conditions manipulated neither the category variances of /d/ and /t/ nor the distance between their category means. In the remainder of the main text, we thus focus on 'shifts' in the categorization function---i.e., changes in listeners' PSE. Parallel analyses of changes (or lack thereof) in the slopes of listeners' categorization functions are reported in the SI (\@ref(sec:slopes-analyses-test)-\@ref(sec:slopes-analyses-exposure)), and do not affect any of our conclusions.
+
+In summary, the analysis across all test blocks conceptually replicates previous findings that exposure to different VOT distributions changes listeners' categorization responses [for /b/-/p/: @clayards2008; @kleinschmidt2015; @kleinschmidt2020; for /g/-/k/, @theodore-monto2019]. This replication is obtained for stimuli with phonetic properties that more closely resemble those experienced in everyday speech perception. This conceptual replication also adds to a small body of work that goes beyond dichotomous comparisons of exposure conditions, testing stronger hypotheses about the *relative order* of exposure effects [e.g., @babel2019; @bejjanki2011; @bradlow-bent2008; @cummings-theodore2023; @kleinschmidt2020; @liu-jaeger2018].
+
+## Overview of incremental analyses
+Next, we turn to the questions of primary interest. Incremental changes in participants' categorization responses can be assessed from three mutually complementing perspectives. First, we compare how exposure affects listeners' categorization responses *relative to other exposure conditions*. This is the perspective taken in previous studies and in the conceptual replication presented above, but extended to test *how early* in the experiment differences between exposure conditions begin to emerge. Second, we compare how exposure *incrementally changes* listeners' categorization responses from block to block within each condition, relative to listeners' responses prior to any exposure. Together with the first perspective, this allows us to test predictions (1)-(2a,b) from the introduction. Third, we compare changes in listeners' responses to those expected from an ideal observer that has fully learned the exposure distributions. This analysis has the potential to identify constraints on cumulative adaptation. As we show, in particular these latter two perspectives---made possible by the incremental exposure-test paradigm---afford stronger tests of predictions (3 - *learn to convergence*) and (4 - *diminishing returns*), and suggest previously unrecognized constraints on the early moments of adaptive speech perception. For all three analyses, we initially focus on Tests 1-4 with intermittent exposure. Following that, we analyze the effects of repeated testing without intermittent exposure blocks during Tests 4-6. Though research---including some of our own previous work---tends to interpret tests as passive windows into the effects of exposure, test stimuli constitute part of the exposure input listeners' receive. This has both methodological and theoretical consequences: for example, we show below that analyses like those used in previous work (and in our conceptual replication) tend to underestimate the true effect of exposure.
+
+(ref:plot-fit-PSE) Summary of results. **Panel A:** Changes in listeners psychometric categorization functions as a function of exposure, from Test 1 to Test 4 with all intervening exposure blocks (only unlabeled trials were included in the analysis of exposure blocks since labeled trials provide little information about listeners' categorization function). Point ranges indicate the mean proportion of participants' "t"-responses and their 95% bootstrapped CIs. Lines and shaded intervals show the *maximum a posteriori* (MAP) estimates and 95%-CIs of a Bayesian mixed-effects psychometric model fit to participants' responses. **Panel B:** Same as Panel A but for the final three test blocks without intervening exposure. Test 4 is shown as part of both Panels A and B. **Panel C:** Changes across blocks and conditions in listeners' point-of-subjective-equality (PSE) of the lapse-corrected categorization functions from Panels A \& B (i.e., the PSE of the perceptual model inferred from listeners' responses; for changes in the slope of that function, see SI, \@ref(sec:io-bias-correction)). Point ranges represent the posterior medians and their 95%-CIs derived from the psychometric model. Horizontal dashed lines indicate 95%-CIs of the PSEs expected from an idealized learner (an ideal observer model that has fully learned the exposure distributions). Percentage labels indicate the amount of shift in PSE exhibited by participants as a proportion of the expected shift under the idealized learners. Horizontal gray ribbon indicates the 95%-CIs of the PSEs expected from an idealized listener *prior to any exposure*.
+
+\begin{landscape}
+
 ```{r}
 # Create data frame for pre-exposure IO. To avoid over-fitting, we use 5-fold cross-validation.
 # We use the isolated speech data from Chodroff and Wilson, and randomly cut it into 5 folds.
@@ -154,9 +209,24 @@ io <-
           rename(x = Item.VOT) %>%
           nest(x = x)))
 
-# Get logistic parameter estimates for a simulated ideal listener.
-# Unlike for the analysis of participants' responses, there is no need to use a psychometric
-# model since ideal observers have no attentional lapses (i.e., lambda = 0).
+# There are two different ways to obtain PSEs from ideal observers along a specified phonetic continuum. 
+# One approach is to estimate the *actual* PSE (either analytically or through optimization, as implemented 
+# in the function get_PSE_from_IO). While this approach avoids the introduction of linearity assumptions, 
+# this is also its downside: we do not know *listeners' actual PSEs*, but rather estimate them in the 
+# psychometric mixed-effects model under the assumption of linear effects of the phonetic continuum on
+# the log-odds of listeners' "t"-responses. The second approach to estimating PSEs for ideal observers 
+# avoids this issue by subjecting the ideal observed to the exact same estimation approach used to estimate
+# listeners' PSEs. This approach also has the advantage that it allows the estimation of an intercept and 
+# slope (paralleling what we do for listeners' categorization function). This is the approach we take here. 
+#
+# get_logistic_parameters_from_model() gets PSE, intercept, and slope by repeatedly sampling responses from 
+# the ideal observer. The function then fits an ordinary logistic regression to these responses (estimation
+# of lapsing rates via a psychometric model is unnecessary since the ideal observers are *known* to have 0 
+# lapses). This replicates for the ideal observers any potential biases that might be introduced by the 
+# linearity assumption of our psychometric model.
+#
+# We note here that, in retrospect, our caution might be overkill since analyses in the SI suggest that the linearity 
+# assumption introduced only minor (non-directional) variation into the intercept, slope, and PSE estimates.
 d.IO_intercept.slope.PSE <-
     # Assess the ideal observers at the exact same locations used during test blocks
     get_logistic_parameters_from_model(
@@ -167,61 +237,6 @@ d.IO_intercept.slope.PSE <-
   ungroup() %>%
   mutate(across(Condition.Exposure, factor))
 ```
-
-## Conceptual replication (averaging over test blocks)
-
-```{r fit-simple-effects-condition, results='hide'}
-# Get simple effects of Condition nested under block
-my_priors <- c(
-  prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),  
-  set_prior("student_t(3, 0, 15)", dpar = "mu2", coef = "Block1:VOT_gs"),
-  set_prior("student_t(3, 0, 15)", dpar = "mu2", coef = "Block3:VOT_gs"),
-  set_prior("student_t(3, 0, 15)", dpar = "mu2", coef = "Block5:VOT_gs"),
-  set_prior("student_t(3, 0, 15)", dpar = "mu2", coef = "Block7:VOT_gs"),
-  set_prior("student_t(3, 0, 15)", dpar = "mu2", coef = "Block8:VOT_gs"),
-  set_prior("student_t(3, 0, 15)", dpar = "mu2", coef = "Block9:VOT_gs"),
-  prior(cauchy(0, 2.5), class = "sd", dpar = "mu2"),
-  prior(lkj(1), class = "cor"))
-
-fit_test.simple_effects_condition <-
-  brm(
-  bf(
-    Response.Voiceless ~ 1,
-    mu1 ~ 0 + offset(0),
-    mu2 ~ 0 + Block / (Condition.Exposure * VOT_gs) +
-      (0 + Block / VOT_gs | ParticipantID) +
-      (0 + Block / (Condition.Exposure * VOT_gs) | Item.MinimalPair),
-    theta1 ~ 1),
-    data = d.for_analysis %>%
-      filter(Phase == "test") %>%
-      prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
-    priors = my_priors,
-    cores = 4,
-    chains = chains,
-    init = 0,
-    iter = 4000,
-    warmup = 2000,
-    family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
-    sample_prior = "yes",
-    control = list(adapt_delta = .995),
-    file ="../models/test-nested-condition.rds")
-```
-
-<!-- TO DO: consider a much simpler result plot here that just shows the marginal effects across blocks (a) in terms of the categorization function and (b) in terms of the PSE. Then we could move the main figure and its description into the overview of incremental analyses, closer to where they are actually being discussed. -->
-We first use to the psychometric mixed-effects model to analyze participants' behavior when averaging over all test blocks. This analysis recasts within a psychometric model the type of analysis that remains the most common in the field: it assesses overall changes in listeners' behavior after exposure, without telling us how these changes accumulate, how they relate to listeners' prior expectations, or how they compare to behavior that would be expected from a learner that has fully adapted to the unfamiliar talker. Prediction (2b) states that changes in listeners' categorization function should depend on the distribution of phonetic cues in the exposure input. Specifically, the +10 condition should elicit a rightward shift in the categorization function relative to the baseline condition, and the +40 condition should elicit an even larger rightward shift. This is also what previous work found [@kleinschmidt-jaeger2016].
-
-Across all test blocks, participants were more likely to respond "t" the longer the VOT (`r get_bf(fit_test, "mu2_VOT_gs > 0")`). Exposure affected participants' categorization responses in the predicted direction. Marginalizing over Tests 1-6, participants in the +40 condition were less likely to respond "t" than participants in the +10 condition (`r get_bf(fit_test, "mu2_Condition.Exposure_Shift40vs.Shift10 < 0")`) or the baseline condition (`r get_bf(fit_test, "mu2_Condition.Exposure_Shift40vs.Shift10 + mu2_Condition.Exposure_Shift10vs.Shift0 < 0")`). There was also evidence---albeit less decisive---that participants in the +10 condition were less likely to respond "t" than participants in the baseline condition (`r get_bf(fit_test, "mu2_Condition.Exposure_Shift10vs.Shift0 < 0")`). That is, the +10 and +40 conditions resulted in categorization functions that were shifted rightwards compared to the baseline condition, as also evident in Figure \@ref(fig:plot-fit-PSE)A.^[The perceptual model contained in the our psychometric mixed-effects model describes the effect of VOT on the log-odds of "t"-responses as a line. The main effect of VOT is the average slope of that line across exposure conditions. The $\hat{\beta}$s for the comparisons across conditions indicate differences in the intercept of that line. Negative $\hat{\beta}$s thus indicate a *down*ward shift of that line in one condition, relative to the other. These downward shifts result in *right*ward shifts of the point of subjective equality (PSE), the VOT at which "t" and "d" responses are equally likely. This also shows in Figure \@ref(fig:plot-fit-PSE)A. In this figure, predictions are transformed into proportion "t"-responses and the downward shifts appear visually as a rightward shifts of the S-shaped categorization function (of one condition relative to another).]
-
-Unlike the differences in the relative shift of the categorization function, there was little evidence that the *slopes* of listeners' categorization functions differed between exposure conditions (`r get_bf(fit_test.simple_effects_condition, "mu2_Block3:Condition.Exposure_Shift40vs.Shift10:VOT_gs = 0", bf = T)` < BFs < `r get_bf(fit_test.simple_effects_condition, "mu2_Block5:Condition.Exposure_Shift40vs.Shift10:VOT_gs + mu2_Block5:Condition.Exposure_Shift10vs.Shift0:VOT_gs = 0", bf = T)`; see also Figure \@ref(fig:plot-fit-PSE)A). This lack of notable differences in the slope is precisely what is expected under distributional learning models, since our exposure conditions manipulated neither the category variances of /d/ and /t/ nor the distance between their category means. In the remainder of the main text, we thus focus on 'shifts' in the categorization function---i.e., changes in listeners' PSE. Parallel analyses of changes (or lack thereof) in the slopes of listeners' categorization functions are reported in the SI (\@ref(sec:slopes-analyses-test)-\@ref(sec:slopes-analyses-exposure)), and do not affect any of our conclusions.
-
-In summary, the analysis across all test blocks conceptually replicates previous findings that exposure to different VOT distributions changes listeners' categorization responses [for /b/-/p/: @clayards2008; @kleinschmidt2015; @kleinschmidt2020; for /g/-/k/, @theodore-monto2019]. This replication is obtained for stimuli with phonetic properties that more closely resemble those experienced in everyday speech perception. This conceptual replication also adds to a small body of work that goes beyond dichotomous comparisons of exposure conditions, testing stronger hypotheses about the *relative order* of exposure effects [e.g., @babel2019; @bejjanki2011; @bradlow-bent2008; @cummings-theodore2023; @kleinschmidt2020; @liu-jaeger2018].
-
-## Overview of incremental analyses
-Next, we turn to the questions of primary interest. Incremental changes in participants' categorization responses can be assessed from three mutually complementing perspectives. First, we compare how exposure affects listeners' categorization responses *relative to other exposure conditions*. This is the perspective taken in previous studies and in the conceptual replication presented above, but extended to test *how early* in the experiment differences between exposure conditions begin to emerge. Second, we compare how exposure *incrementally changes* listeners' categorization responses from block to block within each condition, relative to listeners' responses prior to any exposure. Together with the first perspective, this allows us to test predictions (1)-(2a,b) from the introduction. Third, we compare changes in listeners' responses to those expected from an ideal observer that has fully learned the exposure distributions. This analysis has the potential to identify constraints on cumulative adaptation. As we show, in particular these latter two perspectives---made possible by the incremental exposure-test paradigm---afford stronger tests of predictions (3 - *learn to convergence*) and (4 - *diminishing returns*), and suggest previously unrecognized constraints on the early moments of adaptive speech perception. For all three analyses, we initially focus on Tests 1-4 with intermittent exposure. Following that, we analyze the effects of repeated testing without intermittent exposure blocks during Tests 4-6. Though research---including some of our own previous work---tends to interpret tests as passive windows into the effects of exposure, test stimuli constitute part of the exposure input listeners' receive. This has both methodological and theoretical consequences: for example, we show below that analyses like those used in previous work (and in our conceptual replication) tend to underestimate the true effect of exposure.
-
-(ref:plot-fit-PSE) Summary of results. **Panel A:** Changes in listeners psychometric categorization functions as a function of exposure, from Test 1 to Test 4 with all intervening exposure blocks (only unlabeled trials were included in the analysis of exposure blocks since labeled trials provide little information about listeners' categorization function). Point ranges indicate the mean proportion of participants' "t"-responses and their 95% bootstrapped CIs. Lines and shaded intervals show the *maximum a posteriori* (MAP) estimates and 95%-CIs of a Bayesian mixed-effects psychometric model fit to participants' responses. **Panel B:** Same as Panel A but for the final three test blocks without intervening exposure. Test 4 is shown as part of both Panels A and B. **Panel C:** Changes across blocks and conditions in listeners' point-of-subjective-equality (PSE) of the lapse-corrected categorization functions from Panels A \& B (i.e., the PSE of the perceptual model inferred from listeners' responses; for changes in the slope of that function, see SI, \@ref(sec:io-bias-correction)). Point ranges represent the posterior medians and their 95%-CIs derived from the psychometric model. Horizontal dashed lines indicate 95%-CIs of the PSEs expected from an idealized learner (an ideal observer model that has fully learned the exposure distributions). Percentage labels indicate the amount of shift in PSE exhibited by participants as a proportion of the expected shift under the idealized learners. Horizontal gray ribbon indicates the 95%-CIs of the PSEs expected from an idealized listener *prior to any exposure*.
-
-\begin{landscape}
 
 ```{r plot-test-exposure-fit, fig.width=11, fig.height=3, message=FALSE}
 cond_fit_test_exposure <-
