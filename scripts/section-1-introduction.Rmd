@@ -219,11 +219,11 @@ The present study seeks to address this call. We present a novel incremental exp
 \begin{small}
 \begin{tabular}{p{0.4\textwidth}p{0.55\textwidth}}
 \hline
-Prediction 1 ({\bf prior expectations}) & AA, (Kang \& Schertz, 2021; Schertz et al., 2016; Xie et al., 2021; Tan et al., 2021) \\
+Prediction 1 ({\bf prior expectations}) & (Kang \& Schertz, 2021; Schertz et al., 2016; Tan et al., 2021; Xie et al., 2021) \\
 
-Prediction 2a ({\bf exposure amount})  & LGPL/VGPL, (Vroomen et al., 2007; Cummings \& Theodore, 2023; Kleinschmidt \& Jaeger, 2011; Liu \& Jaeger, 2018) \\
+Prediction 2a ({\bf exposure amount})  & (Vroomen et al., 2007; Cummings \& Theodore, 2023; Kleinschmidt \& Jaeger, 2011; Liu \& Jaeger, 2018) \\
 
-Prediction 2b ({\bf exposure distribution}) & AA (Hitczenko \& Feldman, 2016; Xie et al., 2021; Tan et al., 2021), DL (Clayards et al., 2008; Idemaru \& Holt, 2011; Kleinschmidt \& Jaeger, 2016; Chl\'adkov\'a et al., 2017; Colby et al., 2018; Theodore \& Monto, 2019) \\
+Prediction 2b ({\bf exposure distribution}) & (Chl\'adkov\'a et al., 2017; Clayards et al., 2008; Colby et al., 2018; Hitczenko \& Feldman, 2016; Idemaru \& Holt, 2011; Kleinschmidt, 2020; Theodore \& Monto, 2019) \\
 
 Prediction 3 ({\bf learn to convergence})  & \\
 
@@ -231,7 +231,7 @@ Prediction 4 ({\bf diminishing returns}) & \\
 
 \hline
 \end{tabular}
-\caption{Predictions of distributional learning models about incremental adaptation to an unfamiliar talker. Also listed are examples of previous work that provide some initial, almost always qualitative, evidence for these predictions (AA = adaptation to natural accents; DL = distributional learning; LGPL/VGPL = lexically- or visually-guided perceptual learning). To the best of our knowledge, prediction (2a) is the only one that has been tested against {\em incremental} changes in listeners' behavior.}
+\caption{Predictions of distributional learning models about incremental adaptation to an unfamiliar talker. Also listed are examples of previous work that provide some initial, almost always qualitative, evidence for these predictions. To the best of our knowledge, prediction (2a) is the only one that has been tested against {\em incremental} changes in listeners' behavior.}
 \label{tab:predictions}
 \end{small}
 \end{table}
