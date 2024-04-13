@@ -6,15 +6,9 @@ if (!exists("PREAMBLE_LOADED")) source("preamble.R")
 ```{r load data}
 d <- 
   read_csv("../data/experiment-results.csv", show_col_types = F) %>% 
-  # load f0 measurements of stimuli
+  # load cue measurements of stimuli
   left_join(
-    exposure_stimuli_cue_measurements %>%
-      dplyr::select(filename, Item.VOT, Item.MinimalPair, f0_5ms_into_vowel, Item.VowelDuration) %>%
-      rename(
-        # This is the F0 measured in the same way as Chodroff & Wilson (2018)
-        Item.Measured_f0 = f0_5ms_into_vowel,
-        Item.Filename = filename) %>%
-      mutate(Item.Filename = paste0(Item.Filename, ".wav")),
+    read_csv("../data/exposure_stimuli_cue_measurements.csv", show_col_types = F),
     by = c("Item.Filename", "Item.VOT", "Item.MinimalPair")) %>%
   mutate(
     Response.Voiceless = ifelse(Response.Voicing == "voiceless", 1, 0),
