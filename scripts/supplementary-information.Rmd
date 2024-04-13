@@ -1571,85 +1571,8 @@ make_hyp_table(
 (ref:plot-IO-psychometric-model-human-accuracy) Same as Figure \@ref(fig:IO-human-accuracy) but also showing listeners' empirical recognition accuracy, as estimated from the unlabeled trials of exposure blocks (triangles). For the empirical accuracy, lineranges show 95% bootstrapped CIs.
 
 ```{r plot-IO-psychometric-model-human-accuracy, fig.width=7.5, fig.height=base.height*2 + .75, fig.cap="(ref:plot-IO-psychometric-model-human-accuracy)"}
-# get human accuracy on unlabelled exposure trials
-human_psychometric_accuracy <- 
-  d.for_analysis %>%
-  filter(Phase == "exposure" & Item.Labeled == F) %>%
-  group_by(ParticipantID, Condition.Exposure, Block) %>%
-  summarise(
-    participant.accuracy = mean(Response.Correct),
-    mean.accuracy = mean(participant.accuracy)) %>% 
-  group_by(Condition.Exposure, Block) %>% 
-  summarise(
-    lower = quantile(mean.accuracy, probs = .025),
-    median = quantile(mean.accuracy, probs = .5),
-    upper = quantile(mean.accuracy, probs = .975)) %T>% 
-  { . ->> temp } %>% mutate(decision = factor("proportional")) %>% 
-  bind_rows(temp %>% mutate(decision = factor("criterion"))) %>% 
-  ungroup() %>% 
-  mutate(decision = fct_relevel(decision, "proportional")) %>% 
-  mutate(model = factor("human")) %>% 
-  full_join(
-    crossing(
-      Condition.Exposure = c("Shift0", "Shift10", "Shift40"), 
-      Block = c(1, 3, 5, 7),
-      lower = NA,
-      median = NA,
-      upper = NA)) %>% 
-  add_block_labels() %>% 
-  full_join(psych.model_accuracy %>% mutate(model = factor("psych"))) %>% 
-  group_by(decision, Condition.Exposure) %>% 
-  arrange(Block, .by_group = T) 
 
-# TO DO: this is largely (but not completely) copied from section 3. Remove redundancy!
-human_psychometric_accuracy %>% 
-  na.omit() %>% 
-  mutate(model = fct_relevel(model, "psych")) %>% 
-  rename(evaluate_on = Condition.Exposure) %>%
-  ggplot(
-    aes(
-      x = Block.plot_label, y = median, 
-      ymin = lower, ymax = upper, 
-      colour = evaluate_on, 
-      shape = model,
-      group = decision)) +
-  geom_hline(
-    data = io.accuracy %>% filter(!Condition.Exposure %in% paste0("prior", c(1:5))),
-    mapping = aes(yintercept = accuracy, color = evaluate_on),
-    linetype = 2,
-    linewidth = .8,
-    alpha = 0.4,
-    show.legend = F) +
-  geom_rect(
-    data = io.accuracy %>% 
-      filter(Condition.Exposure %in% paste0("prior", c(1:5))) %>% 
-      group_by(evaluate_on, decision) %>% 
-      summarise(
-        ymin = mean(accuracy) - sd(accuracy) / sqrt(length(accuracy)) * 1.96, 
-        ymax = mean(accuracy) + sd(accuracy) / sqrt(length(accuracy)) * 1.96),
-    mapping = aes(xmin = -Inf, ymin = ymin, ymax = ymax, xmax = Inf),
-    fill = "#d2d4dc",
-    alpha = 0.3,
-    inherit.aes = F) +
-  geom_pointrange(position = position_dodge2(.5), size = .4) +
-  stat_summary(
-    data = 
-      human_psychometric_accuracy %>% 
-      filter(model == "psych") %>% 
-      rename(evaluate_on = Condition.Exposure),
-    geom = "line", position = position_dodge2(.5)) +
-  labs(x = "Block") +
-  scale_y_continuous("Accuracy\n(of psychometric model)", breaks = c(.6, .8, 1)) +
-  scale_colour_manual("Condition", values = colours.condition, labels = c("baseline", "+10", "+40"), guide = F) +
-  scale_shape_manual("Accuracy", values = c(16, 17), labels = c("psychometric model", "human", "")) +
-  coord_cartesian(ylim = c(.6, 1)) +
-  facet_grid(
-    decision ~ evaluate_on,
-    labeller = labeller(
-      decision = c("proportional" = "Luce's\ndecision rule", "criterion" = "Criterion\ndecision rule"),
-      evaluate_on = c("Shift0" = "baseline", "Shift10" = "+10", "Shift40" = "+40"))) +
-  guides(shape = "none") +
-  theme(axis.text.x = element_text(angle = 30, vjust = 1, hjust = 1)) 
+p.human_psych_accuracy
 ```
 
 ## Relaxing the linearity assumption for VOT {#sec:GAMM}
