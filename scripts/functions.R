@@ -1056,7 +1056,7 @@ density_quantiles <- function(x, y, quantiles) {
 
 # Evaluate psychometric model predictions ---------------------------------------------------
 # note: predictions are of the whole model which includes the lapse rates
-# this is not strictly-speaking equivalent to the IA/IO models which assume no lapsing
+# this is not strictly-speaking, equivalent to the IA/IO models which assume no lapsing
 get_pyschometric_accuracy <- function(
     model_fit,
     newdata,
@@ -1096,8 +1096,6 @@ get_pyschometric_accuracy <- function(
            upper = mean.upper) %>%
     select(-c(3:5))
 }
-
-
 
 
 # Evaluation of IOs --------------------------------------------------------
