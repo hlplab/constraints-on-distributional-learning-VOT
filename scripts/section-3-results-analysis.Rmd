@@ -765,34 +765,68 @@ io.accuracy <-
     values_to = "accuracy") %>% 
   mutate(decision = factor(str_replace(decision, "categorization\\.(.*)_response", "\\1"), levels = c("proportional", "criterion")))  
 
-# get predictions of the fitted psychometric model
+# get human accuracy on unlabelled exposure trials
+# join with predictions of the fitted psychometric model
 fit_exposure <- readRDS("../models/exposure-standard-priorSD15-0.999.rds")
 fit_test <- readRDS("../models/test-standard-priorSD15-0.995.rds")
 
-psych.model_accuracy <- 
-  get_pyschometric_accuracy(fit_exposure, d.for_analysis, "exposure", VOT.sd_exposure) %>% 
+
+human_psychometric_accuracy <- 
+  d.for_analysis %>%
+  filter(Phase == "exposure" & Item.Labeled == F) %>%
+  group_by(ParticipantID, Condition.Exposure, Block) %>%
+  summarise(
+    participant.accuracy = mean(Response.Correct),
+    mean.accuracy = mean(participant.accuracy)) %>% 
+  group_by(Condition.Exposure, Block) %>% 
+  summarise(
+    lower = quantile(mean.accuracy, probs = .025),
+    median = quantile(mean.accuracy, probs = .5),
+    upper = quantile(mean.accuracy, probs = .975)) %T>% 
+  { . ->> temp } %>% mutate(decision = factor("proportional")) %>% 
+  bind_rows(temp %>% mutate(decision = factor("criterion"))) %>% 
+  ungroup() %>% 
+  mutate(decision = fct_relevel(decision, "proportional")) %>% 
+  mutate(model = factor("human")) %>% 
+  full_join(
+    crossing(
+      Condition.Exposure = c("Shift0", "Shift10", "Shift40"), 
+      Block = c(1, 3, 5, 7),
+      lower = NA,
+      median = NA,
+      upper = NA)) %>% 
+  add_block_labels() %>% 
+  full_join(
+    get_pyschometric_accuracy(fit_exposure, d.for_analysis, "exposure", VOT.sd_exposure) %>% 
   bind_rows(
     get_pyschometric_accuracy(fit_test, d.for_analysis, "test", VOT.sd_test)) %>% 
   mutate(decision = factor(decision)) %>%
   ungroup() %>%
   mutate(decision = fct_relevel(decision, "proportional", "criterion")) %>% 
-  add_block_labels()
+  add_block_labels() %>% 
+    mutate(model = factor("psych"))) %>% 
+  group_by(decision, Condition.Exposure) %>% 
+  arrange(Block, .by_group = T) 
 
 rm(fit_exposure)
 ```
 
 ```{r IO-human-accuracy, fig.width=7.5, fig.height=base.height*2 + .75, fig.cap="(ref:IO-human-accuracy)", fig.pos="!ht"}
-psych.model_accuracy %>% 
+# store plot for plotting in SI
+p.human_psych_accuracy <- 
+  human_psychometric_accuracy %>% 
+  na.omit() %>% 
+  mutate(model = fct_relevel(model, "psych")) %>% 
   rename(evaluate_on = Condition.Exposure) %>%
-  group_by(decision, evaluate_on) %>% 
-  arrange(Block, .by_group = T) %>% 
   ggplot(
-    aes(x = Block.plot_label, y = median, 
-        ymin = lower, ymax = upper, 
-        colour = evaluate_on, 
-        group = decision)) +
+    aes(
+      x = Block.plot_label, y = median, 
+      ymin = lower, ymax = upper, 
+      colour = evaluate_on, 
+      shape = model,
+      group = decision)) +
   geom_hline(
-    data = io.accuracy %>% filter(!Condition.Exposure %in% paste0("prior", c(1:5))),
+    data = io.accuracy %>% filter(!str_starts(Condition.Exposure, "prior")),
     mapping = aes(yintercept = accuracy, color = evaluate_on),
     linetype = 2,
     linewidth = .8,
@@ -810,10 +844,16 @@ psych.model_accuracy %>%
     alpha = 0.3,
     inherit.aes = F) +
   geom_pointrange(position = position_dodge2(.5), size = .4) +
-  stat_summary(geom = "line", position = position_dodge2(.4)) +
+  stat_summary(
+    data = 
+      human_psychometric_accuracy %>% 
+      filter(model == "psych") %>% 
+      rename(evaluate_on = Condition.Exposure),
+    geom = "line", position = position_dodge2(.5)) +
   labs(x = "Block") +
   scale_y_continuous("Accuracy\n(of psychometric model)", breaks = c(.6, .8, 1)) +
   scale_colour_manual("Condition", values = colours.condition, labels = c("baseline", "+10", "+40"), guide = F) +
+  scale_shape_manual("Accuracy", values = c(16, 17), labels = c("psychometric model", "human", "")) +
   coord_cartesian(ylim = c(.6, 1)) +
   facet_grid(
     decision ~ evaluate_on,
@@ -822,6 +862,14 @@ psych.model_accuracy %>%
       evaluate_on = c("Shift0" = "baseline", "Shift10" = "+10", "Shift40" = "+40"))) +
   guides(shape = "none") +
   theme(axis.text.x = element_text(angle = 30, vjust = 1, hjust = 1)) 
+
+# plot psych model accuracy
+p.human_psych_accuracy %+%
+  subset(human_psychometric_accuracy %>% 
+           filter(model == "psych") %>% 
+           rename(evaluate_on = Condition.Exposure) %>%
+  group_by(decision, evaluate_on) %>% 
+  arrange(Block, .by_group = T))
 ```
 
 If confirmed, premature convergence against stable behavior despite only partial adaptation would challenge prediction (3) of existing distributional learning models. Premature convergence is also unexpected under any other model of adaptive speech perception. In the general discussion, we present an extension to distributional learning models that explains premature convergence, and highlights a striking link between adaptive changes in speech perception and second language learning. As part of that discussion, we present additional models, and entertain methodological artifacts, and analysis confounds that would offer alternative explanation of premature convergence. For now, we summarize one additional property of incremental adaptation suggested by the data.
