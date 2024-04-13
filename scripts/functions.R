@@ -631,14 +631,14 @@ point_overlay <- function(
     center = F
 ) {
   geom_autopoint(
-    data =  if (center) { d %>% 
-        center_stimuli(database = database) %>% 
+    data =  if (center) { d %>%
+        center_stimuli(database = database) %>%
         select(!c(VOT, f0_Mel, vowel_duration)) %>%
         rename(VOT = VOT.CCuRE, f0_Mel = f0_Mel.CCuRE, vowel_duration = vowel_duration.CCuRE) %>%
         filter(Phase == "test") %>% distinct(VOT, f0_Mel, vowel_duration) %>%
-        mutate(category = "test") } else { 
-          d %>% 
-            filter(Phase == "test") %>% 
+        mutate(category = "test") } else {
+          d %>%
+            filter(Phase == "test") %>%
             distinct(VOT, f0_Mel, vowel_duration) %>%
             mutate(category = "test") },
     color = "black", alpha = .5, size = 1, inherit.aes = F)
@@ -894,16 +894,17 @@ get_IO_predicted_PSE <- function(condition, block = 7, io.intercept.slope.PSE = 
 # Get approximate f0 of synthesised stimuli from VOT values
 ############################################################################
 
-# Intercept and slope values are obtained from linear model based on original recordings of exposure talker
-predict_f0 <- function(VOT, intercept = 245.47, slope = 0.04, Mel = FALSE) {
-  f0 <- intercept + slope * (VOT)
+predict_f0 <- function(VOT, Mel = TRUE) {
+  # Intercept and slope values are obtained from linear model based on original recordings of the exposure talker
+  f0 <- 245.47 + 0.04 * (VOT)
+
   if (Mel) f0 <- phonR::normMel(f0)
   return(f0)
 }
 
-# TO DO: please fill in the correct intercept and slope
-predict_vowel_duration <- function(VOT, intercept = 0, slope = 1) {
-  vowel_duration <- intercept + slope * (VOT)
+predict_vowel_duration <- function(VOT) {
+  # TO DO: please fill in the correct function and explain where it comes from
+  vowel_duration <- 200 + -.3 * (VOT)
   return(vowel_duration)
 }
 
@@ -965,19 +966,42 @@ add_x_to_IO <- function(
     nest(x = x)
 }
 
-get_diff_in_likelihood_from_io <- function(x, io, add_f0 = F) {
-  # Since we want to only consider cases that have F0 values that are in a certain linear relation to VOT
-  # (the way we created our stimuli), we set the F0 based on the VOT.
-  if (add_f0) x <- c(x, normMel(predict_f0(x)))
-  y <- abs(dmvnorm(x, io$mu[[2]], io$Sigma[[2]] + io$Sigma_noise[[2]], log = F) / (dmvnorm(x, io$mu[[1]], io$Sigma[[1]] + io$Sigma_noise[[1]], log = F) + dmvnorm(x, io$mu[[2]], io$Sigma[[2]] + io$Sigma_noise[[2]], log = F)) - .5)
+get_diff_in_likelihood_from_io <- function(x, io, predict_cues = NULL) {
+  if (!is.null(predict_cues)) {
+    for (cue in names(predict_cues)) {
+      x <- c(x, predict_cues[[cue]](x[1]))
+    }
+  }
 
-  # message(paste("Explored VOT =", x, "and found p(t) of", y, "\n"))
+  # Find absolute difference from .5/.5
+  y <-
+    abs(
+      dmvnorm(x, io$mu[[2]], io$Sigma[[2]] + io$Sigma_noise[[2]], log = F) /
+        (dmvnorm(x, io$mu[[1]], io$Sigma[[1]] + io$Sigma_noise[[1]], log = F) +
+           dmvnorm(x, io$mu[[2]], io$Sigma[[2]] + io$Sigma_noise[[2]], log = F)) - .5)
+
   return(y)
 }
 
-get_PSE_from_io <- function(io) {
+get_PSE_from_io <- function(io, find_along = "VOT", predict_cues = NULL) {
+  message("get_PSE_from_io() finds the PSE along one phonetic cue (by default: VOT), assuming uniform priors.")
+
+  # Keeping asserts here even though they check inputs for get_diff_in_likelihood_from_io() since
+  # get_diff_in_likelihood_from_io() would otherwise get very slow.
+  assert_that(is.MVG_ideal_observer(io))
+  cues <- get_cue_labels_from_model(io)
+  assert_that(find_along %in% cues,
+              msg = paste(find_along, "must be a cue in the model (io)."))
+  if (length(cues) > 1) {
+    assert_that(is.list(predict_cues),
+                msg = "For models (io) with more than one cue dimension, predict_cues must be a list of named functions.")
+    assert_that(is_empty(setdiff(c(find_along, names(predict_cues)), cues)),
+                msg = "The names of the functions in predict_cues must match the cue names in the model (io).")
+  }
+
   # Set bounds for optimization to be the two category means
   # and initialize optimization half-way between the two means
+  # of the find_along dimension
   min.pars <-
     io$mu %>%
     reduce(rbind) %>%
@@ -986,7 +1010,7 @@ get_PSE_from_io <- function(io) {
     io$mu %>%
     reduce(rbind) %>%
     apply(., MARGIN = 2, max)
-  pars = (max.pars - min.pars) / 2
+  pars = min.pars + (max.pars - min.pars) / 2
 
   # Find and return VOT values that minimize the difference in log-likelihoods
   o <- optim(
@@ -997,17 +1021,45 @@ get_PSE_from_io <- function(io) {
     lower = min.pars[1],
     upper = max.pars[1],
     io = io,
-    add_f0 = length(pars) > 1)
+    predict_cues = predict_cues)
 
   return(o$par)
 }
 
 add_PSE_and_categorization_to_IO <- function(io) {
-  message("This function assumes that observations x have already been attached to the IO.")
+  message("add_PSE_and_categorization_to_IO() assumes that observations x have already been attached to the IO.")
 
   io %>%
     mutate(
-      PSE = map_dbl(io, ~ get_PSE_from_io(io = .x)),
+      PSE =
+        map_dbl(
+          io,
+          function(io) {
+            assert_that(is.MVG_ideal_observer(io))
+            cues <- get_cue_labels_from_model(io)
+
+            prediction_cues <- if (length(cues) == 1) {
+              find_along <- cues
+              predict_cues <- NULL
+            } else {
+              find_along <- cues[1]
+              cues <- setdiff(cues, cues[1])
+              predict_cues <- list()
+              for (c in cues) {
+                if (tolower(c) == "f0") {
+                  predict_cues[[c]] <- function(x) predict_f0(x, Mel = F)
+                } else if (tolower(c) == "f0_mel") {
+                  predict_cues[[c]] <- predict_f0
+                } else if (tolower(c) == "vowel_duration") {
+                  predict_cues[[c]] <- predict_vowel_duration
+                } else {
+                  stop("add_PSE_and_categorization_to_IO() does not know how to predict cues other than f0, f0_Mel, and vowel_duration.")
+                }
+              }
+            }
+
+            get_PSE_from_io(io = io, find_along = find_along, predict_cues = predict_cues)
+            } ),
       categorization =
         map2(
           x, io,
@@ -1023,7 +1075,7 @@ add_gaussians_as_geoms_to_io <- function(
     linewidth = .5,
     plot.colour = colours.category_greyscale
 ) {
-  message("This function assumes univariate IOs along VOT.")
+  message("add_gaussians_as_geoms_to_io() assumes univariate IOs along VOT.")
 
   io %>%
     mutate(
