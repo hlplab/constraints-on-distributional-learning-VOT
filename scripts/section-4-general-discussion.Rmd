@@ -179,10 +179,7 @@ d.talkerPSEs <-
   # get each talker's boundary estimate
   make_IOs_from_phonetic_data(
     data = d.chodroff_wilson,
-    # TO DO: this needs to be changed to all three cues: add , "f0", "vowel_duration"
-    # but this will require an adjustment to get_PSE_from_io(), which currently assumes 
-    # a univariate IO
-    cues = c("VOT"),
+    cues = c("VOT", "f0_Mel", "vowel_duration"),
     groups = c("speechstyle", "Talker", "gender"),
     with_noise = TRUE) %>%
   nest(io = -c(speechstyle, Talker, gender)) %>%

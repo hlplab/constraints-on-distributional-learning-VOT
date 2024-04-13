@@ -31,7 +31,7 @@ d.talker_IO.VOT %<>%
   add_x_to_IO() %>%
   add_PSE_and_categorization_to_IO() %>%
   unnest(io) %>%
-  add_gaussians_as_geoms_to_io(alpha = .1, linetype = 1, linewidth = .5) %>%
+  add_gaussians_as_geoms_to_io(alpha = .2, linetype = 1, linewidth = .5) %>%
   bind_rows(
     # Do the same after aggregating all talker-specific IOs into a single 'typical' talker IO
     aggregate_models_by_group_structure(d.talker_IO.VOT, group_structure = "Talker") %>%
