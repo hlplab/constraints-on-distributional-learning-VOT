@@ -400,7 +400,7 @@ get_conditional_effects <- function(model, data, phase) {
 
 get_lapse_hypothesis <- function(model, contrast_row = 1) {
   paste(
-    "theta1_Intercept +",
+    "plogis(theta1_Intercept +",
     paste(
       paste(
         unname(attr(model$data$Block, "contrasts")[contrast_row, 1:7]),
@@ -410,7 +410,7 @@ get_lapse_hypothesis <- function(model, contrast_row = 1) {
         unname(attr(model$data$Block, "contrasts")[contrast_row, 8]),
         "*",
         rownames(fixef(model))[63])),
-    "< 0")
+    ") > 0")
 }
 
 get_nsamples <- function(model) {
@@ -877,6 +877,7 @@ get_IBBU_predicted_response <- function(
 get_IO_predicted_PSE <- function(condition, block = 7, io.intercept.slope.PSE = d.IO_intercept.slope.PSE) {
   if (!("Block" %in% names(io.intercept.slope.PSE)))
     io.intercept.slope.PSE %<>% crossing(Block = 1:9)
+
   if (condition == "prior") {
     io.intercept.slope.PSE %>%
       select(Condition.Exposure, Block, intercept_scaled) %>%
