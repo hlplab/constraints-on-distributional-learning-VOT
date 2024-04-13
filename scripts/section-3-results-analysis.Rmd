@@ -101,64 +101,57 @@ d.prior <-
 # the exposure distributions. Note that we include perceptual noise in the ideal observers
 # (estimated in Kronrod et al., 2016) to make their perception more human-like.
 io <-    
-  make_VOT_IOs_from_exposure(
-    d.for_analysis %>%
-      filter(Phase == "exposure") %>%
-      group_by(ParticipantID, Condition.Exposure) %>%
-      nest(data = -c(ParticipantID, Condition.Exposure)) %>%
-      group_by(Condition.Exposure) %>%
-      # Subset data to a single participant per exposure condition. This is sufficient since
-      # the ideal observer's /d/ and /t/ categories only depend on the sufficient statistics
-      # (mean and SD) at the end of the experiment, which were identical across participants
-      # in each condition.
-      #
-      # Note that this approach trains the ideal observers on the *actual* VOT distribution
-      # that participants heard, not on the theoretical distributions these VOTs were sampled
-      # from. This is in line with our goal to simulate behavior of an idealized participant
-      # who has fully learned the exposure distributions.
-      slice_sample(n = 1) %>%
-      unnest(data) %>%
-      mutate(category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))) %>%
-  # Join in the data that the IOs will be applied to. For exposure IOs, only VOT is used for 
-  # categorizing stimuli (since these IOs are trained on only VOT). Here, we use the test tokens
-  # to estimate PSEs for all IOs, and assume that these are constant across all exposure and 
-  # test blocks. In the SI, we present additional visualizations that obtain PSEs separately 
-  # for each block. This allows us to detect potential biases in the estimation of PSEs that 
-  # would result from the distribution of phonetic cues (we don't find any notable biaes of
-  # that form, which is why we present a simpler approach in the main text).
-  left_join(
-    d.for_analysis %>%  
-      filter(Phase == "test") %>%
-      distinct(Condition.Exposure, Item.VOT) %>%
-      rename(x = Item.VOT) %>%
-      nest(x = x)) %>%
-  # Add prior based on Chodroff & Wilson (2018). Note that this database has substantially higher
-  # VOT variance than our exposure conditions, which we based on estimates from Kronrod et al.
-  # (2016). Uses all three cues; duration and spectral noise taken from Kronrod et al.
   bind_rows(
-    d.prior %>%
-      group_by(fold) %>%
-      nest(data = -fold) %>%
-      mutate(
-        io = map(
-          data, ~
-            make_MVG_ideal_observer_from_data(
-              data = .x,
-              cues = c("VOT", "f0_Mel", "vowel_duration"),
-              Sigma_noise = matrix(
-                c(80, 0, 0, 0, 878, 0, 0, 0, 80),
-                nrow = 3,
-                dimnames = list(c("VOT", "f0_Mel", "vowel_duration"), c("VOT", "f0_Mel", "vowel_duration")))))) %>%
-      mutate(Condition.Exposure = str_c("prior", fold)) %>%
+    # Add prior based on Chodroff & Wilson (2018). Note that this database has substantially higher
+    # VOT variance than our exposure conditions, which we based on estimates from Kronrod et al.
+    # (2016). Uses all three cues; duration and spectral noise taken from Kronrod et al.
+    make_IOs_from_phonetic_data(
+      data = d.prior,
+      cues = c("VOT", "f0_Mel", "vowel_duration"),
+      group = "fold") %>%
+      nest(io = -fold) %>%
+      mutate(fold = str_c("prior", fold)) %>%
+      rename(Condition.Exposure = fold) %>%
       ungroup() %>%
-      select(-c(fold, data)) %>%
       # Join in the data that the pre-exposure IOs will be applied to:
       cross_join(
         d.for_analysis %>%  
           filter(Phase == "test") %>%
           distinct(Condition.Exposure, Item.VOT, Item.f0_Mel, Item.VowelDuration) %>%
-          mutate(x = pmap(.l = list(Item.VOT, Item.f0_Mel, Item.VowelDuration), ~ c(..1, ..2, ..3))) %>%
+          mutate(x = pmap(.l = list(Item.VOT, Item.f0_Mel, Item.VowelDuration), ~ c(...))) %>%
           select(x) %>%
+          nest(x = x)),
+    # Add ideal learner IOs for each exposure condition
+    make_VOT_IOs_from_exposure(
+      d.for_analysis %>%
+        filter(Phase == "exposure") %>%
+        group_by(ParticipantID, Condition.Exposure) %>%
+        nest(data = -c(ParticipantID, Condition.Exposure)) %>%
+        group_by(Condition.Exposure) %>%
+        # Subset data to a single participant per exposure condition. This is sufficient since
+        # the ideal observer's /d/ and /t/ categories only depend on the sufficient statistics
+        # (mean and SD) at the end of the experiment, which were identical across participants
+        # in each condition.
+        #
+        # Note that this approach trains the ideal observers on the *actual* VOT distribution
+        # that participants heard, not on the theoretical distributions these VOTs were sampled
+        # from. This is in line with our goal to simulate behavior of an idealized participant
+        # who has fully learned the exposure distributions.
+        slice_sample(n = 1) %>%
+        unnest(data) %>%
+        mutate(category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))) %>%
+      # Join in the data that the IOs will be applied to. For exposure IOs, only VOT is used for 
+      # categorizing stimuli (since these IOs are trained on only VOT). Here, we use the test tokens
+      # to estimate PSEs for all IOs, and assume that these are constant across all exposure and 
+      # test blocks. In the SI, we present additional visualizations that obtain PSEs separately 
+      # for each block. This allows us to detect potential biases in the estimation of PSEs that 
+      # would result from the distribution of phonetic cues (we don't find any notable biaes of
+      # that form, which is why we present a simpler approach in the main text).
+      left_join(
+        d.for_analysis %>%  
+          filter(Phase == "test") %>%
+          distinct(Condition.Exposure, Item.VOT) %>%
+          rename(x = Item.VOT) %>%
           nest(x = x)))
 
 # Get logistic parameter estimates for a simulated ideal listener.
@@ -245,18 +238,16 @@ cond_fit_test_exposure <-
     Phase = ifelse(Block %in% c(2, 4, 6), "exposure", "test")) %>%
   add_block_labels()
 
-label_colour <-
-  tibble(
-    Block.plot_label = c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3", "Test 4"),
-    Block.colour = c("grey", "white", "grey", "white", "grey", "white", "grey")) %>%
-  mutate(Block.plot_label = factor(Block.plot_label, levels = Block.plot_label, ordered = T))
-
 p.fit_1to7 <-
   cond_fit_test_exposure %>%
   filter(Block %in% c(1:7))  %>%
   ggplot() +
   geom_rect(
-    data = label_colour,
+    data = 
+      tibble(
+        Block.plot_label = c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3", "Test 4"),
+        Block.colour = c("grey", "white", "grey", "white", "grey", "white", "grey")) %>%
+      mutate(Block.plot_label = factor(Block.plot_label, levels = Block.plot_label, ordered = T)),
     aes(
       xmin = -Inf, xmax = Inf,
       ymin = 1.05, ymax = 1.3,
@@ -404,8 +395,7 @@ heights = c(1.1, 1.1, 1.8)) +
 
 ```{r}
 # Not removing the PSE panel since we replot and augment it further down
-rm(p.across_blocks, p.estimates_1to7, p.fit_1to7, p.fit_7to9, label_colour, 
-   fit_test_nested_within_condition_and_block, fit_exposure, fit_exposure_nested, cond_fit_test_exposure)
+rm(fit_test_nested_within_condition_and_block, fit_exposure, fit_exposure_nested, cond_fit_test_exposure)
 ```
 
 ## How quickly does exposure affect listeners' categorization responses? (comparing exposure conditions within each test block)

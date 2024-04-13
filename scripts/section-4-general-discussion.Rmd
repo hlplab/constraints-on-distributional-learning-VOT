@@ -177,12 +177,17 @@ prior.PSE_mean <-
 
 d.talkerPSEs <-
   # get each talker's boundary estimate
-  get_IO_from_talkers(
+  make_IOs_from_phonetic_data(
     data = d.chodroff_wilson,
-    cues = "VOT",
+    # TO DO: this needs to be changed to all three cues: add , "f0", "vowel_duration"
+    # but this will require an adjustment to get_PSE_from_io(), which currently assumes 
+    # a univariate IO
+    cues = c("VOT"),
     groups = c("speechstyle", "Talker", "gender"),
-    with_noise = TRUE,
-    VOTs = seq(0, 85, .5)) %>%
+    with_noise = TRUE) %>%
+  nest(io = -c(speechstyle, Talker, gender)) %>%
+  add_x_to_IO() %>%
+  add_PSE_and_categorization_to_IO() %>%
   # Center talker PSEs to mean of prior PSEs
   mutate(PSE_centered = prior.PSE_mean - mean(PSE)) %>%
   group_by(speechstyle) %>%

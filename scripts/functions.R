@@ -889,30 +889,88 @@ get_IO_predicted_PSE <- function(condition, block = 7, io.intercept.slope.PSE = 
 # Get approximate f0 of synthesised stimuli from VOT values
 ############################################################################
 
-# intercept and slope values are obtained from linear model based on original recordings of exposure talker
+# Intercept and slope values are obtained from linear model based on original recordings of exposure talker
 predict_f0 <- function(VOT, intercept = 245.47, slope = 0.04, Mel = FALSE) {
   f0 <- intercept + slope * (VOT)
   if (Mel) f0 <- phonR::normMel(f0)
   return(f0)
 }
 
+# TO DO: please fill in the correct intercept and slope
+predict_vowel_duration <- function(VOT, intercept = 0, slope = 1) {
+  vowel_duration <- intercept + slope * (VOT)
+  return(vowel_duration)
+}
+
 
 # Make IOs of each talker in a database and plot their categorization functions---------------------------------------------------
-get_diff_in_likelihood_from_io <- function(x, io, add_f0 = F, io.type = NULL) {
+
+# TO DO: this function can probably be unified with make_VOT_IOs_from_exposure
+# It is important to avoid having similar code in many places, since this makes
+# it hard to control that the same thing is done in all places.
+make_IOs_from_phonetic_data <- function(
+    data = d.chodroff_wilson,
+    cues,
+    groups = NULL,
+    lapse_rate = 0,
+    with_noise = T
+) {
+  data %>%
+    make_MVG_ideal_observer_from_data(
+      data = .,
+      cues = cues,
+      lapse_rate = lapse_rate,
+      group = groups,
+      Sigma_noise = if(with_noise == FALSE & length(cues) == 1) {
+        matrix(c(0), ncol = 1, dimnames = list(cues, cues))
+      } else if(with_noise == FALSE & length(cues) == 2) {
+        matrix(rep(0, 4), ncol = 2, dimnames = list(cues, cues))
+      } else if(with_noise == FALSE & length(cues) == 3) {
+        matrix(rep(0, 9), ncol = 3, dimnames = list(cues, cues))
+      } else if(with_noise == TRUE & length(cues) == 1) {
+        matrix(c(80), ncol = 1, dimnames = list(cues, cues))
+      } else if(with_noise == TRUE & length(cues) == 2) {
+        m <- diag(2) * c(80, 878)
+        dimnames(m) <- list(cues, cues)
+        m
+      } else if(with_noise == TRUE & length(cues) == 3) {
+        m <- diag(3) * c(80, 878, 80)
+        dimnames(m) <- list(cues, cues)
+        m
+      })
+}
+
+add_x_to_IO <- function(
+    io,
+    VOTs = seq(0, 130, .5),
+    f0s = predict_f0(VOTs, Mel = T),
+    vowel_durations = predict_vowel_duration(VOTs)
+) {
+  n_cues <- length(first(first(io$io)$mu))
+
+  # Attach data based on dimensionality of IO
+  io %>%
+    { if (n_cues == 1) {
+      crossing(., tibble(x = VOTs))
+    } else if (n_cues == 2) {
+      crossing(., tibble(x = map2(VOTs, f0s, ~ c(.x, .y))))
+    } else if (n_cues == 3) {
+      crossing(., tibble(x = pmap(list(VOTs, f0s, vowel_durations), ~ c(...))))
+    }} %>%
+    nest(x = x)
+}
+
+get_diff_in_likelihood_from_io <- function(x, io, add_f0 = F) {
   # Since we want to only consider cases that have F0 values that are in a certain linear relation to VOT
   # (the way we created our stimuli), we set the F0 based on the VOT.
   if (add_f0) x <- c(x, normMel(predict_f0(x)))
-  #else if (add_f0 & io.type == "VOT_F0.centered.input") x <- c(x, normMel(predict_f0(x)) + (chodroff.mean_f0_Mel - f0.mean_exp1))
-  #else if (add_f0 & io.type == "VOT_F0.centered.input_block1") x <- c(x, normMel(predict_f0(x)) + (chodroff.mean_f0_Mel - f0.mean_test))
-
-  # abs(dmvnorm(x, io$mu[[1]], io$Sigma[[1]], log = T) - dmvnorm(x, io$mu[[2]], io$Sigma[[2]], log = T))
   y <- abs(dmvnorm(x, io$mu[[2]], io$Sigma[[2]] + io$Sigma_noise[[2]], log = F) / (dmvnorm(x, io$mu[[1]], io$Sigma[[1]] + io$Sigma_noise[[1]], log = F) + dmvnorm(x, io$mu[[2]], io$Sigma[[2]] + io$Sigma_noise[[2]], log = F)) - .5)
 
   # message(paste("Explored VOT =", x, "and found p(t) of", y, "\n"))
   return(y)
 }
 
-get_PSE_from_io <- function(io, io.type = NULL) {
+get_PSE_from_io <- function(io) {
   # Set bounds for optimization to be the two category means
   # and initialize optimization half-way between the two means
   min.pars <-
@@ -934,91 +992,47 @@ get_PSE_from_io <- function(io, io.type = NULL) {
     lower = min.pars[1],
     upper = max.pars[1],
     io = io,
-    io.type = io.type,
     add_f0 = length(pars) > 1)
 
   return(o$par)
 }
 
+add_PSE_and_categorization_to_IO <- function(io) {
+  message("This function assumes that observations x have already been attached to the IO.")
 
-get_IO_from_talkers <- function(
-    data = d.chodroff_wilson,
-    cues,
-    groups = NULL,
-    lapse_rate = 0,
-    with_noise = T,
-    VOTs = seq(0, 130, .5),
-    F0s = predict_f0(VOTs, Mel = T),
-    plot.colour = colours.category_greyscale,
-    alpha = .3,
-    linetype = 1,
-    linewidth = .5
-) {
-  data %<>%
-    make_MVG_from_data(cues = cues, group = groups) %>%
-    group_by(!!! syms(groups)) %>%
-    nest(mvg = -all_of(groups)) %>%
+  io %>%
     mutate(
-      io = map(
-        mvg,
-        ~ lift_MVG_to_MVG_ideal_observer(
-          .x,
-          group = NULL,
-          #prior = c("/d/" = .5, "/t/" = .5),
-          lapse_rate = lapse_rate,
-          #lapse_bias = c("/d/" = .5, "/t/" = .5),
-          Sigma_noise =
-            if(with_noise == FALSE & length(cues) == 1) {
-              matrix(c(0), ncol = 1, dimnames = list(cues, cues))
-            } else if(with_noise == FALSE & length(cues) == 2) {
-              matrix(c(0, 0, 0, 0), ncol = 2, dimnames = list(cues, cues))
-            } else if(with_noise == TRUE & length(cues) == 1) {
-              matrix(c(80), ncol = 1, dimnames = list(cues, cues))
-            } else if(with_noise == TRUE & length(cues) == 2) {
-              matrix(c(80, 0, 0, 878), ncol = 2, dimnames = list(cues, cues))
-            })))
-
-  {if(length(cues) == 1) {
-    crossing(data,
-             tibble(
-               !! sym(cues[1]) := VOTs,
-               x = map(!! sym(cues[1]), ~ c(.x))))
-  } else {
-    crossing(data,
-             tibble(
-               !! sym(cues[1]) := VOTs,
-               !! sym(cues[2]) := F0s,
-               x = map2(!! sym(cues[1]),
-                        !! sym(cues[2]), ~ c(.x, .y))))
-  }} %>%
-
-    select(-all_of(cues)) %>%
-    nest(x = x) %>%
-    mutate(
-      PSE = map_dbl(
-        io, ~ get_PSE_from_io(io = .x)),
+      PSE = map_dbl(io, ~ get_PSE_from_io(io = .x)),
       categorization =
         map2(
           x, io,
           ~ get_categorization_from_MVG_ideal_observer(x = .x$x, model = .y, decision_rule = "proportional") %>%
             filter(category == "/t/") %>%
-            mutate(VOT = map(x, ~ .x[1]) %>% unlist())),
-      x = list(VOT = seq(-25, 130, .5)),
-      x = map(x, ~ as_tibble(.x) %>% rename("VOT (ms)" = value))) %>%
-    unnest(io) %>%
-    mutate(
-      gaussian = pmap(
-        list(x, category, mu, Sigma, Sigma_noise),
-        ~ geom_function(
-          data = ..1,
-          aes(x = `VOT (ms)`,
-              colour = ..2),
-          fun = function(x) dnorm(x, mean = ..3[[1]][[1]], sd = sqrt(..4[[1]][[1]])),
-          alpha = alpha,
-          linetype = linetype,
-          linewidth = linewidth)))
+            mutate(VOT = map(x, ~ .x[1]) %>% unlist())))
 }
 
+add_gaussians_as_geoms_to_io <- function(
+    io,
+    alpha = .3,
+    linetype = 1,
+    linewidth = .5,
+    plot.colour = colours.category_greyscale
+) {
+  message("This function assumes univariate IOs along VOT.")
+
+  io %>%
+    mutate(
+      gaussian =
+        pmap(
+          list(x, category, mu, Sigma, Sigma_noise),
+          ~ geom_function(
+            data = ..1 %>% rename(VOT = x),
+            aes(x = VOT, colour = ..2),
+            fun = function(x) dnorm(x, mean = ..3[[1]][[1]], sd = sqrt(..4[[1]][[1]])),
+            alpha = alpha,
+            linetype = linetype,
+            linewidth = linewidth)))
+}
 
 # Make non-parametric density plot ---------------------------------------------------
 # ensuring that the corresponding proportion of points are included within each contour region as defined by their quantile
