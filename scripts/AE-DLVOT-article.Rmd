@@ -124,6 +124,7 @@ INCLUDE_TODO <- F           # switch on/off to get to do list.
 \setcounter{tocdepth}{-10}
 \changelocaltocdepth{-10}
 
+<!-- \brefsection -->
 
 ```{r sec-intro, child="section-1-introduction.Rmd"}
 ```
@@ -137,6 +138,9 @@ INCLUDE_TODO <- F           # switch on/off to get to do list.
 ```{r sec-discussion, child="section-4-general-discussion.Rmd"}
 ```
 
+<!-- \printbibliography -->
+<!-- \erefsection -->
+
 ```{r sec-references, child="section-5-references.Rmd"}
 ```
 
@@ -145,6 +149,10 @@ INCLUDE_TODO <- F           # switch on/off to get to do list.
 \renewcommand{\thesection}{\S \arabic{section}}
 \renewcommand{\theHsection}{sisection. \arabic{section}}
 
+<!-- \brefsection -->
+
 ```{r, child="supplementary-information.Rmd"}
 ```
 
+<!-- \printbibliography -->
+<!-- \erefsection -->
