@@ -84,33 +84,32 @@ Pre-voicing in 5ms increments were generated from a a clear pre-voicing waveform
 
 ### Annotation of resynthesized stimuli (used in visualizations and for ideal observer/adaptor analyses)
 
-All resynthesized stimuli were annotated for VOT, pre-voicing, vowel duration, and f0 following the same procedure as in the original recordings. In the data shared on OSF, these annotations are stored in materials/stimuli_AE/annotationfiles. For reasons we describe next, we corrected and simplified the measurements derived from these annotations. We used these corrected measurements for all visualizations of the stimuli (e.g., in Figure \@ref(fig:exposure-means-database-matrix-plot) in the main text) and in our ideal observer and adaptor analyses. In the data shared on OSF, these corrected measurements are stored as Item.CUE_NAME in the file stimuli_cue_corrected.csv. 
+All resynthesized stimuli were annotated for VOT, pre-voicing, vowel duration, and f0 following the same procedure as in the original recordings. In the data shared on OSF, these annotations are stored in exposure_stimuli_cue_measurements.csv. For reasons we describe next, we corrected and simplified the measurements derived from these annotations. We used these corrected measurements for all visualizations of the stimuli (e.g., in Figure \@ref(fig:exposure-means-database-matrix-plot) in the main text) and in our ideal observer and adaptor analyses. In the data shared on OSF, the targeted cue values are stored as Item.CUE_NAME.measured and the measured values are stored as Item.CUE_NAME.measured in the file stimuli_cue_corrected.csv. 
 
 First, we follow previous work on speech perception and combined the pre-voicing and VOT data, treating pre-voicing as negative VOT. This simplifies plotting and analysis. It does, however, make assumptions that we revisit in the general discussion.
 
-Second, we used the *targeted* rather than *measured* f0 and vowel duration values. This removes measurement noise that might have been introduced by the annotation procedure, and makes f0 and vowel duration values more akin to our VOT values, which are also targeted. Specifically, the f0 values were linearly interpolated between the f0 values of the voiced and voiceless tokens of the minimal pair. For vowel durations, we used the vowel durations of the *dip*-*tip* pair, which sidesteps the difficulty of annotation the boundary between the vowel and the coda for *din*-*tin* and *dill*-*till* word pairs. This assumes that listeners perceive the same vowel duration for the different words that have the same VOT duration. This assumption is likely a reasonable approximation given that the stimuli were generated from word recordings that were made in the same context and spoken by the same individual in a similar speech style and rate. Figure \@(fig:plot-exposure-stimuli-cues) shows uncorrected and corrected measurements of all stimuli.  
+Second, we used the *targeted* rather than *measured* f0 and vowel duration values. This removes measurement noise that might have been introduced by the annotation procedure, and makes f0 and vowel duration values more akin to our VOT values, which are also targeted. Specifically, the f0 values were linearly interpolated between the f0 values of the voiced and voiceless tokens of the minimal pair. For vowel durations, we used the vowel durations of the *dip*-*tip* pair, which sidesteps the difficulty of annotation the boundary between the vowel and the coda for *din*-*tin* and *dill*-*till* word pairs. This assumes that listeners perceive the same vowel duration for the different words that have the same VOT duration. This assumption is likely a reasonable approximation given that the stimuli were generated from word recordings that were made in the same context and spoken by the same individual in a similar speech style and rate. Figure \@ref(fig:plot-exposure-stimuli-cues) shows uncorrected and corrected measurements of all stimuli while Table \@ref(tab:exposure-stimuli-cue-correlations) shows their correlation values after correction.
 
 
-(ref:plot-exposure-stimuli-cues) Correlations of VOT, f0 and vowel duration of the synthesized stimuli before (**A**) and after (**B**) adjustments
+(ref:plot-exposure-stimuli-cues) Correlations of VOT, f0 and vowel duration of the synthesized stimuli **A)** before and **B)** after adjustments.
 ```{r plot-exposure-stimuli-cues, fig.height=5.5, fig.width=10, fig.cap="(ref:plot-exposure-stimuli-cues)"}
 cue_measurements <- 
-  exposure_stimuli_cue_measurements %>% 
-  select(Item.MinimalPair, Item.VOT, f0_5ms_into_vowel, target_f0, vowel, Item.VowelDuration) %>% 
-  rename(Measured.f0 = f0_5ms_into_vowel,
-         Measured.VowelDuration = vowel,
-         Item.f0 = target_f0,
+  read_csv("../data/exposure_stimuli_cue_measurements.csv", show_col_types = F) %>% 
+  rename(f0.target = Item.f0,
+         f0.measured = Item.f0.measured,
+         VowelDuration.target = Item.VowelDuration,
+         VowelDuration.measured = Item.VowelDuration.measured,
          VOT = Item.VOT) %>% 
-  mutate(Measured.VowelDuration = Measured.VowelDuration * 1000) %>% 
-   pivot_longer(
-    cols = 3:6,
-    names_to = c("measurement", ".value"),
-    names_pattern = "(.*)\\.(.*)") %>% 
-  mutate(measurement = factor(ifelse(measurement == "Item", "Target", measurement)))
-         
+  select(-Item.VOT.measured, Item.Filename) %>% 
+  pivot_longer(
+    cols = 4:7,
+    names_to = c(".value", "measurement"),
+    names_pattern = "(.*)\\.(.*)")
+
 (cue_measurements %>% 
-  plot_exposure_stim_cues(measurement = "Measured")) +
+  plot_exposure_stim_cues(measurement = "measured")) +
 (cue_measurements %>% 
-  plot_exposure_stim_cues(measurement = "Target")) + 
+  plot_exposure_stim_cues(measurement = "target")) + 
   plot_annotation(tag_levels = 'A', tag_suffix = ")") +
   plot_layout(guides = "collect") &
   theme(legend.position = "top",
@@ -119,7 +118,7 @@ cue_measurements <-
         plot.tag = element_text(face = "bold"))
 ```
 
-(ref:exposure-stimuli-cue-correlations) Cue correlations after measurement adjustments
+
 ```{r exposure-stimuli-cue-correlations, fig.cap="cue correlations of synthesised stimuli", fig.cap="(ref:exposure-stimuli-cue-correlations)"}
 round(cor(d.for_analysis %>% 
       distinct(VOT, f0_Mel, vowel_duration) %>% 
@@ -128,7 +127,8 @@ round(cor(d.for_analysis %>%
   kable(
     format = "simple",
     col.names = c("Cues", "VOT", "f0", "Vowel duration"),
-    align = "c")
+    align = "c",
+    caption = "Cue correlations after measurement adjustments")
 ```
 
 # Additional information on participant exclusions {#sec:exclusions}
