@@ -243,19 +243,10 @@ This left a total of `r nrow(d.chodroff_wilson)` tokens from `r length(unique(d.
 For the predictions for idealized pre-exposure listeners, we decided to focus on the isolated speech data. While this database is substantially smaller (`r length(unique(d.chodroff_wilson.isolated$Talker))` female talkers), the conditions under which the recordings were elicited more closely resemble the conditions used to record our stimuli from which the test stimuli were created. Both recordings were sampled from a similar population pool, i.e. undergraduate native L1-US English speakers and both were recordings of isolated utterances. Nonetheless there were differences in the way talkers were instructed to produce the tokens that may have contributed to differences we see between our stimuli and the database's. The isolated database tokens were CV*t* syllables (e.g., *dot*, *tot*) produced in the context of a carrier phrase "*Say ______ again.*". The participants were told to speak at a normal rate and to make a slight pause after "Say" and before "again" [@chodroff-wilson2014]. These instructions resemble those given to the talker we recorded for our stimuli. <!-- TO DO: I think it would be good here to perhaps show a condensed version of the distributional plot from the main text + our test & exposure stimuli overlaid (corrected measurements), in order to see how our stimuli compare to the two databases, thereby justifying our choice. -->
 
 ### A model of listeners representations of /d/ and /t/ categories
-We used the adaptive speech perception (ASP) framework described in @xie2023 as a convenient way to approximate how listeners map the acoustic-phonetic properties of the speech input onto phonetic categories like /d/ and /t/. Following Xie and colleagues, we assume that category representations can be approximated as multivariate Gaussian distributions in the phonetic space. Specifically, ... <!-- TO DO: more here. what cues, etc. --> The choice of multivariate Gaussian categories strikes a compromise between substantially less parsimonious models (e.g., exemplar models, neural networks, LDA) and even more parsimonious models [e.g., independent Gaussians for each phonetic cue, as discussed in more detail in @xie2023]. 
+We used the adaptive speech perception (ASP) framework described in @xie2023 as a convenient way to approximate how listeners map the acoustic-phonetic properties of the speech input onto phonetic categories like /d/ and /t/. Following Xie and colleagues, we assume that category representations can be approximated as multivariate Gaussian distributions in the phonetic space. Specifically, we describe /d/ and /t/ as multivariate Gaussian categories of VOT (in ms), f0 (in Mel), and vowel duration (in ms). As mentioned in the main text, we follow previous work and treat pre-voicing as negative VOT, and revisit the consequences of that decision in the general discussion. The choice of multivariate Gaussian categories strikes a compromise between substantially less parsimonious models (e.g., exemplar models, neural networks, LDA) and even more parsimonious models [e.g., independent Gaussians for each phonetic cue, as discussed in more detail in @xie2023]. 
 
-Given the small number of talkers in the isolated speech database (13), its restriction to University students from a single campus, and the stimuli being limited to selected phonetic contexts this result is unlikely to be representative of a typical listener's exposure to everyday speech. To safeguard against providing a false sense of strength given by this point estimate, we divided the database into five folds by talker and constructed ideal observers from the data in each fold (i.e. data to train each IO never overlapped but each had a fifth of the data points produced by each talker). An alternative would have been to randomly distribute talkers into the folds. With few talkers in the database this would have meant that each prior PSE estimate would have been based on data from only 2-3 talkers. Since the aim is to simulate an adult L1 US English listener's knowledge the prior should ideally be estimated on as many talkers as possible. The first option strikes the best compromise given the small database we had at hand. 
-
-### A procedure to estimate the parameters of the model from the database of /d/ and /t/ productions
-
-
-Committing to a database is, however, not a *sufficient* assumption. Estimates of listeners' prior expectations also depend strongly on assumptions about how listeners represent the mapping from phonetic cues to phonetic categories. For example, previous work has often derived estimates under the implicit assumption that listener learn and maintain a *single* representation for each phonetic category across talkers. This assumption typically has taken one of two forms. One approach is to entirely ignore talker identity during the estimation of phonetic categories. This is illustrated in Figure \@ref(fig:plot-database-pairwise-cue-correlations) which shows the distribution of /d/ and /t/ over VOT, f0, and vowel duration in isolated (top left) and connected (bottom left) speech. Ellipses indicate the phonetic category representations that would be estimated from these data. Another approach is to first normalize each cue within each talker---e.g., by subtracting the talker's cue mean from each token [e.g., @mcmurray2011; @mcmurray-jongman2011; for review, see @apfelbaum-mcmurray2015; @weatherholtz-jaeger2016]. Phonetic categories are then estimated over these normalized cues. The resulting representations are shown in Figure \@ref(fig:plot-database-pairwise-cue-correlations)C and \@ref(fig:plot-database-pairwise-cue-correlations)D. 
-
-The two approaches have different trade-offs. When cues are not talker-normalized, the resulting category representations inherit not only within-category variability but also variability across talker, over-estimating the actual category covariances for any given talker. Normalizing cues addresses this problem. It does, however, remove potentially useful information about the correlation between cues from the signal: compared to unnormalized cues in Panel A, the talker-normalized cues in Panel B contain less information about the covariance of VOT, f0, and vowel duration.
-
-The two approaches also share potentially important shortcomings. Specifically, neither approach is well-suited if the correlation between cues *within* talkers differs from the correlation between talker means of those cues. The /d/ and /t/ categories in Panel A conflate the two source of covariance; the categories in Panel B completely removed any information about covariance in talker means. This is problematic, as there is strong evidence that such correlations exists [@chodroff-wilson2017; @chodroff-wilson2018; @theodore2009; @sonderegger2020], and that listeners have strong expectations about, at least some types of, correlations between talker means [@idemaru-holt2011; @idemaru-holt2020; @schertz2016; @OTHERs].^[Additionally, the category means for /d/ and /t/ (solid points) for unnormalized cues are simply the weighted average of the talkers available in the data. If talkers contribute different amounts of data to the database, this means that the category means might disproportionately depend on a subset of the data.] This issue is illustrated in Figure XXX, which shows that correlation between phonetic cues *within* talkers (Panel A) and the correlations of talker means of the phonetic cues *across* talkers (Panel B).<!-- TO DO: add figure. think about visualization -->  XXX <!-- TO DO: add description . NOTE that even when those two types of correlations are similar, one would have to somehow USE that knowledge when generalizing prior expectations to a new talker. --> For the same reasons, neither of the two approaches considered above captures correlations between talkers' category means and category (co)variances. Both approaches would, for example, miss if category variance generally increases for larger category means (or vice versa).
-
+### A procedure to fit the parameters of the model
+To train ideal observers (or other models of phonetic representations), it is necessary to make assumptions about listeners' representations of phonetic categories. Previous work has often derived estimates under the implicit assumption that listener learn and maintain a single, *talker-independent*, representation for each phonetic category across talkers. This assumption typically has taken one of two forms. One approach is to entirely ignore talker identity during the estimation of phonetic categories. This is illustrated in Figure \@ref(fig:plot-database-pairwise-cue-correlations) which shows the distribution of /d/ and /t/ over VOT, f0, and vowel duration in isolated (top left) and connected (bottom left) speech. Ellipses indicate the phonetic category representations that would be estimated from these data. Another approach is to first normalize each cue within each talker---e.g., by subtracting the talker's cue mean from each token [e.g., @mcmurray2011; @mcmurray-jongman2011; for review, see @apfelbaum-mcmurray2015; @weatherholtz-jaeger2016]. Phonetic categories are then estimated over these normalized cues. Under this approach, cues are interpreted in a talker-dependent way but the phonetic category representations remain talker-independent. The resulting representations are shown in Figure \@ref(fig:plot-database-pairwise-cue-correlations)C and \@ref(fig:plot-database-pairwise-cue-correlations)D. 
 
 ```{r}
 p.database <- 
@@ -320,282 +311,291 @@ point_overlay(d.for_analysis, d.chodroff_wilson.connected, center = T)
         plot.tag = element_text(face = "bold"))
 ```
 
+The two approaches to talker-independent category representations have different trade-offs. When cues are not talker-normalized, the resulting category representations inherit not only within-category variability but also variability across talker, over-estimating the actual category covariances for any given talker. Normalizing cues addresses this problem. It does, however, remove potentially useful information about the correlation between cues from the signal: compared to unnormalized cues in Panel A, the talker-normalized cues in Panel B contain less information about the covariance of VOT, f0, and vowel duration.
 
-### DMMM: A distributional multivariate mixed-effects model
-Here we use a distributional multivariate mixed-effects model (DMMM) to fit the data from both isolated and connected speech, separately for /d/ and /t/. The model fits not only the mean but higher-level statistical moments of the *distribution* of cues for each category. Specifically, we assume /d/ and /t/ categories that are normally distributed with unknown mean and variance but also can exhibit unknown skew. The ability to model skew should help to fit distributions along cues with soft or hard bounds, such VOT [especially, if 'negative VOTs' are considered the combination of a VOT of 0 and the presence of a second cue, pre-voicing].
+The two approaches also share potentially important shortcomings. Specifically, neither approach is well-suited if the correlation between cues *within* talkers differs from the correlation between talker means of those cues. The /d/ and /t/ categories in Panel A conflate the two source of covariance; the categories in Panel B completely removed any information about covariance in talker means. This is problematic, as there is strong evidence that such correlations exists [@chodroff-wilson2017; @chodroff-wilson2018; @theodore2009; @sonderegger2020], and that listeners have strong expectations about, at least some types of, correlations between talker means [@idemaru-holt2011; @idemaru-holt2020; @schertz2016; @OTHERs].^[Additionally, the category means for /d/ and /t/ (solid points) for unnormalized cues are simply the weighted average of the talkers available in the data. If talkers contribute different amounts of data to the database, this means that the category means might disproportionately depend on a subset of the data.] This issue is illustrated in Figure XXX, which shows that correlation between phonetic cues *within* talkers (Panel A) and the correlations of talker means of the phonetic cues *across* talkers (Panel B).<!-- TO DO: add figure. think about visualization -->  XXX <!-- TO DO: add description . NOTE that even when those two types of correlations are similar, one would have to somehow USE that knowledge when generalizing prior expectations to a new talker. --> For the same reasons, neither of the two approaches considered above captures correlations between talkers' category means and category (co)variances. Both approaches would, for example, miss if category variance generally increases for larger category means (or vice versa).
 
-The model is multivariate because we fit the data simultaneously to all three cues (VOT, f0, and vowel duration). This allows us to capture correlations between these cues, as well as correlations between any of the parameters of the talker-specific cue distributions for each category (e.g., the category means and variances).^[Since we fit separate models to each category, our implementation only captures such cross-talker correlations *within* each category, but not those that are known to exist *across* categories [@REF]. We made this decision since current implementations of DMMMs assume that residual (population-level) correlations between cues are identical across the data. As Figure XXX above shows, <!-- TO DO: figure that shows pairwise cue correlations --> this is clearly not the case for the, for instance, the correlation between VOT and vowel duration across /d/ and /t/.]
+An alternative to the two approaches described so far is to derive multiple *talker-dependent category representations* [as assumed in e.g., @kleinschmidt-jaeger2015]. Under this approach, expectations for a 'typical' talker are then derived by averaging over the talker-dependent category representations. And expectations for a typical talker of a certain type (e.g., a female talker of a certain age) are derived by averaging over the talker-dependent category representations learned from previous talkers of that type. In the only study we are aware of that has directly compared talker-independent and talker-dependent models of listeners' prior expectations, talker-dependent representations seemed to better describe human behavior [@xie2021cognition], though it is important to keep in mind that this study focused on a single supra-segmental contrast (question vs. statement prosody). 
 
-Finally, the model is a multilevel or mixed-effects model since we recognize the hierarchical grouping structure of the data (talkers).
+Given the uncertainty about the most adequate approach, we implemented two of the three alternatives for the present study. For most of the main text, we rely on talker-independent category representations over the *un*normalized distribution of VOT, f0, and vowel duration (Panel A of Figure \@ref(fig:plot-database-pairwise-cue-correlations)). To this end, we obtained the mean and covariance matrices for /d/ and /t/ across all talkers in that unnormalized cue space. This talker-independent model is used to create the predictions for an idealized pre-exposure listeners in, for example, Figure \@ref(fig:plot-fit-PSE)C. Given the small number of talkers in the isolated speech database (`r length(unique(d.chodroff_wilson.isolated$Talker))`), its restriction to University students from a single campus, and the stimuli being limited to selected phonetic contexts this result is unlikely to be representative of a typical listener's exposure to everyday speech. To safeguard against providing a false sense of strength given by this point estimate, we divided the database into five folds that were randomly sampled within all `r nrow(d.chodroff_wilson.isolated %>% distinct(Talker, category))` unique combinations of Talker and category. We then trained five separate ideal observers---one for each of the five folds. This gives us the 95% CIs shown in Figure \@ref(fig:plot-fit-PSE)C.^[An alternative would have been to randomly distribute talkers into the folds. With few talkers in the database this would have meant that each prior PSE estimate would have been based on data from only 2-3 talkers. Since the aim is to simulate an adult L1 US English listener's knowledge the prior should ideally be estimated on as many talkers as possible. The first option strikes the best compromise given the small database we had at hand.]
 
-```{r DMMM-setup, eval=FALSE}
-d.chodroff_wilson.for_analysis <-
-  d.chodroff_wilson %>%
-  select(Talker, category, VOT, f0_Mel, vowel_duration) %>%
-  # Remove pitch-halving and extreme vowel duration outlier
-  # (vowel duration is also truncated at > 30ms because of the automatic alignment that
-  # was used by Chodroff and Wilson to get those measures)
-  filter(f0_Mel > 200, vowel_duration < 450)
+In the general discussion, however, we present a talker-dependent model to the data from all five folds. For this, we estimated the category means and covariances separately for each talker. This gave us the range of talker-specific PSE estimates shown on the righthand-side of Figure \@ref(fig:plot-IA-human-PSE).
 
-scale_f0 <- scale(d.chodroff_wilson.for_analysis$f0_Mel)
-scale_vowel_duration <- scale(d.chodroff_wilson.for_analysis$vowel_duration)
-d.chodroff_wilson.for_analysis %<>%
-  mutate(
-    across(
-      c(VOT, f0_Mel, vowel_duration),
-      ~ (.x - mean(.x, na.rm = T)) / (2 * sd(.x, na.rm = T))))
+<!-- ### DMMM: A distributional multivariate mixed-effects model -->
+<!-- Here we use a distributional multivariate mixed-effects model (DMMM) to fit the data from both isolated and connected speech, separately for /d/ and /t/. The model fits not only the mean but higher-level statistical moments of the *distribution* of cues for each category. Specifically, we assume /d/ and /t/ categories that are normally distributed with unknown mean and variance but also can exhibit unknown skew. The ability to model skew should help to fit distributions along cues with soft or hard bounds, such VOT [especially, if 'negative VOTs' are considered the combination of a VOT of 0 and the presence of a second cue, pre-voicing]. -->
 
-# Recognizing that f0 was censored at lower end
-# Recognizing that vowel duration was censored at lower and upper end
-bounds <- list()
-bounds[["f0_Mel"]] <- range(d.chodroff_wilson.for_analysis$f0_Mel) * 1.0001
-bounds[["vowel_duration"]] <- range(d.chodroff_wilson.for_analysis$vowel_duration) * 1.0001
+<!-- The model is multivariate because we fit the data simultaneously to all three cues (VOT, f0, and vowel duration). This allows us to capture correlations between these cues, as well as correlations between any of the parameters of the talker-specific cue distributions for each category (e.g., the category means and variances).^[Since we fit separate models to each category, our implementation only captures such cross-talker correlations *within* each category, but not those that are known to exist *across* categories [@REF]. We made this decision since current implementations of DMMMs assume that residual (population-level) correlations between cues are identical across the data. As Figure XXX above shows,  this is clearly not the case for the, for instance, the correlation between VOT and vowel duration across /d/ and /t/.] -->
+<!-- TO DO: figure that shows pairwise cue correlations -->
+<!-- Finally, the model is a multilevel or mixed-effects model since we recognize the hierarchical grouping structure of the data (talkers). -->
 
-my.priors.DMMM <-
-  c(
-    # Uncomment if we'd like to include speechstyle as a predictor, or if we'd like to fit
-    # the data from both categories in one model (in which case, we'd need to add category
-    # as predictor)
-    #
-    # MU: COEFFICIENTS IN LINEAR PREDICTOR
-    prior(student_t(3, 0, 2.5), class = b, resp = VOT, dpar = mu),
-    prior(student_t(3, 0, 2.5), class = b, resp = f0Mel, dpar = mu),
-    prior(student_t(3, 0, 2.5), class = b, resp = vowelduration, dpar = mu),
-    prior(cauchy(0, 2.5), class = sd, resp = VOT, dpar = mu),
-    prior(cauchy(0, 2.5), class = sd, resp = f0Mel, dpar = mu),
-    prior(cauchy(0, 2.5), class = sd, resp = vowelduration, dpar = mu),
-    # SIGMA: VARIANCE OF RANDOM EFFECTS
-    prior(student_t(3, 0, 2.5), class = b, resp = VOT, dpar = sigma),
-    prior(student_t(3, 0, 2.5), class = b, resp = f0Mel, dpar = sigma),
-    prior(student_t(3, 0, 2.5), class = b, resp = vowelduration, dpar = sigma),
-    prior(cauchy(0, 2.5), class = sd, resp = VOT, dpar = sigma),
-    prior(cauchy(0, 2.5), class = sd, resp = f0Mel, dpar = sigma),
-    prior(cauchy(0, 2.5), class = sd, resp = vowelduration, dpar = sigma),
-    prior(student_t(3, 0, 2.5), class = b, resp = VOT, dpar = alpha),
-    prior(student_t(3, 0, 2.5), class = b, resp = vowelduration, dpar = alpha),
-    # prior(cauchy(0, 2.5), class = sd, resp = VOT, dpar = alpha),
-    # prior(cauchy(0, 2.5), class = sd, resp = vowelduration, dpar = alpha),
-    # COR: CORRELATION OF RANDOM EFFECTS
-    prior(lkj(1), class = cor)
-)
+<!-- ```{r DMMM-setup, eval=FALSE} -->
+<!-- d.chodroff_wilson.for_analysis <- -->
+<!--   d.chodroff_wilson %>% -->
+<!--   select(Talker, category, VOT, f0_Mel, vowel_duration) %>% -->
+<!--   # Remove pitch-halving and extreme vowel duration outlier -->
+<!--   # (vowel duration is also truncated at > 30ms because of the automatic alignment that -->
+<!--   # was used by Chodroff and Wilson to get those measures) -->
+<!--   filter(f0_Mel > 200, vowel_duration < 450) -->
 
-# TO DO: consider using a gaussian after all.
-# formula + set_rescor(rescor = TRUE) is only implemented for gaussian and student models
-#
-# holding grouping index p constant across mu, sigma, alpha allows us to fit correlations
-# across statistical moments (mu, log sigma, and skew). Fitting across both categories
-# allows us to do so across categories.
-bf_VOT <-
-  bf(VOT ~ 1 + category + (1 + category | p | Talker)) +
-  lf(sigma ~ 1 + category + (1 + category | q | Talker)) +
-  # lf(alpha ~ 1 + category + (1 + category | o | Talker)) +
-  lf(alpha ~ 1 + category) +
-  brmsfamily(
-    "skew_normal",
-    link = "identity",
-    link_sigma = "log",
-    link_alpha = "identity")
+<!-- scale_f0 <- scale(d.chodroff_wilson.for_analysis$f0_Mel) -->
+<!-- scale_vowel_duration <- scale(d.chodroff_wilson.for_analysis$vowel_duration) -->
+<!-- d.chodroff_wilson.for_analysis %<>% -->
+<!--   mutate( -->
+<!--     across( -->
+<!--       c(VOT, f0_Mel, vowel_duration), -->
+<!--       ~ (.x - mean(.x, na.rm = T)) / (2 * sd(.x, na.rm = T)))) -->
 
-bf_f0 <-  
-  # bf(paste0("f0_Mel | trunc(lb = ", bounds[["f0_Mel"]][1], ") ~ 1 + category + (1 + category | p | Talker)")) +
-  bf(f0_Mel ~ 1 + category + (1 + category | p | Talker)) +
-  lf(sigma ~ 1 + category + (1 + category | q | Talker)) +
-  brmsfamily(
-    "gaussian",
-    link = "identity",
-    link_sigma = "log")
+<!-- # Recognizing that f0 was censored at lower end -->
+<!-- # Recognizing that vowel duration was censored at lower and upper end -->
+<!-- bounds <- list() -->
+<!-- bounds[["f0_Mel"]] <- range(d.chodroff_wilson.for_analysis$f0_Mel) * 1.0001 -->
+<!-- bounds[["vowel_duration"]] <- range(d.chodroff_wilson.for_analysis$vowel_duration) * 1.0001 -->
 
-bf_vowel_duration <-  
-  # bf(paste0("vowel_duration | trunc(lb = ", bounds[["vowel_duration"]][1], ", ub = ", bounds[["vowel_duration"]][2], ") ~ 1 + category + (1 + category | p | Talker)")) +
- bf(vowel_duration ~ 1 + category + (1 + category | p | Talker)) +
-  lf(sigma ~ 1 + category + (1 + category | q | Talker)) +
-#  lf(alpha ~ 1 + category + (1 + category | o | Talker)) +
-  lf(alpha ~ 1 + category) +
-  brmsfamily(
-    "skew_normal",
-    link = "identity",
-    link_sigma = "log",
-    link_alpha = "identity")
+<!-- my.priors.DMMM <- -->
+<!--   c( -->
+<!--     # Uncomment if we'd like to include speechstyle as a predictor, or if we'd like to fit -->
+<!--     # the data from both categories in one model (in which case, we'd need to add category -->
+<!--     # as predictor) -->
+<!--     # -->
+<!--     # MU: COEFFICIENTS IN LINEAR PREDICTOR -->
+<!--     prior(student_t(3, 0, 2.5), class = b, resp = VOT, dpar = mu), -->
+<!--     prior(student_t(3, 0, 2.5), class = b, resp = f0Mel, dpar = mu), -->
+<!--     prior(student_t(3, 0, 2.5), class = b, resp = vowelduration, dpar = mu), -->
+<!--     prior(cauchy(0, 2.5), class = sd, resp = VOT, dpar = mu), -->
+<!--     prior(cauchy(0, 2.5), class = sd, resp = f0Mel, dpar = mu), -->
+<!--     prior(cauchy(0, 2.5), class = sd, resp = vowelduration, dpar = mu), -->
+<!--     # SIGMA: VARIANCE OF RANDOM EFFECTS -->
+<!--     prior(student_t(3, 0, 2.5), class = b, resp = VOT, dpar = sigma), -->
+<!--     prior(student_t(3, 0, 2.5), class = b, resp = f0Mel, dpar = sigma), -->
+<!--     prior(student_t(3, 0, 2.5), class = b, resp = vowelduration, dpar = sigma), -->
+<!--     prior(cauchy(0, 2.5), class = sd, resp = VOT, dpar = sigma), -->
+<!--     prior(cauchy(0, 2.5), class = sd, resp = f0Mel, dpar = sigma), -->
+<!--     prior(cauchy(0, 2.5), class = sd, resp = vowelduration, dpar = sigma), -->
+<!--     prior(student_t(3, 0, 2.5), class = b, resp = VOT, dpar = alpha), -->
+<!--     prior(student_t(3, 0, 2.5), class = b, resp = vowelduration, dpar = alpha), -->
+<!--     # prior(cauchy(0, 2.5), class = sd, resp = VOT, dpar = alpha), -->
+<!--     # prior(cauchy(0, 2.5), class = sd, resp = vowelduration, dpar = alpha), -->
+<!--     # COR: CORRELATION OF RANDOM EFFECTS -->
+<!--     prior(lkj(1), class = cor) -->
+<!-- ) -->
 
-inits <- 
-  
-  list(
-    b_alpha_VOT_Intercept = 5,
-    b_alpha_VOT_categoryD = 1,
-    b_alpha_vowelduration_Intercept = 5,
-    b_alpha_duration_categoryD = 1,
-  )
+<!-- # TO DO: consider using a gaussian after all. -->
+<!-- # formula + set_rescor(rescor = TRUE) is only implemented for gaussian and student models -->
+<!-- # -->
+<!-- # holding grouping index p constant across mu, sigma, alpha allows us to fit correlations -->
+<!-- # across statistical moments (mu, log sigma, and skew). Fitting across both categories -->
+<!-- # allows us to do so across categories. -->
+<!-- bf_VOT <- -->
+<!--   bf(VOT ~ 1 + category + (1 + category | p | Talker)) + -->
+<!--   lf(sigma ~ 1 + category + (1 + category | q | Talker)) + -->
+<!--   # lf(alpha ~ 1 + category + (1 + category | o | Talker)) + -->
+<!--   lf(alpha ~ 1 + category) + -->
+<!--   brmsfamily( -->
+<!--     "skew_normal", -->
+<!--     link = "identity", -->
+<!--     link_sigma = "log", -->
+<!--     link_alpha = "identity") -->
 
-# TO DO: consider using *all* talkers here (currently subset to female talkers)
-# (inclusion of male talkers would require taking care of pitch-halving separately
-# for both sexes, and it probably would require including talker sex in the f0 model)
-contrasts(d.chodroff_wilson.for_analysis$category) <- cbind("D" = c(-1, 1))
-DMMM <-
-  brm(
-  formula = bf_VOT + bf_f0 + bf_vowel_duration + set_rescor(rescor = FALSE),
-  data = d.chodroff_wilson.for_analysis,
-  prior = my.priors.DMMM,
-  chains = 4,
-  cores = 4,
-  warmup = 1500,
-  iter = 4000,
-  thin = 1,
-  threads = threading(threads = 2),
-  control = list(adapt_delta = .85, max_treedepth = 15))
+<!-- bf_f0 <-   -->
+<!--   # bf(paste0("f0_Mel | trunc(lb = ", bounds[["f0_Mel"]][1], ") ~ 1 + category + (1 + category | p | Talker)")) + -->
+<!--   bf(f0_Mel ~ 1 + category + (1 + category | p | Talker)) + -->
+<!--   lf(sigma ~ 1 + category + (1 + category | q | Talker)) + -->
+<!--   brmsfamily( -->
+<!--     "gaussian", -->
+<!--     link = "identity", -->
+<!--     link_sigma = "log") -->
 
-save_model = "../models/DMMM.stan"
-saveRDS(DMMM, file = "../models/DMMM-attempt4.rds")
-DMMM <- readRDS(file = "../models/DMMM-attempt3.rds")
-```
+<!-- bf_vowel_duration <-   -->
+<!--   # bf(paste0("vowel_duration | trunc(lb = ", bounds[["vowel_duration"]][1], ", ub = ", bounds[["vowel_duration"]][2], ") ~ 1 + category + (1 + category | p | Talker)")) + -->
+<!--  bf(vowel_duration ~ 1 + category + (1 + category | p | Talker)) + -->
+<!--   lf(sigma ~ 1 + category + (1 + category | q | Talker)) + -->
+<!-- #  lf(alpha ~ 1 + category + (1 + category | o | Talker)) + -->
+<!--   lf(alpha ~ 1 + category) + -->
+<!--   brmsfamily( -->
+<!--     "skew_normal", -->
+<!--     link = "identity", -->
+<!--     link_sigma = "log", -->
+<!--     link_alpha = "identity") -->
 
-```{r checking-posterior-predictive, eval=FALSE}
-pp_check(DMMM, resp = "VOT")
-pp_check(DMMM, resp = "f0Mel")
-pp_check(DMMM, resp = "vowelduration")
-```
+<!-- inits <-  -->
 
-```{r draw-samples-from-DMMM, eval=FALSE}
-# 1. Get estimates of each talker model. This could be a. or b.
-#   a. use mean/median estimates
-#   b. marginalize over all parameters that go into each talker model.
-# 2. Calculate marginal density of test tokens under each (draw of each) talker model. 
-#    This could be done in a number of ways:
-#   a. for each test token, take density under category that maximizes the density
-#   b. for each test token, take average density by weighting density under each 
-#      category proporotional to the density of the observation under that category.
-#   c. ...
-#   
-# OR select model based on stimulus *mean* (mean generated under talker model is most 
-# similar to currently observed mean)  
-#   
-# 3. Calculate categorization function over test tokens conditional on the relative 
-#    probability of the different talker models, by either
-#   a. selecting the talker model that achieved the highest density, or 
-#   b. weighting each talker model relative to the density the test tokens have under 
-#      that model.
-s.DMMM <-
-  DMMM %>%
-  spread_draws(
-    # fixed effects for mu, sigma, and alpha 
-    !!! syms(pmap_chr(
-      expand_grid(
-        parameter = c("b", "b_sigma", "b_alpha"), 
-        cue = c("VOT", "f0Mel", "vowelduration"), 
-        coef = c("Intercept", "categoryD")) %>%
-        # Filter an variables for which alpha was not modeled
-        filter(!(cue == "f0Mel" & parameter == "b_alpha")),
-      ~ paste(..., sep = "_"))),
-    # random effects for mu, sigma, and alpha
-    r_Talker__VOT[TalkerID, coef],
-    r_Talker__f0Mel[TalkerID, coef],
-    r_Talker__vowelduration[TalkerID, coef],
-    r_Talker__sigma_VOT[TalkerID, coef],  
-    r_Talker__sigma_f0Mel[TalkerID, coef],
-    r_Talker__sigma_vowelduration[TalkerID, coef]) %>%
-  # The followoing only applies the indices to the first element to the list of random effect names
-  # { !!! syms(pmap_chr(
-  #   expand_grid(
-  #     parameter = c("r_Talker_", "r_Talker__sigma", "r_Talker__alpha"), 
-  #     cue = c("VOT", "f0Mel", "vowelduration")) %>%
-  #     # Filter an variables for which *random effects* of alpha were not modeled
-  #     filter(!(cue %in% c("VOT", "f0Mel", "vowelduration") & parameter == "r_Talker__alpha")),
-  #   ~ paste(..., sep = "_"))) }[TalkerID, coef] 
-  # Spread the random effects
-  pivot_wider(
-    values_from = starts_with("r_"),
-    names_from = coef) %>%
-  # Add random effects to fixed effects 
-  # (and add 0 if no random effect matching the fixed effect is found)
-  mutate(
-    across(
-      starts_with("b_"),
-      function(x) {
-        r_name <- gsub("^b", "r_Talker_", cur_column())
-        r_value <- if (r_name %in% names(.)) get(r_name) else 0
-        x + r_value 
-      })) %>%
-  select(-starts_with("r_")) %>%
-  # Get the predicted values for all category parameters
-  mutate(
-    across(
-      ends_with("Intercept"),
-      list(
-        "catD" = function(x) {
-          r_name <- gsub("Intercept", "categoryD", cur_column())
-          x + get(r_name) 
-        },
-        "catT" = function(x) {
-          r_name <- gsub("Intercept", "categoryD", cur_column())
-          x - get(r_name) 
-        }),
-      .names = "{.col}_{.fn}")) %>%
-  select(TalkerID, .chain, .draw, ends_with(c("catD", "catT"))) %>%
-  rename_with(~ gsub("Intercept_", "", .x)) %>%
-  rename_with(~ gsub("b_(VOT|f0Mel|vowelduration)", "b_mu_\\1", .x)) 
+<!--   list( -->
+<!--     b_alpha_VOT_Intercept = 5, -->
+<!--     b_alpha_VOT_categoryD = 1, -->
+<!--     b_alpha_vowelduration_Intercept = 5, -->
+<!--     b_alpha_duration_categoryD = 1, -->
+<!--   ) -->
 
-s.DMMM %>%
-  # Add sampling functions for all three cues
-  mutate(
-    marginal_VOT = 
-      pmap(
-        list(b_mu_VOT_catD, b_sigma_VOT_catD, b_alpha_VOT_catD, b_mu_VOT_catT, b_sigma_VOT_catT, b_alpha_VOT_catT),
-        ~ function(muD, sigmaD, alphaD, muT, sigmaT, alphaT) {
-          dD <- dskew_normal(x, mu = muD, sigma = sigmaD, alpha = alphaD)
-          dT <- dskew_normal(x, mu = muT, sigma = sigmaT, alpha = alphaT)
-          (dD + dT)
-          }),
-    posterior_VOT_T = 
-      pmap(
-        list(b_mu_VOT_catD, b_sigma_VOT_catD, b_alpha_VOT_catD, b_mu_VOT_catT, b_sigma_VOT_catT, b_alpha_VOT_catT),
-        ~ function(muD, sigmaD, alphaD, muT, sigmaT, alphaT) {
-          dD <- dskew_normal(x, mu = muD, sigma = sigmaD, alpha = alphaD)
-          dT <- dskew_normal(x, mu = muT, sigma = sigmaT, alpha = alphaT)
-          dT / (dD + dT)
-          }),
-    marginal_f0Mel = 
-      pmap(
-        list(b_mu_f0Mel_catD, b_sigma_f0Mel_catD, b_mu_f0Mel_catT, b_sigma_f0Mel_catT),
-        ~ function(muD, sigmaD, muT, sigmaT) {
-          dD <- dnorm(x, mu = muD, sigma = sigmaD)
-          dT <- dnorm(x, mu = muT, sigma = sigmaT)
-          (dD + dT)
-          }),
-    posterior_f0Mel_T = 
-      pmap(
-        list(b_mu_f0Mel_catD, b_sigma_f0Mel_catD, b_mu_f0Mel_catT, b_sigma_f0Mel_catT),
-        ~ function(muD, sigmaD, muT, sigmaT) {
-          dD <- dnorm(x, mu = muD, sigma = sigmaD)
-          dT <- dnorm(x, mu = muT, sigma = sigmaT)
-          dT / (dD + dT)
-          }),
-    marginal_vowelduration = 
-      pmap(
-        list(b_mu_vowelduration_catD, b_sigma_vowelduration_catD, b_alpha_vowelduration_catD, b_mu_vowelduration_catT, b_sigma_vowelduration_catT, b_alpha_vowelduration_catT),
-        ~ function(muD, sigmaD, alphaD, muT, sigmaT, alphaT) {
-          dD <- dskew_normal(x, mu = muD, sigma = sigmaD, alpha = alphaD)
-          dT <- dskew_normal(x, mu = muT, sigma = sigmaT, alpha = alphaT)
-          (dD + dT)
-          }),
-    posterior_vowelduration_T = 
-      pmap(
-        list(b_mu_vowelduration_catD, b_sigma_vowelduration_catD, b_alpha_vowelduration_catD, b_mu_vowelduration_catT, b_sigma_vowelduration_catT, b_alpha_vowelduration_catT),
-        ~ function(muD, sigmaD, alphaD, muT, sigmaT, alphaT) {
-          dD <- dskew_normal(x, mu = muD, sigma = sigmaD, alpha = alphaD)
-          dT <- dskew_normal(x, mu = muT, sigma = sigmaT, alpha = alphaT)
-          dT / (dD + dT)
-          })) %>%
-    select(TalkerID, .chain, .draw, ends_with(c("_D", "_T")))
-```
+<!-- # TO DO: consider using *all* talkers here (currently subset to female talkers) -->
+<!-- # (inclusion of male talkers would require taking care of pitch-halving separately -->
+<!-- # for both sexes, and it probably would require including talker sex in the f0 model) -->
+<!-- contrasts(d.chodroff_wilson.for_analysis$category) <- cbind("D" = c(-1, 1)) -->
+<!-- DMMM <- -->
+<!--   brm( -->
+<!--   formula = bf_VOT + bf_f0 + bf_vowel_duration + set_rescor(rescor = FALSE), -->
+<!--   data = d.chodroff_wilson.for_analysis, -->
+<!--   prior = my.priors.DMMM, -->
+<!--   chains = 4, -->
+<!--   cores = 4, -->
+<!--   warmup = 1500, -->
+<!--   iter = 4000, -->
+<!--   thin = 1, -->
+<!--   threads = threading(threads = 2), -->
+<!--   control = list(adapt_delta = .85, max_treedepth = 15)) -->
 
-advantages for regression-based approach fitting categories
-- understands structure of data; doesn't assume balanced data
-- weights talkers with less data appropriate.
-- considers cues relative to the category the come from
-- can model correlation of category means across cues and talkers, while modeling correlation within categories separately (and separately for each category, if fit separately to each category)
-- can model correlation of category variances across cues and talkers
-- can generate hypotheses about new talkers
+<!-- save_model = "../models/DMMM.stan" -->
+<!-- saveRDS(DMMM, file = "../models/DMMM-attempt4.rds") -->
+<!-- DMMM <- readRDS(file = "../models/DMMM-attempt3.rds") -->
+<!-- ``` -->
 
-Following @xie2023, the ideal observers included perceptual noise [estimates taken from @kronrod2016].
+<!-- ```{r checking-posterior-predictive, eval=FALSE} -->
+<!-- pp_check(DMMM, resp = "VOT") -->
+<!-- pp_check(DMMM, resp = "f0Mel") -->
+<!-- pp_check(DMMM, resp = "vowelduration") -->
+<!-- ``` -->
+
+<!-- ```{r draw-samples-from-DMMM, eval=FALSE} -->
+<!-- # 1. Get estimates of each talker model. This could be a. or b. -->
+<!-- #   a. use mean/median estimates -->
+<!-- #   b. marginalize over all parameters that go into each talker model. -->
+<!-- # 2. Calculate marginal density of test tokens under each (draw of each) talker model.  -->
+<!-- #    This could be done in a number of ways: -->
+<!-- #   a. for each test token, take density under category that maximizes the density -->
+<!-- #   b. for each test token, take average density by weighting density under each  -->
+<!-- #      category proporotional to the density of the observation under that category. -->
+<!-- #   c. ... -->
+<!-- #    -->
+<!-- # OR select model based on stimulus *mean* (mean generated under talker model is most  -->
+<!-- # similar to currently observed mean)   -->
+<!-- #    -->
+<!-- # 3. Calculate categorization function over test tokens conditional on the relative  -->
+<!-- #    probability of the different talker models, by either -->
+<!-- #   a. selecting the talker model that achieved the highest density, or  -->
+<!-- #   b. weighting each talker model relative to the density the test tokens have under  -->
+<!-- #      that model. -->
+<!-- s.DMMM <- -->
+<!--   DMMM %>% -->
+<!--   spread_draws( -->
+<!--     # fixed effects for mu, sigma, and alpha  -->
+<!--     !!! syms(pmap_chr( -->
+<!--       expand_grid( -->
+<!--         parameter = c("b", "b_sigma", "b_alpha"),  -->
+<!--         cue = c("VOT", "f0Mel", "vowelduration"),  -->
+<!--         coef = c("Intercept", "categoryD")) %>% -->
+<!--         # Filter an variables for which alpha was not modeled -->
+<!--         filter(!(cue == "f0Mel" & parameter == "b_alpha")), -->
+<!--       ~ paste(..., sep = "_"))), -->
+<!--     # random effects for mu, sigma, and alpha -->
+<!--     r_Talker__VOT[TalkerID, coef], -->
+<!--     r_Talker__f0Mel[TalkerID, coef], -->
+<!--     r_Talker__vowelduration[TalkerID, coef], -->
+<!--     r_Talker__sigma_VOT[TalkerID, coef],   -->
+<!--     r_Talker__sigma_f0Mel[TalkerID, coef], -->
+<!--     r_Talker__sigma_vowelduration[TalkerID, coef]) %>% -->
+<!--   # The followoing only applies the indices to the first element to the list of random effect names -->
+<!--   # { !!! syms(pmap_chr( -->
+<!--   #   expand_grid( -->
+<!--   #     parameter = c("r_Talker_", "r_Talker__sigma", "r_Talker__alpha"),  -->
+<!--   #     cue = c("VOT", "f0Mel", "vowelduration")) %>% -->
+<!--   #     # Filter an variables for which *random effects* of alpha were not modeled -->
+<!--   #     filter(!(cue %in% c("VOT", "f0Mel", "vowelduration") & parameter == "r_Talker__alpha")), -->
+<!--   #   ~ paste(..., sep = "_"))) }[TalkerID, coef]  -->
+<!--   # Spread the random effects -->
+<!--   pivot_wider( -->
+<!--     values_from = starts_with("r_"), -->
+<!--     names_from = coef) %>% -->
+<!--   # Add random effects to fixed effects  -->
+<!--   # (and add 0 if no random effect matching the fixed effect is found) -->
+<!--   mutate( -->
+<!--     across( -->
+<!--       starts_with("b_"), -->
+<!--       function(x) { -->
+<!--         r_name <- gsub("^b", "r_Talker_", cur_column()) -->
+<!--         r_value <- if (r_name %in% names(.)) get(r_name) else 0 -->
+<!--         x + r_value  -->
+<!--       })) %>% -->
+<!--   select(-starts_with("r_")) %>% -->
+<!--   # Get the predicted values for all category parameters -->
+<!--   mutate( -->
+<!--     across( -->
+<!--       ends_with("Intercept"), -->
+<!--       list( -->
+<!--         "catD" = function(x) { -->
+<!--           r_name <- gsub("Intercept", "categoryD", cur_column()) -->
+<!--           x + get(r_name)  -->
+<!--         }, -->
+<!--         "catT" = function(x) { -->
+<!--           r_name <- gsub("Intercept", "categoryD", cur_column()) -->
+<!--           x - get(r_name)  -->
+<!--         }), -->
+<!--       .names = "{.col}_{.fn}")) %>% -->
+<!--   select(TalkerID, .chain, .draw, ends_with(c("catD", "catT"))) %>% -->
+<!--   rename_with(~ gsub("Intercept_", "", .x)) %>% -->
+<!--   rename_with(~ gsub("b_(VOT|f0Mel|vowelduration)", "b_mu_\\1", .x))  -->
+
+<!-- s.DMMM %>% -->
+<!--   # Add sampling functions for all three cues -->
+<!--   mutate( -->
+<!--     marginal_VOT =  -->
+<!--       pmap( -->
+<!--         list(b_mu_VOT_catD, b_sigma_VOT_catD, b_alpha_VOT_catD, b_mu_VOT_catT, b_sigma_VOT_catT, b_alpha_VOT_catT), -->
+<!--         ~ function(muD, sigmaD, alphaD, muT, sigmaT, alphaT) { -->
+<!--           dD <- dskew_normal(x, mu = muD, sigma = sigmaD, alpha = alphaD) -->
+<!--           dT <- dskew_normal(x, mu = muT, sigma = sigmaT, alpha = alphaT) -->
+<!--           (dD + dT) -->
+<!--           }), -->
+<!--     posterior_VOT_T =  -->
+<!--       pmap( -->
+<!--         list(b_mu_VOT_catD, b_sigma_VOT_catD, b_alpha_VOT_catD, b_mu_VOT_catT, b_sigma_VOT_catT, b_alpha_VOT_catT), -->
+<!--         ~ function(muD, sigmaD, alphaD, muT, sigmaT, alphaT) { -->
+<!--           dD <- dskew_normal(x, mu = muD, sigma = sigmaD, alpha = alphaD) -->
+<!--           dT <- dskew_normal(x, mu = muT, sigma = sigmaT, alpha = alphaT) -->
+<!--           dT / (dD + dT) -->
+<!--           }), -->
+<!--     marginal_f0Mel =  -->
+<!--       pmap( -->
+<!--         list(b_mu_f0Mel_catD, b_sigma_f0Mel_catD, b_mu_f0Mel_catT, b_sigma_f0Mel_catT), -->
+<!--         ~ function(muD, sigmaD, muT, sigmaT) { -->
+<!--           dD <- dnorm(x, mu = muD, sigma = sigmaD) -->
+<!--           dT <- dnorm(x, mu = muT, sigma = sigmaT) -->
+<!--           (dD + dT) -->
+<!--           }), -->
+<!--     posterior_f0Mel_T =  -->
+<!--       pmap( -->
+<!--         list(b_mu_f0Mel_catD, b_sigma_f0Mel_catD, b_mu_f0Mel_catT, b_sigma_f0Mel_catT), -->
+<!--         ~ function(muD, sigmaD, muT, sigmaT) { -->
+<!--           dD <- dnorm(x, mu = muD, sigma = sigmaD) -->
+<!--           dT <- dnorm(x, mu = muT, sigma = sigmaT) -->
+<!--           dT / (dD + dT) -->
+<!--           }), -->
+<!--     marginal_vowelduration =  -->
+<!--       pmap( -->
+<!--         list(b_mu_vowelduration_catD, b_sigma_vowelduration_catD, b_alpha_vowelduration_catD, b_mu_vowelduration_catT, b_sigma_vowelduration_catT, b_alpha_vowelduration_catT), -->
+<!--         ~ function(muD, sigmaD, alphaD, muT, sigmaT, alphaT) { -->
+<!--           dD <- dskew_normal(x, mu = muD, sigma = sigmaD, alpha = alphaD) -->
+<!--           dT <- dskew_normal(x, mu = muT, sigma = sigmaT, alpha = alphaT) -->
+<!--           (dD + dT) -->
+<!--           }), -->
+<!--     posterior_vowelduration_T =  -->
+<!--       pmap( -->
+<!--         list(b_mu_vowelduration_catD, b_sigma_vowelduration_catD, b_alpha_vowelduration_catD, b_mu_vowelduration_catT, b_sigma_vowelduration_catT, b_alpha_vowelduration_catT), -->
+<!--         ~ function(muD, sigmaD, alphaD, muT, sigmaT, alphaT) { -->
+<!--           dD <- dskew_normal(x, mu = muD, sigma = sigmaD, alpha = alphaD) -->
+<!--           dT <- dskew_normal(x, mu = muT, sigma = sigmaT, alpha = alphaT) -->
+<!--           dT / (dD + dT) -->
+<!--           })) %>% -->
+<!--     select(TalkerID, .chain, .draw, ends_with(c("_D", "_T"))) -->
+<!-- ``` -->
+
+<!-- advantages for regression-based approach fitting categories -->
+<!-- - understands structure of data; doesn't assume balanced data -->
+<!-- - weights talkers with less data appropriate. -->
+<!-- - considers cues relative to the category the come from -->
+<!-- - can model correlation of category means across cues and talkers, while modeling correlation within categories separately (and separately for each category, if fit separately to each category) -->
+<!-- - can model correlation of category variances across cues and talkers -->
+<!-- - can generate hypotheses about new talkers -->
+
+<!-- Following @xie2023, the ideal observers included perceptual noise [estimates taken from @kronrod2016]. -->
 
 ## Idealized learners that have fully learned the exposure distribution {#sec:idealized-learners}
 To construct idealized learners that fully learned the exposure distribution, we followed a similar approach as for the idealized listeners. We again used ideal observers to approximate such a learner's category representations. Unlike for the idealized listeners described above, the idealized learners only consider the only cue that was manipulated in the experiment (VOT). This decision was made since we constructed our stimuli such that the other two cues (f0 and vowel duration) were perfectly correlated with VOT, not providing any additional information. For each exposure condition we constructed ideal observers to simulate a learner that fully learned the exposure distribution (i.e. the cumulative distribution after having experienced all 144 trials). Such an idealized learner would therefore categorize the stimuli at test based purely on the statistics of exposure input.
