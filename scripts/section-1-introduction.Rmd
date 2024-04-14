@@ -81,6 +81,11 @@ p.gaussian <-
     legend.position = "inside",
     legend.position.inside = c(0.79,0.8))
 
+arrow_PSE <- 
+  d.talker_IO.VOT %>% 
+  filter(Talker %in% c("typical", "unfamiliar")) %>%
+  mutate(x = PSE, xend = PSE, y = .5, yend = .01)
+
 p.cat <- 
   d.talker_IO.VOT %>% 
   filter(Talker %in% c("typical", "unfamiliar")) %>% 
@@ -103,10 +108,6 @@ p.cat <-
     inherit.aes = F) +
   scale_x_continuous(limits = c(15, 90), breaks = c(37, 72))
 
-arrow_PSE <- 
-  d.talker_IO.VOT %>% 
-  filter(Talker %in% c("typical", "unfamiliar")) %>%
-  mutate(x = PSE, xend = PSE, y = .5, yend = .01) 
 
 p.PSE <- 
   d.talker_IO.VOT %>% 
