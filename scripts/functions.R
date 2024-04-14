@@ -82,10 +82,11 @@ plot_exposure_stim_cues <- function(
 {
   data %>%
     filter(measurement == {{ measurement }}) %>%
-    ggplot(aes(x = .panel_x, y = .panel_y, group = Item.MinimalPair, color = Item.MinimalPair)) +
+    ggplot(aes(x = .panel_x, y = .panel_y, group = Item.MinimalPair, fill = Item.MinimalPair, color = Item.MinimalPair)) +
     geom_autopoint(alpha = .3) +
-    stat_ellipse(alpha = .3) +
+    geom_autodensity(alpha = .3, colour = NA) +
     facet_matrix(vars(cues),
+                 layer.diag = 2,
                  labeller = labeller(.rows = c(VOT = "VOT (ms)", f0 = str_c(measurement, "\n f0 (Hz)"), VowelDuration = str_c(measurement, "\n Vowel duration (ms)")),
                                      .cols = c(VOT = "VOT (ms)", f0 = str_c(measurement, "\n f0 (Hz)"), VowelDuration = str_c(measurement, "\n Vowel duration (ms)")))) +
     guides(colour = guide_legend(title = "Minimal Pair")) +

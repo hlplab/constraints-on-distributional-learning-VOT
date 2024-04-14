@@ -1,6 +1,6 @@
-# This code collates and tidies stimuli measurements from the various annotation files into one dataframe
-# make column names for targetted cue values and measured cue values.
-# save as a .csv for joining with the experiment data
+# This code collates and tidies stimuli measurements from the various annotation files into one dataframe,
+# makes column names for targetted cue values and measured cue values.
+# saves file as a .csv for joining with the experiment data.
 
 #------------------------------------------------
 library(tidyverse)          # keeping things tidy
