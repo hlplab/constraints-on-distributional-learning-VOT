@@ -139,24 +139,6 @@ The present work thus employs a novel repeated-exposure-test paradigm that expli
 
 
 
-## Maryann's most recent intro
-Recent reviews have identified distributional learning of marginal cue statistics ['normalization', @apfelbaum-mcmurray2015; @mcmurray-jongman2011; @magnuson-nusbaum2007] or the statistics of cue-to-category mappings as an important mechanism affording this adaptivity ['representational learning', @clayards2008; @idemaru-holt2011; @kleinschmidt-jaeger2015; @davis-sohoglu2020; for review, @schertz-clare2020; @xie2023]. This hypothesis has gained considerable influence over the past decade, with findings that changes in listener perception are qualitatively predicted by the statistics of exposure stimuli [@bejjanki2011; @clayards2008; @idemaru-holt2020; @kleinschmidt2012; @munson2011; @nixon2016; @theodore-monto2019; @tan2021; for important caveats, see @harmon2019].
-
-Viewing speech perception as an adaptive process has been pivotal in our understanding of how human listeners overcome the lack of invariance problem; a problem fully appreciated when one begins to map out the variability of acoustic-phonetic cues that point to a single linguistic category [e.g. @delattre1955; @peterson-barney1952; @newman2001]; compounded when talker sex, age, social class, dialect and a host of other contexts are factored into consideration. Listeners' aptitude at speech comprehension however, belie this challenge. Given the uncertainty involved it is not surprising models of spoken word recognition that allow for probabilistic outcomes have left a lasting impression [@mcllelland-elman1986; @vitevitch-luce; @norris-mcqueen2008].
-
-Over the past 20 years there have been prolific investigations into how and when listeners adjust their phonological categories after hearing acoustically manipulated speech sounds. These manipulations take place at the margins of linguistic categories where perception can be heavily influenced by the contexts in which they are presented [@norris2003; @mcqueen2006]. A sound that is ambiguous between /s/ and /sh/ presented in the utterance *contradiction* would bias its interpretation as /sh/ since *contradicson* is not a word. Repeated exposure to the sound in such biasing word contexts reliably elicits a shift in perception along the /s/-/sh/ continuum in subsequent testing -- those having heard the sound in /sh/-biasing words tend to give more /sh/ responses; vice-versa for those who were exposed to it in /s/-contexts. This perceptual recalibration of less prototypical category members has also been induced under audio-visual manipulations [@bertelson2003; @vroomen2007]. The paradigm has been exploited to its fullest to investigate, among other things, the sustainability of perceptual changes [@eisner-mcqueen2006; @kraljic-samuel2005], its generalizability to members of the same phonological class [@kraljic-samuel2006], and its generalizability to other talkers [@kraljic-samuel2007; @reinisch-holt2014].
-
-In general, these findings are compatible with exemplar and other probabilistic updating frameworks that link the distributions of cues to changes in category mappings hence perceptual recalibration findings can to an extent inform general understanding of talker adaptation. But the mechanisms that underlie the perceptual changes observed are still not well understood and therefore remain a point of debate. Some positions remain less specified than others. For instance the proposal that listeners expand their categories when confronted with unfamiliar accents or that they "relax their criteria" for category membership (@zheng-samuel2020; @schmale2012; @floccia2006; @bent2016). While it is possible that apparent perceptual shifts post-exposure can be explained by processes independent of distributional learning [@clarke-davidson2008; see @xie2023 for simulations] what is needed are better specified hypotheses coupled with stronger predictions and tests to weigh the evidence [@schertz-clare2020; @xie2023; @bent-baese-berk2021].
-
-Analytic frameworks that facilitate modelling of perceptual processes conditioned on different assumptions offer a way forward. If robust speech recognition involves learning from the input under varying contexts in a rational manner, it has to account for the implicit assumptions that listeners seem to bring to any speech perception task  with regard to cue-category mappings, and be able to explain how they reconcile these assumptions with recent input. Theories that explicitly bring this to bear include the influential exemplar models [@johnson1996; @pierrehumbert2001; @apfelbaum-mcmurray2015], Bayesian inference models [@feldman2009; @kronrod2016; @kleinschmidt-jaeger2015; @hitczenko-feldman2016], and error-driven learning [@harmon2019].
-
-In a recent example @cummings-theodore2023 working within the ideal adaptor framework, predicted that perceptual recalibration could have graded effects. This logic follows from the general premise that adaptation is the outcome of weighted updates of listener prior expectations of cue-category mappings with the statistics of talker input. By manipulating the number of times an ambiguous sound between /s/ and /sh/ was heard between participants and within each biasing context (1, 4, 10 or 20 occurences) they showed that the size of the putative perceptual recalibration effect correlated with the frequency of the ambiguous tokens. Model simulations qualitatively predicted behavioral results and provided strong evidence of a mechanism that is sensitive to cue statistics. This result corroborates earlier modelling efforts of @kleinschmidt-jaeger2011 which demonstrated that incremental bayesian belief-updating is a possible mechanism behind what has been believed to be dichotomous perceptual phenomena -- selective adaptation and perceptual recalibration.
-
-The present study was devised in similar spirit to past studies guided by an understanding of language as inference and learning under uncertain conditions [@fine2010; @kleinschmidt-jaeger2016; @kleinschmidt-jaeger2011; @clayards2008]. In particular we aim to subject the hypothesis that talker adaptation results from distributional learning with incremental belief updating to a stronger test. While studies of perceptual recalibration that demonstrate graded learning effects based on the quantity of evidence support this hypothesis, there are limitations to the paradigm that preclude deeper investigation. Talker-specific learning involves inferring the means and variances of her cue-category mappings. This task is made more difficult for talkers with extreme cue shifts that fall beyond the prior expectations of listeners because an entire remapping of the cue space is required [@sumner2011]. In perceptual recalibration listeners are presented with maximally informative instances of the same ambiguous acoustic-phonetic token essentially providing ideal but very unnatural circumstances for learning to occur. However even this has a limit -- exposure to a certain number of critical trials (about 20 trials in lexical context studies [@cummings-theodore2022; @tzeng2021]; 64 trials in audio-visual context studies[@vroomen2007]) -- do not bring additive learning effects.
-
-Here we build on the pioneering work of @clayards2008; @kleinschmidt-jaeger2016; @theodore-monto2019; @kleinschmidt2020 with some design innovations that we believe affords a productive test of the core claims of an ideal adaptor account of speech perception. In @kleinschmidt-jaeger2016 L1-US English listeners heard recordings of /b/-/p/ minimal pair words like *beach* and *peach* that were acoustically manipulated. Separate groups of listeners were exposed to different distributions of voice onset times (VOTs)---the primary cue distinguishing word-initial voicing ---that were shifted by up to +30 ms, relative to what one might expect from a 'typical' talker (Figure \@ref(fig:kleinschmidt-jaeger-2016-replotted)A). In line with the distributional learning hypothesis, listeners' category boundary or point of subjective equality (PSE)---i.e., the VOT for which listeners are equally likely to respond "b" or "p"---shifted in the same direction as the exposure distribution (Figure \@ref(fig:kleinschmidt-jaeger-2016-replotted)B). @kleinschmidt-jaeger2016 and closely related work have been able to show perceptual shifts move qualitatively in the direction of the manipulated distributions but so far none of them were designed to test incremental adaptation. We propose to fill that gap with a novel test-exposure-test design. In doing so we aim to estimate listeners prior expectations about the category mappings for our test talker before they receive further informative exposure and to document how quickly, from the onset of exposure, does the distributional learning effect emerge. The latter point is something that remains opaque in previous work because of the lack of test blocks. Given the substantial evidence that adaptation is rapid (e.g. under 5 mins in L2 accent adaptation; 4-10 trials in perceptual recalibration) listeners may show learning effects very early on in distributional learning as well. On the other hand, given the comparatively more naturalistic task of inferring talker distributions over a range of cues, learning effects may take longer to show.   
-
-In experimental work researchers often have to consider the generalizability of their results which leads to questions about ecological validity. There is a trade-off between ecological validity of the experimental design and the desired degree of control over the variables. Questions about ecological validity of prior work in distributional learning pertain to two features. First, the stimuli which were generated with a synthesiser, had an obvious machine-like quality[@kleinschmidt-jaeger2016; @clayards2008]. Second, the pairs of distributions of voiced and voiceless categories were always identical in their variances [see also @theodore-monto2019] which adds to the artificiality of the experiment. In our description of methods below we show how we can begin to improve on these features through the stimuli and the setting of exposure conditions.
 
 
 ## Previous intro
@@ -1332,3 +1314,279 @@ m_IA.VOT_f0_vowelduration_informedpriors <-
 
 ```
 
+###DMMMM
+<!-- ### DMMM: A distributional multivariate mixed-effects model -->
+<!-- Here we use a distributional multivariate mixed-effects model (DMMM) to fit the data from both isolated and connected speech, separately for /d/ and /t/. The model fits not only the mean but higher-level statistical moments of the *distribution* of cues for each category. Specifically, we assume /d/ and /t/ categories that are normally distributed with unknown mean and variance but also can exhibit unknown skew. The ability to model skew should help to fit distributions along cues with soft or hard bounds, such VOT [especially, if 'negative VOTs' are considered the combination of a VOT of 0 and the presence of a second cue, pre-voicing]. -->
+
+<!-- The model is multivariate because we fit the data simultaneously to all three cues (VOT, f0, and vowel duration). This allows us to capture correlations between these cues, as well as correlations between any of the parameters of the talker-specific cue distributions for each category (e.g., the category means and variances).^[Since we fit separate models to each category, our implementation only captures such cross-talker correlations *within* each category, but not those that are known to exist *across* categories [@REF]. We made this decision since current implementations of DMMMs assume that residual (population-level) correlations between cues are identical across the data. As Figure XXX above shows,  this is clearly not the case for the, for instance, the correlation between VOT and vowel duration across /d/ and /t/.] -->
+<!-- TO DO: figure that shows pairwise cue correlations -->
+<!-- Finally, the model is a multilevel or mixed-effects model since we recognize the hierarchical grouping structure of the data (talkers). -->
+
+<!-- ```{r DMMM-setup, eval=FALSE} -->
+<!-- d.chodroff_wilson.for_analysis <- -->
+<!--   d.chodroff_wilson %>% -->
+<!--   select(Talker, category, VOT, f0_Mel, vowel_duration) %>% -->
+<!--   # Remove pitch-halving and extreme vowel duration outlier -->
+<!--   # (vowel duration is also truncated at > 30ms because of the automatic alignment that -->
+<!--   # was used by Chodroff and Wilson to get those measures) -->
+<!--   filter(f0_Mel > 200, vowel_duration < 450) -->
+
+<!-- scale_f0 <- scale(d.chodroff_wilson.for_analysis$f0_Mel) -->
+<!-- scale_vowel_duration <- scale(d.chodroff_wilson.for_analysis$vowel_duration) -->
+<!-- d.chodroff_wilson.for_analysis %<>% -->
+<!--   mutate( -->
+<!--     across( -->
+<!--       c(VOT, f0_Mel, vowel_duration), -->
+<!--       ~ (.x - mean(.x, na.rm = T)) / (2 * sd(.x, na.rm = T)))) -->
+
+<!-- # Recognizing that f0 was censored at lower end -->
+<!-- # Recognizing that vowel duration was censored at lower and upper end -->
+<!-- bounds <- list() -->
+<!-- bounds[["f0_Mel"]] <- range(d.chodroff_wilson.for_analysis$f0_Mel) * 1.0001 -->
+<!-- bounds[["vowel_duration"]] <- range(d.chodroff_wilson.for_analysis$vowel_duration) * 1.0001 -->
+
+<!-- my.priors.DMMM <- -->
+<!--   c( -->
+<!--     # Uncomment if we'd like to include speechstyle as a predictor, or if we'd like to fit -->
+<!--     # the data from both categories in one model (in which case, we'd need to add category -->
+<!--     # as predictor) -->
+<!--     # -->
+<!--     # MU: COEFFICIENTS IN LINEAR PREDICTOR -->
+<!--     prior(student_t(3, 0, 2.5), class = b, resp = VOT, dpar = mu), -->
+<!--     prior(student_t(3, 0, 2.5), class = b, resp = f0Mel, dpar = mu), -->
+<!--     prior(student_t(3, 0, 2.5), class = b, resp = vowelduration, dpar = mu), -->
+<!--     prior(cauchy(0, 2.5), class = sd, resp = VOT, dpar = mu), -->
+<!--     prior(cauchy(0, 2.5), class = sd, resp = f0Mel, dpar = mu), -->
+<!--     prior(cauchy(0, 2.5), class = sd, resp = vowelduration, dpar = mu), -->
+<!--     # SIGMA: VARIANCE OF RANDOM EFFECTS -->
+<!--     prior(student_t(3, 0, 2.5), class = b, resp = VOT, dpar = sigma), -->
+<!--     prior(student_t(3, 0, 2.5), class = b, resp = f0Mel, dpar = sigma), -->
+<!--     prior(student_t(3, 0, 2.5), class = b, resp = vowelduration, dpar = sigma), -->
+<!--     prior(cauchy(0, 2.5), class = sd, resp = VOT, dpar = sigma), -->
+<!--     prior(cauchy(0, 2.5), class = sd, resp = f0Mel, dpar = sigma), -->
+<!--     prior(cauchy(0, 2.5), class = sd, resp = vowelduration, dpar = sigma), -->
+<!--     prior(student_t(3, 0, 2.5), class = b, resp = VOT, dpar = alpha), -->
+<!--     prior(student_t(3, 0, 2.5), class = b, resp = vowelduration, dpar = alpha), -->
+<!--     # prior(cauchy(0, 2.5), class = sd, resp = VOT, dpar = alpha), -->
+<!--     # prior(cauchy(0, 2.5), class = sd, resp = vowelduration, dpar = alpha), -->
+<!--     # COR: CORRELATION OF RANDOM EFFECTS -->
+<!--     prior(lkj(1), class = cor) -->
+<!-- ) -->
+
+<!-- # TO DO: consider using a gaussian after all. -->
+<!-- # formula + set_rescor(rescor = TRUE) is only implemented for gaussian and student models -->
+<!-- # -->
+<!-- # holding grouping index p constant across mu, sigma, alpha allows us to fit correlations -->
+<!-- # across statistical moments (mu, log sigma, and skew). Fitting across both categories -->
+<!-- # allows us to do so across categories. -->
+<!-- bf_VOT <- -->
+<!--   bf(VOT ~ 1 + category + (1 + category | p | Talker)) + -->
+<!--   lf(sigma ~ 1 + category + (1 + category | q | Talker)) + -->
+<!--   # lf(alpha ~ 1 + category + (1 + category | o | Talker)) + -->
+<!--   lf(alpha ~ 1 + category) + -->
+<!--   brmsfamily( -->
+<!--     "skew_normal", -->
+<!--     link = "identity", -->
+<!--     link_sigma = "log", -->
+<!--     link_alpha = "identity") -->
+
+<!-- bf_f0 <-   -->
+<!--   # bf(paste0("f0_Mel | trunc(lb = ", bounds[["f0_Mel"]][1], ") ~ 1 + category + (1 + category | p | Talker)")) + -->
+<!--   bf(f0_Mel ~ 1 + category + (1 + category | p | Talker)) + -->
+<!--   lf(sigma ~ 1 + category + (1 + category | q | Talker)) + -->
+<!--   brmsfamily( -->
+<!--     "gaussian", -->
+<!--     link = "identity", -->
+<!--     link_sigma = "log") -->
+
+<!-- bf_vowel_duration <-   -->
+<!--   # bf(paste0("vowel_duration | trunc(lb = ", bounds[["vowel_duration"]][1], ", ub = ", bounds[["vowel_duration"]][2], ") ~ 1 + category + (1 + category | p | Talker)")) + -->
+<!--  bf(vowel_duration ~ 1 + category + (1 + category | p | Talker)) + -->
+<!--   lf(sigma ~ 1 + category + (1 + category | q | Talker)) + -->
+<!-- #  lf(alpha ~ 1 + category + (1 + category | o | Talker)) + -->
+<!--   lf(alpha ~ 1 + category) + -->
+<!--   brmsfamily( -->
+<!--     "skew_normal", -->
+<!--     link = "identity", -->
+<!--     link_sigma = "log", -->
+<!--     link_alpha = "identity") -->
+
+<!-- inits <-  -->
+
+<!--   list( -->
+<!--     b_alpha_VOT_Intercept = 5, -->
+<!--     b_alpha_VOT_categoryD = 1, -->
+<!--     b_alpha_vowelduration_Intercept = 5, -->
+<!--     b_alpha_duration_categoryD = 1, -->
+<!--   ) -->
+
+<!-- # TO DO: consider using *all* talkers here (currently subset to female talkers) -->
+<!-- # (inclusion of male talkers would require taking care of pitch-halving separately -->
+<!-- # for both sexes, and it probably would require including talker sex in the f0 model) -->
+<!-- contrasts(d.chodroff_wilson.for_analysis$category) <- cbind("D" = c(-1, 1)) -->
+<!-- DMMM <- -->
+<!--   brm( -->
+<!--   formula = bf_VOT + bf_f0 + bf_vowel_duration + set_rescor(rescor = FALSE), -->
+<!--   data = d.chodroff_wilson.for_analysis, -->
+<!--   prior = my.priors.DMMM, -->
+<!--   chains = 4, -->
+<!--   cores = 4, -->
+<!--   warmup = 1500, -->
+<!--   iter = 4000, -->
+<!--   thin = 1, -->
+<!--   threads = threading(threads = 2), -->
+<!--   control = list(adapt_delta = .85, max_treedepth = 15)) -->
+
+<!-- save_model = "../models/DMMM.stan" -->
+<!-- saveRDS(DMMM, file = "../models/DMMM-attempt4.rds") -->
+<!-- DMMM <- readRDS(file = "../models/DMMM-attempt3.rds") -->
+<!-- ``` -->
+
+<!-- ```{r checking-posterior-predictive, eval=FALSE} -->
+<!-- pp_check(DMMM, resp = "VOT") -->
+<!-- pp_check(DMMM, resp = "f0Mel") -->
+<!-- pp_check(DMMM, resp = "vowelduration") -->
+<!-- ``` -->
+
+<!-- ```{r draw-samples-from-DMMM, eval=FALSE} -->
+<!-- # 1. Get estimates of each talker model. This could be a. or b. -->
+<!-- #   a. use mean/median estimates -->
+<!-- #   b. marginalize over all parameters that go into each talker model. -->
+<!-- # 2. Calculate marginal density of test tokens under each (draw of each) talker model.  -->
+<!-- #    This could be done in a number of ways: -->
+<!-- #   a. for each test token, take density under category that maximizes the density -->
+<!-- #   b. for each test token, take average density by weighting density under each  -->
+<!-- #      category proporotional to the density of the observation under that category. -->
+<!-- #   c. ... -->
+<!-- #    -->
+<!-- # OR select model based on stimulus *mean* (mean generated under talker model is most  -->
+<!-- # similar to currently observed mean)   -->
+<!-- #    -->
+<!-- # 3. Calculate categorization function over test tokens conditional on the relative  -->
+<!-- #    probability of the different talker models, by either -->
+<!-- #   a. selecting the talker model that achieved the highest density, or  -->
+<!-- #   b. weighting each talker model relative to the density the test tokens have under  -->
+<!-- #      that model. -->
+<!-- s.DMMM <- -->
+<!--   DMMM %>% -->
+<!--   spread_draws( -->
+<!--     # fixed effects for mu, sigma, and alpha  -->
+<!--     !!! syms(pmap_chr( -->
+<!--       expand_grid( -->
+<!--         parameter = c("b", "b_sigma", "b_alpha"),  -->
+<!--         cue = c("VOT", "f0Mel", "vowelduration"),  -->
+<!--         coef = c("Intercept", "categoryD")) %>% -->
+<!--         # Filter an variables for which alpha was not modeled -->
+<!--         filter(!(cue == "f0Mel" & parameter == "b_alpha")), -->
+<!--       ~ paste(..., sep = "_"))), -->
+<!--     # random effects for mu, sigma, and alpha -->
+<!--     r_Talker__VOT[TalkerID, coef], -->
+<!--     r_Talker__f0Mel[TalkerID, coef], -->
+<!--     r_Talker__vowelduration[TalkerID, coef], -->
+<!--     r_Talker__sigma_VOT[TalkerID, coef],   -->
+<!--     r_Talker__sigma_f0Mel[TalkerID, coef], -->
+<!--     r_Talker__sigma_vowelduration[TalkerID, coef]) %>% -->
+<!--   # The followoing only applies the indices to the first element to the list of random effect names -->
+<!--   # { !!! syms(pmap_chr( -->
+<!--   #   expand_grid( -->
+<!--   #     parameter = c("r_Talker_", "r_Talker__sigma", "r_Talker__alpha"),  -->
+<!--   #     cue = c("VOT", "f0Mel", "vowelduration")) %>% -->
+<!--   #     # Filter an variables for which *random effects* of alpha were not modeled -->
+<!--   #     filter(!(cue %in% c("VOT", "f0Mel", "vowelduration") & parameter == "r_Talker__alpha")), -->
+<!--   #   ~ paste(..., sep = "_"))) }[TalkerID, coef]  -->
+<!--   # Spread the random effects -->
+<!--   pivot_wider( -->
+<!--     values_from = starts_with("r_"), -->
+<!--     names_from = coef) %>% -->
+<!--   # Add random effects to fixed effects  -->
+<!--   # (and add 0 if no random effect matching the fixed effect is found) -->
+<!--   mutate( -->
+<!--     across( -->
+<!--       starts_with("b_"), -->
+<!--       function(x) { -->
+<!--         r_name <- gsub("^b", "r_Talker_", cur_column()) -->
+<!--         r_value <- if (r_name %in% names(.)) get(r_name) else 0 -->
+<!--         x + r_value  -->
+<!--       })) %>% -->
+<!--   select(-starts_with("r_")) %>% -->
+<!--   # Get the predicted values for all category parameters -->
+<!--   mutate( -->
+<!--     across( -->
+<!--       ends_with("Intercept"), -->
+<!--       list( -->
+<!--         "catD" = function(x) { -->
+<!--           r_name <- gsub("Intercept", "categoryD", cur_column()) -->
+<!--           x + get(r_name)  -->
+<!--         }, -->
+<!--         "catT" = function(x) { -->
+<!--           r_name <- gsub("Intercept", "categoryD", cur_column()) -->
+<!--           x - get(r_name)  -->
+<!--         }), -->
+<!--       .names = "{.col}_{.fn}")) %>% -->
+<!--   select(TalkerID, .chain, .draw, ends_with(c("catD", "catT"))) %>% -->
+<!--   rename_with(~ gsub("Intercept_", "", .x)) %>% -->
+<!--   rename_with(~ gsub("b_(VOT|f0Mel|vowelduration)", "b_mu_\\1", .x))  -->
+
+<!-- s.DMMM %>% -->
+<!--   # Add sampling functions for all three cues -->
+<!--   mutate( -->
+<!--     marginal_VOT =  -->
+<!--       pmap( -->
+<!--         list(b_mu_VOT_catD, b_sigma_VOT_catD, b_alpha_VOT_catD, b_mu_VOT_catT, b_sigma_VOT_catT, b_alpha_VOT_catT), -->
+<!--         ~ function(muD, sigmaD, alphaD, muT, sigmaT, alphaT) { -->
+<!--           dD <- dskew_normal(x, mu = muD, sigma = sigmaD, alpha = alphaD) -->
+<!--           dT <- dskew_normal(x, mu = muT, sigma = sigmaT, alpha = alphaT) -->
+<!--           (dD + dT) -->
+<!--           }), -->
+<!--     posterior_VOT_T =  -->
+<!--       pmap( -->
+<!--         list(b_mu_VOT_catD, b_sigma_VOT_catD, b_alpha_VOT_catD, b_mu_VOT_catT, b_sigma_VOT_catT, b_alpha_VOT_catT), -->
+<!--         ~ function(muD, sigmaD, alphaD, muT, sigmaT, alphaT) { -->
+<!--           dD <- dskew_normal(x, mu = muD, sigma = sigmaD, alpha = alphaD) -->
+<!--           dT <- dskew_normal(x, mu = muT, sigma = sigmaT, alpha = alphaT) -->
+<!--           dT / (dD + dT) -->
+<!--           }), -->
+<!--     marginal_f0Mel =  -->
+<!--       pmap( -->
+<!--         list(b_mu_f0Mel_catD, b_sigma_f0Mel_catD, b_mu_f0Mel_catT, b_sigma_f0Mel_catT), -->
+<!--         ~ function(muD, sigmaD, muT, sigmaT) { -->
+<!--           dD <- dnorm(x, mu = muD, sigma = sigmaD) -->
+<!--           dT <- dnorm(x, mu = muT, sigma = sigmaT) -->
+<!--           (dD + dT) -->
+<!--           }), -->
+<!--     posterior_f0Mel_T =  -->
+<!--       pmap( -->
+<!--         list(b_mu_f0Mel_catD, b_sigma_f0Mel_catD, b_mu_f0Mel_catT, b_sigma_f0Mel_catT), -->
+<!--         ~ function(muD, sigmaD, muT, sigmaT) { -->
+<!--           dD <- dnorm(x, mu = muD, sigma = sigmaD) -->
+<!--           dT <- dnorm(x, mu = muT, sigma = sigmaT) -->
+<!--           dT / (dD + dT) -->
+<!--           }), -->
+<!--     marginal_vowelduration =  -->
+<!--       pmap( -->
+<!--         list(b_mu_vowelduration_catD, b_sigma_vowelduration_catD, b_alpha_vowelduration_catD, b_mu_vowelduration_catT, b_sigma_vowelduration_catT, b_alpha_vowelduration_catT), -->
+<!--         ~ function(muD, sigmaD, alphaD, muT, sigmaT, alphaT) { -->
+<!--           dD <- dskew_normal(x, mu = muD, sigma = sigmaD, alpha = alphaD) -->
+<!--           dT <- dskew_normal(x, mu = muT, sigma = sigmaT, alpha = alphaT) -->
+<!--           (dD + dT) -->
+<!--           }), -->
+<!--     posterior_vowelduration_T =  -->
+<!--       pmap( -->
+<!--         list(b_mu_vowelduration_catD, b_sigma_vowelduration_catD, b_alpha_vowelduration_catD, b_mu_vowelduration_catT, b_sigma_vowelduration_catT, b_alpha_vowelduration_catT), -->
+<!--         ~ function(muD, sigmaD, alphaD, muT, sigmaT, alphaT) { -->
+<!--           dD <- dskew_normal(x, mu = muD, sigma = sigmaD, alpha = alphaD) -->
+<!--           dT <- dskew_normal(x, mu = muT, sigma = sigmaT, alpha = alphaT) -->
+<!--           dT / (dD + dT) -->
+<!--           })) %>% -->
+<!--     select(TalkerID, .chain, .draw, ends_with(c("_D", "_T"))) -->
+<!-- ``` -->
+
+<!-- advantages for regression-based approach fitting categories -->
+<!-- - understands structure of data; doesn't assume balanced data -->
+<!-- - weights talkers with less data appropriate. -->
+<!-- - considers cues relative to the category the come from -->
+<!-- - can model correlation of category means across cues and talkers, while modeling correlation within categories separately (and separately for each category, if fit separately to each category) -->
+<!-- - can model correlation of category variances across cues and talkers -->
+<!-- - can generate hypotheses about new talkers -->
+
+<!-- Following @xie2023, the ideal observers included perceptual noise [estimates taken from @kronrod2016]. -->
