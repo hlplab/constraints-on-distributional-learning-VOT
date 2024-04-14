@@ -92,7 +92,7 @@ For reasons we describe next, we then corrected and simplified the measurements 
 
 We used the *corrected* rather than *measured* f0 and vowel duration values. This removes measurement noise that might be introduced by the annotation procedure, and makes f0 and vowel duration values more akin to our VOT values. Specifically, the f0 values were linearly interpolated between the f0 values of the voiced and voiceless tokens of the minimal pair. For vowel durations, we used the vowel durations of the *dip*-*tip* pair, which sidesteps the difficulty of annotating the boundary between the vowel and the coda for *din*-*tin* and *dill*-*till* word pairs. This assumes that listeners perceive the same vowel duration for the different words that have the same VOT duration. This assumption is likely a reasonable approximation given that the stimuli were generated from word recordings that were made in the same context and spoken by the same individual in a similar speech style and rate. Figure \@ref(fig:plot-exposure-stimuli-cues) shows uncorrected and corrected measurements of all stimuli while Table \@ref(tab:exposure-stimuli-cue-correlations) shows their correlation values after correction.
 
-(ref:plot-exposure-stimuli-cues) Correlations of VOT, f0 and vowel duration of the synthesized stimuli **A)** before and **B)** after adjustments.
+(ref:plot-exposure-stimuli-cues) Correlations of VOT, f0 and vowel duration of the synthesized stimuli **A)** before and **B)** after measurement corrections.
 
 ```{r plot-exposure-stimuli-cues, fig.height=5.5, fig.width=10, fig.cap="(ref:plot-exposure-stimuli-cues)"}
 cue_measurements <- 
@@ -120,7 +120,6 @@ cue_measurements <-
         plot.tag = element_text(face = "bold"))
 ```
 
-
 ```{r exposure-stimuli-cue-correlations, fig.cap="cue correlations of synthesised stimuli", fig.cap="(ref:exposure-stimuli-cue-correlations)"}
 round(cor(d.for_analysis %>% 
       distinct(VOT, f0_Mel, vowel_duration) %>% 
@@ -130,7 +129,7 @@ round(cor(d.for_analysis %>%
     format = "simple",
     col.names = c("Cues", "VOT", "f0", "Vowel duration"),
     align = "c",
-    caption = "Cue correlations after measurement adjustments")
+    caption = "Cue correlations after measurement corrections")
 ```
 
 # Additional information on participant exclusions {#sec:exclusions}

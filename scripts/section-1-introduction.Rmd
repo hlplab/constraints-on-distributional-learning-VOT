@@ -81,66 +81,32 @@ p.gaussian <-
     legend.position = "inside",
     legend.position.inside = c(0.79,0.8))
 
-# TO DO: this needs fixing. It also looks like the categorizations have already been obtained and are stored in
-# d.talker_IO.VOT. So there would seem to be no need to repeat all of that here!
-d.talker_cat <- 
-  d.chodroff_wilson.connected %>% 
-  ungroup() %>% 
-  group_by(category) %>% 
-  summarise(VOT = mean(VOT)) %>% 
-  mutate(rows = 2) %>% 
-  uncount(rows) %>% 
-  mutate(Talker = factor(rep(c("typical", "unfamiliar"), 2)),
-                Shift = rep(c(-2.5, 32), 2),
-         VOT = VOT + Shift) %>%  
-  select(-Shift) %>% 
-  group_by(Talker) %>% 
-  nest(data = -Talker) %>% 
-  mutate(io = map(
-    data, ~ make_MVG_ideal_observer_from_data(
-              data = .x,
-              cues = c("VOT"),
-              Sigma_noise = matrix(c(120), ncol = 1, dimnames = list(c("VOT"), c("VOT"))),
-      prior = c("/d/" = .5, "/t/" = .5),
-      lapse_bias = c("/d/" = .5, "/t/" = .5)) %>% 
-      mutate(Sigma = ifelse(category == "/d/", 10, 35)))) %>% 
-  left_join(
-    tibble(Talker = rep(c("typical", "unfamiliar"), 2)) %>% 
-           expand_grid(x = seq(-25, 110, .5)) %>% 
-      group_by(Talker) %>% 
-      nest(x = x)) %>% 
-  mutate(
-     categorization =
-        map2(
-          x, io,
-          ~ get_categorization_from_MVG_ideal_observer(x = .x$x, model = .y, decision_rule = "proportional") %>%
-            filter(category == "/t/") %>%
-            mutate(VOT = map_dbl(x, ~ .x[1]))))
-
-arrow_PSE <- 
-  d.talker_IO.VOT %>% 
-  filter(Talker %in% c("typical", "unfamiliar")) %>%
-  mutate(x = PSE, xend = PSE, y = .5, yend = .01) 
-
 p.cat <- 
-  d.talker_cat %>% 
-  select(Talker, categorization) %>% 
-  group_by(Talker) %>% 
+  d.talker_IO.VOT %>% 
+  filter(Talker %in% c("typical", "unfamiliar")) %>% 
+  select(Talker, category, categorization, PSE) %>% 
+  filter(category == "/t/") %>% 
   unnest(categorization, names_repair = "unique") %>% 
   ggplot(aes(x = VOT, y = response, group = Talker, colour = Talker, linetype = Talker)) +
   geom_line(linewidth = 1.2) +
   scale_colour_manual(values = c("grey", "#02427e")) +
   scale_linetype_manual(values = c("solid", "longdash")) +
-  scale_x_continuous("VOT (ms)", limits = c(-25, 130), breaks = c(0, 37, 72, 100)) +
+  #scale_x_continuous("VOT (ms)", limits = c(-25, 130), breaks = c(0, 37, 72, 100)) +
   scale_y_continuous('Proportion "t"-responses', breaks = c(0, .5, 1)) +
   guides(linetype = "none", colour = "none") +
-  geom_segment(
+   geom_segment(
     data = arrow_PSE,
     mapping = aes(x = x, xend = xend, y = y , yend = yend),
     colour = "grey",
     alpha = 0.5,
     arrow = arrow(type = "open" , length = unit(0.04, "npc")),
-    inherit.aes = F) 
+    inherit.aes = F) +
+  scale_x_continuous(limits = c(15, 90), breaks = c(37, 72))
+
+arrow_PSE <- 
+  d.talker_IO.VOT %>% 
+  filter(Talker %in% c("typical", "unfamiliar")) %>%
+  mutate(x = PSE, xend = PSE, y = .5, yend = .01) 
 
 p.PSE <- 
   d.talker_IO.VOT %>% 
