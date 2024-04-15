@@ -216,8 +216,7 @@ get_ChodroffWilson_data <- function(
 prepVars <- function(
     d,
     test_mean = NULL,
-    levels.Condition = NULL,
-    contrast_type
+    levels.Condition = NULL
 ) {
   d %<>%
     drop_na(Condition.Exposure, Phase, Block, Item.MinimalPair, ParticipantID, Item.VOT, Response)
@@ -238,32 +237,24 @@ prepVars <- function(
 
   contrasts(d$Condition.Exposure) <- cbind("_Shift10 vs. Shift0" = c(-2/3, 1/3, 1/3),
                                            "_Shift40 vs. Shift10" = c(-1/3,-1/3, 2/3))
-  if (all(d$Phase == "test") & n_distinct(d$Block) > 1 & contrast_type == "difference") {
+  message(contrasts(d$Condition.Exposure))
+  
+  if (all(d$Phase == "test") & n_distinct(d$Block) > 1) {
     contrasts(d$Block) <- MASS::fractions(MASS::contr.sdif(6))
     dimnames(contrasts(d$Block))[[2]] <- c("_Test2 vs. Test1", "_Test3 vs. Test2", "_Test4 vs. Test3", "_Test5 vs. Test4", "_Test6 vs. Test5")
     message("Condition contrast is:", contrasts(d$Condition.Exposure))
     message("Block contrast is:", contrasts(d$Block))
-  } else if (all(d$Phase == "test") & n_distinct(d$Block) > 1 & contrast_type == "helmert") {
-    contrasts(d$Block) <- cbind("_Test2 vs. Test1" = c(-1/2, 1/2, 0, 0, 0, 0),
-                                "_Test3 vs. Test2_1" = c(-1/3, -1/3, 2/3, 0, 0, 0),
-                                "Test4 vs. Test3_2_1" = c(-1/4, -1/4, -1/4, 3/4, 0, 0),
-                                "_Test5 vs. Test4_3_2_1" = c(-1/5, -1/5, -1/5, -1/5, 4/5, 0),
-                                "_Test6 vs. Test5_4_3_2_1" = c(-1/6, -1/6, -1/6, -1/6, -1/6, 5/6))
-    message("Condition contrast is:", contrasts(d$Condition.Exposure))
-    message("Block contrast is:", contrasts(d$Block))
-  } else if (all(d$Phase == "exposure") & n_distinct(d$Block) > 1 & contrast_type == "difference") {
+  } else if (all(d$Phase == "exposure") & n_distinct(d$Block) > 1) {
     contrasts(d$Block) <- cbind("_Exposure2 vs. Exposure1" = c(-2/3, 1/3, 1/3),
                                 "_Exposure3 vs. Exposure2" = c(-1/3,-1/3, 2/3))
     message("Condition contrast is:", MASS::fractions(contrasts(d$Condition.Exposure)))
     message("Block contrast is:", MASS::fractions(contrasts(d$Block)))
-  } else if (n_distinct(d$Block) > 1 & contrast_type == "difference") {
+  } else if (n_distinct(d$Block) > 1) {
     contrasts(d$Block) <- MASS::fractions(MASS::contr.sdif(9))
     dimnames(contrasts(d$Block))[[2]] <- c("_Exp1 vs. Test1", "_Test2 vs. Exp1", "_Exp2 vs. Test2", "_Test3 vs. Exp2", "_Exp3 vs. Test3", "_Test4 vs. Exp3", "_Test5 vs. Test4", "_Test6 vs. Test5")
     message("Condition contrast is:", MASS::fractions(contrasts(d$Condition.Exposure)))
     message("Block contrast is:", MASS::fractions(contrasts(d$Block)))
-  } else {
-    message(contrasts(d$Condition.Exposure))
-  }
+  } 
   return(d)
 }
 
@@ -294,16 +285,14 @@ fit_model <- function(
 
   levels_Condition.Exposure <- c("Shift0", "Shift10", "Shift40")
 
-  contrast_type <- "difference"
-
   if (phase == "all") {
     data %<>%
       filter(Item.Labeled == F) %>%
-      prepVars(test_mean = VOT.mean_test, levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type)
+      prepVars(test_mean = VOT.mean_test, levels.Condition = levels_Condition.Exposure)
   } else {
     data %<>%
       filter(Phase == phase & Item.Labeled == F) %>%
-      prepVars(test_mean = VOT.mean_test, levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type)
+      prepVars(test_mean = VOT.mean_test, levels.Condition = levels_Condition.Exposure)
   }
 
   # specify the prior for beta parameters here if different from the general one
@@ -400,7 +389,7 @@ get_conditional_effects <- function(model, data, phase) {
     conditions = make_conditions(
       data %>%
         filter(Phase == .env$phase & Item.Labeled == FALSE) %>%
-        prepVars(test_mean = VOT.mean_test, levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
+        prepVars(test_mean = VOT.mean_test, levels.Condition = levels_Condition.Exposure),
       vars = c("Block")),
     method = "posterior_epred",
     ndraws = 500,
@@ -910,9 +899,6 @@ predict_vowel_duration <- function(VOT) {
 
 # Make IOs of each talker in a database and plot their categorization functions---------------------------------------------------
 
-# TO DO: this function can probably be unified with make_VOT_IOs_from_exposure
-# It is important to avoid having similar code in many places, since this makes
-# it hard to control that the same thing is done in all places.
 make_IOs_from_data <- function(
     data = d.chodroff_wilson,
     cues,

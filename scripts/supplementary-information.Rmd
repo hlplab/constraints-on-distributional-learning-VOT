@@ -241,7 +241,7 @@ We filtered both databases to only the /d/ and /t/ tokens. For both databases we
 
 This left a total of `r nrow(d.chodroff_wilson)` tokens from `r length(unique(d.chodroff_wilson$Talker))` female talkers: `r nrow(d.chodroff_wilson.connected)` tokens by `r length(unique(d.chodroff_wilson.connected$Talker))` female talkers from the connected speech database and `r nrow(d.chodroff_wilson.isolated)` tokens by `r length(unique(d.chodroff_wilson.isolated$Talker))` female talkers from the isolated speech database. This is the data shown in Figure \@ref(fig:exposure-means-database-matrix-plot). 
 
-For the predictions for idealized pre-exposure listeners, we decided to focus on the isolated speech data. While this database is substantially smaller (`r length(unique(d.chodroff_wilson.isolated$Talker))` female talkers), the conditions under which the recordings were elicited more closely resemble the conditions used to record our stimuli from which the test stimuli were created. Both recordings were sampled from a similar population pool, i.e. undergraduate native L1-US English speakers and both were recordings of isolated utterances. Nonetheless there were differences in the way talkers were instructed to produce the tokens that may have contributed to differences we see between our stimuli and the database's. The isolated database tokens were CV*t* syllables (e.g., *dot*, *tot*) produced in the context of a carrier phrase "*Say ______ again.*". The participants were told to speak at a normal rate and to make a slight pause after "Say" and before "again" [@chodroff-wilson2014]. These instructions resemble those given to the talker we recorded for our stimuli. <!-- TO DO: I think it would be good here to perhaps show a condensed version of the distributional plot from the main text + our test & exposure stimuli overlaid (corrected measurements), in order to see how our stimuli compare to the two databases, thereby justifying our choice. -->
+For the predictions for idealized pre-exposure listeners, we decided to focus on the isolated speech data. While this database is substantially smaller (`r length(unique(d.chodroff_wilson.isolated$Talker))` female talkers), the conditions under which the recordings were elicited more closely resemble the conditions used to record our stimuli from which the test stimuli were created. Both recordings were sampled from a similar population pool, i.e. undergraduate native L1-US English speakers and both were recordings of isolated utterances. Nonetheless there were differences in the way talkers were instructed to produce the tokens that may have contributed to differences we see between our stimuli and the database's. The isolated database tokens were CV*t* syllables (e.g., *dot*, *tot*) produced in the context of a carrier phrase "*Say ______ again.*". The participants were told to speak at a normal rate and to make a slight pause after "Say" and before "again" [@chodroff-wilson2014]. The recordings of our talker were made without a carrier phrase.<!-- TO DO: I think it would be good here to perhaps show a condensed version of the distributional plot from the main text + our test & exposure stimuli overlaid (corrected measurements), in order to see how our stimuli compare to the two databases, thereby justifying our choice. -->
 
 ### A model of listeners representations of /d/ and /t/ categories
 We used the adaptive speech perception (ASP) framework described in @xie2023 as a convenient way to approximate how listeners map the acoustic-phonetic properties of the speech input onto phonetic categories like /d/ and /t/. Following Xie and colleagues, we assume that category representations can be approximated as multivariate Gaussian distributions in the phonetic space. Specifically, we describe /d/ and /t/ as multivariate Gaussian categories of VOT (in ms), f0 (in Mel), and vowel duration (in ms). As mentioned in the main text, we follow previous work and treat pre-voicing as negative VOT, and revisit the consequences of that decision in the general discussion. The choice of multivariate Gaussian categories strikes a compromise between substantially less parsimonious models (e.g., exemplar models, neural networks, LDA) and even more parsimonious models [e.g., independent Gaussians for each phonetic cue, as discussed in more detail in @xie2023]. Also following Xie and colleagues, we included perceptual noise in the ideal observer models. Perceptual noise was assumed to be independent for each phonetic cue. Noise estimates for VOT and f0 were obtained from previous work [@kronrod2016, $sigma_{noise} = 80ms^2$ and $878 Mel^2$, respectively], the perceptual noise for vowel duration was set to the same value as for VOT given that both are durational cues ($sigma_{noise} = 80ms^2$).
@@ -714,7 +714,7 @@ fit_exposure.simple_effects_condition <-
       theta1 ~ 1),
     data = d.test_exposure_for_analysis %>%
       filter(Phase == "exposure") %>%
-      prepVars(test_mean = test_mean, levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
+      prepVars(test_mean = test_mean, levels.Condition = levels_Condition.Exposure),
     prior = my_priors,
     cores = 4,
     chains = chains,
@@ -748,7 +748,7 @@ fit_exposure.simple_effects_block <-
     theta1 ~ 1),
     data = d.for_analysis %>%
       filter(Phase == "exposure") %>%
-      prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
+      prepVars(levels.Condition = levels_Condition.Exposure),
     priors = my_priors,
     cores = 4,
     chains = chains,
@@ -1328,7 +1328,7 @@ d.GAMM <-
   mutate(Trial = 1:length(Trial)) %>%
   filter(Item.Labeled == F) %>%
   mutate(Trial_gs = (Trial - mean(Trial)) / (2 * sd(Trial))) %>%
-  prepVars(test_mean = VOT.mean_test, levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type)
+  prepVars(test_mean = VOT.mean_test, levels.Condition = levels_Condition.Exposure)
 
 my_priors <-
   c(

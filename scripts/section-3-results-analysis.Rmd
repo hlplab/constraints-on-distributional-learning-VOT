@@ -16,7 +16,7 @@ VOT.sd_test <- (d.mean_sd_scaling %>% pull(Item.VOT_sd))[2]
 rm(d.mean_sd_scaling)
 
 levels_Condition.Exposure = c("Shift0", "Shift10", "Shift40")
-contrast_type <- "difference"
+
 ```
 
 # Results {#sec:results}
@@ -113,7 +113,7 @@ fit_test.simple_effects_condition <-
     theta1 ~ 1),
     data = d.for_analysis %>%
       filter(Phase == "test") %>%
-      prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
+      prepVars(levels.Condition = levels_Condition.Exposure),
     priors = my_priors,
     cores = 4,
     chains = chains,
@@ -496,7 +496,7 @@ fit_test.simple_effects_block <-
     theta1 ~ 1),
     data = d.for_analysis %>%
       filter(Phase == "test") %>%
-      prepVars(levels.Condition = levels_Condition.Exposure, contrast_type = contrast_type),
+      prepVars(levels.Condition = levels_Condition.Exposure),
     priors = my_priors,
     cores = 4,
     chains = chains,
