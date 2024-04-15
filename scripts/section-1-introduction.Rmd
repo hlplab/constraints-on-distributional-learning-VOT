@@ -20,7 +20,7 @@ With this shared assumption, distributional learning models also share several c
 ```{r predictions, fig.height=base.height*3+2/3, fig.width=base.width*5, fig.cap="(ref:predictions)", fig.pos="H"}
 # Create all talker-specific IOs for connected speech data, using only the VOT cue
 d.talker_IO.VOT <- 
-  make_IOs_from_phonetic_data (
+  make_IOs_from_data (
     data = d.chodroff_wilson.connected,
     cues = c("VOT"),
     groups = "Talker") 

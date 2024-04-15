@@ -181,7 +181,7 @@ prior.PSE_mean <-
 # *might* affect our estimates of listeners' PSE, intercept, and slope.
 d.talkerPSEs <-
   # Make separate ideal observer for each talker in the database
-  make_IOs_from_phonetic_data(
+  make_IOs_from_data(
     data = d.chodroff_wilson,
     cues = c("VOT", "f0_Mel", "vowel_duration"),
     groups = c("speechstyle", "Talker", "gender"),
