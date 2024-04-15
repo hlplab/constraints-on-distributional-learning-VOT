@@ -1,5 +1,5 @@
 ---
-title             : "Incremental adaptation to an unfamiliar talker"
+title             : "Learning to understand an unfamiliar talker: testing models of adaptive speech perception"
 shorttitle        : "DRAFT"
 date              : "`r format(Sys.time(), '%B %d, %Y')`"
 
