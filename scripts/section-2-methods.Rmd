@@ -3,29 +3,6 @@ if (!exists("PREAMBLE_LOADED")) source("preamble.R")
 ```
 
 
-```{r load data}
-d <- 
-  read_csv("../data/experiment-results.csv", show_col_types = F) %>% 
-  # load cue measurements of stimuli
-  left_join(
-    read_csv("../data/exposure_stimuli_cue_measurements.csv", show_col_types = F),
-    by = c("Item.Filename", "Item.VOT", "Item.MinimalPair")) %>%
-  mutate(
-    Response.Voiceless = ifelse(Response.Voicing == "voiceless", 1, 0),
-    across(
-      c(Experiment, starts_with("List"), 
-        ParticipantID, Participant.Race, Participant.Ethnicity, Participant.Sex,
-        Condition.Exposure, Phase, 
-        Trial.ImageSelection, Item.ExpectedResponse, Item.ExpectedResponse.Voicing, Item.MinimalPair,
-        Response.ClickPosition, Response.Voicing),
-      factor),
-    Participant.Sex = str_to_lower(Participant.Sex),
-    Item.f0_Mel = normMel(Item.f0),
-    category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))) %>%
-  # Make copies of cue just to make working across the functions, which are not yet standardized a bit easier
-  mutate(VOT = Item.VOT, f0_Mel = Item.f0_Mel, vowel_duration = Item.VowelDuration)
-```
-
 # Methods 
 
 ## Participants
@@ -178,9 +155,9 @@ Next, we created the two additional exposure conditions by shifting all VOTs sam
 
 ```{r get-exclusion-indicators, warning=FALSE}
 # get data for exclusion due to categorization slope of first 36 trials. 
-# set the range of VOT values 
-empirical_means <- c(17, 62)
-VOT_for_required_proportion_t <- empirical_means + c(-20, 20)
+# set the approximate means for both d and t categories
+category_means <- c(17, 62)
+VOT_for_required_proportion_t <- category_means + c(-20, 20)
 required_proportion_t <- c(.15, .80) 
 
 d.VOT_exclusion <- 
@@ -269,7 +246,10 @@ Exclusion criteria were determined prior to analysis. Due to data transfer error
 rm(
   d.Participant,
   d.exposure,
+  category_means,
   d.VOT_exclusion,
+  VOT_for_required_proportion_t,
+  required_proportion_t,
   d.means,
   p.histogram_conditions)
 ```

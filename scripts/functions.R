@@ -721,18 +721,6 @@ get_bivariate_normal_ellipse <- function(
 
 # LINK IDEAL OBSERVERS TO PERCEPTION EXPERIMENT ---------------------------
 
-# Make ideal observer based on exposure conditions
-make_VOT_IOs_from_exposure <- function(data, Sigma_noise = matrix(80, dimnames = list("VOT", "VOT"))) {
-  data %>%
-    # This takes all of the actual data to make ideal observers. Alternatively, one could
-    # first distinct the data to one full list of each condition.
-    make_MVG_ideal_observer_from_data(
-      group = "Condition.Exposure",
-      cues = c("VOT"),
-      Sigma_noise = Sigma_noise) %>%
-    nest(io = -c(Condition.Exposure))
-}
-
 # Estimate the intercept, slope, and PSE that these ideal observers would have
 # were they analyzed the same way the human data is analyzed.
 
@@ -925,7 +913,7 @@ predict_vowel_duration <- function(VOT) {
 # TO DO: this function can probably be unified with make_VOT_IOs_from_exposure
 # It is important to avoid having similar code in many places, since this makes
 # it hard to control that the same thing is done in all places.
-make_IOs_from_phonetic_data <- function(
+make_IOs_from_data <- function(
     data = d.chodroff_wilson,
     cues,
     groups = NULL,

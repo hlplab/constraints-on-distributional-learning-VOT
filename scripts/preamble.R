@@ -72,31 +72,28 @@ colours.category <- c("/d/" = "#eb6223", "/t/" = "#522888")
 
 set.seed(42007)
 
-# Load cue information about exposure stimuli ------------------------------------------------
-files <- list.files(path = "../materials/stimuli_AE/annotation_files/", pattern = "*_measured.csv")
-exposure_stimuli_cue_measurements <-
-  bind_rows(map(1:4, ~ read_csv(paste0("../materials/stimuli_AE/annotation_files/", files[.x]), show_col_types = F))) %>%
+# Load experiment data and join with exposure stimuli cues ------------------
+d <- 
+read_csv("../data/experiment-results.csv", show_col_types = F) %>% 
+  # load cue measurements of stimuli
+  left_join(
+    read_csv("../data/exposure_stimuli_cue_measurements.csv", show_col_types = F),
+    by = c("Item.Filename", "Item.VOT", "Item.MinimalPair")) %>%
   mutate(
-    Item.MinimalPair = str_replace(filename, "(.*)_.*_.*$", "\\1"),
-    Item.VOT = str_replace(filename, ".*_VOT(.*)_.*$", "\\1"),
-    target_f0 = str_replace(filename, ".*_VOT.*_F0(.*)$", "\\1"),
-    Item.VowelDuration = vowel * 1000) %>%
-  # filter all minimal pairs to common VOT values and exclude unused minimal pair
-  filter(Item.VOT %in% c(-20:125),
-         Item.MinimalPair != "dimtim") %>%
-  group_by(Item.MinimalPair) %>%
-  arrange(Item.VOT, by_group = T) %>%
-  summarise(across(everything(), list)) %T>%
-  # temporarily store vector of vowel duration
-  { .$Item.VowelDuration[[3]] ->> replacement } %>%
-  # standardise vowel durations to that of diptip measurements
-  # VC segments with sonorant codas are difficult to objectively measure because of coarticulation
-  # since the stimuli were created in the same way we assume the vowel lengths to be the same across minimal pairs
-  mutate(Item.VowelDuration = map(Item.VowelDuration, ~ c(replacement))) %>%
-  unnest_longer(everything()) %>%
-  mutate(across(c(Item.VOT, target_f0), as.numeric))
+    Response.Voiceless = ifelse(Response.Voicing == "voiceless", 1, 0),
+    across(
+      c(Experiment, starts_with("List"), 
+        ParticipantID, Participant.Race, Participant.Ethnicity, Participant.Sex,
+        Condition.Exposure, Phase, 
+        Trial.ImageSelection, Item.ExpectedResponse, Item.ExpectedResponse.Voicing, Item.MinimalPair,
+        Response.ClickPosition, Response.Voicing),
+      factor),
+    Participant.Sex = str_to_lower(Participant.Sex),
+    Item.f0_Mel = normMel(Item.f0),
+    category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))) %>%
+  # Make copies of cue just to make working across the functions, which are not yet standardized a bit easier
+  mutate(VOT = Item.VOT, f0_Mel = Item.f0_Mel, vowel_duration = Item.VowelDuration)
 
-rm(replacement)
 
 # Load Chodroff & Wilson data used for priors and plots of natural distributions -------------
 n_min_per_talker <- 15
@@ -163,19 +160,11 @@ d.chodroff_wilson %<>%
 d.chodroff_wilson.connected <-
   d.chodroff_wilson %>%
   filter(speechstyle == "connected") %>%
-  # mutate(
-  #   across(
-  #     c("VOT", "f0_Mel", "vowel_duration"),
-  #     function(x) apply_ccure(data = ., cue = substitute(x)))) %>%
   ungroup()
 
 d.chodroff_wilson.isolated <-
   d.chodroff_wilson %>%
   filter(speechstyle == "isolated") %>%
-  # mutate(
-  #   across(
-  #     c("VOT", "f0_Mel", "vowel_duration"),
-  #     function(x) apply_ccure(data = ., cue = substitute(x)))) %>%
   ungroup()
 
 # This dataframe is used whenever we reference overall stats from Chodroff & Wilson,

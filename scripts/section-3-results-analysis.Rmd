@@ -160,7 +160,7 @@ io <-
     # Add prior based on Chodroff & Wilson (2018). Note that this database has substantially higher
     # VOT variance than our exposure conditions, which we based on estimates from Kronrod et al.
     # (2016). Uses all three cues; duration and spectral noise taken from Kronrod et al.
-    make_IOs_from_phonetic_data(
+    make_IOs_from_data(
       data = d.prior,
       cues = c("VOT", "f0_Mel", "vowel_duration"),
       group = "fold") %>%
@@ -177,7 +177,7 @@ io <-
           select(x) %>%
           nest(x = x)),
     # Add ideal learner IOs for each exposure condition
-    make_VOT_IOs_from_exposure(
+   make_IOs_from_data(
       d.for_analysis %>%
         filter(Phase == "exposure") %>%
         group_by(ParticipantID, Condition.Exposure) %>%
@@ -194,7 +194,10 @@ io <-
         # who has fully learned the exposure distributions.
         slice_sample(n = 1) %>%
         unnest(data) %>%
-        mutate(category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))) %>%
+        mutate(category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")),
+      cues = "VOT",
+      groups = "Condition.Exposure") %>% 
+  nest(io = -c(Condition.Exposure)) %>%
       # Join in the data that the IOs will be applied to. For exposure IOs, only VOT is used for 
       # categorizing stimuli (since these IOs are trained on only VOT). Here, we use the test tokens
       # to estimate PSEs for all IOs, and assume that these are constant across all exposure and 
@@ -343,7 +346,7 @@ d.true_shift <-
   mutate(Phase = ifelse(Block %in% c(2, 4, 6), "Exposure", "Test")) %>%
   add_block_labels()
 
-p.PSE_1to7 <-     
+p.PSE_1to9 <-     
   p.across_blocks +  
   scale_y_continuous("PSE (ms VOT)") +
   aes(y = PSE, ymin = PSE.lower, ymax = PSE.upper) +
@@ -385,7 +388,7 @@ p.PSE_1to7 <-
 ```{r plot-fit-PSE, fig.width=12.5, fig.height=7, fig.cap="(ref:plot-fit-PSE)"}
 p.fit_1to7 + 
   p.fit_7to9 + 
-  (p.PSE_1to7 +
+  (p.PSE_1to9 +
      geom_label(
        data = d.true_shift %>%
          filter(Block != 1),
