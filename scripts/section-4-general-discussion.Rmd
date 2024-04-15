@@ -239,15 +239,15 @@ d.talkerPSEs %<>%
         upper = ~ quantile(., probs = .975)), 
       .names = "{.col}.{.fn}"))
 
-d.talkerPSEs %>%
-  pivot_longer(
-    cols = starts_with("PSE"),
-    names_to = "PSE_type",
-    values_to = "PSE") %>%
-  separate(PSE_type, into = c("PSE_type", "stat"), sep = "\\.") %>%
-  pivot_wider(names_from = stat, values_from = PSE) %>%
-  ggplot(aes(x = PSE_type, y = mean, ymin = lower, ymax = upper, color = speechstyle)) +
-  geom_pointrange(position = pos)
+# d.talkerPSEs %>%
+#   pivot_longer(
+#     cols = starts_with("PSE"),
+#     names_to = "PSE_type",
+#     values_to = "PSE") %>%
+#   separate(PSE_type, into = c("PSE_type", "stat"), sep = "\\.") %>%
+#   pivot_wider(names_from = stat, values_from = PSE) %>%
+#   ggplot(aes(x = PSE_type, y = mean, ymin = lower, ymax = upper, color = speechstyle)) +
+#   geom_pointrange(position = pos)
 ```
 
 ```{r plot-IA-human-PSE, fig.width=6.5, fig.height=3.5, fig.cap="(ref:plot-IA-human-PSE)", fig.pos="ht"}
