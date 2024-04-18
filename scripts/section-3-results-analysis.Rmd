@@ -53,15 +53,15 @@ fit_test_nested_within_condition_and_block <-
   fit_model(
     data = d.for_analysis,
     phase = "test",
-    formulation = "nested_slope",
+    formulation = "nested_within_condition_and_block",
     priorSD = 15,
     adapt_delta = .995)
 
-fit_exposure_nested <-
+fit_exposure_nested_within_condition_and_block <-
   fit_model(
     data = d.for_analysis,
     phase = "exposure",
-    formulation = "nested_slope",
+    formulation = "nested_within_condition_and_block",
     priorSD = 15,
     adapt_delta = .999)
 ```
@@ -70,7 +70,7 @@ fit_exposure_nested <-
 d.psychometric_intercept.slope.PSE <-
   full_join(
     fit_test_nested_within_condition_and_block %>% get_intercepts_and_slopes(),
-    fit_exposure_nested %>% get_intercepts_and_slopes()) %>%
+    fit_exposure_nested_within_condition_and_block %>% get_intercepts_and_slopes()) %>%
   mutate(
     Block = factor(Block),
     # Adding unscaled slope here to have a more intuitive scale on which to compare VOT slopes
@@ -413,7 +413,7 @@ heights = c(1.1, 1.1, 1.8)) +
 
 ```{r}
 # Not removing the PSE panel since we replot and augment it further down
-rm(fit_test_nested_within_condition_and_block, fit_exposure, fit_exposure_nested, cond_fit_test_exposure)
+rm(fit_test_nested_within_condition_and_block, fit_exposure, fit_exposure_nested_within_condition_and_block, cond_fit_test_exposure)
 ```
 
 ## How quickly does exposure affect listeners' categorization responses? (comparing exposure conditions within each test block)
