@@ -256,8 +256,8 @@ d.psychometric_intercept.slope.PSE %>%
   ggplot(
     aes(
       x = Block.plot_label,
-      y = PSE,
-      ymin = PSE.lower, ymax = PSE.upper,
+      y = PSE_unscaled,
+      ymin = PSE_unscaled.lower, ymax = PSE_unscaled.upper,
       colour = Condition.Exposure, 
       group = Condition.Exposure)) +
   geom_point(position = pos, size = 1.8) +
@@ -285,20 +285,19 @@ d.psychometric_intercept.slope.PSE %>%
     linetype = 2,
     linewidth = .8,
     alpha = 0.4) +
-  # TO DO (here and elsewhere): this should probably be an annotation
-  geom_text(
-    data = d.true_shift %>%
-      filter(Phase == "exposure") %>%
-      group_by(Condition.Exposure, true_shift) %>%
-      summarise(),
-    mapping = aes(
-      x = 8, y = c(25, 35, 65),
-      label = paste(round(true_shift), "(100%)"),
-      colour = Condition.Exposure),
+  annotate(
+    geom = "text",
+    data = d.psychometric_intercept.slope.PSE %>%
+      mutate(true_shift = predictedPSE_unscaled - PSE_unscaled) %>% 
+      filter(Block == 1) %>% pull(true_shift),
+      x = c(8, 8, 8), 
+    y = c(25, 35, 65),
+      label = d.psychometric_intercept.slope.PSE %>%
+      mutate(true_shift = paste(round(predictedPSE_unscaled - PSE_unscaled), "(100%)")) %>% 
+      filter(Block == 1) %>% pull(true_shift),
     colour = colours.condition,
     fontface = "bold",
-    size = 2.7,
-    inherit.aes = F) +
+    size = 2.7) +
   annotate(
     "crossbar",
     x = 7.7, 

@@ -140,7 +140,7 @@ Next, we provide additional information on participants' performance during catc
 ## Performance on catch and labelled trials
 Of the 122 participants that completed the experiment, 1 committed more than 3 errors (< 84% accuracy). Labelled trials provided another measure to check participant attention during the experiment. Performance on labelled trials was good across all exposure conditions with participants in the +40 condition committing the most errors. This is not unexpected as the +40 condition had the furthest shifted with the most unexpected cue-category mappings. 
 
-(ref:plot-catch-labeled-trial-performance) Total errors committed on catch trials and labelled trials. 
+(ref:plot-catch-labeled-trial-performance) Total errors committed on catch trials and labelled trials. Percentage values indicate the proportion of participants in the respective groups.
 
 ```{r plot-catch-labeled-trial-performance, fig.height=4, fig.width=8, fig.cap="(ref:plot-catch-labeled-trial-performance)", message=F}
 
@@ -442,7 +442,7 @@ d.IO_intercept.slope.PSE %>%
       mutate(categorisation = 
                map2(x, io, ~ 
                       get_categorization_from_MVG_ideal_observer(x = .x$x, model = .y, decision_rule = "proportional") %>% 
-                      mutate(VOT = map(x, ~ .x[1]) %>% unlist()))) %>% 
+                      mutate(VOT = map_dbl(x, ~ .x[1])))) %>% 
       unnest(categorisation, names_repair = "unique") %>% 
       filter(category == "/t/"),
     mapping = aes(x = VOT, y = response, colour = Condition.Exposure),
@@ -483,21 +483,20 @@ Figure \@ref(fig:plot-fit-PSE)C in the main text presents prediction lines that 
 (ref:plot-fit-pars) Same as Figure \@ref(fig:plot-fit-PSE) but also showing block-to-block changes in the *intercepts* and *slopes* of listeners' categorization function (PSE = -intercept / slope). Additionally, the prediction lines for idealized learners are adjusted on a block-by-block basis for potential biases in the estimation of intercepts, slopes, and PSEs that might be introduced by the linearity assumption of the psychometric mixed-effects model (that effects of VOT on listeners' responses are linear in log-odds of responding "t").
 
 ```{r prepare-plot-intercepts-slopes-SI}
-p.intercept_1to7 <-
+p.intercept_1to9 <-
   p.across_blocks +  
-  # TO DO: figure out why these ribbons aren't working. Perhaps x needs to be continuous?
-  # Alternatively, make a sequence of rectangles, one for each block
-  geom_ribbon(
+  geom_rect(
     data = 
       d.IO_intercept.slope.PSE %>%
       filter(str_starts(Condition.Exposure, "prior")) %>%
+      add_block_labels() %>% 
       group_by(Block.plot_label) %>%
       summarise(
         intercept_unscaled.lower = mean(intercept_unscaled) - sd(intercept_unscaled) / sqrt(length(intercept_unscaled)) * 1.96, 
         intercept_unscaled.upper = mean(intercept_unscaled) + sd(intercept_unscaled) / sqrt(length(intercept_unscaled)) * 1.96,
         intercept_scaled.lower = mean(intercept_scaled) - sd(intercept_scaled) / sqrt(length(intercept_scaled)) * 1.96, 
         intercept_scaled.upper = mean(intercept_scaled) + sd(intercept_scaled) / sqrt(length(intercept_scaled)) * 1.96),
-    mapping = aes(x = Block.plot_label, ymin = intercept_unscaled.lower, ymax = intercept_unscaled.upper),
+    mapping = aes(xmin = -Inf, xmax= Inf, ymin = intercept_unscaled.lower, ymax = intercept_unscaled.upper),
     fill = "#d2d4dc",
     alpha = .3,
     inherit.aes = F) +
@@ -506,11 +505,11 @@ p.intercept_1to7 <-
     mapping = aes(x = Block.plot_label, y = intercept_scaled, colour = Condition.Exposure, group = Condition.Exposure),
     linetype = 2,
     linewidth = .8,
-    alpha = 0.5,
+    alpha = 0.5, 
     inherit.aes = F) +
   scale_y_continuous("Intercept (log-odds)")
 
-p.slope_1to7 <-
+p.slope_1to9 <-
   # Plotting participants' and ideal observers' slopes. We're transforming both types of slopes back
   # into the unit ms VOT. This makes sure that the different slopes are actually comparable across
   # exposure and test blocks (participants) and ideal observers, each of which (might) have different
@@ -547,50 +546,9 @@ p.slope_1to7 <-
     inherit.aes = F) +
   scale_y_continuous("slope (log-odds/ms VOT)")
 
-p.PSE_1to9 <-     
-  p.across_blocks +  
-  aes(y = PSE, ymin = PSE.lower, ymax = PSE.upper) +
-  # TO DO: figure out why these ribbons aren't working. Perhaps x needs to be continuous?
-  # Alternatively, make a sequence of rectangles, one for each block
-  geom_ribbon(
-    data = 
-      d.IO_intercept.slope.PSE %>%
-      filter(str_starts(Condition.Exposure, "prior")) %>%
-      group_by(Block.plot_label) %>%
-      summarise(
-        PSE.lower = mean(PSE) - sd(PSE) / sqrt(length(PSE)) * 1.96, 
-        PSE.upper = mean(PSE) + sd(PSE) / sqrt(length(PSE)) * 1.96),
-    mapping = aes(x = Block.plot_label, ymin = PSE.lower, ymax = PSE.upper),
-    fill = "#d2d4dc",
-    alpha = .3,
-    inherit.aes = F) +
-  geom_linerange(linewidth = .6, position = position_dodge(.3), alpha = .5) +
-  geom_step(
-    data = d.IO_intercept.slope.PSE %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")),
-    mapping = aes(x = Block.plot_label, y = PSE, color = Condition.Exposure, group = Condition.Exposure),
-    linetype = 2,
-    linewidth = .8,
-    alpha = 0.4,
-    inherit.aes = F) +
-  geom_text(
-    data = d.true_shift %>%
-      filter(Phase == "exposure") %>%
-      group_by(Condition.Exposure, true_shift) %>%
-      summarise(),
-    mapping = aes(
-      x = 10.2, y = c(25, 35, 65),
-      label = paste(round(true_shift), "(100%)"),
-      colour = Condition.Exposure),
-    colour = colours.condition,
-    fontface = "bold",
-    size = 3,
-    inherit.aes = F) +
-  scale_y_continuous("PSE (ms VOT)") +
-  coord_cartesian(xlim = c(0.75, 9), clip = "off") +
-  theme(plot.margin = unit(c(1, 3.2, 1, 1), "lines"), legend.position = "none")
 
 p.estimates_1to7 <-  
-  (p.intercept_1to7 | p.slope_1to7) +
+  (p.intercept_1to9 | p.slope_1to9) +
   plot_layout(
     guides = "collect", 
     design = "
@@ -1222,31 +1180,40 @@ One possible explanation for the consistently small lapse rate in the present ex
 
 <!-- TO DO: add Test 4 here, too -->
 
-```{r hypothesis-table-shrinkage-all, results='asis'}
+```{r hypothesis-table-shrinkage-all, results='asis', eval=FALSE}
 hyp.shrinkage <-
   hypothesis(
     fit_test_nested_within_condition_and_block,
     c(
-      str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift0x1 - ", predictedPSE_0, ") > 0" ),
-      str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift10x1 - ", predictedPSE_10, ") > 0" ),
-      str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift0x1 - ", predictedPSE_40, ") > 0" ),
+      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs  - " , predictedPSE_0, ") > 0" ),
+      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs  - " , predictedPSE_10, ") > 0" ),
+      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs - ", predictedPSE_40, ") > 0" ),
       
-      str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift0x3 - ", predictedPSE_0, ") > 0" ),
-      str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift10x3 - ", predictedPSE_10, ") > 0" ),
-      str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift0x3 - ", predictedPSE_40, ") > 0" ),
+      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x3/mu2_IpasteCondition.ExposureBlocksepEQxShift0x3:VOT_gs - ", predictedPSE_0, ") > 0" ),
+      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x3/mu2_IpasteCondition.ExposureBlocksepEQxShift10x3:VOT_gs - ", predictedPSE_10, ") > 0" ),
+      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x3/mu2_IpasteCondition.ExposureBlocksepEQxShift40x3:VOT_gs - ", predictedPSE_40, ") > 0" ),
       
-      str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift0x5 - ", predictedPSE_0, ") > 0" ),
-      str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift10x5 - ", predictedPSE_10, ") > 0" ),
-      str_c("abs(mu2_IpasteCondition.ExposureBlocksepEQxShift0x5 - ", predictedPSE_40, ") > 0" ),
+      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x5/mu2_IpasteCondition.ExposureBlocksepEQxShift0x5:VOT_gs - ", predictedPSE_0, ") > 0" ),
+      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x5/mu2_IpasteCondition.ExposureBlocksepEQxShift10x5:VOT_gs - ", predictedPSE_10, ") > 0" ),
+      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x5/mu2_IpasteCondition.ExposureBlocksepEQxShift40x5:VOT_gs - ", predictedPSE_40, ") > 0" ),
       
-      str_c("(mu2_IpasteCondition.ExposureBlocksepEQxShift10x1  -", predictedPSE_prior, ")/(", predictedPSE_10, "-", predictedPSE_prior, ") >", "(mu2_IpasteCondition.ExposureBlocksepEQxShift0x1  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")"),
-      str_c("(mu2_IpasteCondition.ExposureBlocksepEQxShift40x1  -", predictedPSE_prior, ")/(", predictedPSE_40, "-", predictedPSE_prior, ") >", "(mu2_IpasteCondition.ExposureBlocksepEQxShift0x1  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")"),
+      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs - ", predictedPSE_0, ") > 0" ),
+      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs - ", predictedPSE_10, ") > 0" ),
+      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs - ", predictedPSE_40, ") > 0" ),
       
-      str_c("(mu2_IpasteCondition.ExposureBlocksepEQxShift10x3  -", predictedPSE_prior, ")/(", predictedPSE_10, "-", predictedPSE_prior, ") >", "(mu2_IpasteCondition.ExposureBlocksepEQxShift0x3  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")"),
-      str_c("(mu2_IpasteCondition.ExposureBlocksepEQxShift40x3  -", predictedPSE_prior, ")/(", predictedPSE_40, "-", predictedPSE_prior, ") >", "(mu2_IpasteCondition.ExposureBlocksepEQxShift0x3  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")"),
+  
       
-      str_c("(mu2_IpasteCondition.ExposureBlocksepEQxShift10x5  -", predictedPSE_prior, ")/(", predictedPSE_10, "-", predictedPSE_prior, ") >", "(mu2_IpasteCondition.ExposureBlocksepEQxShift0x5  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")"),
-      str_c("(mu2_IpasteCondition.ExposureBlocksepEQxShift40x5  -", predictedPSE_prior, ")/(", predictedPSE_40, "-", predictedPSE_prior, ") >", "(mu2_IpasteCondition.ExposureBlocksepEQxShift0x5  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")")),
+      str_c("(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs  -", predictedPSE_prior, ")/(", predictedPSE_10, "-", predictedPSE_prior, ") >", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")"),
+      str_c("(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs  -", predictedPSE_prior, ")/(", predictedPSE_40, "-", predictedPSE_prior, ") >", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")"),
+      
+      str_c("(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x3/mu2_IpasteCondition.ExposureBlocksepEQxShift10x3:VOT_gs  -", predictedPSE_prior, ")/(", predictedPSE_10, "-", predictedPSE_prior, ") >", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x3/mu2_IpasteCondition.ExposureBlocksepEQxShift0x3:VOT_gs  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")"),
+      str_c("(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x3/mu2_IpasteCondition.ExposureBlocksepEQxShift40x3:VOT_gs  -", predictedPSE_prior, ")/(", predictedPSE_40, "-", predictedPSE_prior, ") >", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x3/mu2_IpasteCondition.ExposureBlocksepEQxShift0x3:VOT_gs  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")"),
+      
+      str_c("(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x5/mu2_IpasteCondition.ExposureBlocksepEQxShift10x5:VOT_gs  -", predictedPSE_prior, ")/(", predictedPSE_10, "-", predictedPSE_prior, ") >", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x5/mu2_IpasteCondition.ExposureBlocksepEQxShift0x5:VOT_gs  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")"),
+      str_c("(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x5/mu2_IpasteCondition.ExposureBlocksepEQxShift40x5:VOT_gs  -", predictedPSE_prior, ")/(", predictedPSE_40, "-", predictedPSE_prior, ") >", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x5/mu2_IpasteCondition.ExposureBlocksepEQxShift0x5:VOT_gs  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")"),
+      
+      str_c("(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs  -", predictedPSE_prior, ")/(", predictedPSE_10, "-", predictedPSE_prior, ") >", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")"),
+      str_c("(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs  -", predictedPSE_prior, ")/(", predictedPSE_40, "-", predictedPSE_prior, ") >", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs  -", predictedPSE_prior, ")/(", predictedPSE_0, "-", predictedPSE_prior, ")")),
     robust = T) %>%
   .$hypothesis %>%
   dplyr::select(-Star)
@@ -1268,6 +1235,11 @@ make_hyp_table(
     "$|\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{+10}})| > 0$",
     "$|\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{+40}})| > 0$",
     
+    # test block 4
+    "$|\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{baseline}})| > 0$",
+    "$|\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{+10}})| > 0$",
+    "$|\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{+40}})| > 0$",
+    
     "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{ideal_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{ideal_{pre}})}$",
     "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{ideal_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{ideal_{pre}})}$",
     
@@ -1282,10 +1254,12 @@ make_hyp_table(
   pack_rows("Test block 1", 1, 3) %>% 
   pack_rows("Test block 2", 4, 6) %>% 
   pack_rows("Test block 3", 7, 9) %>% 
+  pack_rows("Test block 4", 10, 12) %>% 
   pack_rows("Does convergence against ideal PSE differ across conditions (asymmetric shrinkage)?", 10, 15) %>% 
-  pack_rows("Test block 1", 10, 11) %>% 
-  pack_rows("Test block 2", 12, 13) %>% 
-  pack_rows("Test block 3", 14, 15) 
+  pack_rows("Test block 1", 13, 14) %>% 
+  pack_rows("Test block 2", 14, 15) %>% 
+  pack_rows("Test block 3", 16, 17) %>% 
+  pack_rows("Test block 4", 18, 19)
 ```
 
 \pagebreak
