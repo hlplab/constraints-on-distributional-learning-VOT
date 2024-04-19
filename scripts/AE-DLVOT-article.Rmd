@@ -1,6 +1,8 @@
 ---
-title             : "Learning to understand an unfamiliar talker: testing models of adaptive speech perception"
-shorttitle        : "DRAFT"
+title             : |
+                    | Learning to understand an unfamiliar talker: 
+                    | Testing models of adaptive speech perception
+shorttitle        : "Learning to understand an unfamiliar talker"
 date              : "`r format(Sys.time(), '%B %d, %Y')`"
 
 author: 
@@ -39,7 +41,7 @@ footnotelist      : no
 linenumbers       : yes
 numbersections    : true
 mask              : no
-draft             : no
+draft             : yes
 
 header-includes: 
  - \usepackage{sectsty}
