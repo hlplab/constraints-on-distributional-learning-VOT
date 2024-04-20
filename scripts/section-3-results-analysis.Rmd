@@ -53,7 +53,7 @@ fit_test_nested_within_condition_and_block <-
   fit_model(
     data = d.for_analysis,
     phase = "test",
-    formulation = "nested_slope",
+    formulation = "nested_within_condition_and_block",
     priorSD = 15,
     adapt_delta = .995)
 
@@ -61,7 +61,7 @@ fit_exposure_nested_within_condition_and_block <-
   fit_model(
     data = d.for_analysis,
     phase = "exposure",
-    formulation = "nested_slope",
+    formulation = "nested_within_condition_and_block",
     priorSD = 15,
     adapt_delta = .999)
 ```
@@ -410,7 +410,7 @@ heights = c(1.1, 1.1, 1.8)) +
 
 ```{r}
 # Not removing the PSE panel since we replot and augment it further down
-rm(fit_test_nested_within_condition_and_block, fit_exposure, fit_exposure_nested, cond_fit_test_exposure)
+rm(fit_test_nested_within_condition_and_block, fit_exposure, fit_exposure_nested_within_condition_and_block, cond_fit_test_exposure)
 ```
 
 ## How quickly does exposure affect listeners' categorization responses? (comparing exposure conditions within each test block)

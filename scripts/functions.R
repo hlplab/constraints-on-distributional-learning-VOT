@@ -238,7 +238,7 @@ prepVars <- function(
   contrasts(d$Condition.Exposure) <- cbind("_Shift10 vs. Shift0" = c(-2/3, 1/3, 1/3),
                                            "_Shift40 vs. Shift10" = c(-1/3,-1/3, 2/3))
   message(contrasts(d$Condition.Exposure))
-  
+
   if (all(d$Phase == "test") & n_distinct(d$Block) > 1) {
     contrasts(d$Block) <- MASS::fractions(MASS::contr.sdif(6))
     dimnames(contrasts(d$Block))[[2]] <- c("_Test2 vs. Test1", "_Test3 vs. Test2", "_Test4 vs. Test3", "_Test5 vs. Test4", "_Test6 vs. Test5")
@@ -254,7 +254,7 @@ prepVars <- function(
     dimnames(contrasts(d$Block))[[2]] <- c("_Exp1 vs. Test1", "_Test2 vs. Exp1", "_Exp2 vs. Test2", "_Test3 vs. Exp2", "_Exp3 vs. Test3", "_Test4 vs. Exp3", "_Test5 vs. Test4", "_Test6 vs. Test5")
     message("Condition contrast is:", MASS::fractions(contrasts(d$Condition.Exposure)))
     message("Block contrast is:", MASS::fractions(contrasts(d$Block)))
-  } 
+  }
   return(d)
 }
 
@@ -296,7 +296,7 @@ fit_model <- function(
   }
 
   # specify the prior for beta parameters here if different from the general one
-  prior_overwrite <- if (phase == "exposure" & formulation == "nested_slope") {
+  prior_overwrite <- if (phase == "exposure" & formulation == "nested_within_condition_and_block") {
     c(set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x2:VOT_gs", dpar = "mu2"),
       set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x4:VOT_gs", dpar = "mu2"),
       set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x6:VOT_gs", dpar = "mu2"),
@@ -306,7 +306,7 @@ fit_model <- function(
       set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x2:VOT_gs", dpar = "mu2"),
       set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x4:VOT_gs", dpar = "mu2"),
       set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift40x6:VOT_gs", dpar = "mu2"))
-  } else if (phase == "test" & formulation == "nested_slope") {
+  } else if (phase == "test" & formulation == "nested_within_condition_and_block") {
     c(set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs", dpar = "mu2"),
       set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x3:VOT_gs", dpar = "mu2"),
       set_prior(paste0("student_t(3, 0, ", priorSD, ")"), coef = "IpasteCondition.ExposureBlocksepEQxShift0x5:VOT_gs", dpar = "mu2"),
@@ -337,7 +337,7 @@ fit_model <- function(
       prior(lkj(1), class = "cor"))
 
   brm(
-    formula = if (formulation == "nested_slope") {
+    formula = if (formulation == "nested_within_condition_and_block") {
       bf(Response.Voiceless ~ 1,
          mu1 ~ 0 + offset(0),
          mu2 ~ 0 + I(paste(Condition.Exposure, Block, sep = "x")) / VOT_gs +
