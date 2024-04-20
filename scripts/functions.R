@@ -385,11 +385,11 @@ get_intercepts_and_slopes <-
 # function to calculate proportion of change in PSE by Condition and draw
 get_prop_shift_by_draw <- function(data) {
   # store the PSE for block 1 of the draw
-  PSE_scaled_block1 <- data$PSE_scaled[1]
-  PSE_unscaled_block1 <- data$PSE_unscaled[1]
+  PSE_scaled_block1 <- data %>% filter(Block == 1) %>% pull(PSE_scaled)
+  PSE_unscaled_block1 <- data %>% filter(Block == 1) %>% pull(PSE_unscaled)
   # the true shift is the distance between the ideal PSE for that condition and the actual PSE before exposure
-  true_shift_scaled <- (data$predictedPSE_scaled - PSE_scaled_block1)[1]
-  true_shift_unscaled <- (data$predictedPSE_unscaled - PSE_unscaled_block1)[1]
+  true_shift_scaled <- (data %>% filter(Block == 1) %>% pull(predictedPSE_scaled))- PSE_scaled_block1
+  true_shift_unscaled <- (data %>% filter(Block == 1) %>% pull(predictedPSE_unscaled))- PSE_unscaled_block1
   
   data %>% 
     mutate(PSE_scaled.change = PSE_scaled - PSE_scaled_block1,
