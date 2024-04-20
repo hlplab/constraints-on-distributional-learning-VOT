@@ -382,6 +382,23 @@ get_intercepts_and_slopes <-
   pivot_wider(names_from = term, values_from = ".value") %>%
   relocate(c(Condition.Exposure, Block, Intercept, slope, .chain, .iteration, .draw))
 
+# function to calculate proportion of change in PSE by Condition and draw
+get_prop_shift_by_draw <- function(data) {
+  # store the PSE for block 1 of the draw
+  PSE_scaled_block1 <- data$PSE_scaled[1]
+  PSE_unscaled_block1 <- data$PSE_unscaled[1]
+  # the true shift is the distance between the ideal PSE for that condition and the actual PSE before exposure
+  true_shift_scaled <- (data$predictedPSE_scaled - PSE_scaled_block1)[1]
+  true_shift_unscaled <- (data$predictedPSE_unscaled - PSE_unscaled_block1)[1]
+  
+  data %>% 
+    mutate(PSE_scaled.change = PSE_scaled - PSE_scaled_block1,
+           prop.shift_scaled = PSE_scaled.change/true_shift_scaled,
+           PSE_unscaled.change = PSE_unscaled - PSE_unscaled_block1,
+           prop.shift_unscaled = PSE_unscaled.change/true_shift_unscaled)
+}  
+
+
 get_conditional_effects <- function(model, data, phase) {
   conditional_effects(
     x = model,
@@ -424,15 +441,15 @@ get_nsamples <- function(model) {
 get_bf <- function(model, hypothesis, est = F, bf = F) {
   h <- hypothesis(model, hypothesis)[[1]]
   BF <- if (is.infinite(h$Evid.Ratio)) paste("\\geq", get_nsamples(model)) else paste("=", round(h$Evid.Ratio, 1))
-  if (bf) { round(hypothesis(model, hypothesis)[[1]][[6]], 1) }
+  if (est == T & bf == T) {  str_c("Est. = ", round(h[[2]], 2), "; BF ", BF) }
   else if (est) { h[[2]] }
+  else if (bf) { round(hypothesis(model, hypothesis)[[1]][[6]], 1) }
   else {
     paste0(
     "\\(\\hat{\\beta} = ", round(h$Estimate, 2),
     "\\), 90\\%-CI = \\([", round(h$CI.Lower, 3), ", ", round(h$CI.Upper, 3),
     "]\\), \\(BF ", BF,
     "\\), \\(p_{posterior} = \\) \\(", signif(h$Post.Prob, 3), "\\)") }
-
 }
 
 # Function to get identity CI of a model summary
@@ -863,20 +880,23 @@ get_IBBU_predicted_response <- function(
 get_IO_predicted_PSE <- function(condition, block = 7, io.intercept.slope.PSE = d.IO_intercept.slope.PSE) {
   if (!("Block" %in% names(io.intercept.slope.PSE)))
     io.intercept.slope.PSE %<>% crossing(Block = 1:9)
-
+  
   if (condition == "prior") {
     io.intercept.slope.PSE %>%
-      select(Condition.Exposure, Block, intercept_scaled) %>%
+      select(Condition.Exposure, Block, intercept_scaled, slope_scaled) %>%
       filter(Condition.Exposure %in% paste0("prior", c(1:5)), Block == block) %>%
-      summarise(intercept_scaled = mean(intercept_scaled)) %>%
-      pull(intercept_scaled)
+      summarise(across(c(intercept_scaled, slope_scaled),  mean)) %>%
+      mutate(PSE = -intercept_scaled/slope_scaled) %>% 
+      pull(PSE)
   } else {
     io.intercept.slope.PSE %>%
-      select(Condition.Exposure, Block, intercept_scaled) %>%
+      select(Condition.Exposure, Block, intercept_scaled, slope_scaled) %>%
       filter(Condition.Exposure == condition, Block == block) %>%
-      pull(intercept_scaled)
+      mutate(PSE = -intercept_scaled/slope_scaled) %>% 
+      pull(PSE)
   }
 }
+
 
 # Get approximate f0 of synthesised stimuli from VOT values
 ############################################################################
