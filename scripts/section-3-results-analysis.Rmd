@@ -410,7 +410,7 @@ heights = c(1.1, 1.1, 1.8)) +
 
 ```{r}
 # Not removing the PSE panel since we replot and augment it further down
-rm(fit_test_nested_within_condition_and_block, fit_exposure, fit_exposure_nested_within_condition_and_block, cond_fit_test_exposure)
+rm(fit_exposure, fit_exposure_nested_within_condition_and_block, cond_fit_test_exposure)
 ```
 
 ## How quickly does exposure affect listeners' categorization responses? (comparing exposure conditions within each test block)
@@ -666,10 +666,6 @@ This explains the reduction in the difference between the +10 and baseline condi
 ## Constraints on cumulative adaptation (comparing exposure effects against idealized learner models)
 
 ```{r hypothesis-table-shrinkage-test4, results='asis'}
-fit_test_nested_within_condition_and_block <- readRDS("../models/test-nested_slope-priorSD15-0.995.rds")
-
-predictedPSE_prior <- get_IO_predicted_PSE(condition = "prior")
-
 hyp.shrinkage <-
   hypothesis(
     fit_test_nested_within_condition_and_block,
