@@ -877,7 +877,11 @@ get_IBBU_predicted_response <- function(
       ) }
 }
 
-get_IO_predicted_PSE <- function(condition, block = 7, io.intercept.slope.PSE = d.IO_intercept.slope.PSE) {
+get_IO_predicted_PSE <- function(
+    condition, 
+    block = 7, 
+    io.intercept.slope.PSE = d.IO_intercept.slope.PSE
+    ) {
   if (!("Block" %in% names(io.intercept.slope.PSE)))
     io.intercept.slope.PSE %<>% crossing(Block = 1:9)
   

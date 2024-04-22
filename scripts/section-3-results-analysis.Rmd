@@ -299,18 +299,19 @@ p.fit_7to9 <-
 
 ```{r prepare-plot-intercepts-slopes}
 # store ideal PSEs predicted by IOs
-predictedPSE_40 <- get_IO_predicted_PSE(condition = "Shift40")
-predictedPSE_10 <- get_IO_predicted_PSE(condition = "Shift10")
-predictedPSE_0 <- get_IO_predicted_PSE(condition = "Shift0")
+predictedPSE_scaled_40 <- get_IO_predicted_PSE(condition = "Shift40")
+predictedPSE_scaled_10 <- get_IO_predicted_PSE(condition = "Shift10")
+predictedPSE_scaled_0 <- get_IO_predicted_PSE(condition = "Shift0")
+predictedPSE_scaled_prior <- get_IO_predicted_PSE(condition = "prior")
 
 # compute proportional shifts by draw
 d.psychometric_intercept.slope.PSE %<>% 
   group_by(Condition.Exposure, Block, .draw) %>% 
   arrange(.draw, by_group = T) %>% 
   # add the ideal learner PSEs
-  mutate(predictedPSE_scaled = case_when(Condition.Exposure == "Shift0" ~ predictedPSE_0,
-                                         Condition.Exposure == "Shift10" ~ predictedPSE_10,
-                                         Condition.Exposure == "Shift40" ~ predictedPSE_40),
+  mutate(predictedPSE_scaled = case_when(Condition.Exposure == "Shift0" ~ predictedPSE_scaled_0,
+                                         Condition.Exposure == "Shift10" ~ predictedPSE_scaled_10,
+                                         Condition.Exposure == "Shift40" ~ predictedPSE_scaled_40),
          predictedPSE_unscaled = descale(predictedPSE_scaled,  VOT.mean_test, VOT.sd_test)) %>% 
   nest(data = -c(Condition.Exposure, .draw)) %>% 
   mutate(data = map(data, ~ get_prop_shift_by_draw(.x))) %>% 
@@ -665,18 +666,18 @@ This explains the reduction in the difference between the +10 and baseline condi
 
 ## Constraints on cumulative adaptation (comparing exposure effects against idealized learner models)
 
-```{r hypothesis-table-shrinkage-test4, results='asis'}
+```{r hypothesis-table-shrinkage-test4-pre-exposure-PSE, results='asis'}
 hyp.shrinkage <-
   hypothesis(
     fit_test_nested_within_condition_and_block,
     c(
-      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs  - ", predictedPSE_0, ") > 0" ),
-      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs - ", predictedPSE_10, ") > 0" ),
-      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs - ", predictedPSE_40, ") > 0" ),
+      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs  - ", predictedPSE_scaled_0, ") > 0" ),
+      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs - ", predictedPSE_scaled_10, ") > 0" ),
+      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs - ", predictedPSE_scaled_40, ") > 0" ),
       
-      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs)", ")/(", predictedPSE_10, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs)", ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")/(", predictedPSE_0, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")"),
+      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs)", ")/(", predictedPSE_scaled_10, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs)", ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")/(", predictedPSE_scaled_0, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")"),
       
-      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs)", ")/(", predictedPSE_40, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs)", ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")/(", predictedPSE_0, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")")),
+      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs)", ")/(", predictedPSE_scaled_40, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs)", ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")/(", predictedPSE_scaled_0, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")")),
     robust = T) %>%
   .$hypothesis %>%
   dplyr::select(-Star)
@@ -691,10 +692,43 @@ make_hyp_table(
     "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{pre}})}$",
     "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{pre}})}$"),
   caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). For identical tests for all test blocks, see SI (\\ref{sec:shrinkage-test-all}).",
-  col1_width = "25em") %>%
+  col1_width = "26em") %>%
   pack_rows("Have participants converged against the PSE expected from idealized learner?", 1, 3) %>% 
   pack_rows("Does convergence against ideal PSE differ across conditions (asymmetric shrinkage)?", 4, 5)
 ```
+
+
+```{r hypothesis-table-shrinkage-test4-prior, results='asis'}
+hyp.shrinkage <-
+  hypothesis(
+    fit_test_nested_within_condition_and_block,
+    c(
+      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs  - ", predictedPSE_scaled_0, ") > 0" ),
+      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs - ", predictedPSE_scaled_10, ") > 0" ),
+      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs - ", predictedPSE_scaled_40, ") > 0" ),
+      
+      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs)  -", predictedPSE_scaled_prior, ")/(", predictedPSE_scaled_10, "-", predictedPSE_scaled_prior, ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", predictedPSE_scaled_prior, ")/(", predictedPSE_scaled_0, "-", predictedPSE_scaled_prior, ")"),
+      
+      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs)  -", predictedPSE_scaled_prior, ")/(", predictedPSE_scaled_40, "-", predictedPSE_scaled_prior, ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", predictedPSE_scaled_prior, ")/(", predictedPSE_scaled_0, "-", predictedPSE_scaled_prior, ")")),
+    robust = T) %>%
+  .$hypothesis %>%
+  dplyr::select(-Star)
+
+make_hyp_table(
+  fit_test_nested_within_condition_and_block,
+  hyp.shrinkage,
+  c(
+    "$|\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{baseline}})| > 0$",
+    "$|\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{+10}})| > 0$",
+    "$|\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{+40}})| > 0$",
+    "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{predicted_{prior}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{predicted_{prior}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{predicted_{prior}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{predicted_{prior}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{predicted_{prior}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{predicted_{prior}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{predicted_{prior}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{predicted_{prior}})}$"),
+  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). For identical tests for all test blocks, see SI (\\ref{sec:shrinkage-test-all}).",
+  col1_width = "26em") %>%
+  pack_rows("Have participants converged against the PSE expected from idealized learner?", 1, 3) %>% 
+  pack_rows("Does convergence against ideal PSE differ across conditions (asymmetric shrinkage)?", 4, 5)
+```
+
 
 Beyond the perspectives on incremental adaptation discussed so far, Figure \@ref(fig:plot-fit-PSE)C compares participants' responses against those of an idealized learner that has fully learned the exposure distributions (colored dashed lines). Specifically, we fit Bayesian ideal observers against the labeled VOT distributions of each exposure condition, using the same approach used for the idealized pre-exposure listeners (horizontal gray ribbons). The dashed lines show the PSEs expected from such idealized learners (for details, see SI \@ref(sec:io-bias-correction)). This approach follows previous work from our lab [@kleinschmidt-jaeger2016; @kleinschmidt2020], and makes it possible to assess how far listeners have converged against the exposure distributions. The relevant hypothesis tests are summarized in Table \@ref(tab:hypothesis-table-shrinkage-test4).
 
@@ -884,9 +918,9 @@ p.human_psych_accuracy %+%
 
 If confirmed, premature convergence against stable behavior despite only partial adaptation would challenge prediction (3) of existing distributional learning models. Premature convergence is also unexpected under any other model of adaptive speech perception. In the general discussion, we present an extension to distributional learning models that explains premature convergence, and highlights a striking link between adaptive changes in speech perception and second language learning. As part of that discussion, we present additional models, and entertain methodological artifacts, and analysis confounds that would offer alternative explanation of premature convergence. For now, we summarize one additional property of incremental adaptation suggested by the data.
 
-Further comparison of exposure conditions in Figure \@ref(fig:plot-fit-PSE)C reveals that more extreme exposure conditions---conditions that differed more from listeners' pre-exposure expectations---might have resulted in proportionally less adaptation. Consider the two conditions that are shifted leftwards relative to listeners pre-exposure expectations: in the more extreme baseline condition, participants' PSE had shifted `r d.psychometric_intercept.slope.PSE %>% filter(Condition.Exposure == "Shift0" & Block == 7) %>% pull(prop.shift_unscaled) %>% percent()` by Test 4, compared to `r d.psychometric_intercept.slope.PSE %>% filter(Condition.Exposure == "Shift10" & Block == 7) %>% pull(prop.shift_unscaled) %>% percent()` in the less extreme +10 condition (BF = `r get_bf(fit_test_nested_within_condition_and_block, str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs)", ")/(", predictedPSE_10, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs)", ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")/(", predictedPSE_0, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")"), bf = T)`). That is, while the absolute changes in listeners' behavior exhibit the pattern expected under predictions (1) and (2b), participants additionally exhibited a pattern of **shrinkage** that is *not* obviously predicted by distributional learning models. 
+Further comparison of exposure conditions in Figure \@ref(fig:plot-fit-PSE)C reveals that more extreme exposure conditions---conditions that differed more from listeners' pre-exposure expectations---might have resulted in proportionally less adaptation. Consider the two conditions that are shifted leftwards relative to listeners pre-exposure expectations: in the more extreme baseline condition, participants' PSE had shifted `r d.psychometric_intercept.slope.PSE %>% filter(Condition.Exposure == "Shift0" & Block == 7) %>% pull(prop.shift_unscaled) %>% percent()` by Test 4, compared to `r d.psychometric_intercept.slope.PSE %>% filter(Condition.Exposure == "Shift10" & Block == 7) %>% pull(prop.shift_unscaled) %>% percent()` in the less extreme +10 condition (BF = `r get_bf(fit_test_nested_within_condition_and_block, str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs)", ")/(", predictedPSE_scaled_10, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs)", ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")/(", predictedPSE_scaled_0, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")"), bf = T)`). That is, while the absolute changes in listeners' behavior exhibit the pattern expected under predictions (1) and (2b), participants additionally exhibited a pattern of **shrinkage** that is *not* obviously predicted by distributional learning models. 
 
-Finally, there is evidence that this shrinkage is asymmetric. The predicted PSEs of an idealized learner for the baseline and +40 conditions are shifted by about the same amount relative to listeners' pre-exposure PSE in Test 1 (+21ms and -18ms VOT, respectively). However, the degree to which listeners converged against these predicted PSEs differed substantially between the two conditions, with cumulative adaptation proceeding almost twice as far in the rightward-shifted +40 condition (in Test 4: `r d.psychometric_intercept.slope.PSE %>% filter(Condition.Exposure == "Shift40" & Block == 7) %>% pull(prop.shift_unscaled) %>% percent()` towards idealized PSE) compared to the leftward-shifted baseline condition (`r get_bf(fit_test_nested_within_condition_and_block, str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs)", ")/(", predictedPSE_40, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs)", ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")/(", predictedPSE_0, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")"), bf = T)`). Taking this **asymmetric shrinkage** at face value (for now), it suggests <!-- revise wording to reflect strength of evidence: anecdotal, moderate, etc. --> that participants adapted to a lesser degree to leftward shifts along the VOT continuum. We return to this point in the general discussion, where we also summarize other recent studies that have found similar asymmetric shrinkage [@kleinschmidt-jaeger2016; @kleinschmidt2020]. Before we do so, we briefly summarize the effects of repeated testing.
+Finally, there is evidence that this shrinkage is asymmetric. The predicted PSEs of an idealized learner for the baseline and +40 conditions are shifted by about the same amount relative to listeners' pre-exposure PSE in Test 1 (+21ms and -18ms VOT, respectively). However, the degree to which listeners converged against these predicted PSEs differed substantially between the two conditions, with cumulative adaptation proceeding almost twice as far in the rightward-shifted +40 condition (in Test 4: `r d.psychometric_intercept.slope.PSE %>% filter(Condition.Exposure == "Shift40" & Block == 7) %>% pull(prop.shift_unscaled) %>% percent()` towards idealized PSE) compared to the leftward-shifted baseline condition (`r get_bf(fit_test_nested_within_condition_and_block, str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs)", ")/(", predictedPSE_scaled_40, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs)", ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")/(", predictedPSE_scaled_0, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")"), bf = T)`). Taking this **asymmetric shrinkage** at face value (for now), it suggests <!-- revise wording to reflect strength of evidence: anecdotal, moderate, etc. --> that participants adapted to a lesser degree to leftward shifts along the VOT continuum. We return to this point in the general discussion, where we also summarize other recent studies that have found similar asymmetric shrinkage [@kleinschmidt-jaeger2016; @kleinschmidt2020]. Before we do so, we briefly summarize the effects of repeated testing.
 
 ## Effects of repeated testing
 
