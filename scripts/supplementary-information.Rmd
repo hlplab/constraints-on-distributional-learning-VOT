@@ -1786,6 +1786,10 @@ summarize.NIW_ideal_adaptor_stanfit(m_IA_inferred.fixed_pars)
 make_all_plots(m_IA_inferred.fixed_pars)
 ```
 
+
+
+
+
 # Session Info
 
 ```{r session_info, echo=FALSE, results='markup'}
