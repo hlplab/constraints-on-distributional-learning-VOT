@@ -1945,7 +1945,7 @@ make_hyp_table(
     "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{actual_{mean-pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{mean-pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{mean-pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{mean-pre}})}$",
     "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{actual_{mean-pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{mean-pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{mean-pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{mean-pre}})}$"),
   caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). Using mean as point estimate and mean actual Block 1 PSEs for calculation of true shift.",
-  col1_width = "31em") %>%
+  col1_width = "28em") %>%
   pack_rows("Have participants converged against the PSE expected from idealized learner?", 1, 3) %>% 
   pack_rows("Does convergence against ideal PSE differ across conditions (asymmetric shrinkage)?", 4, 5)
 ```
@@ -1978,7 +1978,7 @@ make_hyp_table(
     "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{actual_{mean-pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{mean-pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{mean-pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{mean-pre}})}$",
     "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{actual_{mean-pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{mean-pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{mean-pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{mean-pre}})}$"),
   caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). Using median as point estimate and mean actual Block 1 PSEs for calculation of true shift.",
-  col1_width = "31em") %>%
+  col1_width = "28em") %>%
   pack_rows("Have participants converged against the PSE expected from idealized learner?", 1, 3) %>% 
   pack_rows("Does convergence against ideal PSE differ across conditions (asymmetric shrinkage)?", 4, 5)
 ```
