@@ -1178,7 +1178,6 @@ One possible explanation for the consistently small lapse rate in the present ex
 
 ## Comparing exposure effects against idealized learner models (all blocks) {#sec:shrinkage-test-all}
 
-<!-- TO DO: add Test 4 here, too -->
 
 ```{r hypothesis-table-shrinkage-all, results='asis'}
 hyp.shrinkage <-
@@ -1238,19 +1237,19 @@ make_hyp_table(
     "$|\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{+10}})| > 0$",
     "$|\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{+40}})| > 0$",
     
-    "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{ideal_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{ideal_{pre}})}$",
-    "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{ideal_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{ideal_{pre}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{pre}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{pre}})}$",
     
-    "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{ideal_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{ideal_{pre}})}$",
-    "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{ideal_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{ideal_{pre}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{pre}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{pre}})}$",
     
-    "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{ideal_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{ideal_{pre}})}$",
-    "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{ideal_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{ideal_{pre}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{pre}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{pre}})}$",
     
-    "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{ideal_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{ideal_{pre}})}$",
-    "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{ideal_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{ideal_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{ideal_{pre}})}$"),
+    "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{pre}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{pre}})}$"),
   caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table complements Table \\ref{tab:hypothesis-table-shrinkage-test4}.",
-  col1_width = "25em") %>%
+  col1_width = "27em") %>%
   pack_rows("Have participants converged against the PSE expected from idealized learner?", 1, 9) %>% 
   pack_rows("Test block 1", 1, 3) %>% 
   pack_rows("Test block 2", 4, 6) %>% 
@@ -1815,7 +1814,7 @@ make_hyp_table(
     "$|\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{+40}})| > 0$",
     "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{pre}})}$",
     "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{pre}})}$"),
-  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). Using mean as point estimate and actual Block 1 PSEs for calculation of true shift.",
+  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). Using the mean as point estimate.",
   col1_width = "27em") %>%
   pack_rows("Have participants converged against the PSE expected from idealized learner?", 1, 3) %>% 
   pack_rows("Does convergence against ideal PSE differ across conditions (asymmetric shrinkage)?", 4, 5)
@@ -1846,7 +1845,7 @@ make_hyp_table(
     "$|\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{+40}})| > 0$",
     "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{pre}})}$",
     "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{pre}})}$"),
-  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). Using median as point estimate and actual Block 1 PSEs for calculation of true shift.",
+  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). Using the median as point estimate.",
   col1_width = "27em") %>%
   pack_rows("Have participants converged against the PSE expected from idealized learner?", 1, 3) %>% 
   pack_rows("Does convergence against ideal PSE differ across conditions (asymmetric shrinkage)?", 4, 5)
@@ -1856,6 +1855,7 @@ make_hyp_table(
 
 
 ```{r hypothesis-table-shrinkage-test4-prior-mean, results='asis', echo=FALSE, message=FALSE}
+predictedPSE_scaled_prior.mean <- get_IO_predicted_PSE(condition = "prior", mean = T)
 hyp.shrinkage <-
   hypothesis(
     fit_test_nested_within_condition_and_block,
@@ -1864,9 +1864,9 @@ hyp.shrinkage <-
       str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs - ", predictedPSE_scaled_10, ") > 0" ),
       str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs - ", predictedPSE_scaled_40, ") > 0" ),
       
-      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs)  -", predictedPSE_scaled_prior, ")/(", predictedPSE_scaled_10, "-", predictedPSE_scaled_prior, ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", predictedPSE_scaled_prior, ")/(", predictedPSE_scaled_0, "-", predictedPSE_scaled_prior, ")"),
+      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs)  -", predictedPSE_scaled_prior.mean, ")/(", predictedPSE_scaled_10, "-", predictedPSE_scaled_prior.mean, ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", predictedPSE_scaled_prior.mean, ")/(", predictedPSE_scaled_0, "-", predictedPSE_scaled_prior.mean, ")"),
       
-      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs)  -", predictedPSE_scaled_prior, ")/(", predictedPSE_scaled_40, "-", predictedPSE_scaled_prior, ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", predictedPSE_scaled_prior, ")/(", predictedPSE_scaled_0, "-", predictedPSE_scaled_prior, ")")),
+      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs)  -", predictedPSE_scaled_prior.mean, ")/(", predictedPSE_scaled_40, "-", predictedPSE_scaled_prior.mean, ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", predictedPSE_scaled_prior.mean, ")/(", predictedPSE_scaled_0, "-", predictedPSE_scaled_prior.mean, ")")),
     robust = F) %>%
   .$hypothesis %>%
   dplyr::select(-Star)
@@ -1880,14 +1880,15 @@ make_hyp_table(
     "$|\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{+40}})| > 0$",
     "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{predicted_{prior}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{predicted_{prior}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{predicted_{prior}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{predicted_{prior}})}$",
     "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{predicted_{prior}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{predicted_{prior}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{predicted_{prior}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{predicted_{prior}})}$"),
-  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). Using mean as point estimate and mean of CV priors for calculation of true shift.",
-  col1_width = "30em") %>%
+  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). Using mean as point estimate and the mean of cross-validated priors obtained from idealized learners.",
+  col1_width = "28em") %>%
   pack_rows("Have participants converged against the PSE expected from idealized learner?", 1, 3) %>% 
   pack_rows("Does convergence against ideal PSE differ across conditions (asymmetric shrinkage)?", 4, 5)
 ```
 
 
 ```{r hypothesis-table-shrinkage-test4-prior-median, results='asis', echo=FALSE, message=FALSE}
+
 hyp.shrinkage <-
   hypothesis(
     fit_test_nested_within_condition_and_block,
@@ -1896,9 +1897,9 @@ hyp.shrinkage <-
       str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs - ", predictedPSE_scaled_10, ") > 0" ),
       str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs - ", predictedPSE_scaled_40, ") > 0" ),
       
-      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs)  -", predictedPSE_scaled_prior, ")/(", predictedPSE_scaled_10, "-", predictedPSE_scaled_prior, ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", predictedPSE_scaled_prior, ")/(", predictedPSE_scaled_0, "-", predictedPSE_scaled_prior, ")"),
+      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs)  -", predictedPSE_scaled_prior.median, ")/(", predictedPSE_scaled_10, "-", predictedPSE_scaled_prior.median, ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", predictedPSE_scaled_prior.median, ")/(", predictedPSE_scaled_0, "-", predictedPSE_scaled_prior.median, ")"),
       
-      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs)  -", predictedPSE_scaled_prior, ")/(", predictedPSE_scaled_40, "-", predictedPSE_scaled_prior, ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", predictedPSE_scaled_prior, ")/(", predictedPSE_scaled_0, "-", predictedPSE_scaled_prior, ")")),
+      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs)  -", predictedPSE_scaled_prior.median, ")/(", predictedPSE_scaled_40, "-", predictedPSE_scaled_prior.median, ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", predictedPSE_scaled_prior.median, ")/(", predictedPSE_scaled_0, "-", predictedPSE_scaled_prior.median, ")")),
     robust = T) %>%
   .$hypothesis %>%
   dplyr::select(-Star)
@@ -1912,8 +1913,8 @@ make_hyp_table(
     "$|\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{+40}})| > 0$",
     "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{predicted_{prior}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{predicted_{prior}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{predicted_{prior}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{predicted_{prior}})}$",
     "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{predicted_{prior}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{predicted_{prior}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{predicted_{prior}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{predicted_{prior}})}$"),
-  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). Using median as point estimate and mean of CV priors for calculation of true shift.",
-  col1_width = "30em") %>%
+  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). Using median as point estimate and the median of cross-validated prior obtained from idealized learners.",
+  col1_width = "28em") %>%
   pack_rows("Have participants converged against the PSE expected from idealized learner?", 1, 3) %>% 
   pack_rows("Does convergence against ideal PSE differ across conditions (asymmetric shrinkage)?", 4, 5)
 ```
@@ -1942,10 +1943,10 @@ make_hyp_table(
     "$|\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{baseline}})| > 0$",
     "$|\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{+10}})| > 0$",
     "$|\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{+40}})| > 0$",
-    "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{actual_{mean-pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{mean-pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{mean-pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{mean-pre}})}$",
-    "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{actual_{mean-pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{mean-pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{mean-pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{mean-pre}})}$"),
-  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). Using mean as point estimate and mean actual Block 1 PSEs for calculation of true shift.",
-  col1_width = "28em") %>%
+    "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{pre}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{pre}})}$"),
+  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). Using mean as point estimate and average mean Block 1 PSEs as the prior.",
+  col1_width = "27em") %>%
   pack_rows("Have participants converged against the PSE expected from idealized learner?", 1, 3) %>% 
   pack_rows("Does convergence against ideal PSE differ across conditions (asymmetric shrinkage)?", 4, 5)
 ```
@@ -1975,10 +1976,10 @@ make_hyp_table(
     "$|\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{baseline}})| > 0$",
     "$|\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{+10}})| > 0$",
     "$|\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{+40}})| > 0$",
-    "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{actual_{mean-pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{mean-pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{mean-pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{mean-pre}})}$",
-    "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{actual_{mean-pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{mean-pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{mean-pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{mean-pre}})}$"),
-  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). Using median as point estimate and mean actual Block 1 PSEs for calculation of true shift.",
-  col1_width = "28em") %>%
+    "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{pre}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{pre}})}$"),
+  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). Using median as point estimate and average median Block 1 PSEs as the prior.",
+  col1_width = "27em") %>%
   pack_rows("Have participants converged against the PSE expected from idealized learner?", 1, 3) %>% 
   pack_rows("Does convergence against ideal PSE differ across conditions (asymmetric shrinkage)?", 4, 5)
 ```

@@ -880,7 +880,8 @@ get_IBBU_predicted_response <- function(
 get_IO_predicted_PSE <- function(
     condition, 
     block = 7, 
-    io.intercept.slope.PSE = d.IO_intercept.slope.PSE
+    io.intercept.slope.PSE = d.IO_intercept.slope.PSE,
+    mean = F
     ) {
   if (!("Block" %in% names(io.intercept.slope.PSE)))
     io.intercept.slope.PSE %<>% crossing(Block = 1:9)
@@ -889,7 +890,7 @@ get_IO_predicted_PSE <- function(
     io.intercept.slope.PSE %>%
       select(Condition.Exposure, Block, intercept_scaled, slope_scaled) %>%
       filter(Condition.Exposure %in% paste0("prior", c(1:5)), Block == block) %>%
-      summarise(across(c(intercept_scaled, slope_scaled),  mean)) %>%
+      summarise(across(c(intercept_scaled, slope_scaled), .fns = if (mean) { ~ mean(.x, na.rm = T) } else { ~ median(.x, na.rm = T) } )) %>%
       mutate(PSE = -intercept_scaled/slope_scaled) %>% 
       pull(PSE)
   } else {
