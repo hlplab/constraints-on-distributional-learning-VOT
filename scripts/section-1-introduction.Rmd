@@ -232,9 +232,7 @@ This study was not publicly pre-registered. The design, participant recruitment,
 
 ```{r}
 rm(
-  d.talker_IO,
-  d.talker_types,
-  d.talker_cat,
+  d.talker_IO.VOT,
   arrow_PSE,
   p.cat,
   p.PSE,

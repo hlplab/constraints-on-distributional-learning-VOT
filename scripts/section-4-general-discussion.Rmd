@@ -253,7 +253,7 @@ d.talkerPSEs %<>%
 
 ```{r plot-IA-human-PSE, fig.width=6.5, fig.height=3.5, fig.cap="(ref:plot-IA-human-PSE)", fig.pos="ht"}
 pos <- position_dodge(.3)
-d.psychometric_intercept.slope.PSE %>%
+d.psychometric_intercept.slope.PSE.median %>%
   filter(Block %in% c(1:7)) %>%
   ggplot(
     aes(
@@ -289,12 +289,12 @@ d.psychometric_intercept.slope.PSE %>%
     alpha = 0.4) +
   annotate(
     geom = "text",
-    data = d.psychometric_intercept.slope.PSE %>%
+    data = d.psychometric_intercept.slope.PSE.median %>%
       mutate(true_shift = predictedPSE_unscaled - PSE_unscaled) %>% 
       filter(Block == 1) %>% pull(true_shift),
       x = c(8, 8, 8), 
     y = c(25, 35, 65),
-      label = d.psychometric_intercept.slope.PSE %>%
+      label = d.psychometric_intercept.slope.PSE.median %>%
       mutate(true_shift = paste(round(predictedPSE_unscaled - PSE_unscaled), "(100%)")) %>% 
       filter(Block == 1) %>% pull(true_shift),
     colour = colours.condition,
