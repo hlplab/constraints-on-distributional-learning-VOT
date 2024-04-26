@@ -327,8 +327,8 @@ p.across_blocks <-
   d.psychometric_intercept.slope.PSE.median %>%
   ggplot(
     aes(
-      x = Block.plot_label, y = Intercept,
-      ymin = Intercept.lower, ymax = Intercept.upper,
+      x = Block.plot_label, y = Intercept_unscaled,
+      ymin = Intercept_unscaled.lower, ymax = Intercept_unscaled.upper,
       colour = Condition.Exposure, group = Condition.Exposure)) +
   geom_rect(
     data = tibble(

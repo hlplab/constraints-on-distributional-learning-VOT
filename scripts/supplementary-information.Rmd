@@ -495,7 +495,7 @@ p.intercept_1to9 <-
         intercept_unscaled.lower = mean(intercept_unscaled) - sd(intercept_unscaled) / sqrt(length(intercept_unscaled)) * 1.96, 
         intercept_unscaled.upper = mean(intercept_unscaled) + sd(intercept_unscaled) / sqrt(length(intercept_unscaled)) * 1.96,
         intercept_scaled.lower = mean(intercept_scaled) - sd(intercept_scaled) / sqrt(length(intercept_scaled)) * 1.96, 
-        intercept_scaled.upper = mean(intercept_scaled) + sd(intercept_scaled) / sqrt(length(intercept_scaled)) * 1.96),
+        intercept_scaled.upper = mean(intercept_scaled) + sd(intercept_scaled) / sqrt(length(intercept_scaled)) * 1.96) %>% filter(Block.plot_label %in% c("Test 1", "Exposure 1")),
     mapping = aes(xmin = -Inf, xmax= Inf, ymin = intercept_unscaled.lower, ymax = intercept_unscaled.upper),
     fill = "#d2d4dc",
     alpha = .3,
@@ -530,20 +530,33 @@ p.slope_1to9 <-
       group_by(Block.plot_label) %>%
       summarise(
         slope_unscaled.lower = mean(slope_unscaled) - sd(slope_unscaled) / sqrt(length(slope_unscaled)) * 1.96, 
-        slope_unscaled.upper = mean(slope_unscaled) + sd(slope_unscaled) / sqrt(length(slope_unscaled)) * 1.96),
+        slope_unscaled.upper = mean(slope_unscaled) + sd(slope_unscaled) / sqrt(length(slope_unscaled)) * 1.96) %>% filter(Block.plot_label %in% c("Test 1", "Exposure 1")),
     mapping = aes(x = Block.plot_label, ymin = slope_unscaled.lower, ymax = slope_unscaled.upper),
     fill = "#d2d4dc",
     alpha = .3,
     inherit.aes = F) +
   geom_step(
-    data = d.IO_intercept.slope.PSE %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")), 
+    data = d.IO_intercept.slope.PSE %>% 
+      filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")), 
     # Using UNscaled slope because slopes are comparable across scales anyway and this is more intuitive
     # (substitute _unscaled to _scaled to switch to slopes over Gelman-scaled VOT)
     mapping = aes(x = Block.plot_label, y = slope_unscaled, colour = Condition.Exposure, group = Condition.Exposure),
     linetype = 2,
     linewidth = .8,
     alpha = 0.5,
+    position = position_nudge(x = -.5),
     inherit.aes = F) +
+  geom_segment(
+    data = d.IO_intercept.slope.PSE %>% 
+  filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")) %>% 
+  select(c(slope_unscaled, Condition.Exposure, Block, Block.plot_label)) %>% 
+    filter(Block == 9),
+  mapping = aes(x = 8.5, xend = 9.5, y = slope_unscaled, yend = slope_unscaled),
+  linetype = 2,
+  linewidth = .8,
+  alpha = .5,
+  colour = colours.condition,
+  inherit.aes = F) +
   scale_y_continuous("slope (log-odds/ms VOT)")
 
 
