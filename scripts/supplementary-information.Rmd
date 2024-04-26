@@ -1292,111 +1292,13 @@ This proportion can then be compared across different exposure conditions, allow
  
 However, equation (\@ref(eq:proportion-convergence)) contains a researcher degree of freedom: the approach to estimating $PSE_{pre-exposure}$. Here, we entertained three different ways of estimating $PSE_{pre-exposure}$, all of which yield similar results: anecdotal, but by no means convincing, evidence of asymmetric shrinkage. The hypothesis tests for the three different approaches are summarizes in Tables \@ref(tab:hypothesis-table-shrinkage-against-prior-IO) to \@ref(tab:hypothesis-table-shrinkage-against-Test1-across-conditions). Table \@ref(tab:hypothesis-table-shrinkage-against-prior-IO) compares participants' actual PSE (and the idealized learner's PSE) against the pre-exposure PSE expected from an idealized pre-exposure listener. Table \@ref(tab:hypothesis-table-shrinkage-against-Test1-same-condition) compares against the PSE that participants in the same condition had prior to any exposure---i.e., participants' PSE in Test 1. **This is the approach we used to calculate the percentage labels in Figure \@ref(fig:plot-fit-PSE)C in the main text**, as it struck us to most straightforwardly account for potential individual differences between listeners. Finally, Table \@ref(tab:hypothesis-table-shrinkage-against-Test1-across-conditions) compares against the participants' pre-exposure PSE in Test 1 while averaging over all three conditions.
 
-<!-- TO DO: provide the tests for ALL exposure and test blocks. Let's only use the median tables (since the BFs are always the same). Note also that I changed the table names above given the content they should have -->
+<!-- TO DO: provide the tests for ALL exposure and test blocks. Let's only use the median tables (since the BFs are always the same). Note also that I changed the table names above given the content they should have. FOR FORMATTING PLEASE LOOK AT THE OTHER TABLES YOU'VE MADE THAT CONTAIN INFORMATION ACROSS BLOCKS. I.E, MAKE SURE YOU USE THE SAME GROUPING IN SUBHEADINGS BY BLOCK. -->
 
-```{r hypothesis-table-shrinkage-test4-actual-mean, results='asis', echo=FALSE, message=FALSE}
+```{r tab:hypothesis-table-shrinkage-against-prior-IO, results='asis', echo=FALSE, message=FALSE}
 hyp.shrinkage <-
   hypothesis(
     fit_test_nested_within_condition_and_block,
     c(
-      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs  - ", predictedPSE_scaled_0, ") > 0" ),
-      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs - ", predictedPSE_scaled_10, ") > 0" ),
-      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs - ", predictedPSE_scaled_40, ") > 0" ),
-      
-      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs)", ")/(", predictedPSE_scaled_10, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs)", ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")/(", predictedPSE_scaled_0, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")"),
-      
-      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs)", ")/(", predictedPSE_scaled_40, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs)", ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")/(", predictedPSE_scaled_0, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")")),
-    robust = F) %>%
-  .$hypothesis %>%
-  dplyr::select(-Star)
-
-make_hyp_table(
-  fit_test_nested_within_condition_and_block,
-  hyp.shrinkage,
-  c(
-    "$|\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{baseline}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{+10}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{+40}})| > 0$",
-    "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{pre}})}$",
-    "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{pre}})}$"),
-  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). Using the mean as point estimate.",
-  col1_width = "27em") %>%
-  pack_rows("Have participants converged against the PSE expected from idealized learner?", 1, 3) %>% 
-  pack_rows("Does convergence against ideal PSE differ across conditions (asymmetric shrinkage)?", 4, 5)
-```
-
-```{r hypothesis-table-shrinkage-test4-actual-median, results='asis', echo=FALSE, message=FALSE}
-hyp.shrinkage <-
-  hypothesis(
-    fit_test_nested_within_condition_and_block,
-    c(
-      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs  - ", predictedPSE_scaled_0, ") > 0" ),
-      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs - ", predictedPSE_scaled_10, ") > 0" ),
-      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs - ", predictedPSE_scaled_40, ") > 0" ),
-      
-      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs)", ")/(", predictedPSE_scaled_10, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs)", ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")/(", predictedPSE_scaled_0, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")"),
-      
-      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs)", ")/(", predictedPSE_scaled_40, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs)", ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")/(", predictedPSE_scaled_0, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")")),
-    robust = T) %>%
-  .$hypothesis %>%
-  dplyr::select(-Star)
-
-make_hyp_table(
-  fit_test_nested_within_condition_and_block,
-  hyp.shrinkage,
-  c(
-    "$|\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{baseline}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{+10}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{+40}})| > 0$",
-    "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{pre}})}$",
-    "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{pre}})}$"),
-  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). Using the median as point estimate.",
-  col1_width = "27em") %>%
-  pack_rows("Have participants converged against the PSE expected from idealized learner?", 1, 3) %>% 
-  pack_rows("Does convergence against ideal PSE differ across conditions (asymmetric shrinkage)?", 4, 5)
-```
-
-```{r hypothesis-table-shrinkage-test4-prior-mean, results='asis', echo=FALSE, message=FALSE}
-predictedPSE_scaled_prior.mean <- get_IO_predicted_PSE(condition = "prior", mean = T)
-hyp.shrinkage <-
-  hypothesis(
-    fit_test_nested_within_condition_and_block,
-    c(
-      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs  - ", predictedPSE_scaled_0, ") > 0" ),
-      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs - ", predictedPSE_scaled_10, ") > 0" ),
-      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs - ", predictedPSE_scaled_40, ") > 0" ),
-      
-      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs)  -", predictedPSE_scaled_prior.mean, ")/(", predictedPSE_scaled_10, "-", predictedPSE_scaled_prior.mean, ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", predictedPSE_scaled_prior.mean, ")/(", predictedPSE_scaled_0, "-", predictedPSE_scaled_prior.mean, ")"),
-      
-      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs)  -", predictedPSE_scaled_prior.mean, ")/(", predictedPSE_scaled_40, "-", predictedPSE_scaled_prior.mean, ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", predictedPSE_scaled_prior.mean, ")/(", predictedPSE_scaled_0, "-", predictedPSE_scaled_prior.mean, ")")),
-    robust = F) %>%
-  .$hypothesis %>%
-  dplyr::select(-Star)
-
-make_hyp_table(
-  fit_test_nested_within_condition_and_block,
-  hyp.shrinkage,
-  c(
-    "$|\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{baseline}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{+10}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{+40}})| > 0$",
-    "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{predicted_{prior}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{predicted_{prior}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{predicted_{prior}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{predicted_{prior}})}$",
-    "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{predicted_{prior}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{predicted_{prior}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{predicted_{prior}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{predicted_{prior}})}$"),
-  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). Using mean as point estimate and the mean of cross-validated priors obtained from idealized learners.",
-  col1_width = "29em") %>%
-  pack_rows("Have participants converged against the PSE expected from idealized learner?", 1, 3) %>% 
-  pack_rows("Does convergence against ideal PSE differ across conditions (asymmetric shrinkage)?", 4, 5)
-```
-
-```{r hypothesis-table-shrinkage-test4-prior-median, results='asis', echo=FALSE, message=FALSE}
-hyp.shrinkage <-
-  hypothesis(
-    fit_test_nested_within_condition_and_block,
-    c(
-      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs  - ", predictedPSE_scaled_0, ") > 0" ),
-      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs - ", predictedPSE_scaled_10, ") > 0" ),
-      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs - ", predictedPSE_scaled_40, ") > 0" ),
-      
       str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs)  -", predictedPSE_scaled_prior.median, ")/(", predictedPSE_scaled_10, "-", predictedPSE_scaled_prior.median, ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", predictedPSE_scaled_prior.median, ")/(", predictedPSE_scaled_0, "-", predictedPSE_scaled_prior.median, ")"),
       
       str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs)  -", predictedPSE_scaled_prior.median, ")/(", predictedPSE_scaled_40, "-", predictedPSE_scaled_prior.median, ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", predictedPSE_scaled_prior.median, ")/(", predictedPSE_scaled_0, "-", predictedPSE_scaled_prior.median, ")")),
@@ -1408,30 +1310,21 @@ make_hyp_table(
   fit_test_nested_within_condition_and_block,
   hyp.shrinkage,
   c(
-    "$|\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{baseline}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{+10}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{+40}})| > 0$",
     "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{predicted_{prior}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{predicted_{prior}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{predicted_{prior}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{predicted_{prior}})}$",
     "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{predicted_{prior}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{predicted_{prior}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{predicted_{prior}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{predicted_{prior}})}$"),
-  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). Using median as point estimate and the median of cross-validated prior obtained from idealized learners.",
-  col1_width = "29em") %>%
-  pack_rows("Have participants converged against the PSE expected from idealized learner?", 1, 3) %>% 
-  pack_rows("Does convergence against ideal PSE differ across conditions (asymmetric shrinkage)?", 4, 5)
+  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. Both participants' and the ideal learner's PSEs are compared against the median PSE of the five cross-validated idealized pre-exposure listeners.",
+  col1_width = "29em")
 ```
 
-```{r hypothesis-table-shrinkage-test4-actual-meanblock1-mean, results='asis', echo=FALSE, message=FALSE}
+```{r tab:hypothesis-table-shrinkage-against-Test1-same-condition, results='asis', echo=FALSE, message=FALSE}
 hyp.shrinkage <-
   hypothesis(
     fit_test_nested_within_condition_and_block,
     c(
-      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs  - ", predictedPSE_scaled_0, ") > 0" ),
-      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs - ", predictedPSE_scaled_10, ") > 0" ),
-      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs - ", predictedPSE_scaled_40, ") > 0" ),
+      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs)", ")/(", predictedPSE_scaled_10, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs)", ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")/(", predictedPSE_scaled_0, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")"),
       
-      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs)  -", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")/(", predictedPSE_scaled_10, "-", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")/(", predictedPSE_scaled_0, "-", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")"),
-      
-      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs)  -", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")/(", predictedPSE_scaled_40, "-", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")/(", predictedPSE_scaled_0, "-", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")")),
-    robust = F) %>%
+      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs)", ")/(", predictedPSE_scaled_40, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs)", ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")/(", predictedPSE_scaled_0, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)", ")")),
+    robust = T) %>%
   .$hypothesis %>%
   dplyr::select(-Star)
 
@@ -1439,26 +1332,17 @@ make_hyp_table(
   fit_test_nested_within_condition_and_block,
   hyp.shrinkage,
   c(
-    "$|\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{baseline}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{+10}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{+40}})| > 0$",
     "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{pre}})}$",
     "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{pre}})}$"),
-  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). Using mean as point estimate and average mean Block 1 PSEs as the prior.",
-  col1_width = "27em") %>%
-  pack_rows("Have participants converged against the PSE expected from idealized learner?", 1, 3) %>% 
-  pack_rows("Does convergence against ideal PSE differ across conditions (asymmetric shrinkage)?", 4, 5)
+  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. Both participants' and the ideal learner's PSEs are compared against the PSE of participants in the same condition during Test 1.",
+  col1_width = "27em")
 ```
 
-```{r hypothesis-table-shrinkage-test4-actual-meanblock1-median, results='asis', echo=FALSE, message=FALSE}
+```{r tab:hypothesis-table-shrinkage-against-Test1-across-conditions, results='asis', echo=FALSE, message=FALSE}
 hyp.shrinkage <-
   hypothesis(
     fit_test_nested_within_condition_and_block,
     c(
-      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs  - ", predictedPSE_scaled_0, ") > 0" ),
-      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs - ", predictedPSE_scaled_10, ") > 0" ),
-      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs - ", predictedPSE_scaled_40, ") > 0" ),
-      
       str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs)  -", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")/(", predictedPSE_scaled_10, "-", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")/(", predictedPSE_scaled_0, "-", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")"),
       
       str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs)  -", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")/(", predictedPSE_scaled_40, "-", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")/(", predictedPSE_scaled_0, "-", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")")),
@@ -1470,15 +1354,10 @@ make_hyp_table(
   fit_test_nested_within_condition_and_block,
   hyp.shrinkage,
   c(
-    "$|\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{baseline}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{+10}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{+40}})| > 0$",
     "$\\frac{\\Delta(PSE_{actual_{+10}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{pre}})}$",
     "$\\frac{\\Delta(PSE_{actual_{+40}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{baseline}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{pre}})}$"),
-  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). Using median as point estimate and average median Block 1 PSEs as the prior.",
-  col1_width = "27em") %>%
-  pack_rows("Have participants converged against the PSE expected from idealized learner?", 1, 3) %>% 
-  pack_rows("Does convergence against ideal PSE differ across conditions (asymmetric shrinkage)?", 4, 5)
+  caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. Both participants' and the ideal learner's PSEs are compared against the PSE of participants during Test 1 (averaging across all three conditions).",
+  col1_width = "27em")
 ```
 
 ### Discussion of shrinkage {#sec:discussion-shrinkage}
