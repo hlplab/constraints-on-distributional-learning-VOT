@@ -76,8 +76,8 @@ d.psychometric_intercept.slope.PSE.draws <-
     # Adding unscaled slope here to have a more intuitive scale on which to compare VOT slopes
     # It is also one way to put the slopes for both exposure and test on the same scale (since
     # the SDs for exposure and test differ).
+    # intercepts have been centered to VOT means at test therefore are comparable, intercepts for both test and exposure indicate log-odds of response at the same VOT value
     slope_unscaled = slope / (2 * ifelse(Block %in% c(2, 4, 6), VOT.sd_exposure, VOT.sd_test)),
-    Intercept_unscaled = descale(Intercept, VOT.mean_test, ifelse(Block %in% c(2, 4, 6), VOT.sd_exposure, VOT.sd_test)),
     PSE_scaled =  -Intercept/slope,
     PSE_unscaled =
       descale(
@@ -327,8 +327,8 @@ p.across_blocks <-
   d.psychometric_intercept.slope.PSE.median %>%
   ggplot(
     aes(
-      x = Block.plot_label, y = Intercept_unscaled,
-      ymin = Intercept_unscaled.lower, ymax = Intercept_unscaled.upper,
+      x = Block.plot_label, y = Intercept,
+      ymin = Intercept.lower, ymax = Intercept.upper,
       colour = Condition.Exposure, group = Condition.Exposure)) +
   geom_rect(
     data = tibble(

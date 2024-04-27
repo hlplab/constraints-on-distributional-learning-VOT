@@ -314,7 +314,7 @@ p.matrix_connected.norm <-
 
 The two approaches to talker-independent category representations have different trade-offs. When cues are not talker-normalized, the resulting category representations inherit not only within-category variability but also variability across talker, over-estimating the actual category covariances for any given talker. Normalizing cues addresses this problem. It does, however, remove potentially useful information about the correlation between cues from the signal: compared to unnormalized cues in Panel A, the talker-normalized cues in Panel B contain less information about the covariance of VOT, f0, and vowel duration.
 
-The two approaches also share potentially important shortcomings. Specifically, neither approach is well-suited if the correlation between cues *within* talkers differs from the correlation between talker means of those cues. The /d/ and /t/ categories in Panel A conflate the two source of covariance; the categories in Panel B completely removed any information about covariance in talker means. This is problematic, as there is strong evidence that such correlations exists [@chodroff-wilson2017; @chodroff-wilson2018; @theodore2009; @sonderegger2020], and that listeners have strong expectations about, at least some types of, correlations between talker means [@idemaru-holt2011; @idemaru-holt2020; @schertz2016; @OTHERs].^[Additionally, the category means for /d/ and /t/ (solid points) for unnormalized cues are simply the weighted average of the talkers available in the data. If talkers contribute different amounts of data to the database, this means that the category means might disproportionately depend on a subset of the data.] This issue is illustrated in Figure XXX, which shows that correlation between phonetic cues *within* talkers (Panel A) and the correlations of talker means of the phonetic cues *across* talkers (Panel B).<!-- TO DO: add figure. think about visualization -->  XXX <!-- TO DO: add description . NOTE that even when those two types of correlations are similar, one would have to somehow USE that knowledge when generalizing prior expectations to a new talker. --> For the same reasons, neither of the two approaches considered above captures correlations between talkers' category means and category (co)variances. Both approaches would, for example, miss if category variance generally increases for larger category means (or vice versa).
+The two approaches also share potentially important shortcomings. Specifically, neither approach is well-suited if the correlation between cues *within* talkers differs from the correlation between talker means of those cues. The /d/ and /t/ categories in Panel A conflate the two source of covariance; the categories in Panel B completely removed any information about covariance in talker means. This is problematic, as there is strong evidence that such correlations exists [@chodroff-wilson2017; @chodroff-wilson2018; @theodore2009; @sonderegger2020], and that listeners have strong expectations about, at least some types of, correlations between talker means [@idemaru-holt2011; @idemaru-holt2020; @schertz2016; @OTHERs].^[Additionally, the category means for /d/ and /t/ (solid points) for unnormalized cues are simply the weighted average of the talkers available in the data. If talkers contribute different amounts of data to the database, this means that the category means might disproportionately depend on a subset of the data.] <!--This issue is illustrated in Figure XXX, which shows that correlation between phonetic cues *within* talkers (Panel A) and the correlations of talker means of the phonetic cues *across* talkers (Panel B).<!-- TO DO: add figure. think about visualization --><!-- TO DO: add description . NOTE that even when those two types of correlations are similar, one would have to somehow USE that knowledge when generalizing prior expectations to a new talker. --> For the same reasons, neither of the two approaches considered above captures correlations between talkers' category means and category (co)variances. Both approaches would, for example, miss if category variance generally increases for larger category means (or vice versa).
 
 An alternative to the two approaches described so far is to derive multiple *talker-dependent category representations* [as assumed in e.g., @kleinschmidt-jaeger2015]. Under this approach, expectations for a 'typical' talker are then derived by averaging over the talker-dependent category representations. And expectations for a typical talker of a certain type (e.g., a female talker of a certain age) are derived by averaging over the talker-dependent category representations learned from previous talkers of that type. In the only study we are aware of that has directly compared talker-independent and talker-dependent models of listeners' prior expectations, talker-dependent representations seemed to better describe human behavior [@xie2021cognition], though it is important to keep in mind that this study focused on a single supra-segmental contrast (question vs. statement prosody). 
 
@@ -362,7 +362,7 @@ io.bias_correct <-
 # 
 # Unlike for the analysis of participants' responses, there is no need to use a psychometric
 # model since ideal observers have not attentional lapses (i.e., lambda = 0). 
-d.IO_intercept.slope.PSE <- 
+d.IO.bias.corrected_intercept.slope.PSE <- 
   rbind(
   # Assess the ideal observers at the exact same locations used during test blocks
     get_logistic_parameters_from_model(
@@ -408,14 +408,14 @@ tokens <-
   select(Condition.Exposure, Phase, VOT)
 
 arrow_df <- 
-  d.IO_intercept.slope.PSE %>% 
+  d.IO.bias.corrected_intercept.slope.PSE %>% 
   filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")) %>% 
   select(Condition.Exposure, Phase, PSE) %>%
   group_by(Condition.Exposure, Phase) %>% 
   slice_head(n = 1) %>% 
   mutate(x = PSE, xend = PSE, y = .5, yend = .01)  
 
-d.IO_intercept.slope.PSE %>% 
+d.IO.bias.corrected_intercept.slope.PSE %>% 
   filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")) %>% 
   select(Condition.Exposure, Phase, model_unscaled) %>% 
   group_by(Condition.Exposure, Phase) %>% 
@@ -487,7 +487,7 @@ p.intercept_1to9 <-
   p.across_blocks +  
   geom_rect(
     data = 
-      d.IO_intercept.slope.PSE %>%
+      d.IO.bias.corrected_intercept.slope.PSE %>%
       filter(str_starts(Condition.Exposure, "prior")) %>%
       add_block_labels() %>% 
       group_by(Block.plot_label) %>%
@@ -501,7 +501,7 @@ p.intercept_1to9 <-
     alpha = .3,
     inherit.aes = F) +
   geom_step(
-    data = d.IO_intercept.slope.PSE %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")), 
+    data = d.IO.bias.corrected_intercept.slope.PSE %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")), 
     mapping = aes(x = Block.plot_label, y = intercept_scaled, colour = Condition.Exposure, group = Condition.Exposure),
     linetype = 2,
     linewidth = .8,
@@ -525,18 +525,18 @@ p.slope_1to9 <-
   # Alternatively, make a sequence of rectangles, one for each block
   geom_ribbon(
     data = 
-      d.IO_intercept.slope.PSE %>%
+      d.IO.bias.corrected_intercept.slope.PSE %>%
       filter(str_starts(Condition.Exposure, "prior")) %>%
       group_by(Block.plot_label) %>%
       summarise(
         slope_unscaled.lower = mean(slope_unscaled) - sd(slope_unscaled) / sqrt(length(slope_unscaled)) * 1.96, 
-        slope_unscaled.upper = mean(slope_unscaled) + sd(slope_unscaled) / sqrt(length(slope_unscaled)) * 1.96) %>% filter(Block.plot_label %in% c("Test 1", "Exposure 1")),
+        slope_unscaled.upper = mean(slope_unscaled) + sd(slope_unscaled) / sqrt(length(slope_unscaled)) * 1.96),
     mapping = aes(x = Block.plot_label, ymin = slope_unscaled.lower, ymax = slope_unscaled.upper),
     fill = "#d2d4dc",
     alpha = .3,
     inherit.aes = F) +
   geom_step(
-    data = d.IO_intercept.slope.PSE %>% 
+    data = d.IO.bias.corrected_intercept.slope.PSE %>% 
       filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")), 
     # Using UNscaled slope because slopes are comparable across scales anyway and this is more intuitive
     # (substitute _unscaled to _scaled to switch to slopes over Gelman-scaled VOT)
@@ -546,8 +546,9 @@ p.slope_1to9 <-
     alpha = 0.5,
     position = position_nudge(x = -.5),
     inherit.aes = F) +
+  # add segment to extend the geom_step over the final block
   geom_segment(
-    data = d.IO_intercept.slope.PSE %>% 
+    data = d.IO.bias.corrected_intercept.slope.PSE %>% 
   filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")) %>% 
   select(c(slope_unscaled, Condition.Exposure, Block, Block.plot_label)) %>% 
     filter(Block == 9),
@@ -555,6 +556,7 @@ p.slope_1to9 <-
   linetype = 2,
   linewidth = .8,
   alpha = .5,
+  position = position_dodge2(.2),
   colour = colours.condition,
   inherit.aes = F) +
   scale_y_continuous("slope (log-odds/ms VOT)")
