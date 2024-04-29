@@ -144,6 +144,7 @@ Next, we turn to our primary questions. We assess Incremental changes in partici
 ```{r}
 # Create data frame for pre-exposure IO. To avoid over-fitting, we use 5-fold cross-validation.
 # We use the isolated speech data from Chodroff and Wilson, and randomly cut it into 5 folds.
+set.seed(920)
 d.prior <-
   d.chodroff_wilson.isolated %>%
   group_by(Talker, category) %>%

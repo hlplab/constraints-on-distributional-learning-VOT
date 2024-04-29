@@ -98,9 +98,6 @@ At first glance, it would be tempting to interpret the 'diminishing returns' dis
 If confirmed by additional data, premature convergence would constitute potentially severe constraints on the adaptivity of speech perception---at least during the initial moments of exposure before additional memory and learning mechanisms are engaged during, e.g., sleep [for discussion, see @REFS-MORE; @xie2018sleep]. This would introduce a novel data point that theories of speech perception need to account for: while existing theoretical frameworks can accommodate both constraints, either constraint would substantially narrow the space of plausible models. Existing *models* of adaptive speech perception, for example, do not seem to predict these effects. Given the potential theoretical relevance of these findings, we present an additional post-hoc test to further characterize changes in participants' categorization functions. We then discuss potential explanations.
 
 ```{r fit-IA-inferred-VOT-f0}
-# Make a data frame that splits the entire data in unique exposure-test combinations.
-# This data frame will be used for adaptive changes in normalization and category
-# representations.
 d_for_ASP <-
   d.for_analysis %>%
   ungroup() %>%
@@ -123,7 +120,7 @@ d_for_ASP <-
   mutate(
     Condition.for_ASP = paste0(Condition.Exposure, List.ExposureBlockOrder, List.ExposureMaterials),
     Block.for_ASP = paste0(Phase, Block),
-    x = map2(VOT, f0_Mel, ~ c(.x, .y)),
+    x = pmap(.l = list(VOT, f0_Mel, vowel_duration), ~ c(...)),
     Response.Category = factor(ifelse(Response.Voicing == "voiced", "/d/", "/t/"), levels = c("/d/", "/t/")),
     Item.ExpectedResponse.Category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"), levels = c("/d/", "/t/"))) %>%
   slice_into_unique_exposure_test(
@@ -136,11 +133,17 @@ d_for_ASP <-
     VOT, f0_Mel, vowel_duration, Response.Category, Item.ExpectedResponse.Category)
 
 # fit ideal adaptor with uninformative priors
-m_IA_inferred.VOT_f0 <-
+# use prior roughly in middle of 5-fold CV
+m_IO.VOT_f0_vowel <-
+  io$io[[3]]
+
+
+# fit ideal adaptor with 3 cue priors
+m_IA.VOT_f0_vowelduration_informedprior <-
   infer_prior_beliefs(
     exposure = d_for_ASP %>% filter(Phase == "exposure"),
     test = d_for_ASP %>% filter(Phase == "test"),
-    cues = c("VOT", "f0_Mel"),  
+    cues = c("VOT", "f0_Mel", "vowel_duration"),  
     category = "Item.ExpectedResponse.Category",
     response = "Response.Category",
     group = "ParticipantID",
@@ -149,36 +152,35 @@ m_IA_inferred.VOT_f0 <-
     scale.observations = T,
     pca.observations = F,
     lapse_rate = NULL,
-    mu_0 = NULL,
-    Sigma_0 = NULL,
+    mu_0 = m_IO.VOT_f0_vowel$mu,
+    Sigma_0 = m_IO.VOT_f0_vowel$Sigma,
     sample = T,
-    file = "../models/IBBU_VOT+f0_uninformative priors.RDS",
+    file = "../models/IBBU_VOT+f0+vowelduration_informative_priors.RDS",
     warmup = 3000, iter = 4000,
     control = list(adapt_delta = .995, max_treedepth = 15))
-
 ```
 
 ```{r summarise-PSE-predictions-of-IA}
 # Get logistic model predictions of the IA's categorisation
 # then prepare the data for plotting
-if (file.exists("../models/d.IA_predicted_test.rds")) {
-  d.IA_predicted_test <- readRDS("../models/d.IA_predicted_test.rds")
+if (file.exists("../models/d.IA_predicted_test_informedprior.rds")) {
+  d.IA_predicted_test <- readRDS("../models/d.IA_predicted_test_informedprior.rds")
 } else {
-  data.test <- prep_data_for_IBBU_prediction(m_IA_inferred.VOT_f0)
-  d.IA_predicted_test <-
+  data.test <- prep_data_for_IBBU_prediction(m_IA.VOT_f0_vowelduration_informedprior)
+  d.IA_predicted_test_informedprior <-
     get_IBBU_predicted_response(
-      m_IA_inferred.VOT_f0,
+      m_IA.VOT_f0_vowelduration_informedprior,
       data = data.test,
-      groups = get_group_levels_from_stanfit(m_IA_inferred.VOT_f0))
+      groups = get_group_levels_from_stanfit(m_IA.VOT_f0_vowelduration_informedprior))
 
-  saveRDS(d.IA_predicted_test, "../models/d.IA_predicted_test.rds")
+  saveRDS(d.IA_predicted_test, "../models/d.IA_predicted_informedprior.rds")
 }
 
-if (file.exists("../models/d.IA_predicted_PSE.rds")) {
-  d.IA_predicted_PSE <- readRDS("../models/d.IA_predicted_PSE.rds")
+if (file.exists("../models/d.IA_predicted_PSE_informedprior.rds")) {
+  d.IA_predicted_PSE <- readRDS("../models/d.IA_predicted_PSE_informedprior.rds")
 } else {
-  d.IA_predicted_PSE <-
-    fit_logistic_regression_to_model_categorization(d.IA_predicted_test) %>%
+  d.IA_predicted_PSE_informedprior <-
+    fit_logistic_regression_to_model_categorization(d.IA_predicted_test_informedprior) %>%
     group_by(group) %>%
     median_hdci(PSE) %>%
     # duplicate the no-exposure row; 1 for each condition
@@ -190,7 +192,7 @@ if (file.exists("../models/d.IA_predicted_PSE.rds")) {
       Block = factor(ifelse(group == "no exposure", 1, Block))) %>%
     add_block_labels()
   
-  saveRDS(d.IA_predicted_PSE, "../models/d.IA_predicted_PSE.rds")
+  saveRDS(d.IA_predicted_PSE_informedprior, "../models/d.IA_predicted_PSE_informedprior.rds")
 }
 ```
 
@@ -302,7 +304,7 @@ d.psychometric_intercept.slope.PSE.median %>%
     inherit.aes = F) +
   # TO DO (here and elsewhere): this should probably be an annotation
   geom_ribbon(
-    data = d.IA_predicted_PSE,
+    data = d.IA_predicted_PSE_informedprior,
     mapping = aes(x = Block.plot_label, ymin = .lower, ymax = .upper, fill = Condition.Exposure, group = Condition.Exposure),
     alpha = .1,
     position = pos,
@@ -327,15 +329,15 @@ d.psychometric_intercept.slope.PSE.median %>%
     colour = colours.condition,
     fontface = "bold",
     size = 2.7) +
-  annotate(
-    "crossbar",
-    x = 7.7, 
-    y = d.talkerPSEs[d.talkerPSEs$speechstyle == "isolated", ]$PSE_logistic.mean, 
-    ymin = d.talkerPSEs[d.talkerPSEs$speechstyle == "isolated", ]$PSE_logistic.lower, 
-    ymax = d.talkerPSEs[d.talkerPSEs$speechstyle == "isolated", ]$PSE_logistic.upper,
-    colour = "black",
-    width = 0.1,
-    alpha = .6) +
+  # annotate(
+  #   "crossbar",
+  #   x = 7.7, 
+  #   y = d.talkerPSEs[d.talkerPSEs$speechstyle == "isolated", ]$PSE_logistic.mean, 
+  #   ymin = d.talkerPSEs[d.talkerPSEs$speechstyle == "isolated", ]$PSE_logistic.lower, 
+  #   ymax = d.talkerPSEs[d.talkerPSEs$speechstyle == "isolated", ]$PSE_logistic.upper,
+  #   colour = "black",
+  #   width = 0.1,
+  #   alpha = .6) +
   labs(y = "PSE (ms VOT)", x = "Block") +
   scale_colour_manual(
     "Condition",
@@ -349,11 +351,9 @@ d.psychometric_intercept.slope.PSE.median %>%
     legend.position = "none")
 ```
 
-<<<<<<< HEAD
-We are not aware of previous evidence for premature convergence or 'flattening off' of adaptivity. This is largely because the detection of such a pattern requires an incremental exposure-test paradigm, which has been lacking. We therefore conducted an additional test to further quantify whether changes in participants' categorization functions were indeed flatter than one would expect from a learning model. We fit a distributional learning model to listeners' data. This allows us to compare changes in listeners' behavior to those expected under an ideal---as opposed to ideal*ized*---learner.^[Following @qian2016, we use the term *idealized* learner for models that are given privileged access to information that listeners have to infer (e.g., the correct exposure statistics of the experiment), and the term *ideal* learner for models that implement a theory of ideal information integration [for a list of assumptions made by the ideal adaptor, see appendix of @kleinschmidt-jaeger2015].] Specifically, we used an ideal adaptor model that captures ideal information integration [@kleinschmidt-jaeger2015; @kleinschmidt-jaeger2016]. <!-- TO DO: say what type of model; ideal info integration. --> Univariate instances of this model have previously achieved high accuracy in modeling changes in listeners categorization functions after LGPL/VGPL [for /s/-/`r linguisticsdown::cond_cmpl("ʃ")`/, @cummings-theodore2023; /b/-/d/, @kleinschmidt-jaeger2011; @kleinschmidt-jaeger2012] or DL exposure [for /b/-/p/, @kleinschmidt2020; @kleinschmidt-jaeger2016; /g/-/k/, @theodore-monto2019]. We extended the model to multivariate categories over VOT, f0, and vowel duration, and fit it to listeners' responses in our experiment (for details, see SI \@ref(sec:ideal-adaptor)). <!-- TO DO: fill in more info here. Perhaps we should take a model that uses, as priors, the mu_0 and Sigma_0 from the gray ribbon in the result figure --> 
-=======
+
 We fit a distributional learning model to listeners' data. This allows us to compare changes in listeners' behavior to those expected under an ideal---as opposed to ideal*ized*---learner.^[Following @qian2016, we use the term *idealized* learner for models that are given privileged access to information that listeners have to infer (e.g., the correct exposure statistics of the experiment), and the term *ideal* learner for models that implement a theory of ideal information integration [for a list of assumptions made by the ideal adaptor, see appendix of @kleinschmidt-jaeger2015].] Specifically, we used an ideal adaptor model [@kleinschmidt-jaeger2015; @kleinschmidt-jaeger2016]. The ideal adaptor defines a model of ideal information integration, updating prior beliefs about phonetic representations based on the exposure data. Univariate instances of this model have previously achieved high accuracy in modeling changes in listeners categorization functions after LGPL/VGPL [for /s/-/`r linguisticsdown::cond_cmpl("ʃ")`/, @cummings-theodore2023; /b/-/d/, @kleinschmidt-jaeger2011; @kleinschmidt-jaeger2012] or DL exposure [for /b/-/p/, @kleinschmidt2020; @kleinschmidt-jaeger2016; /g/-/k/, @theodore-monto2019]. We extended the model to multivariate categories over VOT, f0, and vowel duration, and fit it to listeners' responses in our experiment (for details, see SI \@ref(sec:ideal-adaptor)). <!-- TO DO: fill in more info here. Perhaps we should take a model that uses, as priors, the mu_0 and Sigma_0 from the gray ribbon in the result figure -->
->>>>>>> 431c018da3ea97380d59dcf911d47ed9e5c46726
+
 
 ```{r compute-R2-between-ideal-adaptor-and-psychometric-model}
 psych.model_prediction <-
