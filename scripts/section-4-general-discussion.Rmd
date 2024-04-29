@@ -158,13 +158,16 @@ m_IA.VOT_f0_vowelduration_informedprior <-
     file = "../models/IBBU_VOT+f0+vowelduration_informative_priors.RDS",
     warmup = 3000, iter = 4000,
     control = list(adapt_delta = .995, max_treedepth = 15))
+
+# summarise IA fit to obtain parameters
+IA_statistics <- get_exposure_statistic_from_stanfit(m_IA.VOT_f0_vowelduration_informedprior) 
 ```
 
 ```{r summarise-PSE-predictions-of-IA}
 # Get logistic model predictions of the IA's categorisation
 # then prepare the data for plotting
 if (file.exists("../models/d.IA_predicted_test_informedprior.rds")) {
-  d.IA_predicted_test <- readRDS("../models/d.IA_predicted_test_informedprior.rds")
+  d.IA_predicted_test_informedprior <- readRDS("../models/d.IA_predicted_test_informedprior.rds")
 } else {
   data.test <- prep_data_for_IBBU_prediction(m_IA.VOT_f0_vowelduration_informedprior)
   d.IA_predicted_test_informedprior <-
@@ -173,11 +176,11 @@ if (file.exists("../models/d.IA_predicted_test_informedprior.rds")) {
       data = data.test,
       groups = get_group_levels_from_stanfit(m_IA.VOT_f0_vowelduration_informedprior))
 
-  saveRDS(d.IA_predicted_test, "../models/d.IA_predicted_informedprior.rds")
+  saveRDS(d.IA_predicted_test_informedprior, "../models/d.IA_predicted_informedprior.rds")
 }
 
 if (file.exists("../models/d.IA_predicted_PSE_informedprior.rds")) {
-  d.IA_predicted_PSE <- readRDS("../models/d.IA_predicted_PSE_informedprior.rds")
+  d.IA_predicted_PSE_informedprior <- readRDS("../models/d.IA_predicted_PSE_informedprior.rds")
 } else {
   d.IA_predicted_PSE_informedprior <-
     fit_logistic_regression_to_model_categorization(d.IA_predicted_test_informedprior) %>%
@@ -391,11 +394,11 @@ psych.model_prediction <-
   summarise(across(c(predicted_proportion_voiceless, predicted_proportion_voiced, proportion_voiceless, proportion_voiced), mean))
 
 IA.prediction <-
-  d.IA_predicted_test %>%
+  d.IA_predicted_test_informedprior %>%
   group_by(group, VOT) %>%
   summarise(across(Predicted_posterior, mean)) %>%
   mutate(ExposureGroup = ifelse(group == "prior", "no exposure", group)) %>%
-  left_join(get_test_data_from_stanfit(m_IA_inferred.VOT_f0) %>% get_untransform_function_from_stanfit(m_IA_inferred.VOT_f0)(.)) %>% 
+  left_join(get_test_data_from_stanfit(m_IA.VOT_f0_vowelduration_informedprior) %>% get_untransform_function_from_stanfit(m_IA.VOT_f0_vowelduration_informedprior)(.)) %>% 
   mutate(
     Response = `/t/` / (`/d/` + `/t/`),
     group = gsub("[ABC]A", "", group))
