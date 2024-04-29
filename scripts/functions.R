@@ -801,7 +801,8 @@ prep_data_for_IBBU_prediction <- function(
     prep_test = T
 ) {
   cue.labels <- get_cue_levels_from_stanfit(model)
-
+  # gets test data from IA fit
+  # exposure data needs to be obtained from relevant dataframe external to the IA fit object 
   if (prep_test) {
   get_test_data_from_stanfit(model) %>%
     distinct(!!! syms(cue.labels)) %>%
