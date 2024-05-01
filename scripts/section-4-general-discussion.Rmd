@@ -135,7 +135,9 @@ d_for_ASP <-
 # fit ideal adaptor with uninformative priors
 # use prior roughly in middle of 5-fold CV
 m_IO.VOT_f0_vowel <-
-  io$io[[3]]
+  make_IOs_from_data(
+    data = d.prior,
+    cues = c("VOT", "f0_Mel", "vowel_duration"))
 
 
 # fit ideal adaptor with 3 cue priors
@@ -153,14 +155,11 @@ m_IA.VOT_f0_vowelduration_informedprior <-
     pca.observations = F,
     lapse_rate = NULL,
     mu_0 = m_IO.VOT_f0_vowel$mu,
-    Sigma_0 = m_IO.VOT_f0_vowel$Sigma,
+    Sigma_0 = map2(m_IO.VOT_f0_vowel$Sigma, m_IO.VOT_f0_vowel$Sigma_noise, `+`),
     sample = T,
     file = "../models/IBBU_VOT+f0+vowelduration_informative_priors.RDS",
     warmup = 3000, iter = 4000,
     control = list(adapt_delta = .995, max_treedepth = 15))
-
-# summarise IA fit to obtain parameters
-IA_statistics <- get_exposure_statistic_from_stanfit(m_IA.VOT_f0_vowelduration_informedprior) 
 ```
 
 ```{r summarise-PSE-predictions-of-IA}
@@ -332,15 +331,15 @@ d.psychometric_intercept.slope.PSE.median %>%
     colour = colours.condition,
     fontface = "bold",
     size = 2.7) +
-  # annotate(
-  #   "crossbar",
-  #   x = 7.7, 
-  #   y = d.talkerPSEs[d.talkerPSEs$speechstyle == "isolated", ]$PSE_logistic.mean, 
-  #   ymin = d.talkerPSEs[d.talkerPSEs$speechstyle == "isolated", ]$PSE_logistic.lower, 
-  #   ymax = d.talkerPSEs[d.talkerPSEs$speechstyle == "isolated", ]$PSE_logistic.upper,
-  #   colour = "black",
-  #   width = 0.1,
-  #   alpha = .6) +
+  annotate(
+    "crossbar",
+    x = 7.7,
+    y = d.talkerPSEs[d.talkerPSEs$speechstyle == "isolated", ]$PSE_logistic.mean,
+    ymin = d.talkerPSEs[d.talkerPSEs$speechstyle == "isolated", ]$PSE_logistic.lower,
+    ymax = d.talkerPSEs[d.talkerPSEs$speechstyle == "isolated", ]$PSE_logistic.upper,
+    colour = "black",
+    width = 0.1,
+    alpha = .6) +
   labs(y = "PSE (ms VOT)", x = "Block") +
   scale_colour_manual(
     "Condition",
@@ -398,13 +397,14 @@ IA.prediction <-
   group_by(group, VOT) %>%
   summarise(across(Predicted_posterior, mean)) %>%
   mutate(ExposureGroup = ifelse(group == "prior", "no exposure", group)) %>%
-  left_join(get_test_data_from_stanfit(m_IA.VOT_f0_vowelduration_informedprior) %>% get_untransform_function_from_stanfit(m_IA.VOT_f0_vowelduration_informedprior)(.)) %>% 
+  left_join(get_test_data_from_stanfit(m_IA.VOT_f0_vowelduration_informedprior) %>% 
+              get_untransform_function_from_stanfit(m_IA.VOT_f0_vowelduration_informedprior)(.)) %>% 
   mutate(
     Response = `/t/` / (`/d/` + `/t/`),
     group = gsub("[ABC]A", "", group))
 ```
 
-Unlike the psychometric model we used for analysis, a distributional learning model specifies how information is integrated across exposure trials. As a consequence, listeners' responses during different test blocks and across different exposure conditions jointly constrain the parameters of model (due to assumption of ideal information integration within and across exposure blocks).  This substantially decreases the degrees of freedom the model has to fit listeners' responses. For example, the ideal adaptor we fit to listeners' responses in the first four test blocks has a total of 21 parameters, <!-- TO DO: if we end up using a model with prior mu, Sigma, this reduces to 3 DFs! --> compared to `r sum(str_detect(rownames(fixef(fit_test)), "mu2")) - sum(str_detect(rownames(fixef(fit_test)), "Test5vs.Test4|Test6vs.Test5"))` population-level ('fixed') and `r length(get_variables(fit_test)[grep("^sd_|^cor_", (get_variables(fit_test)))]) - sum(str_detect(get_variables(fit_test)[grep("^sd_|^cor_", (get_variables(fit_test)))], "Block_Test6vs.Test5|Block_Test5vs.Test4"))` group-level ('random') effect parameters for the psychometric mixed-effect model fit to the same data. For the present data, the ideal adaptor model nevertheless predicts the proportion of listeners' "t"-responses with a high $R^2 =$ `r round(cor(IA.prediction$Predicted_posterior, IA.prediction$Response) %>% . ^2, 3) * 100`$\%$, comparable to that of the psychometric model ($R^2 =$ `r round(cor(psych.model_prediction$predicted_proportion_voiceless, psych.model_prediction$proportion_voiceless) %>% . ^2, 3) * 100`$\%$). <!-- TO DO for post-submission: get LOOICs for both models and compare. This might support stronger statements about the model --> This suggests that the ideal adaptor provides a decent explanation for participants' behavior with substantially fewer degrees of freedom. We leave further analysis of this model to future work. Here we focus on what the comparison of listeners behavior against the ideal adaptor can tell us about the incremental build-up of adaptation.
+Unlike the psychometric model we used for analysis, a distributional learning model specifies how information is integrated across exposure trials. As a consequence, listeners' responses during different test blocks and across different exposure conditions jointly constrain the parameters of model (due to assumption of ideal information integration within and across exposure blocks).  This substantially decreases the degrees of freedom the model has to fit listeners' responses. For example, the ideal adaptor we fit to listeners' responses in the first four test blocks has a total of 3 parameters, compared to `r sum(str_detect(rownames(fixef(fit_test)), "mu2")) - sum(str_detect(rownames(fixef(fit_test)), "Test5vs.Test4|Test6vs.Test5"))` population-level ('fixed') and `r length(get_variables(fit_test)[grep("^sd_|^cor_", (get_variables(fit_test)))]) - sum(str_detect(get_variables(fit_test)[grep("^sd_|^cor_", (get_variables(fit_test)))], "Block_Test6vs.Test5|Block_Test5vs.Test4"))` group-level ('random') effect parameters for the psychometric mixed-effect model fit to the same data. For the present data, the ideal adaptor model nevertheless predicts the proportion of listeners' "t"-responses with a high $R^2 =$ `r round(cor(IA.prediction$Predicted_posterior, IA.prediction$Response) %>% . ^2, 3) * 100`$\%$, comparable to that of the psychometric model ($R^2 =$ `r round(cor(psych.model_prediction$predicted_proportion_voiceless, psych.model_prediction$proportion_voiceless) %>% . ^2, 3) * 100`$\%$). <!-- TO DO for post-submission: get LOOICs for both models and compare. This might support stronger statements about the model --> This suggests that the ideal adaptor provides a decent explanation for participants' behavior with substantially fewer degrees of freedom. We leave further analysis of this model to future work. Here we focus on what the comparison of listeners behavior against the ideal adaptor can tell us about the incremental build-up of adaptation.
 
 Despite the good quantitative fit, the ideal adaptor exhibits a systematic deficiency in explaining participants' responses. Figure \@ref(fig:plot-IA-human-PSE) shows the PSEs inferred from the ideal adaptor, along with listeners' PSEs (the same data as in Figure \@ref(fig:plot-fit-PSE)C but focused on blocks up to Test 4). Notably, the ideal adaptor *under*-predicts changes in listeners' PSEs in early blocks---a tendency that is most evident for the exposure conditions with more extreme shifts (baseline and +40). Similarly, though less obvious, the ideal adaptor *over*-predicts listeners' PSE in later blocks (see the baseline and +40 conditions in Test 4). 
 
