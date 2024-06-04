@@ -3,4 +3,3 @@ This is the git repo for Tan & Jaeger *Learning to understand an unfamiliar talk
 Both the main text and these supplementary information (SI) are derived from the same R markdown document available via [https://osf.io/hxcy4/](OSF). It is best viewed using Acrobat Reader. The document was compiled using \texttt{knitr} in RStudio with R.
 
 You will also need to download the IPA font [SIL Doulos](https://software.sil.org/doulos/download/) and a Latex environment like (e.g., [MacTex](https://tug.org/mactex/mactex-download.html) or the R library \texttt{tinytex}).
-

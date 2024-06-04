@@ -1,0 +1,12 @@
+<!-- # References -->
+\singlespacing
+
+\begingroup
+\setlength{\parindent}{-0.5in}
+\setlength{\leftskip}{0.5in}
+
+\printbibliography
+<!-- <div id="refs" custom-style="Bibliography"></div> -->
+\endgroup
+
+\doublespacing

@@ -1,0 +1,6 @@
+dilltill_F0_1_VOT_1.wav
+dilltill_F0_2_VOT_2.wav
+dilltill_F0_3_VOT_3.wav
+dilltill_F0_4_VOT_4.wav
+dilltill_F0_5_VOT_5.wav
+dilltill_F0_6_VOT_6.wav

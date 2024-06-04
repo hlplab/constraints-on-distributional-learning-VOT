@@ -1,0 +1,11 @@
+dill_VOT0_PV100_F0242.wav
+dill_VOT0_PV10_F0246.wav
+dill_VOT0_PV20_F0245.wav
+dill_VOT0_PV30_F0245.wav
+dill_VOT0_PV40_F0245.wav
+dill_VOT0_PV50_F0244.wav
+dill_VOT0_PV60_F0244.wav
+dill_VOT0_PV70_F0244.wav
+dill_VOT0_PV80_F0243.wav
+dill_VOT0_PV90_F0243.wav
+

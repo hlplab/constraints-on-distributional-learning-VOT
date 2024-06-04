@@ -1,0 +1,10 @@
+dip_VOT0_PV10.wav
+dip_VOT0_PV100.wav
+dip_VOT0_PV20.wav
+dip_VOT0_PV30.wav
+dip_VOT0_PV40.wav
+dip_VOT0_PV50.wav
+dip_VOT0_PV60.wav
+dip_VOT0_PV70.wav
+dip_VOT0_PV80.wav
+dip_VOT0_PV90.wav
