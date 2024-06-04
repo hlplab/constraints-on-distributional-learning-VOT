@@ -1,0 +1,1668 @@
+File type = "ooTextFile"
+Object class = "TextGrid"
+
+xmin = 0 
+xmax = 37.53541950113379 
+tiers? <exists> 
+size = 2 
+item []: 
+    item [1]:
+        class = "IntervalTier" 
+        name = "labels" 
+        xmin = 0 
+        xmax = 37.53541950113379 
+        intervals: size = 80 
+        intervals [1]:
+            xmin = 0 
+            xmax = 0.33918367346938777 
+            text = "AE1_1_101_dip_0" 
+        intervals [2]:
+            xmin = 0.33918367346938777 
+            xmax = 0.7512471655328798 
+            text = "AE1_1_101_dip_1" 
+        intervals [3]:
+            xmin = 0.7512471655328798 
+            xmax = 1.1599546485260772 
+            text = "AE1_1_101_dip_2" 
+        intervals [4]:
+            xmin = 1.1599546485260772 
+            xmax = 1.5296825396825398 
+            text = "AE1_1_101_dip_3" 
+        intervals [5]:
+            xmin = 1.5296825396825398 
+            xmax = 2.012517006802721 
+            text = "AE1_1_101_dip_4" 
+        intervals [6]:
+            xmin = 2.012517006802721 
+            xmax = 2.3653741496598637 
+            text = "AE1_1_101_dip_5" 
+        intervals [7]:
+            xmin = 2.3653741496598637 
+            xmax = 2.797596371882086 
+            text = "AE1_1_101_dip_6" 
+        intervals [8]:
+            xmin = 2.797596371882086 
+            xmax = 3.0943537414965983 
+            text = "AE1_1_101_dip_7" 
+        intervals [9]:
+            xmin = 3.0943537414965983 
+            xmax = 3.4211111111111108 
+            text = "AE1_1_101_dip_8" 
+        intervals [10]:
+            xmin = 3.4211111111111108 
+            xmax = 3.711020408163265 
+            text = "AE1_1_101_dip_9" 
+        intervals [11]:
+            xmin = 3.711020408163265 
+            xmax = 4.074444444444444 
+            text = "AE1_2_101_tip_0" 
+        intervals [12]:
+            xmin = 4.074444444444444 
+            xmax = 4.457165532879817 
+            text = "AE1_2_101_tip_1" 
+        intervals [13]:
+            xmin = 4.457165532879817 
+            xmax = 4.8415873015873006 
+            text = "AE1_2_101_tip_2" 
+        intervals [14]:
+            xmin = 4.8415873015873006 
+            xmax = 5.220816326530612 
+            text = "AE1_2_101_tip_3" 
+        intervals [15]:
+            xmin = 5.220816326530612 
+            xmax = 5.602607709750567 
+            text = "AE1_2_101_tip_4" 
+        intervals [16]:
+            xmin = 5.602607709750567 
+            xmax = 5.949569160997732 
+            text = "AE1_2_101_tip_5" 
+        intervals [17]:
+            xmin = 5.949569160997732 
+            xmax = 6.349750566893423 
+            text = "AE1_2_101_tip_6" 
+        intervals [18]:
+            xmin = 6.349750566893423 
+            xmax = 6.724943310657595 
+            text = "AE1_2_101_tip_7" 
+        intervals [19]:
+            xmin = 6.724943310657595 
+            xmax = 7.117392290249432 
+            text = "AE1_2_101_tip_8" 
+        intervals [20]:
+            xmin = 7.117392290249432 
+            xmax = 7.464421768707482 
+            text = "AE1_2_101_tip_9" 
+        intervals [21]:
+            xmin = 7.464421768707482 
+            xmax = 7.909319727891155 
+            text = "AE1_3_102_dill_0" 
+        intervals [22]:
+            xmin = 7.909319727891155 
+            xmax = 8.465600907029478 
+            text = "AE1_3_102_dill_1" 
+        intervals [23]:
+            xmin = 8.465600907029478 
+            xmax = 8.895646258503401 
+            text = "AE1_3_102_dill_2" 
+        intervals [24]:
+            xmin = 8.895646258503401 
+            xmax = 9.452585034013605 
+            text = "AE1_3_102_dill_3" 
+        intervals [25]:
+            xmin = 9.452585034013605 
+            xmax = 10.01732426303855 
+            text = "AE1_3_102_dill_4" 
+        intervals [26]:
+            xmin = 10.01732426303855 
+            xmax = 10.481451247165534 
+            text = "AE1_3_102_dill_5" 
+        intervals [27]:
+            xmin = 10.481451247165534 
+            xmax = 11.015532879818595 
+            text = "AE1_3_102_dill_6" 
+        intervals [28]:
+            xmin = 11.015532879818595 
+            xmax = 11.54716553287982 
+            text = "AE1_3_102_dill_7" 
+        intervals [29]:
+            xmin = 11.54716553287982 
+            xmax = 12.07201814058957 
+            text = "AE1_3_102_dill_8" 
+        intervals [30]:
+            xmin = 12.07201814058957 
+            xmax = 12.562199546485262 
+            text = "AE1_3_102_dill_9" 
+        intervals [31]:
+            xmin = 12.562199546485262 
+            xmax = 13.088480725623583 
+            text = "AE1_4_102_till_0" 
+        intervals [32]:
+            xmin = 13.088480725623583 
+            xmax = 13.543764172335601 
+            text = "AE1_4_102_till_1" 
+        intervals [33]:
+            xmin = 13.543764172335601 
+            xmax = 14.023832199546487 
+            text = "AE1_4_102_till_2" 
+        intervals [34]:
+            xmin = 14.023832199546487 
+            xmax = 14.471678004535148 
+            text = "AE1_4_102_till_3" 
+        intervals [35]:
+            xmin = 14.471678004535148 
+            xmax = 14.97249433106576 
+            text = "AE1_4_102_till_4" 
+        intervals [36]:
+            xmin = 14.97249433106576 
+            xmax = 15.441020408163267 
+            text = "AE1_4_102_till_5" 
+        intervals [37]:
+            xmin = 15.441020408163267 
+            xmax = 15.926235827664401 
+            text = "AE1_4_102_till_6" 
+        intervals [38]:
+            xmin = 15.926235827664401 
+            xmax = 16.46698412698413 
+            text = "AE1_4_102_till_7" 
+        intervals [39]:
+            xmin = 16.46698412698413 
+            xmax = 16.96009070294785 
+            text = "AE1_4_102_till_8" 
+        intervals [40]:
+            xmin = 16.96009070294785 
+            xmax = 17.48807256235828 
+            text = "AE1_4_102_till_9" 
+        intervals [41]:
+            xmin = 17.48807256235828 
+            xmax = 17.975011337868484 
+            text = "AE1_5_103_din_0" 
+        intervals [42]:
+            xmin = 17.975011337868484 
+            xmax = 18.58852607709751 
+            text = "AE1_5_103_din_1" 
+        intervals [43]:
+            xmin = 18.58852607709751 
+            xmax = 19.121950113378688 
+            text = "AE1_5_103_din_2" 
+        intervals [44]:
+            xmin = 19.121950113378688 
+            xmax = 19.654195011337873 
+            text = "AE1_5_103_din_3" 
+        intervals [45]:
+            xmin = 19.654195011337873 
+            xmax = 20.145804988662135 
+            text = "AE1_5_103_din_4" 
+        intervals [46]:
+            xmin = 20.145804988662135 
+            xmax = 20.75342403628118 
+            text = "AE1_5_103_din_5" 
+        intervals [47]:
+            xmin = 20.75342403628118 
+            xmax = 21.32136054421769 
+            text = "AE1_5_103_din_6" 
+        intervals [48]:
+            xmin = 21.32136054421769 
+            xmax = 21.814716553287983 
+            text = "AE1_5_103_din_7" 
+        intervals [49]:
+            xmin = 21.814716553287983 
+            xmax = 22.395419501133787 
+            text = "AE1_5_103_din_8" 
+        intervals [50]:
+            xmin = 22.395419501133787 
+            xmax = 22.887891156462587 
+            text = "AE1_5_103_din_9" 
+        intervals [51]:
+            xmin = 22.887891156462587 
+            xmax = 23.356439909297055 
+            text = "AE1_6_103_tin_0" 
+        intervals [52]:
+            xmin = 23.356439909297055 
+            xmax = 23.830181405895694 
+            text = "AE1_6_103_tin_1" 
+        intervals [53]:
+            xmin = 23.830181405895694 
+            xmax = 24.30696145124717 
+            text = "AE1_6_103_tin_2" 
+        intervals [54]:
+            xmin = 24.30696145124717 
+            xmax = 24.810408163265308 
+            text = "AE1_6_103_tin_3" 
+        intervals [55]:
+            xmin = 24.810408163265308 
+            xmax = 25.350204081632654 
+            text = "AE1_6_103_tin_4" 
+        intervals [56]:
+            xmin = 25.350204081632654 
+            xmax = 25.875192743764174 
+            text = "AE1_6_103_tin_5" 
+        intervals [57]:
+            xmin = 25.875192743764174 
+            xmax = 26.3984126984127 
+            text = "AE1_6_103_tin_6" 
+        intervals [58]:
+            xmin = 26.3984126984127 
+            xmax = 26.90936507936508 
+            text = "AE1_6_103_tin_7" 
+        intervals [59]:
+            xmin = 26.90936507936508 
+            xmax = 27.4043537414966 
+            text = "AE1_6_103_tin_8" 
+        intervals [60]:
+            xmin = 27.4043537414966 
+            xmax = 27.910408163265306 
+            text = "AE1_6_103_tin_9" 
+        intervals [61]:
+            xmin = 27.910408163265306 
+            xmax = 28.553990929705215 
+            text = "AE1_7_104_dim_0" 
+        intervals [62]:
+            xmin = 28.553990929705215 
+            xmax = 29.085578231292516 
+            text = "AE1_7_104_dim_1" 
+        intervals [63]:
+            xmin = 29.085578231292516 
+            xmax = 29.569455782312925 
+            text = "AE1_7_104_dim_2" 
+        intervals [64]:
+            xmin = 29.569455782312925 
+            xmax = 30.113854875283447 
+            text = "AE1_7_104_dim_3" 
+        intervals [65]:
+            xmin = 30.113854875283447 
+            xmax = 30.633605442176872 
+            text = "AE1_7_104_dim_4" 
+        intervals [66]:
+            xmin = 30.633605442176872 
+            xmax = 31.125238095238096 
+            text = "AE1_7_104_dim_5" 
+        intervals [67]:
+            xmin = 31.125238095238096 
+            xmax = 31.670521541950116 
+            text = "AE1_7_104_dim_6" 
+        intervals [68]:
+            xmin = 31.670521541950116 
+            xmax = 32.24913832199547 
+            text = "AE1_7_104_dim_7" 
+        intervals [69]:
+            xmin = 32.24913832199547 
+            xmax = 32.764263038548755 
+            text = "AE1_7_104_dim_8" 
+        intervals [70]:
+            xmin = 32.764263038548755 
+            xmax = 33.278117913832205 
+            text = "AE1_7_104_dim_9" 
+        intervals [71]:
+            xmin = 33.278117913832205 
+            xmax = 33.72752834467121 
+            text = "AE1_8_104_Tim_0" 
+        intervals [72]:
+            xmin = 33.72752834467121 
+            xmax = 34.18820861678005 
+            text = "AE1_8_104_Tim_1" 
+        intervals [73]:
+            xmin = 34.18820861678005 
+            xmax = 34.59952380952382 
+            text = "AE1_8_104_Tim_2" 
+        intervals [74]:
+            xmin = 34.59952380952382 
+            xmax = 35.02798185941044 
+            text = "AE1_8_104_Tim_3" 
+        intervals [75]:
+            xmin = 35.02798185941044 
+            xmax = 35.39897959183674 
+            text = "AE1_8_104_Tim_4" 
+        intervals [76]:
+            xmin = 35.39897959183674 
+            xmax = 35.78936507936508 
+            text = "AE1_8_104_Tim_5" 
+        intervals [77]:
+            xmin = 35.78936507936508 
+            xmax = 36.23965986394558 
+            text = "AE1_8_104_Tim_6" 
+        intervals [78]:
+            xmin = 36.23965986394558 
+            xmax = 36.67120181405896 
+            text = "AE1_8_104_Tim_7" 
+        intervals [79]:
+            xmin = 36.67120181405896 
+            xmax = 37.10650793650794 
+            text = "AE1_8_104_Tim_8" 
+        intervals [80]:
+            xmin = 37.10650793650794 
+            xmax = 37.53541950113379 
+            text = "AE1_8_104_Tim_9" 
+    item [2]:
+        class = "IntervalTier" 
+        name = "cues" 
+        xmin = 0 
+        xmax = 37.53541950113379 
+        intervals: size = 332 
+        intervals [1]:
+            xmin = 0 
+            xmax = 0.010063660917365222 
+            text = "" 
+        intervals [2]:
+            xmin = 0.010063660917365222 
+            xmax = 0.025129886621315194 
+            text = "VOT" 
+        intervals [3]:
+            xmin = 0.025129886621315194 
+            xmax = 0.1367269635126778 
+            text = "VOWEL" 
+        intervals [4]:
+            xmin = 0.1367269635126778 
+            xmax = 0.33918367346938777 
+            text = "" 
+        intervals [5]:
+            xmin = 0.33918367346938777 
+            xmax = 0.35043461829176115 
+            text = "" 
+        intervals [6]:
+            xmin = 0.35043461829176115 
+            xmax = 0.42959949745664033 
+            text = "NEG_VOT" 
+        intervals [7]:
+            xmin = 0.42959949745664033 
+            xmax = 0.4448697368635704 
+            text = "VOT" 
+        intervals [8]:
+            xmin = 0.4448697368635704 
+            xmax = 0.5610103785103786 
+            text = "VOWEL" 
+        intervals [9]:
+            xmin = 0.5610103785103786 
+            xmax = 0.7512471655328798 
+            text = "" 
+        intervals [10]:
+            xmin = 0.7512471655328798 
+            xmax = 0.772639722555689 
+            text = "" 
+        intervals [11]:
+            xmin = 0.772639722555689 
+            xmax = 0.827891156462585 
+            text = "NEG_VOT" 
+        intervals [12]:
+            xmin = 0.827891156462585 
+            xmax = 0.8414123883171503 
+            text = "VOT" 
+        intervals [13]:
+            xmin = 0.8414123883171503 
+            xmax = 0.9559105180533752 
+            text = "VOWEL" 
+        intervals [14]:
+            xmin = 0.9559105180533752 
+            xmax = 1.1599546485260772 
+            text = "" 
+        intervals [15]:
+            xmin = 1.1599546485260772 
+            xmax = 1.1733820861678006 
+            text = "" 
+        intervals [16]:
+            xmin = 1.1733820861678006 
+            xmax = 1.1889477946567097 
+            text = "VOT" 
+        intervals [17]:
+            xmin = 1.1889477946567097 
+            xmax = 1.3248143424036283 
+            text = "VOWEL" 
+        intervals [18]:
+            xmin = 1.3248143424036283 
+            xmax = 1.5296825396825398 
+            text = "" 
+        intervals [19]:
+            xmin = 1.5296825396825398 
+            xmax = 1.5521201814058958 
+            text = "" 
+        intervals [20]:
+            xmin = 1.5521201814058958 
+            xmax = 1.655003943606428 
+            text = "NEG_VOT" 
+        intervals [21]:
+            xmin = 1.655003943606428 
+            xmax = 1.6707725828207283 
+            text = "VOT" 
+        intervals [22]:
+            xmin = 1.6707725828207283 
+            xmax = 1.780353252412076 
+            text = "VOWEL" 
+        intervals [23]:
+            xmin = 1.780353252412076 
+            xmax = 2.012517006802721 
+            text = "" 
+        intervals [24]:
+            xmin = 2.012517006802721 
+            xmax = 2.027569916855631 
+            text = "" 
+        intervals [25]:
+            xmin = 2.027569916855631 
+            xmax = 2.0415751290291166 
+            text = "VOT" 
+        intervals [26]:
+            xmin = 2.0415751290291166 
+            xmax = 2.177960013273602 
+            text = "VOWEL" 
+        intervals [27]:
+            xmin = 2.177960013273602 
+            xmax = 2.3653741496598637 
+            text = "" 
+        intervals [28]:
+            xmin = 2.3653741496598637 
+            xmax = 2.374648526077097 
+            text = "" 
+        intervals [29]:
+            xmin = 2.374648526077097 
+            xmax = 2.494041950113379 
+            text = "NEG_VOT" 
+        intervals [30]:
+            xmin = 2.494041950113379 
+            xmax = 2.507937352995028 
+            text = "VOT" 
+        intervals [31]:
+            xmin = 2.507937352995028 
+            xmax = 2.6207723089235695 
+            text = "VOWEL" 
+        intervals [32]:
+            xmin = 2.6207723089235695 
+            xmax = 2.797596371882086 
+            text = "" 
+        intervals [33]:
+            xmin = 2.797596371882086 
+            xmax = 2.8053716849058463 
+            text = "" 
+        intervals [34]:
+            xmin = 2.8053716849058463 
+            xmax = 2.820276575276575 
+            text = "VOT" 
+        intervals [35]:
+            xmin = 2.820276575276575 
+            xmax = 2.9389031844621907 
+            text = "VOWEL" 
+        intervals [36]:
+            xmin = 2.9389031844621907 
+            xmax = 3.0943537414965983 
+            text = "" 
+        intervals [37]:
+            xmin = 3.0943537414965983 
+            xmax = 3.108329752953813 
+            text = "" 
+        intervals [38]:
+            xmin = 3.108329752953813 
+            xmax = 3.123079428548349 
+            text = "VOT" 
+        intervals [39]:
+            xmin = 3.123079428548349 
+            xmax = 3.2382799193751572 
+            text = "VOWEL" 
+        intervals [40]:
+            xmin = 3.2382799193751572 
+            xmax = 3.4211111111111108 
+            text = "" 
+        intervals [41]:
+            xmin = 3.4211111111111108 
+            xmax = 3.429653206016319 
+            text = "" 
+        intervals [42]:
+            xmin = 3.429653206016319 
+            xmax = 3.4498071011350273 
+            text = "VOT" 
+        intervals [43]:
+            xmin = 3.4498071011350273 
+            xmax = 3.5462986220129076 
+            text = "VOWEL" 
+        intervals [44]:
+            xmin = 3.5462986220129076 
+            xmax = 3.711020408163265 
+            text = "" 
+        intervals [45]:
+            xmin = 3.711020408163265 
+            xmax = 3.7205660041794495 
+            text = "" 
+        intervals [46]:
+            xmin = 3.7205660041794495 
+            xmax = 3.80631117295403 
+            text = "VOT" 
+        intervals [47]:
+            xmin = 3.80631117295403 
+            xmax = 3.9090438397581253 
+            text = "VOWEL" 
+        intervals [48]:
+            xmin = 3.9090438397581253 
+            xmax = 4.074444444444444 
+            text = "" 
+        intervals [49]:
+            xmin = 4.074444444444444 
+            xmax = 4.086389698736638 
+            text = "" 
+        intervals [50]:
+            xmin = 4.086389698736638 
+            xmax = 4.1492196795036005 
+            text = "VOT" 
+        intervals [51]:
+            xmin = 4.1492196795036005 
+            xmax = 4.245391156462585 
+            text = "VOWEL" 
+        intervals [52]:
+            xmin = 4.245391156462585 
+            xmax = 4.457165532879817 
+            text = "" 
+        intervals [53]:
+            xmin = 4.457165532879817 
+            xmax = 4.47034291704103 
+            text = "" 
+        intervals [54]:
+            xmin = 4.47034291704103 
+            xmax = 4.539128042328042 
+            text = "VOT" 
+        intervals [55]:
+            xmin = 4.539128042328042 
+            xmax = 4.64260865457294 
+            text = "VOWEL" 
+        intervals [56]:
+            xmin = 4.64260865457294 
+            xmax = 4.8415873015873006 
+            text = "" 
+        intervals [57]:
+            xmin = 4.8415873015873006 
+            xmax = 4.856069436783722 
+            text = "" 
+        intervals [58]:
+            xmin = 4.856069436783722 
+            xmax = 4.9247606292517005 
+            text = "VOT" 
+        intervals [59]:
+            xmin = 4.9247606292517005 
+            xmax = 5.029814610528896 
+            text = "VOWEL" 
+        intervals [60]:
+            xmin = 5.029814610528896 
+            xmax = 5.220816326530612 
+            text = "" 
+        intervals [61]:
+            xmin = 5.220816326530612 
+            xmax = 5.233441479155765 
+            text = "" 
+        intervals [62]:
+            xmin = 5.233441479155765 
+            xmax = 5.293158681912481 
+            text = "VOT" 
+        intervals [63]:
+            xmin = 5.293158681912481 
+            xmax = 5.402131519274376 
+            text = "VOWEL" 
+        intervals [64]:
+            xmin = 5.402131519274376 
+            xmax = 5.602607709750567 
+            text = "" 
+        intervals [65]:
+            xmin = 5.602607709750567 
+            xmax = 5.612580174927114 
+            text = "" 
+        intervals [66]:
+            xmin = 5.612580174927114 
+            xmax = 5.655469562183848 
+            text = "VOT" 
+        intervals [67]:
+            xmin = 5.655469562183848 
+            xmax = 5.754435941043084 
+            text = "VOWEL" 
+        intervals [68]:
+            xmin = 5.754435941043084 
+            xmax = 5.949569160997732 
+            text = "" 
+        intervals [69]:
+            xmin = 5.949569160997732 
+            xmax = 5.9641307634164775 
+            text = "" 
+        intervals [70]:
+            xmin = 5.9641307634164775 
+            xmax = 6.032898715041572 
+            text = "VOT" 
+        intervals [71]:
+            xmin = 6.032898715041572 
+            xmax = 6.149139532835788 
+            text = "VOWEL" 
+        intervals [72]:
+            xmin = 6.149139532835788 
+            xmax = 6.349750566893423 
+            text = "" 
+        intervals [73]:
+            xmin = 6.349750566893423 
+            xmax = 6.365991548134406 
+            text = "" 
+        intervals [74]:
+            xmin = 6.365991548134406 
+            xmax = 6.420333809398529 
+            text = "VOT" 
+        intervals [75]:
+            xmin = 6.420333809398529 
+            xmax = 6.542922584238373 
+            text = "VOWEL" 
+        intervals [76]:
+            xmin = 6.542922584238373 
+            xmax = 6.724943310657595 
+            text = "" 
+        intervals [77]:
+            xmin = 6.724943310657595 
+            xmax = 6.738097222123129 
+            text = "" 
+        intervals [78]:
+            xmin = 6.738097222123129 
+            xmax = 6.7953035925113845 
+            text = "VOT" 
+        intervals [79]:
+            xmin = 6.7953035925113845 
+            xmax = 6.911452038179613 
+            text = "VOWEL" 
+        intervals [80]:
+            xmin = 6.911452038179613 
+            xmax = 7.117392290249432 
+            text = "" 
+        intervals [81]:
+            xmin = 7.117392290249432 
+            xmax = 7.130179894179895 
+            text = "" 
+        intervals [82]:
+            xmin = 7.130179894179895 
+            xmax = 7.1897054806327985 
+            text = "VOT" 
+        intervals [83]:
+            xmin = 7.1897054806327985 
+            xmax = 7.292909432429688 
+            text = "VOWEL" 
+        intervals [84]:
+            xmin = 7.292909432429688 
+            xmax = 7.464421768707482 
+            text = "" 
+        intervals [85]:
+            xmin = 7.464421768707482 
+            xmax = 7.47421459492888 
+            text = "" 
+        intervals [86]:
+            xmin = 7.47421459492888 
+            xmax = 7.49399561747776 
+            text = "VOT" 
+        intervals [87]:
+            xmin = 7.49399561747776 
+            xmax = 7.695637390269639 
+            text = "VOWEL" 
+        intervals [88]:
+            xmin = 7.695637390269639 
+            xmax = 7.909319727891155 
+            text = "" 
+        intervals [89]:
+            xmin = 7.909319727891155 
+            xmax = 7.997131519274376 
+            text = "" 
+        intervals [90]:
+            xmin = 7.997131519274376 
+            xmax = 8.01782650648912 
+            text = "VOT" 
+        intervals [91]:
+            xmin = 8.01782650648912 
+            xmax = 8.259055829228243 
+            text = "VOWEL" 
+        intervals [92]:
+            xmin = 8.259055829228243 
+            xmax = 8.465600907029478 
+            text = "" 
+        intervals [93]:
+            xmin = 8.465600907029478 
+            xmax = 8.477766439909297 
+            text = "" 
+        intervals [94]:
+            xmin = 8.477766439909297 
+            xmax = 8.494666582682456 
+            text = "VOT" 
+        intervals [95]:
+            xmin = 8.494666582682456 
+            xmax = 8.711512471655329 
+            text = "VOWEL" 
+        intervals [96]:
+            xmin = 8.711512471655329 
+            xmax = 8.895646258503401 
+            text = "" 
+        intervals [97]:
+            xmin = 8.895646258503401 
+            xmax = 8.9128089569161 
+            text = "" 
+        intervals [98]:
+            xmin = 8.9128089569161 
+            xmax = 9.004837220602527 
+            text = "NEG_VOT" 
+        intervals [99]:
+            xmin = 9.004837220602527 
+            xmax = 9.025135389931307 
+            text = "VOT" 
+        intervals [100]:
+            xmin = 9.025135389931307 
+            xmax = 9.232939582612707 
+            text = "VOWEL" 
+        intervals [101]:
+            xmin = 9.232939582612707 
+            xmax = 9.452585034013605 
+            text = "" 
+        intervals [102]:
+            xmin = 9.452585034013605 
+            xmax = 9.469152752009895 
+            text = "" 
+        intervals [103]:
+            xmin = 9.469152752009895 
+            xmax = 9.545529100529102 
+            text = "NEG_VOT" 
+        intervals [104]:
+            xmin = 9.545529100529102 
+            xmax = 9.564543454345435 
+            text = "VOT" 
+        intervals [105]:
+            xmin = 9.564543454345435 
+            xmax = 9.777155706727136 
+            text = "VOWEL" 
+        intervals [106]:
+            xmin = 9.777155706727136 
+            xmax = 10.01732426303855 
+            text = "" 
+        intervals [107]:
+            xmin = 10.01732426303855 
+            xmax = 10.031569779426922 
+            text = "" 
+        intervals [108]:
+            xmin = 10.031569779426922 
+            xmax = 10.050642655367232 
+            text = "VOT" 
+        intervals [109]:
+            xmin = 10.050642655367232 
+            xmax = 10.267875893947323 
+            text = "VOWEL" 
+        intervals [110]:
+            xmin = 10.267875893947323 
+            xmax = 10.481451247165534 
+            text = "" 
+        intervals [111]:
+            xmin = 10.481451247165534 
+            xmax = 10.508087139617752 
+            text = "" 
+        intervals [112]:
+            xmin = 10.508087139617752 
+            xmax = 10.53007260214027 
+            text = "VOT" 
+        intervals [113]:
+            xmin = 10.53007260214027 
+            xmax = 10.792904972143383 
+            text = "VOWEL" 
+        intervals [114]:
+            xmin = 10.792904972143383 
+            xmax = 11.015532879818595 
+            text = "" 
+        intervals [115]:
+            xmin = 11.015532879818595 
+            xmax = 11.043494640280354 
+            text = "" 
+        intervals [116]:
+            xmin = 11.043494640280354 
+            xmax = 11.063776993355482 
+            text = "VOT" 
+        intervals [117]:
+            xmin = 11.063776993355482 
+            xmax = 11.321127661792687 
+            text = "VOWEL" 
+        intervals [118]:
+            xmin = 11.321127661792687 
+            xmax = 11.54716553287982 
+            text = "" 
+        intervals [119]:
+            xmin = 11.54716553287982 
+            xmax = 11.569710448281878 
+            text = "" 
+        intervals [120]:
+            xmin = 11.569710448281878 
+            xmax = 11.600588856494978 
+            text = "VOT" 
+        intervals [121]:
+            xmin = 11.600588856494978 
+            xmax = 11.803018160480567 
+            text = "VOWEL" 
+        intervals [122]:
+            xmin = 11.803018160480567 
+            xmax = 12.07201814058957 
+            text = "" 
+        intervals [123]:
+            xmin = 12.07201814058957 
+            xmax = 12.095557273414416 
+            text = "" 
+        intervals [124]:
+            xmin = 12.095557273414416 
+            xmax = 12.116609127543192 
+            text = "VOT" 
+        intervals [125]:
+            xmin = 12.116609127543192 
+            xmax = 12.310434792052197 
+            text = "VOWEL" 
+        intervals [126]:
+            xmin = 12.310434792052197 
+            xmax = 12.562199546485262 
+            text = "" 
+        intervals [127]:
+            xmin = 12.562199546485262 
+            xmax = 12.586611721611723 
+            text = "" 
+        intervals [128]:
+            xmin = 12.586611721611723 
+            xmax = 12.686945578231294 
+            text = "VOT" 
+        intervals [129]:
+            xmin = 12.686945578231294 
+            xmax = 12.850750816182709 
+            text = "VOWEL" 
+        intervals [130]:
+            xmin = 12.850750816182709 
+            xmax = 13.088480725623583 
+            text = "" 
+        intervals [131]:
+            xmin = 13.088480725623583 
+            xmax = 13.102779037540943 
+            text = "" 
+        intervals [132]:
+            xmin = 13.102779037540943 
+            xmax = 13.21470152402046 
+            text = "VOT" 
+        intervals [133]:
+            xmin = 13.21470152402046 
+            xmax = 13.343941798941799 
+            text = "VOWEL" 
+        intervals [134]:
+            xmin = 13.343941798941799 
+            xmax = 13.543764172335601 
+            text = "" 
+        intervals [135]:
+            xmin = 13.543764172335601 
+            xmax = 13.563970353573527 
+            text = "" 
+        intervals [136]:
+            xmin = 13.563970353573527 
+            xmax = 13.654255210856272 
+            text = "VOT" 
+        intervals [137]:
+            xmin = 13.654255210856272 
+            xmax = 13.847049537763825 
+            text = "VOWEL" 
+        intervals [138]:
+            xmin = 13.847049537763825 
+            xmax = 14.023832199546487 
+            text = "" 
+        intervals [139]:
+            xmin = 14.023832199546487 
+            xmax = 14.044244771982868 
+            text = "" 
+        intervals [140]:
+            xmin = 14.044244771982868 
+            xmax = 14.129936181830592 
+            text = "VOT" 
+        intervals [141]:
+            xmin = 14.129936181830592 
+            xmax = 14.27779888967081 
+            text = "VOWEL" 
+        intervals [142]:
+            xmin = 14.27779888967081 
+            xmax = 14.471678004535148 
+            text = "" 
+        intervals [143]:
+            xmin = 14.471678004535148 
+            xmax = 14.504174952032095 
+            text = "" 
+        intervals [144]:
+            xmin = 14.504174952032095 
+            xmax = 14.582087094241068 
+            text = "VOT" 
+        intervals [145]:
+            xmin = 14.582087094241068 
+            xmax = 14.755508082020688 
+            text = "VOWEL" 
+        intervals [146]:
+            xmin = 14.755508082020688 
+            xmax = 14.97249433106576 
+            text = "" 
+        intervals [147]:
+            xmin = 14.97249433106576 
+            xmax = 14.992163265306122 
+            text = "" 
+        intervals [148]:
+            xmin = 14.992163265306122 
+            xmax = 15.069384243372864 
+            text = "VOT" 
+        intervals [149]:
+            xmin = 15.069384243372864 
+            xmax = 15.273004940071266 
+            text = "VOWEL" 
+        intervals [150]:
+            xmin = 15.273004940071266 
+            xmax = 15.441020408163267 
+            text = "" 
+        intervals [151]:
+            xmin = 15.441020408163267 
+            xmax = 15.476555683306186 
+            text = "" 
+        intervals [152]:
+            xmin = 15.476555683306186 
+            xmax = 15.554825381907149 
+            text = "VOT" 
+        intervals [153]:
+            xmin = 15.554825381907149 
+            xmax = 15.728009322247418 
+            text = "VOWEL" 
+        intervals [154]:
+            xmin = 15.728009322247418 
+            xmax = 15.926235827664401 
+            text = "" 
+        intervals [155]:
+            xmin = 15.926235827664401 
+            xmax = 15.961299853274644 
+            text = "" 
+        intervals [156]:
+            xmin = 15.961299853274644 
+            xmax = 16.04072205137763 
+            text = "VOT" 
+        intervals [157]:
+            xmin = 16.04072205137763 
+            xmax = 16.224477456310503 
+            text = "VOWEL" 
+        intervals [158]:
+            xmin = 16.224477456310503 
+            xmax = 16.46698412698413 
+            text = "" 
+        intervals [159]:
+            xmin = 16.46698412698413 
+            xmax = 16.49558231292517 
+            text = "" 
+        intervals [160]:
+            xmin = 16.49558231292517 
+            xmax = 16.581132080072177 
+            text = "VOT" 
+        intervals [161]:
+            xmin = 16.581132080072177 
+            xmax = 16.76002739984883 
+            text = "VOWEL" 
+        intervals [162]:
+            xmin = 16.76002739984883 
+            xmax = 16.96009070294785 
+            text = "" 
+        intervals [163]:
+            xmin = 16.96009070294785 
+            xmax = 16.991243676957964 
+            text = "" 
+        intervals [164]:
+            xmin = 16.991243676957964 
+            xmax = 17.077451955782315 
+            text = "VOT" 
+        intervals [165]:
+            xmin = 17.077451955782315 
+            xmax = 17.261579081632654 
+            text = "VOWEL" 
+        intervals [166]:
+            xmin = 17.261579081632654 
+            xmax = 17.48807256235828 
+            text = "" 
+        intervals [167]:
+            xmin = 17.48807256235828 
+            xmax = 17.50968543713782 
+            text = "" 
+        intervals [168]:
+            xmin = 17.50968543713782 
+            xmax = 17.526093287387738 
+            text = "VOT" 
+        intervals [169]:
+            xmin = 17.526093287387738 
+            xmax = 17.68571829911906 
+            text = "VOWEL" 
+        intervals [170]:
+            xmin = 17.68571829911906 
+            xmax = 17.975011337868484 
+            text = "" 
+        intervals [171]:
+            xmin = 17.975011337868484 
+            xmax = 18.00506462585034 
+            text = "" 
+        intervals [172]:
+            xmin = 18.00506462585034 
+            xmax = 18.111989359846504 
+            text = "NEG_VOT" 
+        intervals [173]:
+            xmin = 18.111989359846504 
+            xmax = 18.126534772930583 
+            text = "VOT" 
+        intervals [174]:
+            xmin = 18.126534772930583 
+            xmax = 18.27750622784325 
+            text = "VOWEL" 
+        intervals [175]:
+            xmin = 18.27750622784325 
+            xmax = 18.58852607709751 
+            text = "" 
+        intervals [176]:
+            xmin = 18.58852607709751 
+            xmax = 18.638999283924097 
+            text = "" 
+        intervals [177]:
+            xmin = 18.638999283924097 
+            xmax = 18.657571572544363 
+            text = "VOT" 
+        intervals [178]:
+            xmin = 18.657571572544363 
+            xmax = 18.8347940287226 
+            text = "VOWEL" 
+        intervals [179]:
+            xmin = 18.8347940287226 
+            xmax = 19.121950113378688 
+            text = "" 
+        intervals [180]:
+            xmin = 19.121950113378688 
+            xmax = 19.18557962911192 
+            text = "" 
+        intervals [181]:
+            xmin = 19.18557962911192 
+            xmax = 19.20632661257274 
+            text = "VOT" 
+        intervals [182]:
+            xmin = 19.20632661257274 
+            xmax = 19.365140726307278 
+            text = "VOWEL" 
+        intervals [183]:
+            xmin = 19.365140726307278 
+            xmax = 19.654195011337873 
+            text = "" 
+        intervals [184]:
+            xmin = 19.654195011337873 
+            xmax = 19.674586167800456 
+            text = "" 
+        intervals [185]:
+            xmin = 19.674586167800456 
+            xmax = 19.689410001838574 
+            text = "VOT" 
+        intervals [186]:
+            xmin = 19.689410001838574 
+            xmax = 19.847647743136346 
+            text = "VOWEL" 
+        intervals [187]:
+            xmin = 19.847647743136346 
+            xmax = 20.145804988662135 
+            text = "" 
+        intervals [188]:
+            xmin = 20.145804988662135 
+            xmax = 20.157281056566774 
+            text = "" 
+        intervals [189]:
+            xmin = 20.157281056566774 
+            xmax = 20.257541894806703 
+            text = "NEG_VOT" 
+        intervals [190]:
+            xmin = 20.257541894806703 
+            xmax = 20.277721088435378 
+            text = "VOT" 
+        intervals [191]:
+            xmin = 20.277721088435378 
+            xmax = 20.446605032459505 
+            text = "VOWEL" 
+        intervals [192]:
+            xmin = 20.446605032459505 
+            xmax = 20.75342403628118 
+            text = "" 
+        intervals [193]:
+            xmin = 20.75342403628118 
+            xmax = 20.768998488284204 
+            text = "" 
+        intervals [194]:
+            xmin = 20.768998488284204 
+            xmax = 20.848804872376302 
+            text = "NEG_VOT" 
+        intervals [195]:
+            xmin = 20.848804872376302 
+            xmax = 20.869047451492914 
+            text = "VOT" 
+        intervals [196]:
+            xmin = 20.869047451492914 
+            xmax = 21.032301039247525 
+            text = "VOWEL" 
+        intervals [197]:
+            xmin = 21.032301039247525 
+            xmax = 21.32136054421769 
+            text = "" 
+        intervals [198]:
+            xmin = 21.32136054421769 
+            xmax = 21.341651549508693 
+            text = "" 
+        intervals [199]:
+            xmin = 21.341651549508693 
+            xmax = 21.3561074506672 
+            text = "VOT" 
+        intervals [200]:
+            xmin = 21.3561074506672 
+            xmax = 21.49909722820211 
+            text = "VOWEL" 
+        intervals [201]:
+            xmin = 21.49909722820211 
+            xmax = 21.814716553287983 
+            text = "" 
+        intervals [202]:
+            xmin = 21.814716553287983 
+            xmax = 21.833835555407266 
+            text = "" 
+        intervals [203]:
+            xmin = 21.833835555407266 
+            xmax = 21.93940303657695 
+            text = "NEG_VOT" 
+        intervals [204]:
+            xmin = 21.93940303657695 
+            xmax = 21.959052756519277 
+            text = "VOT" 
+        intervals [205]:
+            xmin = 21.959052756519277 
+            xmax = 22.110381781623115 
+            text = "VOWEL" 
+        intervals [206]:
+            xmin = 22.110381781623115 
+            xmax = 22.395419501133787 
+            text = "" 
+        intervals [207]:
+            xmin = 22.395419501133787 
+            xmax = 22.44131628453851 
+            text = "" 
+        intervals [208]:
+            xmin = 22.44131628453851 
+            xmax = 22.457612807396863 
+            text = "VOT" 
+        intervals [209]:
+            xmin = 22.457612807396863 
+            xmax = 22.61601594173023 
+            text = "VOWEL" 
+        intervals [210]:
+            xmin = 22.61601594173023 
+            xmax = 22.887891156462587 
+            text = "" 
+        intervals [211]:
+            xmin = 22.887891156462587 
+            xmax = 22.906709656084658 
+            text = "" 
+        intervals [212]:
+            xmin = 22.906709656084658 
+            xmax = 22.993468831977236 
+            text = "VOT" 
+        intervals [213]:
+            xmin = 22.993468831977236 
+            xmax = 23.112609007979785 
+            text = "VOWEL" 
+        intervals [214]:
+            xmin = 23.112609007979785 
+            xmax = 23.356439909297055 
+            text = "" 
+        intervals [215]:
+            xmin = 23.356439909297055 
+            xmax = 23.379231796422275 
+            text = "" 
+        intervals [216]:
+            xmin = 23.379231796422275 
+            xmax = 23.45823692487748 
+            text = "VOT" 
+        intervals [217]:
+            xmin = 23.45823692487748 
+            xmax = 23.586267877229634 
+            text = "VOWEL" 
+        intervals [218]:
+            xmin = 23.586267877229634 
+            xmax = 23.830181405895694 
+            text = "" 
+        intervals [219]:
+            xmin = 23.830181405895694 
+            xmax = 23.846751367213553 
+            text = "" 
+        intervals [220]:
+            xmin = 23.846751367213553 
+            xmax = 23.935117890087977 
+            text = "VOT" 
+        intervals [221]:
+            xmin = 23.935117890087977 
+            xmax = 24.04773960530355 
+            text = "VOWEL" 
+        intervals [222]:
+            xmin = 24.04773960530355 
+            xmax = 24.30696145124717 
+            text = "" 
+        intervals [223]:
+            xmin = 24.30696145124717 
+            xmax = 24.333884945282463 
+            text = "" 
+        intervals [224]:
+            xmin = 24.333884945282463 
+            xmax = 24.421762379370353 
+            text = "VOT" 
+        intervals [225]:
+            xmin = 24.421762379370353 
+            xmax = 24.552284446587034 
+            text = "VOWEL" 
+        intervals [226]:
+            xmin = 24.552284446587034 
+            xmax = 24.810408163265308 
+            text = "" 
+        intervals [227]:
+            xmin = 24.810408163265308 
+            xmax = 24.826460096233617 
+            text = "" 
+        intervals [228]:
+            xmin = 24.826460096233617 
+            xmax = 24.90994952819838 
+            text = "VOT" 
+        intervals [229]:
+            xmin = 24.90994952819838 
+            xmax = 25.043064215058006 
+            text = "VOWEL" 
+        intervals [230]:
+            xmin = 25.043064215058006 
+            xmax = 25.350204081632654 
+            text = "" 
+        intervals [231]:
+            xmin = 25.350204081632654 
+            xmax = 25.369795918367352 
+            text = "" 
+        intervals [232]:
+            xmin = 25.369795918367352 
+            xmax = 25.451394853593616 
+            text = "VOT" 
+        intervals [233]:
+            xmin = 25.451394853593616 
+            xmax = 25.58557442315349 
+            text = "VOWEL" 
+        intervals [234]:
+            xmin = 25.58557442315349 
+            xmax = 25.875192743764174 
+            text = "" 
+        intervals [235]:
+            xmin = 25.875192743764174 
+            xmax = 25.903307119025957 
+            text = " " 
+        intervals [236]:
+            xmin = 25.903307119025957 
+            xmax = 25.98978217549646 
+            text = "VOT" 
+        intervals [237]:
+            xmin = 25.98978217549646 
+            xmax = 26.1118654128318 
+            text = "VOWEL" 
+        intervals [238]:
+            xmin = 26.1118654128318 
+            xmax = 26.3984126984127 
+            text = "" 
+        intervals [239]:
+            xmin = 26.3984126984127 
+            xmax = 26.44148526077098 
+            text = "" 
+        intervals [240]:
+            xmin = 26.44148526077098 
+            xmax = 26.500313099598817 
+            text = "VOT" 
+        intervals [241]:
+            xmin = 26.500313099598817 
+            xmax = 26.63796776740386 
+            text = "VOWEL" 
+        intervals [242]:
+            xmin = 26.63796776740386 
+            xmax = 26.90936507936508 
+            text = "" 
+        intervals [243]:
+            xmin = 26.90936507936508 
+            xmax = 26.922504749234214 
+            text = "" 
+        intervals [244]:
+            xmin = 26.922504749234214 
+            xmax = 27.00822430522597 
+            text = "VOT" 
+        intervals [245]:
+            xmin = 27.00822430522597 
+            xmax = 27.145685119458413 
+            text = "VOWEL" 
+        intervals [246]:
+            xmin = 27.145685119458413 
+            xmax = 27.4043537414966 
+            text = "" 
+        intervals [247]:
+            xmin = 27.4043537414966 
+            xmax = 27.43713492063492 
+            text = "" 
+        intervals [248]:
+            xmin = 27.43713492063492 
+            xmax = 27.50500029449009 
+            text = "VOT" 
+        intervals [249]:
+            xmin = 27.50500029449009 
+            xmax = 27.63524726663489 
+            text = "VOWEL" 
+        intervals [250]:
+            xmin = 27.63524726663489 
+            xmax = 27.910408163265306 
+            text = "" 
+        intervals [251]:
+            xmin = 27.910408163265306 
+            xmax = 27.929869614512477 
+            text = "" 
+        intervals [252]:
+            xmin = 27.929869614512477 
+            xmax = 28.078319160997737 
+            text = "NEG_VOT" 
+        intervals [253]:
+            xmin = 28.078319160997737 
+            xmax = 28.09482531726141 
+            text = "VOT" 
+        intervals [254]:
+            xmin = 28.09482531726141 
+            xmax = 28.24774279235504 
+            text = "VOWEL" 
+        intervals [255]:
+            xmin = 28.24774279235504 
+            xmax = 28.553990929705215 
+            text = "" 
+        intervals [256]:
+            xmin = 28.553990929705215 
+            xmax = 28.57756604967569 
+            text = "" 
+        intervals [257]:
+            xmin = 28.57756604967569 
+            xmax = 28.597623456790124 
+            text = "VOT" 
+        intervals [258]:
+            xmin = 28.597623456790124 
+            xmax = 28.747632494858408 
+            text = "VOWEL" 
+        intervals [259]:
+            xmin = 28.747632494858408 
+            xmax = 29.085578231292516 
+            text = "" 
+        intervals [260]:
+            xmin = 29.085578231292516 
+            xmax = 29.104496598639457 
+            text = "" 
+        intervals [261]:
+            xmin = 29.104496598639457 
+            xmax = 29.12026132554471 
+            text = "VOT" 
+        intervals [262]:
+            xmin = 29.12026132554471 
+            xmax = 29.2547573953824 
+            text = "VOWEL" 
+        intervals [263]:
+            xmin = 29.2547573953824 
+            xmax = 29.569455782312925 
+            text = "" 
+        intervals [264]:
+            xmin = 29.569455782312925 
+            xmax = 29.59209309649786 
+            text = "" 
+        intervals [265]:
+            xmin = 29.59209309649786 
+            xmax = 29.610151816824292 
+            text = "VOT" 
+        intervals [266]:
+            xmin = 29.610151816824292 
+            xmax = 29.76973086204179 
+            text = "VOWEL" 
+        intervals [267]:
+            xmin = 29.76973086204179 
+            xmax = 30.113854875283447 
+            text = "" 
+        intervals [268]:
+            xmin = 30.113854875283447 
+            xmax = 30.131521541950114 
+            text = "" 
+        intervals [269]:
+            xmin = 30.131521541950114 
+            xmax = 30.15485499462943 
+            text = "VOT" 
+        intervals [270]:
+            xmin = 30.15485499462943 
+            xmax = 30.31429042290869 
+            text = "VOWEL" 
+        intervals [271]:
+            xmin = 30.31429042290869 
+            xmax = 30.633605442176872 
+            text = "" 
+        intervals [272]:
+            xmin = 30.633605442176872 
+            xmax = 30.650696509524295 
+            text = "" 
+        intervals [273]:
+            xmin = 30.650696509524295 
+            xmax = 30.670553778122496 
+            text = "VOT" 
+        intervals [274]:
+            xmin = 30.670553778122496 
+            xmax = 30.811467444120506 
+            text = "VOWEL" 
+        intervals [275]:
+            xmin = 30.811467444120506 
+            xmax = 31.125238095238096 
+            text = "" 
+        intervals [276]:
+            xmin = 31.125238095238096 
+            xmax = 31.153926681783826 
+            text = "" 
+        intervals [277]:
+            xmin = 31.153926681783826 
+            xmax = 31.174491645558184 
+            text = "VOT" 
+        intervals [278]:
+            xmin = 31.174491645558184 
+            xmax = 31.35310857676404 
+            text = "VOWEL" 
+        intervals [279]:
+            xmin = 31.35310857676404 
+            xmax = 31.670521541950116 
+            text = "" 
+        intervals [280]:
+            xmin = 31.670521541950116 
+            xmax = 31.695278237421096 
+            text = "" 
+        intervals [281]:
+            xmin = 31.695278237421096 
+            xmax = 31.77078916838053 
+            text = "NEG_VOT" 
+        intervals [282]:
+            xmin = 31.77078916838053 
+            xmax = 31.7892510318276 
+            text = "VOT" 
+        intervals [283]:
+            xmin = 31.7892510318276 
+            xmax = 31.95340500114419 
+            text = "VOWEL" 
+        intervals [284]:
+            xmin = 31.95340500114419 
+            xmax = 32.24913832199547 
+            text = "" 
+        intervals [285]:
+            xmin = 32.24913832199547 
+            xmax = 32.27047619047619 
+            text = "" 
+        intervals [286]:
+            xmin = 32.27047619047619 
+            xmax = 32.289452570561785 
+            text = "VOT" 
+        intervals [287]:
+            xmin = 32.289452570561785 
+            xmax = 32.45023001175779 
+            text = "VOWEL" 
+        intervals [288]:
+            xmin = 32.45023001175779 
+            xmax = 32.764263038548755 
+            text = "" 
+        intervals [289]:
+            xmin = 32.764263038548755 
+            xmax = 32.79319877636589 
+            text = "" 
+        intervals [290]:
+            xmin = 32.79319877636589 
+            xmax = 32.813255700782186 
+            text = "VOT" 
+        intervals [291]:
+            xmin = 32.813255700782186 
+            xmax = 32.971524464600655 
+            text = "VOWEL" 
+        intervals [292]:
+            xmin = 32.971524464600655 
+            xmax = 33.278117913832205 
+            text = "" 
+        intervals [293]:
+            xmin = 33.278117913832205 
+            xmax = 33.29367944753659 
+            text = "" 
+        intervals [294]:
+            xmin = 33.29367944753659 
+            xmax = 33.40452447255706 
+            text = "VOT" 
+        intervals [295]:
+            xmin = 33.40452447255706 
+            xmax = 33.524132282728836 
+            text = "VOWEL" 
+        intervals [296]:
+            xmin = 33.524132282728836 
+            xmax = 33.72752834467121 
+            text = "" 
+        intervals [297]:
+            xmin = 33.72752834467121 
+            xmax = 33.742267020629384 
+            text = "" 
+        intervals [298]:
+            xmin = 33.742267020629384 
+            xmax = 33.844671265154105 
+            text = "VOT" 
+        intervals [299]:
+            xmin = 33.844671265154105 
+            xmax = 33.97385316077651 
+            text = "VOWEL" 
+        intervals [300]:
+            xmin = 33.97385316077651 
+            xmax = 34.18820861678005 
+            text = "" 
+        intervals [301]:
+            xmin = 34.18820861678005 
+            xmax = 34.197811481640976 
+            text = "" 
+        intervals [302]:
+            xmin = 34.197811481640976 
+            xmax = 34.27692326616181 
+            text = "VOT" 
+        intervals [303]:
+            xmin = 34.27692326616181 
+            xmax = 34.3951761148904 
+            text = "VOWEL" 
+        intervals [304]:
+            xmin = 34.3951761148904 
+            xmax = 34.59952380952382 
+            text = "" 
+        intervals [305]:
+            xmin = 34.59952380952382 
+            xmax = 34.61166383219955 
+            text = "" 
+        intervals [306]:
+            xmin = 34.61166383219955 
+            xmax = 34.70361387289959 
+            text = "VOT" 
+        intervals [307]:
+            xmin = 34.70361387289959 
+            xmax = 34.824588445970285 
+            text = "VOWEL" 
+        intervals [308]:
+            xmin = 34.824588445970285 
+            xmax = 35.02798185941044 
+            text = "" 
+        intervals [309]:
+            xmin = 35.02798185941044 
+            xmax = 35.04127492376261 
+            text = "" 
+        intervals [310]:
+            xmin = 35.04127492376261 
+            xmax = 35.11937661614353 
+            text = "VOT" 
+        intervals [311]:
+            xmin = 35.11937661614353 
+            xmax = 35.22736232932889 
+            text = "VOWEL" 
+        intervals [312]:
+            xmin = 35.22736232932889 
+            xmax = 35.39897959183674 
+            text = "" 
+        intervals [313]:
+            xmin = 35.39897959183674 
+            xmax = 35.415897581254725 
+            text = "" 
+        intervals [314]:
+            xmin = 35.415897581254725 
+            xmax = 35.49057493540052 
+            text = "VOT" 
+        intervals [315]:
+            xmin = 35.49057493540052 
+            xmax = 35.59903406399448 
+            text = "VOWEL" 
+        intervals [316]:
+            xmin = 35.59903406399448 
+            xmax = 35.78936507936508 
+            text = "" 
+        intervals [317]:
+            xmin = 35.78936507936508 
+            xmax = 35.805081254724115 
+            text = "" 
+        intervals [318]:
+            xmin = 35.805081254724115 
+            xmax = 35.87971927437641 
+            text = "VOT" 
+        intervals [319]:
+            xmin = 35.87971927437641 
+            xmax = 36.01584746336345 
+            text = "VOWEL" 
+        intervals [320]:
+            xmin = 36.01584746336345 
+            xmax = 36.23965986394558 
+            text = "" 
+        intervals [321]:
+            xmin = 36.23965986394558 
+            xmax = 36.25468610301264 
+            text = "" 
+        intervals [322]:
+            xmin = 36.25468610301264 
+            xmax = 36.34462084533513 
+            text = "VOT" 
+        intervals [323]:
+            xmin = 36.34462084533513 
+            xmax = 36.463898680684395 
+            text = "VOWEL" 
+        intervals [324]:
+            xmin = 36.463898680684395 
+            xmax = 36.67120181405896 
+            text = "" 
+        intervals [325]:
+            xmin = 36.67120181405896 
+            xmax = 36.69084249084249 
+            text = "" 
+        intervals [326]:
+            xmin = 36.69084249084249 
+            xmax = 36.758528911564625 
+            text = "VOT" 
+        intervals [327]:
+            xmin = 36.758528911564625 
+            xmax = 36.89192840945902 
+            text = "VOWEL" 
+        intervals [328]:
+            xmin = 36.89192840945902 
+            xmax = 37.10650793650794 
+            text = "" 
+        intervals [329]:
+            xmin = 37.10650793650794 
+            xmax = 37.11431864809416 
+            text = "" 
+        intervals [330]:
+            xmin = 37.11431864809416 
+            xmax = 37.175135933161144 
+            text = "VOT" 
+        intervals [331]:
+            xmin = 37.175135933161144 
+            xmax = 37.31267110600108 
+            text = "VOWEL" 
+        intervals [332]:
+            xmin = 37.31267110600108 
+            xmax = 37.53541950113379 
+            text = "" 

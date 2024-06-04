@@ -1,0 +1,10 @@
+dim_VOT0_PV10.wav
+dim_VOT0_PV100.wav
+dim_VOT0_PV20.wav
+dim_VOT0_PV30.wav
+dim_VOT0_PV40.wav
+dim_VOT0_PV50.wav
+dim_VOT0_PV60.wav
+dim_VOT0_PV70.wav
+dim_VOT0_PV80.wav
+dim_VOT0_PV90.wav

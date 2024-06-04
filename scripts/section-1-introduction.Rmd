@@ -1,23 +1,242 @@
-<!-- Do NOT knit this document. It is part of a larger document. Instead knit the main document (my-apa-formatted-article) -->
+```{r setup, include=FALSE, message=FALSE}
+if (!exists("PREAMBLE_LOADED")) source("preamble.R")
+```
 
 # Introduction
-Talkers who share a common language vary in the way they pronounce its linguistic categories. Yet, listeners of the same language background typically cope with such variation without much trouble. In scenarios where a talker produces those categories in an unexpected and unfamiliar way, comprehending their speech may pose a real challenge. However, brief exposure to the talker's accent (sometimes just minutes) can be sufficient for the listener to overcome any initial comprehension difficulty [e.g. @bradlow2008perceptual; @clarke2004rapid; @xie2018rapid; @xie2021cross].  This adaptive skill is in a sense, trivial for any expert language user but becomes complex when considered from the angle of acoustic-cue-to-linguistic-category mappings. Since talkers differ in countless ways and each listening occasion is different in circumstance, there is not a single set of cues that can be definitively mapped to each linguistic category. Listeners instead have to contend with many possible cue-to-category mappings and infer the intended category of the talker. How listeners achieve prompt and accurate comprehension of speech in spite of this variability remains the overarching aim of speech perception research.
+Human speech perception is a remarkable feat. Successful speech recognition requires that listeners map the acoustic signal onto words and meanings. But this signal-to-meaning mapping varies across talkers and context. The same word spoken by different talkers can sound quite different; and conversely, the same acoustic signal can imply different words depending on the talker. Yet, listeners typically recognize speech quickly and accurately across a wide range of talkers and acoustic conditions (after decades of advances, automatic speech recognition is just beginning to approach the recognition accuracy that most listeners display during everyday speech perception).
 
-Researchers have been exploring the hypothesis that listeners solve this perceptual problem by exploiting their knowledge gained from experience with different talkers. This knowledge is often implicit and context contingent since listeners are sensitive to both social and environmental cues (e.g. age, sex, group identity, native language etc.) that are relevant for optimal speech perception. Impressively, shifts in perception can be induced implicitly through subtle cues such as the presence of cultural artefacts that hint at talker provenance, [@hay2010stuffed] and explicitly such as when the listener is instructed to imagine a talker as a man or a woman [@johnson1999auditory]. While these and other related effects of exposure-induced changes speak to the malleability of human perception, it remains unclear how human perceptual systems strike the balance between stability and flexibility.
+Research has identified *adaptivity* as a key component to the robustness of human speech perception. Although first encounters with an unfamiliar accent can cause initial processing difficulty, this difficulty diminishes with exposure, sometimes rapidly [e.g., @bradlow-bent2008; @bradlow2023; @sidaras2009; @xie2021jep]. Eighteen short sentences from a talker with an unfamiliar accent---even a moderately strong second language accent---have been found to significantly improve subsequent perception of that talker's speech [@clarke-garrett2004; @xie2018]. Findings like these suggest that speech perception can be highly malleable, allowing listeners to adjust the mapping from acoustics to phonetic categories and word meanings. While such adaptivity may seem obvious in hindsight, its discovery was a major breakthrough in the field of speech perception, spurring the development of new paradigms and theories [for reviews, see @bent-baeseberk2021; @cummings-theodore2023; @schertz-clare2020; @zheng-samuel2023]. 
 
-One possibility is that listeners continuously update their implicit knowledge with each talker encounter by integrating prior knowledge of cue-to-category distributions with the statistics of the current talker's productions, leading to changes in representations which affect listener categorisation behaviour. Broadly speaking, many theoretical accounts would agree with this assertion. Connectionist (McClelland & Elman 1986; Luce & Pisoni, 1998), and Bayesian models of spoken word recognition (Norris & McQueen, 2008) and adaptation [@kleinschmidt2015robust] are generative systems that abstract the frequency of input.  Even exemplar models of speech perception (Goldinger 1996, 1998; Johnson, 1997; Pierrehumbert 2001) which encode high fidelity memories of speaker-specific phonetic detail converge to a level of generalisation due to effects of token frequency [@Pierrehumbert2003; @DragerKirtley2016].
+We thus know *that* listeners adapt to unfamiliar talkers. What remains unclear, however, is *how* adaptation is achieved. How do listeners integrate information from a new talker, and how does this come to incrementally change their interpretation of that talker's speech? Research on adaptive speech perception tends to discuss informal---often descriptive, rather than explanatory---hypotheses [see also @norris-cutler2021].<!-- TO DO: revisit after initial submission: ^[This tendency is hardly specific to speech perception research. Seminal works from the early days of the cognitive sciences describe the field as often phenomenon-driven rather than theory-driven, and insightfully discussed the consequences of this tendency [@newell1973; @platt1964]. Recent reviews have found this trend continued [@yarkoni-westfall2017].] --> This includes references to "boundary re-tuning/shift", "perceptual/phonetic recalibration/retuning", "category shift/expansion" or similar ideas [e.g., @mcqueen2006; @mitterer2013; @reinisch-holt2014; @schmale2012; @vroomen-baart2009; @xie2017; @zheng-samuel2020]. Such descriptions do not specify what mechanisms support adaptive speech perception, nor do they make predictions about how adaptation unfolds incrementally with each new observation from an unfamiliar talker. 
+
+Viewed from this perspective, research on adaptive speech perception can appear to be an open-ended list of empirical questions. Is adaptation more or less immediate, or does it unfold gradually? If the latter, do changes in listeners' behavior accumulate additively, leading to more or less linear changes in behavior? If not a linear development, is adaptation first slow and then fast, or first fast and then slow? And, how do differences in listeners' prior experience affect how listeners adapt? Are there limits to listeners' ability to fully adapt to a new talker? Or can we adapt to more or less any accent provided sufficient input? Although each of these questions can be studied separately, there are benefits to testing predictive theories that might offer unifying explanations for multiple properties of adaptive speech perception.
+
+Critically, there are  theories that make clear, quantifiable predictions about all of these questions---including basic predictions that remain untested. One of the most developed of these theories is the hypothesis that adaptive speech perception draws on *distributional learning* [e.g., @apfelbaum-mcmurray2015; @harmon2019; @johnson1997; @kleinschmidt-jaeger2015; @magnuson2020; @nearey-assmann2007; @lancia-winter2013; @sohoglu-davis2016]. Distributional learning models make untested predictions about how adaptation unfolds incrementally during the initial moments of listening to an unfamiliar talker. While distributional learning models differ from each other in important aspects, they share the central assumption that listeners incrementally learn and store information about talkers' speech. This includes information about the phonetic distributions that characterize the talker's speech, such as the average values of phonetic cues, their variability, or even the full phonetic distributions of all speech categories. These statistical properties are then used to interpret subsequent speech from the talker, supporting robust speech recognition across talkers [for reviews, see @bent-baeseberk2021; @schertz-clare2020; @xie2023]. <!-- For example, some of the most parsimonious distributional learning accounts---normalization accounts---assume that listeners adapt their expectations for the phonetic cues the talker produces. Talkers with faster speech rates, for example, might have overall shorter durational cues. Normalization accounts propose that listeners learn, say, the average value that a talker produces for a cue, and interpret subsequent speech from the talker relative to this expectation [@nearey-assmann2007; @mcmurray-jongman2011]. Less parsimonious distributional learning accounts propose that listeners even learn the cue distributions that the talker produces for each category [@johnson1997; @kleinschmidt-jaeger2015]. --> 
+
+With this shared assumption, distributional learning models also share several core predictions. Consider a listener's initial encounter with an unfamiliar talker who produces some sounds, such as /d/ and /t/, in an unexpected way (Figure \@ref(fig:predictions)A). Listeners' perception is predicted to change incrementally with exposure (Figure \@ref(fig:predictions)B-C). Distributional learning models make four predictions about how these changes unfold incrementally. First, the direction and magnitude of that change should gradiently depend on listeners' prior expectations based on relevant previously experienced speech input from other talkers (**prediction 1 - *prior expectations***), and both the amount (**prediction 2a - *exposure amount***) and distribution of phonetic cues in the exposure input from the unfamiliar talker [**prediction 2b - *exposure distribution* **, for review, see @xie2023]. Specifically, listeners' categorization functions---the mapping from acoustics to phonetic categories and words---should gradually shift from a starting point that reflects the statistics of previously experienced speech towards a target that reflects the statistics of the new talker's speech. Existing models further predict that this shift proceeds until the listener has fully learned the statistics of the new talker's speech (**prediction 3 - *learn to convergence***). Finally, some distributional learning models further commit to specific learning mechanisms that constrain how exactly adaptation is expected to accumulate incrementally: both error-driven theories [@harmon2019; @olejarczuk2018; @sohoglu-davis2016] and theories of ideal information integration [@kleinschmidt-jaeger2015; @kleinschmidt2020] predict that adaptation initially proceeds quickly and then slows down as the listener approaches the correct mapping from the acoustic signal to phonetic categories (**prediction 4 - *diminishing returns***).^[Predictions (1)-(4) assume that listeners *know* that they are listening to the same new talker. Talker recognition is itself an active inference process that we do not further discuss here [but see @kleinschmidt-jaeger2015; @magnuson-nusbaum2007].] Figure \@ref(fig:predictions)D illustrates these predictions and contrasts them with other possible scenarios, such as immediate talker switching; linear, rather than sublinear, changes to the point of convergence; or convergence against partial adaptation. These scenarios are not meant as an exhaustive list, but rather to illustrate that there are many possible ways that adaptive speech perception might unfold---some more plausible than others.
+
+(ref:predictions) Some hypothetical ways in which adaptive changes in listeners perception might unfold incrementally, using the pronunciation of US English word-initial /d/ and /t/ as an example (as in "dip" vs. "tip"). **Panel A:** Transparent lines indicate cross-talker variability in the realization of /d/ and /t/ along the primary cue used to distinguish them (voice onset timing or VOT). Shown are 20 random talkers from a database of connected speech [@chodroff-wilson2018]. The thicker solid lines indicate a 'typical' talker (averaging over all talkers in the database). Dashed lines indicate a hypothetical unfamiliar talker with a noticeably different distribution of VOT values. **Panel B:** Ideal categorization functions along the phonetic VOT continuum for speech from a typical talker (*idealized pre-exposure listener*, SI \@ref(sec:idealized-prior-listeners)) and speech from the unfamiliar talker (*idealized learner* that has fully learned that talkers distributions, SI \@ref(sec:idealized-learners)). Grey arrows point to the points of subjective equality (PSE), the point along the phonetic VOT continuum at which listeners are equally likely to identify a sound as an instance of /d/ or /t/. **Panel C:** The same as in Panel B but just showing the PSE. **Panel D:** Different ways in which listeners' PSEs along the phonetic VOT continuum might incrementally change with increasing exposure to the unfamiliar talker (from more transparent to less transparent). The horizontal lines indicates the ideal PSEs from Panel C. 
+
+```{r predictions, fig.height=base.height*3+2/3, fig.width=base.width*5, fig.cap="(ref:predictions)", fig.pos="H"}
+# Create all talker-specific IOs for connected speech data, using only the VOT cue
+d.talker_IO.VOT <- 
+  make_IOs_from_data (
+    data = d.chodroff_wilson.connected,
+    cues = c("VOT"),
+    groups = "Talker") 
+
+# Add x, PSE, categorization, and get gaussian geoms
+d.talker_IO.VOT %<>%
+  nest(io = -Talker) %>%
+  add_x_to_IO() %>%
+  add_PSE_and_categorization_to_IO() %>%
+  unnest(io) %>%
+  add_gaussians_as_geoms_to_io(alpha = .2, linetype = 1, linewidth = .5) %>%
+  bind_rows(
+    # Do the same after aggregating all talker-specific IOs into a single 'typical' talker IO
+    aggregate_models_by_group_structure(d.talker_IO.VOT, group_structure = "Talker") %>%
+      mutate(Talker = "typical") %>%
+      nest(io = -Talker) %>%
+      add_x_to_IO() %>%
+      add_PSE_and_categorization_to_IO() %>%
+      unnest(io) %>%
+      add_gaussians_as_geoms_to_io(alpha = 1, linetype = 1, linewidth = 1.2),
+    # Do the same after aggregating all talker-specific IOs into a single talker that is shifted by 35ms relative to the 'typical' talker
+    aggregate_models_by_group_structure(d.talker_IO.VOT, group_structure = "Talker") %>%
+      mutate(
+        mu = map(mu, ~ .x + 35),
+        Talker = "unfamiliar") %>%
+      nest(io = -Talker) %>%
+      add_x_to_IO() %>%
+      add_PSE_and_categorization_to_IO() %>%
+      unnest(io) %>%
+      add_gaussians_as_geoms_to_io(alpha = 1, linetype = "longdash", linewidth = 1.2))
+
+p.gaussian <- 
+  ggplot() +
+  (d.talker_IO.VOT %>% 
+     filter(
+       !(Talker %in% c("typical", "unfamiliar")),
+       Talker %in% sample(unique(Talker), 20)) %>% 
+     pull(gaussian)) + 
+  (d.talker_IO.VOT %>% 
+     filter(Talker == "typical") %>% .$gaussian) +
+  scale_colour_manual(values = c(colours.category_greyscale)) +
+  guides(colour = "none") +
+  new_scale_colour() +
+  (d.talker_IO.VOT %>% 
+     filter(Talker == "unfamiliar") %>% .$gaussian) +
+  scale_colour_manual("Category", values = c("#02427e", "#b4dafe")) +
+  guides(color = guide_legend(override.aes = list(size = 0.5, colour = c(colours.category_greyscale), values = c("/d/", "/t/")))) +
+  labs(x = "VOT (ms)", y = "Density") +
+  theme(
+    legend.background = element_rect(fill='transparent'),
+    legend.box.background = element_rect(fill='transparent'),
+    legend.key = element_rect(fill = "transparent"),
+    legend.key.size = unit(0.5, "cm"),
+    legend.key.spacing = unit(0.05, "cm"),
+    legend.key.height = unit(0.01, "cm"),
+    legend.title = element_text(size = 7), 
+    legend.text = element_text(size = 6),
+    legend.position = "inside",
+    legend.position.inside = c(0.79,0.8))
+
+p.cat <- 
+  d.talker_IO.VOT %>% 
+  filter(Talker %in% c("typical", "unfamiliar")) %>% 
+  select(Talker, category, categorization, PSE) %>% 
+  filter(category == "/t/") %>% 
+  unnest(categorization, names_repair = "unique") %>% 
+  ggplot(aes(x = VOT, y = response, group = Talker, colour = Talker, linetype = Talker)) +
+  geom_line(linewidth = 1.2) +
+  scale_colour_manual(values = c("grey", "#02427e")) +
+  scale_linetype_manual(values = c("solid", "longdash")) +
+  #scale_x_continuous("VOT (ms)", limits = c(-25, 130), breaks = c(0, 37, 72, 100)) +
+  scale_y_continuous('Proportion "t"-responses', breaks = c(0, .5, 1)) +
+  guides(linetype = "none", colour = "none") +
+   geom_segment(
+     data = 
+       d.talker_IO.VOT %>% 
+       filter(Talker %in% c("typical", "unfamiliar")) %>%
+       mutate(x = PSE, xend = PSE, y = .5, yend = .01),
+    mapping = aes(x = x, xend = xend, y = y , yend = yend, color = Talker),
+    alpha = 0.5,
+    arrow = arrow(type = "open" , length = unit(0.04, "npc")),
+    inherit.aes = F) +
+  scale_x_continuous(limits = c(15, 90), breaks = c(37, 72)) +
+  scale_colour_manual(values = c("grey", "#02427e"))
 
 
-At the level of acoustic-phonetic input, listeners' implicit knowledge refer to the way relevant acoustic cues that distinguish phonological categories are distributed across talkers within a linguistic system. Talkers of US-English, for instance, distinguish the /d/-/t/ contrasts primarily through the voice-onset-time (VOT) acoustic cue. Given its relevance for telling word pairs such as "din" and "tin" apart, a distributional learning hypothesis would posit that listeners learn the distribution of VOT cues when talkers produce those stop consonant contrasts in word contexts. Earliest evidence for listener sensitivity to individual talker statistics in the domain of stop consonants come from studies such as Allen & Miller [2004, also @theodore2010characteristics] but more recent studies that formalise the problem of speech perception as rational inference have shown that listeners' behavioural responses are probabilistic function of the exposure talker's statistics [@clayards2008perception; @kleinschmidt2016you; and @theodore2019distributional]. 
+p.PSE <- 
+  d.talker_IO.VOT %>% 
+  filter(Talker %in% c("typical", "unfamiliar")) %>%
+  select(Talker, category, PSE) %>% 
+  group_by(Talker) %>% 
+  filter(category == "/t/") %>% 
+  ggplot(aes(x = Talker, y = PSE, colour = Talker)) +
+  geom_point(size = 1.5) +
+  scale_colour_manual(values = c("grey", "#02427e"), guide = "none") + 
+  scale_x_discrete("Talker") +
+  scale_y_continuous("Ideal PSE (ms VOT)", limits = c(30, 75), breaks = c(37, 72))
+ 
+PSE_change <- 
+  expand_grid(
+    PSE = c(),
+    learning_pattern = factor(c("immediate", "linear", "diminished", "premature")),
+    exposure_amount = factor(c("none", "1/3", "2/3", "complete"))) %>%
+  mutate(
+    learning_pattern = fct_relevel(learning_pattern, "immediate", "linear", "diminished", "premature"),
+    exposure_amount = fct_relevel(exposure_amount, "none", "1/3", "2/3", "complete"),
+    PSE = case_when(
+      exposure_amount == "none" ~ 37,
+      exposure_amount == "complete" & learning_pattern %in% c("immediate", "linear") ~ 72,
+      exposure_amount %in% c("1/3", "2/3") & learning_pattern == "immediate" ~ 72,
+      exposure_amount == "1/3" & learning_pattern == "linear" ~ 37 + ((72 - 37 + 1)/3),
+      exposure_amount == "2/3" & learning_pattern == "linear" ~ 37 + 2 * ((72 - 37 + 1)/3),
+      exposure_amount == "1/3" & learning_pattern == "diminished" ~ 37 + ((72 - 37 + 1)/2),
+      exposure_amount == "2/3" & learning_pattern == "diminished" ~ 37 + 1.6 * ((72 - 37 + 1)/2),
+      exposure_amount == "complete" & learning_pattern == "diminished" ~ 37 + 1.85 * ((72 - 37 + 1)/2) ,
+      exposure_amount == "1/3" & learning_pattern == "premature" ~ 37 + ((72 - 37 + 1)/2),
+      exposure_amount %in% c("2/3", "complete") & learning_pattern == "premature" ~ 37 + 25))
 
-@clayards2008perception for instance found that listeners responded with greater uncertainty after they were exposed to VOT distributions for a "beach-peach" contrast that had wider variances as compared to another group who had heard the same contrasts with narrower variances. Across both wide and narrow conditions, the mean values of the voiced and voiceless categories were kept constant and set at values that were close to the expected means for /b/ and /p/ in US English. The study was one of the first to demonstrate that at least in the context of an experiment, listeners categorisation behaviour was a function of the variance of the exposure talker's cue distributions -- listeners who were exposed to a wide distribution of VOTs showed greater uncertainty in their perception of the stimuli, exhibiting a flatter categorisation function on average, compared to listeners who were exposed to a narrow distribution.
+p.PSE_change <- 
+  PSE_change %>% 
+  ggplot(aes(exposure_amount, PSE, alpha = exposure_amount, group = 1), colour = "#02427e") +
+  geom_rect(
+    data = PSE_change  %>% 
+      nest(data = c(exposure_amount, PSE)) %>% 
+      group_by(learning_pattern) %>% 
+      slice_sample(n = 1) %>% 
+      select(learning_pattern) %>% 
+      mutate(ymin = ifelse(learning_pattern == "diminished", -Inf, NA),
+             ymax = ifelse(learning_pattern == "diminished", Inf, NA)),
+    mapping = aes(xmin = -Inf, ymin = ymin, ymax = ymax, xmax = Inf),
+    fill = "yellow",
+    alpha = .15,
+    inherit.aes = F) +
+  geom_point(size = 1.8, colour = "#02427e") +
+  geom_line(alpha = .3) +
+  geom_hline(aes(yintercept = 37), linetype = 1, alpha = .8, colour = "grey") +
+  geom_hline(aes(yintercept = 72), linetype = 2, alpha = .6, colour = "#02427e") +
+  scale_x_discrete("Exposure amount", breaks = c("none", "complete"), labels = c("none", "full")) +
+  scale_y_continuous("PSE (ms VOT)", limits = c(25, 75), breaks = c(30, 40, 50, 60, 70)) +
+  guides(alpha = "none") +
+  facet_wrap(~learning_pattern, nrow = 1, labeller = labeller(learning_pattern = c("immediate" = "immediate switch", "linear" = "linear", "diminished" = "convergence w/\ndiminishing returns", "premature" = "premature convergence\nw/ diminishing returns"))) +
+  theme(strip.text = element_text(size = 9))
 
-In a later study @kleinschmidt2016you tested listener response to talker statistics by shifting the means of the voiced and voiceless categories between conditions. Specifically, the mean values for /b/ and /p/ were shifted rightwards by several magnitudes, as well as leftwards, from the expected mean values of a typical American English talker while the category variances remained identical and the distance between the category means were kept constant. With this manipulation of means they were able to investigate how inclined listeners are to adapt their categorisation behaviors when the statistics of the exposure talker were shifted beyond the bounds of a typical talker.  
 
-In all exposure conditions, listeners on average adapted to the exposure talker by shifting their categorization function in the direction of the predicted function of an ideal listener (a listener who perfectly learned the exposure talker's cue statistics). However, in all conditions, listener categorization fell short of the predicted ideal categorization boundary. This difference between the observed and predicted categorization functions was larger, the greater the magnitude of the shift from the typical talker's distribution, suggesting some constraints on adaptation.
+((p.gaussian | p.cat | p.PSE) / p.PSE_change) +
+  plot_annotation(tag_levels = 'A', tag_suffix = ")") &
+  theme(plot.tag = element_text(face = "bold"))
+```
 
-The study we report here builds on the pioneering work of @clayards2008perception and @kleinschmidt2016you with the aim to shed more light on the role of prior implicit knowledge on adaptation to an unfamiliar talker.
+Although predictions (1)-(4) are specific and testable, they remain largely untested. This is in part due to limitations of the designs and paradigms used in research on adaptive speech perception. The most common paradigms expose one group of listeners to one speech pattern (e.g., rightward shifted VOT distributions as in Figure \@ref(fig:predictions)A), and a second group of listeners to another speech pattern (e.g., leftward shifted VOT distributions). Following exposure, both groups are tested on their ability to recognize one of the two speech patterns. Such designs were effective in establishing the *existence* of adaptive speech perception [see also @cummings-theodore2023]. They do, however, offer only weak tests of existing theories [for demonstration, see @xie2023]. Put simply, it is one thing to show that differences in exposure lead to differences in behavior; it is another thing to test whether the direction and magnitude of changes in behavior can be consistently explained by existing theories (given the distribution of phonetic properties during exposure). 
 
-Specifically, while K&J16 demonstrated how prior beliefs of listeners can be inferred computationally from post-exposure categorisation, their experiment was not designed to capture listener categorisation data before exposure to a novel talker. Nor did they run intermittent tests to scrutinise the progress of adaptation. In the ideal adapter framework, listener expectations are predicted to  be rationally updated through integration with the incoming speech input and thus can theoretically be analysed on a trial-by-trial basis. The overall design of the studies reported here were motivated by our aim to understand this incremental belief-updating process which has not been closely studied in previous work. We thus address the limitations of previous work and in conjunction, make use of ideal observer models to validate baseline assumptions that accompany this kind of speech perception study -- that listeners hold prior expectations or beliefs about cue distributions based on previously experienced speech input (here taken to mean native AE listeners' lifetime of experience with AE). Arriving at a definitive conclusion of what shape and form those beliefs take is beyond the scope of this study however we attempt to explore the various proposals that have emerged from more than half a century of speech perception research.
+Recent reviews have thus called for the development of paradigms that can more strongly constrain theories of adaptive speech perception [@bent-baeseberk2021; @coretta2023; @schertz-clare2020; @xie2023]. Based on computational simulations, Xie and colleagues argue that strong tests require (a) information about the distribution of phonetic cues in both listeners' prior experience and during exposure, (b) paradigms that measure incremental changes in listeners' behavior both within and across exposure conditions, and (c) analyses that link the latter to the former. The present study responds to this call. We present a novel incremental exposure-test paradigm, and use it to test predictions (1)-(4), repeated in Table \@ref(tab:predictions). 
 
-A secondary aim was to begin to address possible concerns of ecological validity of prior work. While no speech stimuli is ever ideal, previous work on which the current study is based did have limitations in one or two aspects:the artificiality of the stimuli or the artificiality of the distributions. For e.g. [@clayards2008perception] and [@kleinschmidt2016you] made use of synthesised stimuli that were robotic or did not sound human-like. The second way that those studies were limited was that the exposure distributions of the linguistic categories had identical variances [see also @theodore2019distributional] unlike what is found in production data where the variance of the voiceless categories are typically wider than that of the voiced category [@chodroff2017structure]. We take modest steps to begin to improve the ecological validity of this study while balancing the need for control through lab experiments by employing more natural sounding stimuli as well as by setting the variances of our exposure distributions to better reflect empirical data on production (see section x.xx. of SI).
+```{r block-design-figure, fig.height=3, fig.width=5, fig.cap="Incremental exposure-test design of our experiment. The three exposure conditions (rows) differed in the distribution of voice onset time (VOT), the primary phonetic cue to syllable-initial /d/ and /t/ in English (e.g., \"dip\" vs. \"tip\"). Test blocks assessed L1-US English listeners' categorization functions over VOT stimuli that were held identical within and across conditions.", fig.pos="H"}
+knitr::include_graphics("../figures/block_design.png")
+```
+
+Figure \@ref(fig:block-design-figure) illustrates our approach. Between groups of participants, we manipulate the amount and distribution of phonetic cues in the exposure input. <!-- We focus on a phonetic contrast that is known to be subject to adaptive changes in perception [syllable-initial /d/-/t/ in US English, @kleinschmidt2015; @kraljic-samuel2006]. --> The three exposure distributions we use are shifted to different degrees both relative to each other, and relative to listeners' prior expectations. This allows us to test predictions (1) and (2a,b) that direction and magnitude of that change should gradiently depend on how and how much the current talker's speech deviates from the listeners’ prior expectations. We measure listeners' categorization functions at multiple points during exposure, and determine whether the direction and magnitude of the observed changes in behavior are consistent with the predictions of distributional learning models, including prediction (4) about the diminishing rate of changes in listeners' behavior. To further guide the interpretation of results, we use normative models of adaptive speech perception [ideal observers and adaptors, @feldman2009; @kleinschmidt-jaeger2015; @massaro1989; @xie2023]. This enables predictions about---intentionally idealized---listeners and distributional learners, prior to considerations about memory or other cognitive limitations. Comparisons of participants' categorization functions against these normative models provides a principled and informative approach to identifying constraints on adaptive speech perception, addressing prediction (3) about learning to convergence.
+
+
+\begin{table}[!ht]
+\begin{small}
+\begin{tabular}{p{0.28\textwidth}p{0.7\textwidth}}
+\hline
+Prediction & Evidence that the {\em outcome} of learning is compatible with this prediction \\
+\hline
+(1) - {\em prior expectations} & (Kang \& Schertz, 2021; Schertz et al., 2016; Tan et al., 2021; Xie et al., 2021) \\
+
+(2a) - {\em exposure amount}  & (Vroomen et al., 2007; Cummings \& Theodore, 2023; Kleinschmidt \& Jaeger, 2011; Liu \& Jaeger, 2018) \\
+
+(2b) - {\em exposure distribution} & (Chl\'adkov\'a et al., 2017; Clayards et al., 2008; Colby et al., 2018; Hitczenko \& Feldman, 2016; Idemaru \& Holt, 2011; Kleinschmidt, 2020; Theodore \& Monto, 2019) \\
+
+(3) - {\em learn to convergence}  & --- \\
+
+(4) - {\em diminishing returns} & --- \\
+
+\hline
+\end{tabular}
+\caption{Predictions of distributional learning models about incremental adaptation to an unfamiliar talker. To the best of our knowledge, only prediction (2a) has been tested against {\em incremental} changes in listeners' behavior, and predictions (3) and (4) have not been tested at all.}
+\label{tab:predictions}
+\end{small}
+\end{table}
+
+<!-- Prediction 1 ({\bf prior expectations}) & Listeners' categorization function prior to informative exposure to an unfamiliar talker's speech is determined by the statistics of the speech input they have previously experienced from other talkers. & AA, \cite{kang-schertz2021, schertz2016, tan2021, xie2021cognition} \\ -->
+
+<!-- Prediction 2a ({\bf exposure amount}) & \multirow{2}{.6\textwidth}{With increasing exposure to the new talker, listeners' adapt their prior expectations by integrating information about the talker's phonetic distributions. The direction and magnitude of changes in listeners' categorization function relative to their pre-exposure behavior are determined by the amount and distribution of phonetic cues relative the statistics of previously experienced speech input}. & LGPL/VGPL, \cite{cummings-theodore2023, kleinschmidt-jaeger2012, liu-jaeger2018, vroomen2007} \\ -->
+
+<!-- Prediction 2b ({\bf exposure distribution}) & & AA, \cite{xie2021cognition, tan2021}; DL, \cite{clayards2008, chladkova2017, colby2018, idemaru-holt2011, kleinschmidt-jaeger2016, theodore-monto2019} \\ -->
+
+<!-- Prediction 3 ({\bf learn to convergence}) &  With additional exposure, listeners will continue to adapt until they have fully learned the exposure distribution. & \\ -->
+
+<!-- Prediction 4 ({\bf diminishing returns}) & With each new observation, changes in listeners' behavior depend on the prediction error (or equivalently, the amount of new information) associated with that observation. As a consequence, listeners' behavior should initially change quickly and then less and less as listeners converge against the exposure distribution. & LGPL \cite{liu-jaeger2018} \\ -->
+
+Our paradigm integrates, and builds on, advances in separate lines of research on unsupervised distributional learning during speech perception [@clayards2008; @colby2018; @kleinschmidt2020; @theodore-monto2019], lexically- or visually-guided perceptual learning [@cummings-theodore2023; @kleinschmidt-jaeger2012; @vroomen2007], and adaptation to natural accents [@hitczenko-feldman2016; @tan2021; @xie2021cognition]. We return to these and related works in the general discussion. For readers unfamiliar with this literature, we briefly make two observations that motivate the paradigm in Figure \@ref(fig:block-design-figure).
+
+First, as indicated in Table \@ref(tab:predictions), previous research has focused on the *outcome* of learning, leaving open whether adaptive speech perception unfolds over time in ways consistent with distributional learning models. For example, in an important early study, @clayards2008 exposed two different groups of US English listeners to instances of "b" and "p" that differed in their distribution along the voice onset time continuum (VOT). VOT is the primary phonetic cue to word-initial stops in US English: the voiced category (e.g., /b/, /d/, or /g/) is produced with lower VOT than the voiceless category (/p/, /t/, /k/). Clayards and colleagues held the VOT means of /b/ and /p/ constant between the two exposure groups, but manipulated whether both /b/ and /p/ had wide or narrow variance along VOT. Using a distributional learning model similar to the idealized learners we presented below, Clayards and colleagues predicted that listeners in the wide variance group would exhibit a more shallow categorization function than the narrow variance group. This is precisely what they found, providing support for prediction (2b) that the distribution of phonetic cues in the exposure input causes changes in listeners' behavior [see also @nixon2016; @theodore-monto2019]. Findings like these suggests that the outcome of adaptation is qualitatively compatible with predictions (2a) and (2b) of distributional learning models [see also @hitczenko-feldman2016; @tan2021; @xie2021cognition].^[A related line of work has used distributional learning or explicit training paradigms to study the acquisition of *novel* sound contrasts [e.g., @maye2002; @mcclelland1999; @pajak-levy2012; @pisoni1982]. These studies, too, have observed outcomes predicted by distributional learning models [for review, see @pajak2016].] 
+
+These findings are, however, based on tests that averaged over, and/or followed, hundreds of exposure trials---exposure amounts that exceed what is available during many everyday interactions with unfamiliar talkers. This leaves open then whether the learning mechanism identified in distributional learning studies are sufficiently rapid to have a meaningful impact on those interactions. <!-- TO DO after submission--- (1) could consider returning to these works in the general discussion, highlighting the link to L1 constraints on L2 learning; (2) could add this back in: Here, we focus on adaptation to shifts along *known* phonetic continua---i.e., the type of input that is generally believed to be easiest to adapt to. --> The strong focus on the outcome of adaptation also means that we do not know how listeners incrementally interpolate between their prior expectations and new phonetic input (the joint effects of predictions 1 and 2a,b). And it explains why predictions (3 - *learn to convergence*) and (4 - *diminishing returns*) have remained untested: tests of these two predictions require a repeated exposure-test paradigm like the one we present here [for discussion, see @cummings-theodore2023; @kleinschmidt2020].
+
+Second, there often is a tension between ecological validity and the ability to make strong, quantitative predictions (though recent advances in automatic speech recognition and large language models might ultimately help resolve this tension). For these reasons, it has remained challenging to test distributional learning models against fully natural speech. This makes it difficult to test, on such stimuli, predictions (1) and (2b) about the effects of phonetic distributions listeners experience throughout their lifetime and during the experiment. Even recent tests against exposure to fully natural speech have thus focused on broad qualitative comparisons [e.g., @schertz2016; @xie2017; see also, @schertz-clare2020]. This leaves open whether the direction and magnitude of changes in listeners' behavior can be explained by existing models [but see @hitczenko-feldman2016; @tan2021; @xie2021cognition]. 
+
+Tests of distributional learning models have thus largely relied on paradigms that afford researchers with fine-grained control over the distribution of phonetic properties that listeners experience in the experiment [e.g., @chladkova2017; @clayards2008; @colby2018; @idemaru-holt2011; @kleinschmidt2020; @theodore-monto2019]. As we aim to demonstrate below, such control is necessary for stronger tests of existing theories, but it often comes with sacrifices in ecological validity (for now, at least). We follow this approach here. As detailed under *Methods*, we do, however, take several modest steps towards addressing concerns about ecological validity. This includes concerns about both the stimuli and their distribution in the experiment [see discussion in @baese-berk2018]. 
+
+To anticipate our results, we find that the changes in listeners' categorization behavior *largely* follow the predictions of distributional learning models. In particular, we present the first direct evidence that the direction and magnitude of changes in listeners' categorization functions is jointly determined by their prior expectations (prediction 1) and the amount and distribution of phonetic cues in the exposure input (predictions 2a,b). We also find initial---though not decisive---evidence that changes in rate of adaptation throughout exposure are consistent with the predictions of error-driven learning theories and theories of ideal information integration (prediction 4). We show that a Bayesian model of adaptation that is based on principles of ideal information integration [the ideal adaptor, @kleinschmidt-jaeger2015; @kleinschmidt-jaeger2016] predicts participants' responses with very high accuracy ($R^2 = 97\%$). However, not all observations we make are predicted by existing models, providing new insights into previously unrecognized limits of adaptation. In particular, we find little support for prediction (3 - *learn to convergence*). Rather, changes in listeners' behavior seem to plateau long before listeners achieve the categorization functions and accuracy that would be expected if they fully learned the talkers' phonetic distributions (cf. the *premature convergence* panel of Figure \@ref(fig:predictions)C). We also find that this constraint on adaptation seems to be asymmetric, depending on the direction of the shift in the exposure input relative to listeners' prior expectations. We discuss the implications of our findings for theories of adaptive speech perception, and suggest how future variants of our paradigm can be used to further contrast different models of adaptive speech perception. 
+
+## Open science
+All data and code for this article are available on OSF at [https://osf.io/hxcy4/?view_only=270fc732415a49f5ab8f1fcaebf46b30](https://osf.io/hxcy4/?view_only=270fc732415a49f5ab8f1fcaebf46b30). Following @xie2023, both this article and its supplementary information (SI) are written in R Markdown. This allows other researchers to replicate and revise our analyses with the press of a button using freely available software [R, @R-base; @RStudio, see also SI, \@ref(sec:software)]. 
+
+This study was not publicly pre-registered. The design, participant recruitment, and procedure were internally pre-registered as part of an undergraduate class at the University of Rochester (BCS206/207). The experiment was originally designed to address predictions (1)-(3). Our analyses of prediction (4 - *diminishing returns*) are thus post-hoc, as are some of the analyses we present to understand the evidence against prediction (3 - *learn to convergence*). All post-hoc analyses are indicated as such. Finally, the ideal observer and adaptor models introduced below to guide interpretation of results follow our previous work ### **ommitted for review** ###<!-- [@kleinschmidt-jaeger2015; @tan2021; @xie2023]-->. However, the choice of phonetic data on which these models are trained constitute researcher degrees of freedom. Where relevant, we motivate our decisions.
+
+```{r}
+rm(
+  d.talker_IO.VOT,
+  p.cat,
+  p.PSE,
+  p.PSE_change,
+  p.gaussian)
+```
+

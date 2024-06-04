@@ -1,0 +1,1652 @@
+---
+title: "cut out stuff"
+author: "T. Florian Jaeger"
+date: "2023-05-31"
+output: html_document
+---
+
+# Cut from intro
+
+For now, we make three observations about previous work that motivated our approach.
+
+First, research on adaptation to natural accents does not typically investigate how the phonetic properties of the exposure input relate to changes in listeners' behavior. This is in part due to the methodological challenges inherent to data that are high in ecological validity, but also of high dimensionality: it is more complicated to model the acoustic consequences of natural accents. Even notable exception to this trend have thus mostly been limited to broad qualitative comparisons [e.g., @schertz2016; @xie2017; see also, @schertz-clare2020], leaving open whether the direction and magnitude of changes in listeners' behavior can be predicted by existing models [but see @hitczenko-feldman2016; @tan2021; @xie2021cognition]. This limitation is generally shared with research on lexically- or visually-guided perceptual learning. Tests of distributional learning models have thus largely relied on paradigms that afford researchers with fine-grained control over the distribution of phonetic properties that listeners experience in the experiment [e.g., @chladkova2017; @clayards2008; @colby2018; @idemaru-holt2011; @kleinschmidt2020; @theodore-monto2019]. We follow this approach here. 
+
+We do, however, take several modest steps towards addressing concerns about the ecological validity of such approaches. This includes concerns about the ecological validity of both the speech stimuli and their distribution in the experiment [see discussion in @baese-berk2018]. For example, previous distributional learning studies have often used highly unnatural, 'robotic'-sounding, speech. Beyond raising questions about what types of expectations listeners apply to such speech, these stimuli also failed to exhibit naturally occurring covariation between phonetic cues that listeners are known to expect [see, e.g., @idemaru-holt2011; @schertz2016]. <!-- Similarly, lexically- or visually-guided perceptual learning studies have often used perceptually ambiguous stimuli obtained by 'acoustic blending'---mixing recordings of two words (e.g., "sin" and "shin") at different relative intensity. This, too, can create acoustic properties that are rarely, if ever, observed in human speech (Rachel Theodore, p.c.). --> We instead developed stimuli that both sound natural and exhibit the type of phonetic covariation that listeners expect from everyday speech perception. We return to these and additional steps we took to increase the ecological validity of the exposure *distributions* under Methods.
+
+Second, the few studies that have tested predictions of existing models have investigated the *outcome* of learning, leaving open whether adaptive speech perception unfolds over time in ways consistent with distributional learning models. For example, in an important early study, @clayards2008 exposed two different groups of US English listeners to instances of "b" and "p" that differed in their distribution along the voice onset time continuum (VOT). VOT is the primary phonetic cue to word-initial stops in US English: the voiced category (e.g., /b/, /d/, or /g/) is produced with lower VOT than the voiceless category (/p/, /t/, /k/). Clayards and colleagues held the VOT means of /b/ and /p/ constant between the two exposure groups, but manipulated whether both /b/ and /p/ had wide or narrow variance along VOT. Using a distributional learning model similar to the idealized learners we presented below, Clayards and colleagues predicted that listeners in the wide variance group would exhibit a more shallow categorization function than the narrow variance group. This is precisely what they found, providing support for prediction (2b) that the distribution of phonetic cues in the exposure input causes changes in listeners' behavior [see also @nixon2016; @theodore-monto2019]. Findings like these suggests that the outcome of adaptation is qualitatively compatible with predictions (2a) and (2b) of distributional learning models [see also @hitczenko-feldman2016; @tan2021; @xie2021cognition]. Previous studies have, however, relied on tests that averaged over, and/or followed, hundreds of exposure trials.^[A related line of work has used distributional learning or explicit training paradigms to study the acquisition of *novel* sound contrasts [e.g., @maye2002; @mcclelland1999; @pajak-levy2012; @pisoni1982]. These studies, too, have observed outcomes predicted by distributional learning models [for review, see @pajak2016], but have left untested the incremental unfolding of learning, or assessed it at time scales much longer than the ones tested here. <!-- TO DO after submission--- (1) could consider returning to these works in the general discussion, highlighting the link to L1 constraints on L2 learning; (2) could add this back in: Here, we focus on adaptation to shifts along *known* phonetic continua---i.e., the type of input that is generally believed to be easiest to adapt to. --> ] This leaves open whether listeners’ categorization behavior follows the change pattern predicted by models of adaptive speech perception: where categorization first reflects expectations based on previously experienced phonetic distributions (prediction 1) and with increasing exposure, integrates the phonetic distributions of the input from the unfamiliar talker (predictions 2a,b). Previous studies also focused on one prediction at a time, leaving open how the effect of prior expectations and the statistics of the unfamiliar input *jointly* explain adaptation. 
+
+Third and finally, we are not aware of any previous tests of predictions (3 - *learn to convergence*) and (4 - *diminishing returns*): without incremental testing it is difficult to assess whether there are hard limits on adaptation or simply 'how far the learner has gotten' with the exposure input they have received so far [for discussion, see @cummings-theodore2023; @kleinschmidt-jaeger2016; @kleinschmidt2020]. For the same reasons, it is difficult to assess whether the build-up of adaptation follows the predictions of error-driven learning or ideal information integration (prediction 4). 
+
+# Cut from SI
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+make_all_plots <- function(
+  fit,
+  groups = c(
+    "Cond Shift0AA_Up to test3", "Cond Shift0AA_Up to test5", "Cond Shift0AA_Up to test7",
+    "Cond Shift10AA_Up to test3", "Cond Shift10AA_Up to test5", "Cond Shift10AA_Up to test7",
+    "Cond Shift40AA_Up to test3", "Cond Shift40AA_Up to test5", "Cond Shift40AA_Up to test7",
+    "prior"),
+  colors.group =  c(
+    "#550000", "#AA0000", "#FF0000",
+    "#005500", "#00AA00", "#00FF00",
+    "#000055", "#0000AA", "#0000FF",
+    "gray"),
+  colors.category = c("blue", "red"),
+  ncol = 3
+) {
+  p <- plot_ibbu_stanfit_parameter_correlations(fit, category.colors = colors.category)
+  ggsave(p, filename = "figures/ibbu_parameter_correlations.png", width = 10, height = 10)
+  plot(p)
+  
+  if (!is.null(groups)) {
+    plot_ibbu_stanfit_parameters(fit, groups = groups, group.colors = colors.group) %>% plot()
+    # (plot_expected_ibbu_stanfit_categories_contour2D(fit, groups = groups, category.colors = colors.category) + facet_wrap(~ group, ncol = ncol)) %>% plot()
+    (plot_ibbu_stanfit_test_categorization(fit, groups = groups, plot_in_cue_space = T, category.colors = colors.category) + facet_wrap(~ group, ncol = ncol)) %>% plot()
+    plot_predicted_vs_actual_categorization_responses_for_IBBU(
+      fit, 
+      groups = c(
+        "Cond Shift0AA_Up to test3", "Cond Shift0AA_Up to test5", "Cond Shift0AA_Up to test7",
+        "Cond Shift10AA_Up to test3", "Cond Shift10AA_Up to test5", "Cond Shift10AA_Up to test7",
+        "Cond Shift40AA_Up to test3", "Cond Shift40AA_Up to test5", "Cond Shift40AA_Up to test7",
+        "Cond Shift0BA_Up to test3", "Cond Shift0BA_Up to test5", "Cond Shift0BA_Up to test7",
+        "Cond Shift10BA_Up to test3", "Cond Shift10BA_Up to test5", "Cond Shift10BA_Up to test7",
+        "Cond Shift40BA_Up to test3", "Cond Shift40BA_Up to test5", "Cond Shift40BA_Up to test7",
+        "Cond Shift0CA_Up to test3", "Cond Shift0CA_Up to test5", "Cond Shift0CA_Up to test7",
+        "Cond Shift10CA_Up to test3", "Cond Shift10CA_Up to test5", "Cond Shift10CA_Up to test7",
+        "Cond Shift40CA_Up to test3", "Cond Shift40CA_Up to test5", "Cond Shift40CA_Up to test7",
+        "no exposure"), 
+      untransform_cues = F, target_category = 2, colors.group = colors.group)
+  } else {
+    plot_ibbu_stanfit_parameters(fit) %>% plot()
+    # plot_expected_ibbu_stanfit_categories_contour2D(fit, category.colors = colors.category) + facet_wrap(~ group, ncol = ncol) %>% plot()
+    plot_ibbu_stanfit_test_categorization(fit, plot_in_cue_space = T, category.colors = colors.category) + facet_wrap(~ group, ncol = ncol) %>% plot()
+  }
+}
+```
+
+## Other cuts
+
+```{r}
+colours.voicing <- c("#7EC8E3", "#990033")
+colours.sex <- c("#c1502e", "#2F9FC2")
+
+
+    Condition.Exposure = case_when(
+    Condition.Exposure == "Shift0" ~ "baseline",
+    Condition.Exposure == "Shift10" ~ "+10ms",
+    Condition.Exposure == "Shift40" ~ "+40ms"), 
+    Condition.Exposure = fct_relevel(
+          Condition.Exposure, c("baseline", "+10ms", "+40ms")),
+
+
+############################################################################
+# function to plot talker productions in experiment 1 (section 2.3)
+############################################################################
+
+plot_talker_UVGs <- function (data_production, data_perception, noise = FALSE) {
+  plot <- data_production %>%
+    mutate(x = list(VOT = seq(-100, 130, .5)),
+           x = map(x, ~ as_tibble(.x) %>% rename("VOT (ms)" = value))) %>%
+    unnest(io) %>%
+    mutate(
+      gaussian = pmap(
+        list(x, gender, category, mu, Sigma, Sigma_noise),
+        ~ geom_function(
+          data = ..1,
+          aes(x = `VOT (ms)`,
+              linetype = ..3, colour = ..2),
+          fun = function(x) dnorm(x, mean = ..4[[1]][[1]], sd = if (noise == T) sqrt(..5[[1]][[1]]) + sqrt(..6[[1]][[1]]) else sqrt(..5[[1]][[1]])), alpha = .2)))
+
+  plot %>%
+    ggplot() +
+    plot$gaussian +
+    scale_colour_manual("Talker sex", values = colours.sex, labels = c("Female", "Male")) +
+    scale_linetype_discrete("Category") +
+    scale_y_continuous("Density") +
+    geom_rug(
+      data = data_perception %>%
+        ungroup() %>%
+        distinct(Item.VOT),
+      mapping = aes(x = Item.VOT),
+      colour = "black",
+      alpha = .6,
+      inherit.aes = F) +
+    guides(colour = "none")
+}
+
+
+
+plot_talker_MVGs <- function(
+  data_production,
+  prod_means = c(chodroff.mean_VOT, chodroff.mean_f0_Mel),
+  cues,
+  data_perception = d.test.excluded,
+  percept_means = c(VOT.mean_exp1, f0.mean_exp1),
+  centered = F
+) {
+  plot <- data_production %>%
+    unnest(io) %>%
+    select(-c(x, PSE, categorization, line)) %>%
+    mutate(ellipse_points = pmap(
+      list(mu, Sigma, Sigma_noise),
+      ~ get_bivariate_normal_ellipse(..1, Sigma = ..2 + ..3))) %>%
+    group_by(Talker) %>%
+    mutate(ellipse = pmap(
+      list(gender, category, ellipse_points),
+      ~ geom_path(data = ..3, mapping = aes(x = ..3[[1]], y = ..3[[2]], colour = ..1, linetype = ..2), alpha = .1)))
+
+  plot %>%
+    ggplot() +
+    plot$ellipse +
+    scale_x_continuous("VOT (ms)", breaks = seq(-100, 150, 50)) +
+    scale_y_continuous("F0 (Mel)") +
+    scale_colour_manual("Talker sex", values = colours.sex, labels = c("Female", "Male")) +
+    scale_linetype_discrete("Category") +
+    geom_point(
+      data = if (centered == T) data_perception %>%
+        ungroup() %>%
+        distinct(Item.VOT, Item.F0_Mel) %>%
+        mutate(Item.VOT = Item.VOT + (prod_means[1] - percept_means[1]),
+               Item.F0_Mel = Item.F0_Mel + (prod_means[2] - percept_means[2])) else
+                 data_perception %>%
+        ungroup() %>%
+        distinct(Item.VOT, Item.F0_Mel),
+      aes(x = Item.VOT, y = Item.F0_Mel),
+      shape = 4,
+      size = .8,
+      alpha = .2,
+      inherit.aes = F) +
+    geom_abline(intercept = if (centered == T) normMel(245.46968) + (prod_means[2] - percept_means[2]) else normMel(245.46968),
+               slope = 0.03827,
+               linetype = 2,
+               alpha = .3) +
+    guides(colour = "none", category = "none")
+}
+```
+
+# NOTES for structure of intro
++ strong test of predictions about effects of exposure
+  + linking back to exposure distributions in the input (unlike all other work except for KJ16)
+  + control over phonetic distributions (unlike LGPL, VGPL, AA)  
+  + can fit categorization function (unlike VGPL; DSL); phonetic distribution during test and the way we analyze our data
+    + (identical test stimuli across and within subject: theory-free testing)
+    + (Bayesian mixed-effects psychometric model to avoid bias in estimation of cat fun)    
+
++ strong test of incrementality (also highlighted in xie2023)
+  + pre-exposure test (unlike most other work)
+  + test short / early moments of exposure (unlike DL)
+  + test incremental accumulation (unlike DL, LGPL, AA) --> amount of evidence
+
++ move towards increased ecolological validity
+  + ecological validity of stimuli (unlike some of DL, VGPL)
+  + ecological validity of distributions (unlike DL; unlike LGPL/VGPL not always maximally ambiguous tokens)
+
+## old intro draft
+
+The predominant paradigms in research on adaptive speech perception are, however, not well-suited to address this question. As @cummings-theodore2023 summarize, "most research [...] has focused on identifying the conditions that are necessary for adaptation to occur" and "consistent with [this goal], outcomes [...] are most often considered as a binary result---does any learning occur, or not?" As a consequence, much remains unknown about how exposure comes to affect perception. It is unclear, for example, whether adaptive changes accumulate depending on both the amount of speech input and its statistical properties in the way predicted by the most explicit theoretical frameworks [e.g., the ideal adaptor, @kleinschmidt-jaeger2015; C-CuRE, @apfelbaum-mcmurray2015; @mcmurray-jongman2011]. 
+
+Typical paradigms manipulate exposure between listeners, and then assess the effects of exposure on subsequent test stimuli that are identical for all groups [for review, see @baese-berk2018; @schertz-clare2020]. These types of paradigms have provided evidence that adaptation to an unfamiliar talker can be rapid. For example, a thought-provoking finding by @clarke2004 suggests that exposure to eighteen sentences from an L2-accented talker---less than two minutes of speech---can be sufficient to facilitate significantly faster processing of that speech. This finding has since been replicated and extended to show that equally short exposure can facilitate recognition that is both faster and more accurate [@xie2018; for related results, see also @bradlow2023; @xie2017; @xie2021jep]. Other work has traded the ecological validity of natural L2 accents against increased control over the phonetic properties of exposure and test stimuli---a critical step towards stronger tests, as competing hypotheses about the mechanisms underlying adaptive speech perception require strong linking hypotheses mapping the acoustic input onto listeners' responses [@martin2023; @xie2023]. One such paradigm is lexically- or visually-guided perceptual recalibration [@bertelson2003; @norris2003; @kraljic-samuel2005], in which listeners are exposed to phonetically manipulated instances of a sound (e.g., making the "s" in "embassy" sound almost like an "sh"), mixed with many filler words without that sound. Following such exposure, listeners are known to shift their categorization function, so as to categorize more tokens along the "s"-"sh" continuum as "s". Recent work within those paradigms has found that as little as four phonetically shifted instances of a sound category can be sufficient to significantly alter listeners' categorization boundary [@liu-jaeger2018; @liu-jaeger2019; @cummings-theodore2023; @vroomen2007]. The same studies have found that exposure seems to accumulate, leading to larger boundary shifts for listeners who were exposed to more instances of the shifted sound [up to a point, @liu-jaeger2018; @vroomen2007; see also @kleinschmidt-jaeger2011; @kleinschmidt-jaeger2012]. Findings like these suggest that even rapid adaptation can be cumulative, rather than being an all or nothing process.
+
+There are, however, important limitations to what perceptual recalibration paradigms can tell us about incremental adaptation. As is typical for such paradigms, all of the above experiments exposed listeners to shifted pronunciations that were always lexically or visually labeled stimuli (e.g., embedding the "sh"-like "s" in the word "embassy", which effectively labels it as an "s"). Such labeling is known to facilitate adaptation [@burchill2018; @burchill2023]---indeed, if shifted pronunciations are embedded in minimal pair or nonce-word context, listeners do no longer shift their categorization boundary [@norris2003; @REF-theodore?]. In everyday speech perception, however, listeners often have uncertainty about the word they are hearing, and must either use contextual information to label the input or adapt from unlabeled input. Perceptual recalibration paradigms, at least as used traditionally, also limit experimenters' control over the phonetic properties of the exposure stimuli: shifted sound instances are selected to sound ambiguous between, e.g., "s" and "sh", not based on their phonetic properties. To the extent that researchers have aimed to understand the consequences of those phonetic properties on the degree of boundary shift following exposure, this has involved post-hoc analyses [@drouin2016; @tzeng2021?]. It is thus an open question to what extent the boundary shifts observed in such experiments reflect not only the quantity, but also the distribution of phonetic properties, during exposure [as would be expected under, e.g., the ideal adaptor framework].
+
+The present work thus employs a novel repeated-exposure-test paradigm that explicitly control the distribution of phonetic properties during exposure.  [clayards, bejjanki; kj16, k20; see also theodore-monto2019]
+
+
+
+
+
+
+## Previous intro
+
+
+
+<!--
+However, Kleinschmidt and Jaeger also observed a previously undocumented property of these adaptive changes: shifts in the exposure distribution had less than proportional (sublinear) effect on shifts in PSE (Figure \@ref(fig:kleinschmidt-jaeger-2016-replotted)C). While this finding is broadly compatible with the hypothesis of distributional learning, it points to important not well-understood constraints on adaptive speech perception.-->
+
+
+(ref:kleinschmidt-jaeger-2016-replotted) Design and results of @kleinschmidt-jaeger2016 replotted. **Panel A:** Different groups of participants were exposed to different shifts in the mean VOT of /b/ and /p/. **Panel B:** categorization functions fitted to the last 1/6th of all trials depending on the exposure condition (shift in VOT means of /b/ and /p/). For reference, the black dashed line shows the categorization function of the 0-shift condition. The colored dashed lines shows the categorization function expected for an ideal observer that has fully learned the exposure distributions. **Panel C:** Mean and 95% CI of participants' points of subjective equality (PSEs), relative to the PSE of the ideal observers.
+
+```{r kleinschmidt-jaeger-2016-refitted}
+# load K&J2016 data and filter to all semi-supervised rows
+d.KJ16 <-
+  supunsup_clean %>%
+  filter(supCond == "mixed" | supCond == "supervised") %>%
+  # rename variables so that they match the naming conventions employed in the remainder
+  # of this paper.
+  rename(
+    ParticipantID = subject,
+    Item.VOT = vot,
+    Condition.Exposure = bvotCond,
+    Response.Voiceless = respP,
+    Item.MinimalPair = wordClass,
+    category = respCategory) %>%
+  mutate(
+    Condition.Exposure = factor(case_when(
+      Condition.Exposure == 0 ~ "+0ms",
+      Condition.Exposure == 10 ~ "+10ms",
+      Condition.Exposure == 20 ~ "+20ms",
+      Condition.Exposure == 30 ~ "+30ms")),  
+    Condition.Exposure = fct_relevel(
+      Condition.Exposure, c("+0ms", "+10ms", "+20ms", "+30ms")))
+
+d.KJ16_unlabeled <-
+  d.KJ16 %>%
+  arrange(trial) %>%
+  filter(labeled == "unlabeled") %>%
+  group_by(ParticipantID) %>%
+  # filter to final 6th of total trials
+  slice_tail(n = 37)
+
+VOT.mean_d.KJ16_unlabeled <- mean(d.KJ16_unlabeled$Item.VOT)
+VOT.sd_d.KJ16_unlabeled <- sd(d.KJ16_unlabeled$Item.VOT)
+d.KJ16_unlabeled %<>% mutate(VOT_gs = (Item.VOT - VOT.mean_d.KJ16_unlabeled) / (2 * VOT.sd_d.KJ16_unlabeled))
+
+contrasts(d.KJ16_unlabeled$Condition.Exposure) <-
+  cbind("10vs0" = c(-3/4, 1/4, 1/4, 1/4),
+        "20vs10" = c(-1/2, -1/2, 1/2, 1/2),
+        "30vs20" = c(-1/4, -1/4, -1/4, 3/4))
+
+my_priors <- c(
+  prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),
+  prior(cauchy(0, 2.5), class = "sd", dpar = "mu2"),
+  prior(lkj(1), class = "cor"))
+
+fit_KJ16 <-
+  brm(
+    bf(
+      Response.Voiceless ~ 1,
+      mu1 ~ 0 + offset(0),
+      mu2 ~ 1 + VOT_gs * Condition.Exposure +
+        (1 + VOT_gs | ParticipantID) +
+        (1 + VOT_gs * Condition.Exposure | Item.MinimalPair),
+      theta1 ~ 1),
+    data = d.KJ16_unlabeled,
+    cores = chains,
+    chains = chains,
+    init = 0,
+    iter = 4000,
+    warmup = 2000,
+    family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
+    priors = my_priors,
+    control = list(adapt_delta = .99),
+    file = "../models/KJ16-semisupervised-GLMM.rds")
+
+# fit nested model to extract slopes and intercepts
+fit_nested_KJ16 <-
+  brm(
+    bf(
+      Response.Voiceless ~ 1,
+      mu1 ~ 0 + offset(0),
+      mu2 ~  0 + (Condition.Exposure) / VOT_gs +
+        (0 + VOT_gs | ParticipantID) +
+        (0 + (Condition.Exposure) / VOT_gs | Item.MinimalPair),
+      theta1 ~ 1),
+    data = d.KJ16_unlabeled,
+    cores = chains,
+    chains = chains,
+    init = 0,
+    iter = 4000,
+    warmup = 2000,
+    family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
+    priors = my_priors,
+    control = list(adapt_delta = .995),
+    file = "../models/KJ16-semisupervised-nested-GLMM.rds")
+
+cond_fit_KJ16 <- fit_KJ16 %>%
+  conditional_effects(
+  effects = "VOT_gs:Condition.Exposure",
+  method = "posterior_epred",
+  ndraws = 500,
+  re_formula = NA) %>%
+  .[[1]] %>%
+  mutate(Item.VOT = descale(VOT_gs, VOT.mean_d.KJ16_unlabeled, VOT.sd_d.KJ16_unlabeled))
+
+d.KJ16_PSE <-
+  fit_nested_KJ16 %>%
+  gather_draws(`b_mu2_Condition.Exposure.*`, regex = TRUE, ndraws = 8000) %>%
+  mutate(
+    term = ifelse(str_detect(.variable, "VOT_gs"), "slope", "Intercept"),
+    .variable = gsub("b_mu2_Condition.ExposureP(\\d{1,2}ms).*$", "\\1", .variable)) %>%
+  pivot_wider(names_from = term, values_from = ".value") %>%
+  rename(Condition.Exposure = .variable) %>%
+  relocate(c(Condition.Exposure, Intercept, slope, .chain, .iteration, .draw)) %>%
+  mutate(
+    PSE = descale(-Intercept/slope, VOT.mean_d.KJ16_unlabeled, VOT.sd_d.KJ16_unlabeled),
+    Condition.Exposure = paste0("+", Condition.Exposure)) %>%
+  group_by(Condition.Exposure) %>%
+  summarise(
+    across(
+      c(Intercept, slope, PSE),
+      list(lower = ~ quantile(.x, probs = .025), mean = mean, upper = ~ quantile(.x, probs = .975))))
+```
+
+
+```{r io-categorization-kleinschmidt-jaeger-2016}
+# Test points by condition
+x <-
+  d.KJ16_unlabeled %>%
+  group_by(Condition.Exposure) %>%
+  distinct(Item.VOT) %>%
+  rename(x = Item.VOT)
+
+# get io categorizations of the test points by condition
+io.d.KJ16 <-
+  make_MVG_ideal_observer_from_data(
+  d.KJ16 %>%
+    rename(VOT = Item.VOT) %>%
+      group_by(ParticipantID, Condition.Exposure) %>%
+      nest(data = -c(ParticipantID, Condition.Exposure)) %>%
+      group_by(Condition.Exposure) %>%
+      slice_sample(n = 1) %>%  
+      unnest(data),
+    group = "Condition.Exposure",
+    cues = c("VOT"),
+    Sigma_noise = matrix(80, dimnames = list("VOT", "VOT"))) %>%
+  nest(io = -c(Condition.Exposure)) %>%
+  left_join(x) %>%
+  mutate(x = map(x, ~ c(.x))) %>%
+  nest(x = x) %>%
+  mutate(categorization = map2(
+    x, io,
+    ~ get_categorization_from_MVG_ideal_observer(x = .x$x, model = .y, decision_rule = "proportional") %>%
+    mutate(VOT = map(x, ~ .x[1]) %>% unlist()))) %>%
+  unnest(cols = categorization, names_repair = "unique") %>%
+  pivot_wider(names_from = category, values_from = response, names_prefix = "response_") %>%
+    mutate(n_b = round(`response_b` * 10^12), n_p = 10^12 - n_b) %>%
+  group_by(Condition.Exposure) %>%
+  nest(data = -c(Condition.Exposure)) %>%
+  mutate(
+    model_unscaled = map(
+      data, ~ glm(
+      cbind(n_p, n_b) ~ 1 + VOT,
+      family = binomial,
+      data = .x)),
+    intercept_unscaled = map_dbl(model_unscaled, ~ tidy(.x)[1, 2] %>% pull()),
+    slope_unscaled = map_dbl(
+      model_unscaled, ~ tidy(.x)[2, 2] %>% pull()),
+    model_scaled = map(data, ~ glm(
+      cbind(n_p, n_b) ~ 1 + I((VOT - VOT.mean_d.KJ16_unlabeled) / (2 * VOT.sd_d.KJ16_unlabeled)),
+      family = binomial,
+      data = .x)),
+    intercept_scaled = map_dbl(model_scaled, ~ tidy(.x)[1, 2] %>% pull()),
+    slope_scaled = map_dbl(model_scaled, ~ tidy(.x)[2, 2] %>% pull()),
+    PSE = -intercept_unscaled/slope_unscaled)
+
+# get io with lapse-accounted categorization
+io.d.KJ16.lapse_rate <-
+  make_MVG_ideal_observer_from_data(
+    data = d.KJ16 %>%
+      rename(VOT = Item.VOT) %>%
+      group_by(ParticipantID, Condition.Exposure) %>%
+      nest(data = -c(ParticipantID, Condition.Exposure)) %>%
+      group_by(Condition.Exposure) %>%
+      slice_sample(n = 1) %>%  
+      unnest(data),
+    group = "Condition.Exposure",
+    cues = c("VOT"),
+    Sigma_noise = matrix(80, dimnames = list("VOT", "VOT")),
+    lapse_rate = plogis(fixef(fit_KJ16)[[2]])) %>%
+  nest(io = -c(Condition.Exposure)) %>%
+  crossing(x = seq(-10, 70, .5)) %>%
+  nest(x = x) %>%
+  mutate(
+    categorization =
+    map2(x, io, ~
+           get_categorization_from_MVG_ideal_observer(
+             x = .x$x, model = .y, decision_rule = "proportional") %>%
+           filter(category == "p") %>%
+           mutate(VOT = map(x, ~.x[1]) %>% unlist()))) %>%
+  unnest(categorization, names_repair = "unique")
+
+# get io of typical talker and its categorization (+0 condition)
+d.typical_talker <-
+  io.d.KJ16[[2]][[1]][1, 1] %>%
+  unnest(io) %>%
+  mutate(lapse_rate = plogis(fixef(fit_KJ16)[[2]])) %>%
+  nest(io = everything()) %>%
+  crossing(x = seq(-10, 70, .5)) %>%
+  nest(x = x) %>%
+  mutate(
+    categorization =
+    map2(x, io, ~
+           get_categorization_from_MVG_ideal_observer(
+             x = .x$x, model = .y, decision_rule = "proportional") %>%
+           filter(category == "p") %>%
+           mutate(VOT = map(x, ~.x[1]) %>% unlist())),
+    line = map(
+      categorization,
+      ~ geom_line(
+          data = .x,
+          mapping = aes(x = VOT, y = response),
+          linetype = 2,
+          linewidth = 0.6,
+          alpha = .8,
+          colour = "black")))
+```
+
+
+
+
+```{r kleinschmidt-jaeger-2016-replotted, fig.height=base.height*3.5, fig.width=base.width*5.5, fig.cap="(ref:kleinschmidt-jaeger-2016-replotted)"}
+# make histograms of exposure distributions
+p.KJ16.histogram <-
+  d.KJ16 %>%
+  group_by(Condition.Exposure) %>%
+  slice_head(n = 222) %>%
+  ggplot(aes(x = Item.VOT,
+             fill = paste(Condition.Exposure, trueCat))) +
+  geom_histogram(binwidth = 5) +
+  scale_x_continuous("VOT (ms)", breaks = seq(-50, 150, 50)) +
+  scale_y_continuous(breaks = c(0, 25, 50)) +
+  scale_fill_manual(
+    "Category",
+    values = c("+0ms b" = "#f8766d",
+               "+0ms p" = "#fdd1ce",
+               "+10ms b" = "#7cae00",
+               "+10ms p" = "#d4ff66",
+               "+20ms b" = "#00bfc4",
+               "+20ms p" = "#99fcff",
+               "+30ms b" = "#c77cff",
+               "+30ms p" = "#e9ccff"),
+    aesthetics = "fill",
+    labels = c("/b/", "/p/", "", "", "", "", "", "")) +
+   guides(
+    fill = guide_legend(
+      override.aes = list(
+        fill = c("#383838", "#C0C0C0", NA, NA, NA, NA, NA, NA),
+        values = c("b", "p", NA, NA, NA, NA, NA, NA)), nrow = 1)) +
+  facet_wrap(~ Condition.Exposure, nrow = 1) +
+  theme(legend.justification = "left") +
+  remove_x_guides
+
+p.KJ16.fit <-
+  cond_fit_KJ16 %>%
+  rename(Condition = Condition.Exposure) %>%
+  ggplot() +
+  geom_ribbon(aes(
+    x = Item.VOT,
+    y = estimate__,
+    group = Condition,
+    ymin = lower__, ymax = upper__, fill = Condition),
+    alpha = .1,
+    show.legend = F) +
+  geom_line(aes(
+    x = Item.VOT,
+    y = estimate__,
+    group = Condition,
+    color = Condition),
+    linewidth = .7,
+    alpha = 0.6,
+    show.legend = F) +
+  stat_summary(
+    data = d.KJ16_unlabeled %>%
+      rename(Condition = Condition.Exposure) %>%
+      group_by(Condition),
+    fun.data = mean_cl_boot,
+    mapping = aes(
+      x = Item.VOT,
+      y = Response.Voiceless,
+      group = Condition,
+      colour = Condition),
+    geom = "pointrange",
+    size = 0.15,
+    show.legend = F) +
+  geom_line(
+    data = io.d.KJ16.lapse_rate %>%
+      rename(Condition = Condition.Exposure) %>%
+      group_by(Condition),
+    mapping = aes(x = VOT, y = response, group = Condition, colour = Condition),
+    linetype = 2,
+    linewidth = 1,
+    alpha = .6,
+    inherit.aes = F,
+    show.legend = F) +
+  d.typical_talker$line +
+  scale_x_continuous("VOT (ms)", breaks = seq(-50, 150, 50)) +
+  scale_y_continuous("Proportion \"p\"-responses", breaks = c(0, .5, 1)) +
+  facet_wrap(~ Condition, nrow = 1)
+
+p.KJ16.PSE <-
+  d.KJ16_PSE %>%
+  left_join(io.d.KJ16) %>%
+  rename(PSE.io = PSE) %>%
+  ggplot(aes(y = PSE_mean, x = Condition.Exposure, colour = Condition.Exposure)) +
+  geom_hline(
+    yintercept = c(20, 30, 40, 50),
+    linewidth = 1.5,
+    alpha = .4,
+    linetype = 2,
+    colour = scales::hue_pal()(4)) +
+  geom_linerange(
+    aes(ymin = PSE_lower, ymax = PSE_upper), size = 1, alpha = .8, show.legend = F) +
+  geom_label(size = 4, show.legend = F, aes(label = paste(round((PSE_mean - 20) / (c(20, 30, 40, 50) - 20) * 100, 1), "%"))) +
+  scale_x_discrete("Condition") +
+  scale_y_continuous("PSE") +
+  theme(axis.text.x = element_text(angle = 22.5, hjust = .8))
+
+layout <- "
+AAAA#
+BBBBC"
+
+p.KJ16.histogram + p.KJ16.fit + p.KJ16.PSE +
+  plot_layout(design = layout,
+              guides = "collect") +
+  plot_annotation(tag_levels = 'A', tag_suffix = ")") &
+  theme(legend.position = "top",
+        plot.tag = element_text(face = "bold"))
+```
+
+
+
+
+```{r remove-unused-objects-section1}
+rm(d.KJ16, d.KJ16_unlabeled, d.KJ16_PSE, cond_fit_KJ16, fit_KJ16, fit_nested_KJ16, p.KJ16.PSE)
+```
+
+For example, influential models of adaptive speech perception predict proportional, rather than sublinear, shifts (for proof, see SI \@ref(sec:ibbu-proof)). This is the case both for incremental Bayesian belief-updating model [@kleinschmidt-jaeger2011] and general purpose normalization accounts [@mcmurray-jongman2011]---models that have been found to explain listeners' behavior well in experiments with less substantial changes in exposure. There are, however, proposals that can accommodate this finding. Some proposals distinguish between two types of mechanisms that might underlie representational changes, <!--- link representational change and distributional learning --> *model learning* and *model selection* [@xie2018, p. 229]. The former refers to the learning of a new category representations---for example, learning a new generative model for the talker [@kleinschmidt-jaeger2015, Part II] or storage of new talker-specific exemplars [@johnson1997; @sumner2011]. Xie and colleagues hypothesized that this process might be much slower than is often assumed in the literature, potentially requiring multiple days of exposure and memory consolidation during sleep [see also @fenn2013; @tamminen2012; @xie2018sleep]. Rapid adaptation that occurs within minutes of exposure might instead be achieved by selecting between *existing* talker-specific representations that were learned from previous speech input---e.g., previously learned talker-specific generative models [see mixture model in @kleinschmidt-jaeger2015, p. 180-181] or previously stored exemplars from other talkers [@johnson1997]. Model learning and model selection both offer explanations for the sublinear effects observed in @kleinschmidt-jaeger2016. But they suggest different predictions for the evolution of this effect over the course of exposure.
+
+Under the hypothesis of model learning, sublinear shifts in PSEs can be explained by assuming a hierarchical prior over talker-specific generative models [$p(\Theta)$ in @kleinschmidt-jaeger2015, p. 180]. This prior would 'shrink' adaptation towards listeners' priors---similar to the effect of random by-subject or by-item effects in generalized linear mixed-effect models, which shrink group-level effect estimates towards the population mean of the data [@baayen2008]. Critically, as long as these priors attribute non-zero probability to even extreme shifts (e.g., the type of Gaussian prior used in mixed-effects models), this predicts listeners' PSEs will continue to change with increasing exposure until they have converged against the PSE that is ideal for the exposure statistics. In contrast, the hypothesis of model selection predicts that rapid adaptation is more strictly constrained by previous experience: listeners can only adapt their categorization functions up to a point that corresponds to (a mixture of) previously learned talker-specific generative models. This would imply that at least the earliest moments of adaptation are subject to a hard limit (Figure \@ref(fig:prediction)): exposure helps listeners to adapt their interpretation to more closely aligned with the statistics of the input, but only to a certain point.
+
+(ref:prediction) Contrasting predictions of model learning and model selection hypotheses about the incremental effects of exposure on listeners' categorization function. Both hypothesis predict incremental adaptation towards the statistics of the input, as well as constraints on this adaptation. The two hypotheses differ, however, in that model selection predicts a hard limit on how far listeners' can adapt during initial encounters with an unfamiliar talker.
+
+```{r prediction, fig.height=base.height+1/4, fig.width=base.width*2, fig.cap="(ref:prediction)"}
+k <- 10^-1
+
+crossing(
+  Exposure = 0:100,
+  Shift = c(20, 40),
+  Hypothesis = c("model learning", "model selection")) %>%
+  mutate(
+    PSE = 25 + ifelse(Hypothesis == "model learning", Shift, pmin(Shift, 25)) *
+      (1 - exp(-k * Exposure))) %>%
+  ggplot(aes(x = Exposure, y = PSE, color = factor(Shift))) +
+  geom_hline(
+    data = crossing(Shift = c(0, 20, 40), Hypothesis = c("model learning", "model selection")),
+    aes(yintercept = Shift + 25, color = factor(Shift)), linetype = 2) +
+  geom_line(alpha = .5) +
+  scale_y_continuous("PSE (in ms VOT)") +
+  scale_color_manual(breaks = c("0", "20", "40"), values = c("gray", "green", "blue")) +
+  facet_wrap(~ Hypothesis) +
+  guides(color = "none") +
+  theme(panel.grid = element_blank())
+```
+
+The present study employs a novel incremental exposure-test paradigm to address two questions. We test whether the sublinear effects of exposure observed in recent work replicate for exposure that (somewhat) more closely resembles the type of speech input listeners receive on a daily basis. And, we evaluate the predictions of the model learning and selection hypotheses against human perception. We take this question to be of interest beyond the specific hypotheses we contrast: whether there are hard limits to the benefits of exposure to unfamiliar speech patterns ultimately has consequences for education and medical treatment.
+
+# Other intros
+
+END OF INTRO: 
+The code for the experiment is available as part of the OSF repository for this article. A live version is available at (https://www.hlp.rochester.edu/FILLIN-FULL-URL). 
++ ALL OTHER OSF STATEMENTS.
+
+
+Prior to creating the three exposure conditions for the experiment, we conducted a norming experiment (N = XXX participants) to assess US-L1 listeners' perception of our stimuli and to determine a baseline categorisation boundary for this talker. While it is normal and acceptable practice to set the baseline by taking population estimates of mean values from past studies on stops, we reasoned that such estimates were highly variable and therefore aimed to obtained a more accurate estimation of how L1-US English listeners perceived the speech of our talker. To anticipate the outcome, we eventually discovered that the classification boundary from norming underestimated the boundary fitted to our participants' classification in the initial test block. This placed our baseline and baseline +10ms shift exposure conditions slightly leftwards of participants' initial perceptual boundary. This finding, however does not impinge on the conclusions drawn from this study [<!--CALL IT baseline, +10 AND +40-->]
+
+The other purpose of the norming experiment was to detect possible anomalous features present in our stimuli (for e.g. if it would elicit unusual categorisation behaviour or whether certain minimal-pairs had an exaggerated effect on categorisation). For the norming experiment the VOT continua employed 24 VOT steps ranging from -100ms VOT to +130ms (-100, -50, -10, 5  `r paste0(seq(15, 90, 5), collapse = ", ")`, `r paste0(seq(100, 130, 10), collapse = ", ")`). VOT tokens in the lower and upper ends were distributed over larger increments because stimuli in those ranges were expected to elicit floor and ceiling effects, respectively. We found VOT to have the expected effect on the proportion of "t"-responses, i.e. higher VOTs elicited greater "t"-responses and that the word-pairs did not differ substantially from each other. The results and analysis of the norming experiment are reported in full in section \@ref(sec:XX).  
+
+
+
+
+To construct the baseline exposure distribution we first computed the point of subjective equality (PSE) from the perceptual component of the fitted psychometric function of listener responses in the norming experiment. The PSE corresponds to the VOT duration that was perceived as most ambiguous across all participants during norming (i.e. the stimulus that on average, elicited equal chance of being categorised as /d/ or /t/) thus marking the categorical boundary. From a distributional perspective the PSE is where the likelihoods of both categories intersect and have equal probability density (we assumed Gaussian distributions and equal prior probability for each category). To limit the infinite combinations of category likelihoods that could intersect at this value, we set the variances of the /d/ (80ms) and /t/ (270ms <!--/t/ variance lowered from original 398ms estimate because of dip-tip pair variance limitations--> categories based on parameter estimates (@Kurumada_Xie_Jaeger_2022) obtained from the production database of word-initial stops in @chodroff2017structure. To each variance value we added 80ms following (@kronrod2016unified) to account for variability due to perceptual noise since these likelihoods were estimated from perceptual data. We took an additional degree of freedom of setting the *distance between the means* of the categories at 46ms; this too was based on the mean  for /d/ and /t/ estimated from the production database. The means of both categories were then obtained through a grid-search process to find the likelihood distributions that crossed at 25ms VOT (see XX of SI for further detail on this procedure).
+
+
+The distributional make up was determined through a process of sampling tokens from a discretised normal distribution with values rounded to the nearest multiple of 5 integer (available through the `extraDistr` package in R). 
+
+
+In addition, participants' categorization during the early phase of the experiment were scrutinised for their slope orientation and their proportion of "t"-responses at the least ambiguous locations of the VOT continuum. The early phase of the experiment was defined as the first 36 trials and the least ambiguous locations were defined as -20ms below the empirical mean of the /d/ category and +20ms above the empirical mean of the /t/ category. These means were obtained from the production data estimates by @Kurumada_Xie_Jaeger_2022.
+
+
+# Results leftovers
+
+
+
+----
+Additional hypothesis tests in Table \@ref(tab:hypothesis-table-interactions) show that the change from Test 1 to 2 was largest (BF = 57.82), followed by the change from Test 2 to 3 (BF = 10), with only minimal changes from Test 3 to 4 (BF = 1.68). Qualitatively paralleling the changes across blocks for the +40 condition, the change in the difference between the +10 and baseline conditions was largest from Test 1 to 2 (BF = 5.42), and then somewhat decreased from Test 2 to Test 4 (BFs < 1). 
+-----
+
+
+
+# Predictions of existing models of adaptive speech perception {#sec:proof}
+We show that two of the most influential approaches to adaptive speech perception do not predict the sublinear (less than proportional) shifts in categorisation functions observed both in the present study and in in previous work [@kleinschmidt-jaeger2016; @kleinschmidt2020]. We focus on these two models since they are the only widely-used accounts of adaptive speech perception that are (1) not limited to specific types of contrasts (unlike, e.g., vowel normalization accounts) and (2) sufficiently specific to make concrete predictions [for review of existing models, see @xie2023]. We only briefly discuss why a third type of account---exemplar models of speech perception---*likely* would also fail to predict the sublinear effects.
+
+We emphasize that our discussion deliberately focuses on *models*, not theories. The finding of sublinear effects of exposure can be accommodated in all three theories that underlie the three models discussed here (Bayesian inference in the ideal adaptor framework, similarity-based inference in exemplar theory, or normalization relative to expectations). Yet, the fact that none of the existing *models* predicts this effect highlights that this property of adaptive speech perception was only recently discovered, and is as-of-yet not well understood.
+
+## Incremental Bayesian belief-updating [@kleinschmidt-jaeger2011, @kleinschmidt-jaeger2012, @kleinschmidt-jaeger2015, @kleinschmidt-jaeger2016; @kleinschmidt2020]
+The only distributional learning model that has been more repeatedly tested against adaptive speech perception---incremental Bayesian belief-updating [@kleinschmidt-jaeger2011]---predicts proportional, rather than sublinear, shifts. This model had previously been found to closely predict the cumulative effects of exposure in perceptual recalibration to audio-visually [@kleinschmidt-jaeger2011; @kleinschmidt-jaeger2012] or lexically labeled speech [@cummings-theodore2023], as well as the type of exposure to unlabelled minimal pair words employed by Kleinschmidt and Jaeger [@theodore-monto2019]. However, all of these studies employed comparatively small changes in cue distributions, and lacked the design necessary to detect deviation from proportionality (we return to this point below). The findings presented in @kleinschmidt-jaeger2016 would seem to reject this specific distributional learning model [though not necessarily the theory it is derived from, @kleinschmidt-jaeger2015; for discussion of the relation between theory and model, see also @kleinschmidt2020]  <!-- TO DO: make sure we do -->
+
+```{r, eval=FALSE}
+# TO DO: This needs to be adjusted (if we keep it) so that the function doesn't just assume that the only cue is VOT 
+# (currently parts of the function make that assumption but other parts don't)
+
+get_IBBU_updates <- function(
+    prior = NULL,
+    exposure = NULL,
+    test = NULL,
+    condition = NULL,
+    cues = c("VOT", "f0_Mel"),
+    kappa = 72, nu = 72,
+    updates_to_keep = c(0, 48, 96, 144),
+    d.chodroff_wilson = d.chodroff_wilson.isolated,
+    seed = 1234
+) {
+  set.seed(seed)
+  Sigma_noise <- diag(c(80, 878)[1:length(cues)], nrow = length(cues))
+  dimnames(Sigma_noise) <- list(cues, cues)
+
+  if (is.null(prior)) {
+    prior <- d.chodroff_wilson %>%
+      make_NIW_ideal_adaptor_from_data(
+        cues = cues, kappa = kappa, nu = nu, Sigma_noise = Sigma_noise)
+  }
+  message("NIW made")
+  
+  if (is.null(exposure)) {
+    message("When exposure is NULL, condition is interpreted as the VOT shift.")
+    exposure <-
+      lapply(
+        X = as.list(1:3),
+        FUN = function(x) d.chodroff_wilson %>%
+          # Sample exposure from VOT distribution regardless of which cues are used
+          # for belief-updating, since that's what we did in the experiment.
+          make_MVG_ideal_observer_from_data(
+            cues = "VOT", Sigma_noise = matrix(80, dimnames = list("VOT", "VOT"))) %>%
+          sample_MVG_data_from_model(Ns = 24, randomize.order = T)) %>%
+      reduce(rbind) %>%
+      mutate(
+        Trial = 1:144,
+        Condition.Exposure = paste0("True", .env$condition),
+        VOT = VOT + as.numeric(gsub("Shift", "", .env$condition)),
+        f0 = predict_f0(VOT, Mel = F),
+        f0_Mel = predict_f0(VOT, Mel = T)) %>%
+      relocate(Condition.Exposure, Trial, category, VOT, f0)
+  }
+
+  idealized_ios <-
+    make_VOT_IOs_from_exposure(exposure) %>%
+    cross_join(
+      exposure %>%  
+        transmute(x = pmap(list(VOT), ~ c(...))) %>%
+        nest(x = x)) %>%
+    get_logistic_parameters_from_model(
+      model = ., 
+      model_col = "io",
+      groups = "Condition.Exposure")
+
+  update_NIW_ideal_adaptor_incrementally(
+    prior = prior,
+    exposure = exposure,
+    exposure.order = "Trial",
+    noise_treatment = "no_noise",
+    lapse_treatment = "no_lapses",
+    method = "label-certain") %>%
+    filter(observation.n %in% updates_to_keep) %>%
+    nest(ia = -observation.n) %>%
+    mutate(
+      Condition.Exposure = unique(exposure$Condition.Exposure),
+      observation.bin = as.numeric(factor(observation.n, levels = sort(observation.n))),
+      observation.alpha = observation.bin / max(observation.bin),
+      cf = map(ia,
+               ~ get_categorization_function_from_NIW_ideal_adaptor(.x, noise_treatment = "no_noise")),
+      sf = map2(cf, observation.alpha,
+                ~ stat_function(
+                  fun = function(x) {
+                    as.numeric(.x(
+                      map(x, function(y) c(y, predict_f0(y, Mel = T))),
+                      target_category = 2)) },
+                  alpha = .y,
+                  color = if (condition %in% c("Shift0", "Shift10", "Shift40")) colours.condition[condition] else "black"))) %>%
+    select(-c(observation.bin, observation.alpha)) %>%
+    relocate(Condition.Exposure, observation.n, ia, cf, sf) %>%
+    mutate(x = list(.env$test)) %>%
+    # Convert updated beliefs into estimated PSE and slope
+    get_logistic_parameters_from_model(
+      model = ., 
+      model_col = "ia",
+      groups = c("Condition.Exposure", "observation.n", "cf", "sf")) %>%
+    # Join in information about idealized prior and posterior
+    # (the latter based on ideal observer that has fully learned the exposure distribution).
+    # Then calculate for each update step the proportion of updating relative to those
+    # idealized priors and posteriors.
+    left_join(
+      idealized_ios %>%
+        select(Condition.Exposure, slope_scaled, PSE) %>%
+        rename(idealized_posterior_slope_scaled = slope_scaled, idealized_posterior_PSE = PSE)) %>%
+    cross_join(
+      idealized_ios %>%
+        ungroup() %>%
+        filter(Condition.Exposure == "prior") %>%
+        select(slope_scaled, PSE) %>%
+        rename(idealized_prior_slope_scaled = slope_scaled, idealized_prior_PSE = PSE)) %>%
+    mutate(
+      proportion_of_idealized_PSE = (PSE - idealized_prior_PSE) / (idealized_posterior_PSE - idealized_prior_PSE),
+      proportion_of_idealized_slope_scaled = (slope_scaled - idealized_prior_slope_scaled) / (idealized_posterior_slope_scaled - idealized_prior_slope_scaled))
+}
+
+get_IBBU_updates_for_experiment <- function(
+    data = d.for_analysis,
+    condition,
+    test = NULL,
+    cues = c("VOT", "f0_Mel"),
+    kappa = 72, nu = 72
+) {
+  exposure <-
+    data %>%
+    ungroup() %>%
+    filter(
+      Condition.Exposure == condition,
+      Phase == "exposure") %>%
+    filter(ParticipantID == first(ParticipantID)) %>%
+    mutate(category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))
+
+  get_IBBU_updates(
+    exposure = exposure,
+    test = test,
+    condition = condition,
+    cues = cues, kappa = kappa, nu = nu)
+}
+
+x <-
+  d.for_analysis %>%
+  ungroup() %>%
+  filter(Phase == "test") %>%
+  distinct(Item.VOT, Item.f0_Mel) %>%
+  arrange(Item.VOT) %>%
+  mutate(x = map2(Item.VOT, Item.f0_Mel, ~ c(.x, .y))) %>%
+  pull(x)
+
+# Plot updates for our three exposure condition
+d.updates <-  
+  bind_rows(
+    get_IBBU_updates_for_experiment(condition = "Shift0", test = x, cues = c("VOT")),
+    get_IBBU_updates_for_experiment(condition = "Shift10", test = x, cues = c("VOT")),
+    get_IBBU_updates_for_experiment(condition = "Shift40", test = x, cues = c("VOT")))
+
+# d.exposure %>%
+#   distinct(VOT) %>%
+#   ggplot(aes(x = VOT)) +
+#   d.updates$sf +
+#   scale_x_continuous(limits = c(10, 90)) +
+#   geom_label(
+#     data = d.updates %>% filter(observation.n == 144),
+#     aes(
+#       x = PSE,
+#       color = Condition.Exposure,
+#       label = percent(proportion_of_idealized_PSE)),x
+
+#     y = .5)
+```
+
+
+
+
+```{r, get-updates-nu-equal-kappa, eval=FALSE}
+x <-
+  tibble(VOT = seq(0, 100)) %>%
+  mutate(x = map(VOT, ~ c(.x, predict_f0(.x, Mel = T)))) %>%
+  pull(x)
+
+# Plot updates for true rightward shifts of various magnitudes
+d.updates <-  
+  bind_rows(get_IBBU_updates(condition = 10, test = x),
+            get_IBBU_updates(condition = 20, test = x),
+            get_IBBU_updates(condition = 30, test = x),
+            get_IBBU_updates(condition = 40, test = x))
+
+tibble(VOT = seq(10, 90)) %>%
+  ggplot(aes(x = VOT)) +
+  d.updates[d.updates$observation.n == 144,]$sf +
+  scale_x_continuous() +
+  geom_label(
+    data = d.updates %>% filter(observation.n == 144),
+    aes(
+      x = PSE,
+      color = Condition.Exposure,
+      label = percent(proportion_of_idealized_PSE)),
+    y = .5)
+```
+
+```{r get-updates-nu-larger-kappa, eval=FALSE}
+d.updates <-  
+  bind_rows(get_IBBU_updates(condition = 10, test = x, nu = 10000),
+            get_IBBU_updates(condition = 20, test = x, nu = 10000),
+            get_IBBU_updates(condition = 30, test = x, nu = 10000),
+            get_IBBU_updates(condition = 40, test = x, nu = 10000))
+
+tibble(VOT = seq(10, 90)) %>%
+  ggplot(aes(x = VOT)) +
+  d.updates[d.updates$observation.n == 144,]$sf +
+  scale_x_continuous() +
+  geom_label(
+    data = d.updates %>% filter(observation.n == 144),
+    aes(
+      x = PSE,
+      color = Condition.Exposure,
+      label = percent(proportion_of_idealized_PSE)),
+    y = .5)
+```
+
+
+```{r get-updates-nu-smaller-kappa, eval=FALSE}
+d.updates <-  
+  bind_rows(
+    get_IBBU_updates(condition = 10, test = x, kappa = 10000),
+    get_IBBU_updates(condition = 20, test = x, kappa = 10000),
+    get_IBBU_updates(condition = 30, test = x, kappa = 10000),
+    get_IBBU_updates(condition = 40, test = x, kappa = 10000))
+
+tibble(VOT = seq(10, 90)) %>%
+  ggplot(aes(x = VOT)) +
+  d.updates[d.updates$observation.n == 144,]$sf +
+  scale_x_continuous() +
+  geom_label(
+    data = d.updates %>% filter(observation.n == 144),
+    aes(
+      x = PSE,
+      color = Condition.Exposure,
+      label = percent(proportion_of_idealized_PSE)),
+    y = .5)
+```
+
+```{r, eval=FALSE}
+m <- readRDS("../models/IBBU-Tan-Jaeger2022-Experiment2-scaled.RDS")
+summary(m)
+```
+
+## Centering cues relative to expecations [C-CuRE, @apfelbaum-mcmurray2015; @mcmurray-jongman2011]
+Similarly, existing models of perceptual normalization---an alternative, but mutually compatible, hypothesis---also predict proportional changes in PSE. <!-- TO DO: write these sections for SI. along a single continuum normalization shift of cue mean just shifts cat function. for multi-dimensional cues, the same is true under cue integration models (variance and thus weighting does not change; shift along each dimension follows same logic as for single cue). for multi-dimensional multivariate models with interacting cues viewed from the perspective of a single cue, shifts can *appear* non-proportional but the pattern observed in KJ16---non proportionality without changes in slopes---would seem to be impossible to create as long as the test stimuli form a line in the multidimensional cue space -->
+
+## Exemplar theory
+<!-- generally the most similar exemplars should dominate perception. So it's unclear why one wouldn't converge against the input -->
+
+
+
+
+# Comparing predictions of different adaptive mechanisms
+Use database from @chodroff-wilson2018 as a starting point, and then expose the three different adaptive mechanisms introduced in @xie2023 to the distributions from the experiment.
+
+```{r functions-for-adaptive-changes}
+# TO DO: consider making plots a bit pretty, e.g., by grouping participant responses together
+# into 5msec VOT bins and by making model prediction a line plot, rather than a point plot.
+plot_predicted_vs_actual_categorization_responses <- function(data, colors.group = NULL) {
+  p <-
+    data %>%
+    mutate(ExposureGroup = gsub("_Up\\sto", "", ExposureGroup)) %>%
+    ggplot(aes(x = VOT)) +
+    stat_summary(fun = mean, geom = "line", aes(y = Response)) +
+    stat_summary(fun = mean, geom = "line", aes(y = Predicted_posterior), color = "gray") +
+    stat_summary(fun.data = mean_cl_boot, geom = "pointrange", aes(y = Response), size = 1/4) +
+    facet_wrap(~ ExposureGroup, ncol = 3) 
+  if (!is.null(colors.group)) p <- p + scale_color_manual("Exposure condition", values = colors.group)
+  plot(p)
+
+  p %+%
+    (data %>%
+       mutate(
+         ExposureGroup = gsub("_Up\\sto", "", ExposureGroup),
+         ExposureGroup = gsub("[ABC]A", "", ExposureGroup))) %>%
+    plot()
+
+  p <- 
+    data %>%
+    group_by(ExposureGroup, VOT) %>%
+    summarise(across(c(Response, Predicted_posterior), mean)) %>%
+    ungroup() %>%
+    mutate(
+      Test = gsub("^.*test(.*)$", "\\1", ExposureGroup),
+      Test = ifelse(Test == "no exposure", 0, Test),
+      ExposureGroup = gsub("_Up\\sto", "", ExposureGroup),
+      ExposureGroup = gsub("[ABC]A", "", ExposureGroup),
+      ExposureGroup = gsub("^.*Shift([0-9]+).*$", "+\\1", ExposureGroup)) %>%
+    ggplot(aes(x = Predicted_posterior, y = Response)) +
+    geom_abline(intercept = 0, slope = 1, color = "lightgray") +
+    geom_text(aes(color = ExposureGroup, label = Test)) +
+    geom_smooth(aes(color = ExposureGroup)) +
+    annotate(
+      geom = "text",
+      label = paste0(
+        "R^2 = ",
+        round(data %>%
+                with(., cor(Predicted_posterior, Response)) %>%
+                . ^ 2, 3) * 100, "%"),
+      x = .1, y = .9) +
+    xlab('Predicted proportion "t"-responses') +
+    ylab('Observed proportion "t"-responses') 
+  
+  if (!is.null(colors.group)) p <- p + scale_color_manual("Exposure condition", values = colors.group[c(3, 6, 9, 10)])
+  plot(p)
+}
+```
+
+## Setting prior beliefs about marginal cue means and category means and covariance matrices
+<!-- TO DO: consider subsetting to /i/ as following vowel context -->
+
+```{r predictions-exposure-conditions-by-IOs}
+# We decided to use C-CuREd VOT and f0 (in Mel) as the input to the ideal observers.
+# Our approach to C-CuREing removes effects of speech rate as well as talker-specific
+# means of the cues.
+cues <- c("VOT", "f0_Mel")
+
+prior_marginal_VOT_f0_stats <-
+  d.chodroff_wilson %>%
+  group_by(Talker) %>%
+  summarise(across(all_of(cues), mean)) %>%
+  ungroup() %>%
+  summarise(
+    x_mean = list(c(VOT = mean(VOT), f0 = mean(f0_Mel))),
+    x_var_VOT = var(VOT),
+    x_var_f0 = var(f0_Mel),
+    x_cov = list(cov(cbind(VOT, f0_Mel))))
+
+m_MVG.VOT_f0 <-
+  make_MVG_from_data(
+  data = d.chodroff_wilson,
+  category = "category",
+  cues = cues)
+
+m_IO.VOT_f0 <-
+  m_MVG.VOT_f0 %>%
+  lift_MVG_to_MVG_ideal_observer(
+      Sigma_noise = matrix(c(80, 0, 0, 878), ncol = 2, dimnames = list(names(first(.$mu)), names(first(.$mu)))),
+      prior = c("/d/" = .5, "/t/" = .5),
+      # set to lapse rate inferred in psychometric model fit to participants
+      lapse_rate = plogis(fixef(fit_test)[[2]]),
+      lapse_bias = c("/d/" = .5, "/t/" = .5))
+
+m_IA.VOT_f0 <-
+  m_IO.VOT_f0 %>%
+  lift_MVG_ideal_observer_to_NIW_ideal_adaptor(kappa = 10, nu = 10)
+```
+
+
+
+```{r prepare-data-for-adaptive-changes}
+# Make a data frame that splits the entire data in unique exposure-test combinations.
+# This data frame will be used for adaptive changes in normalization and category
+# representations.
+d_for_ASP <-
+  d.for_analysis %>%
+  ungroup() %>%
+  # Exclude catch trials and the final two test blocks since we expect unlearning during those blocks
+  # (which is not modeled)
+  filter(
+    !(Phase == "exposure" & is.na(Item.ExpectedResponse.Voicing)),
+    as.numeric(Block) <= 7) %>%
+  # Use F0 as intended by generation script. This makes fitting more computationally feasible
+  # (336 instead of 1001 unique combinations of group & test locations), and also removes the
+  # potential that annotation / measurement error perturb the f0 values. It does, however,
+  # make the assumption that f0 is the same across the three minimal pairs. While likely wrong,
+  # this assumption better aligns with the fact that the model doesn't have a way to keep track
+  # of any lexical, phonological, or phonetic context effects on VOT (and thus no way to predict
+  # any potential differences between minimal pairs).
+  # rename(VOT = Item.VOT, f0_Mel = Item.F0_target_for_generation_script) %>%
+  # Create new condition variable that uniquely identifies what participants have seen at any of the
+  # tests and a new block variable that identifies the type and order of blocks. Also create two
+  # convenience variables, x (stimulus) and Response.Category (to make matching with the category
+  # column of ideal observers/adaptors more straightforward).
+  mutate(
+    Condition.for_ASP = paste0(Condition.Exposure, List.ExposureBlockOrder, List.ExposureMaterials),
+    Block.for_ASP = paste0(Phase, Block),
+    x = map2(VOT, f0_Mel, ~ c(.x, .y)),
+    Response.Category = factor(ifelse(Response.Voicing == "voiced", "/d/", "/t/"), levels = c("/d/", "/t/")),
+    Item.ExpectedResponse.Category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"), levels = c("/d/", "/t/"))) %>%
+  slice_into_unique_exposure_test(
+    condition_var = "Condition.for_ASP",
+    block_var = "Block.for_ASP",
+    block_order = c("test1", "exposure2", "test3", "exposure4", "test5", "exposure6", "test7")) %>%
+  mutate(ExposureGroup = factor(ExposureGroup)) %>%
+  select(
+    ExposureGroup, Phase, ParticipantID, Block, Trial, x,
+    VOT, f0_Mel, vowel_duration, Response.Category, Item.ExpectedResponse.Category)
+```
+
+
+```{r set-subsample-proportion}
+set.seed(1976)
+# For changes in decision-making, the adaptive algorithm is order-sensitive. This makes it computationally
+# demanding to find the optimal parameterization for this algorithm (as optimization requires updating the
+# data and calculating the likelihood of the test responses under the updated model, but order-sensitivity
+# means that the updating cannot be vectorized but must be calculated trial-by-trial). This makes it
+# computationally infeasible to find the optimal learning rate (beta) for the entire data set. We thus
+# select a subset of participants for each exposure-test combination, optimize the parameter for that subset,
+# and then use that (approximately) 'optimal' parameter to update the *entire* data set (once) to calculate
+# the likelihood, R2, etc. for that parameter.
+#
+# In order to penalize all adaptive models equally, we subset the same amount of data for each model,
+# including the other two change models (even though they are computationally much less demanding to fit).
+sample_proportion_of_participants_per_exposure_test_condition <- .5
+
+# TO DO: IMPLEMENT SUBSAMPLING FOR NORMALIZATION AND FOR IBBU TO COMPARE LIKELIHOODS IN A MEANINGFUL WAY.
+# ---> Actually since the other algorithms are not order sensitive, they should not depend on how many
+# participants are included in the fitting. Perhaps a better way to make this a fair comparison is to 
+# subset the test data?
+```
+
+# Fitting models to the data
+
+## Changes in normalization
+
+```{r}
+# Only one participant per exposure group is needed for exposure data
+# (since they all have the same exposure up to that point, and our
+# approach to normalization is order-insensitive; so doing this separately
+# for each participant shouldn't make a difference).
+#
+# -------------------------------------------------------------------------
+# TO DO: results changes after limiting data to first participant in each
+# exposure group. this is unexpected. One possibility is that this is simply
+# an optimization problem. another possibility is that participants differ
+# in their cue means even within ExposureGroup (e.g., due to missing data)
+# even though that shouldn't be the case.
+# -------------------------------------------------------------------------
+filename.parameter <- "../models/best_performing_parameters.normalization.rds"
+filename.df <- "../models/best_performing_data.normalization.rds"
+
+if (RESET_MODELS || !file.exists(filename.parameter)) {
+  # This function is intended for the optimization run right below it
+  history.optimization_normalization <- tibble(.rows = 0)
+  range.prior_kappa.normalization <- c(10^-5, 10^5)
+
+  d_for_ASP.for_normalization <-
+    d_for_ASP %>%
+    group_by(ExposureGroup, Phase) %>%
+    filter(
+      ParticipantID %in%
+        sample(
+          x = unique(ParticipantID),
+          size = round(length(unique(ParticipantID)) * sample_proportion_of_participants_per_exposure_test_condition)))
+
+  best_performing_parameters.normalization <-
+    optim(
+      par = log(mean(range.prior_kappa.normalization)),
+      fn = get_likelihood_from_updated_normalization,
+      method = "L-BFGS-B",
+      lower = log(min(range.prior_kappa.normalization)),
+      upper = log(max(range.prior_kappa.normalization)),
+      control = list(
+        fnscale = -1,
+        factr = 10^8))
+
+  saveRDS(best_performing_parameters.normalization, filename.parameter)
+
+  # Get the normalized data based on the optimal parameter for normalization
+  # and then prepare it for plotting
+  df.normalized <-
+    update_normalization_and_normalize_test_data(
+      kappa = exp(best_performing_parameters.normalization$par[1]),
+      data = d_for_ASP)
+
+  df.normalized %<>%
+    mutate(observationID = 1:nrow(.)) %>%
+    # Get posterior of prior model for the normalized data and join it to the
+    # data.
+    left_join(
+      df.normalized %>%
+        group_map(
+          .f =
+            ~ get_posterior_from_model(
+              model = m_IO.VOT_f0,
+              x = .x$x,
+              noise_treatment = "marginalize",
+              lapse_treatment = "marginalize") %>%
+            filter(category == "/t/")) %>%
+        .[[1]],
+      by = "observationID") %>%
+    # Prepare the data frame for plotting by renaming variable names to those
+    # expected by plot_predicted_vs_actual_categorization_responses
+    mutate(
+      VOT = map_dbl(x.x, ~ .x[1]),
+      Response = ifelse(Response.Category == "/t/", 1, 0)) %>%
+    rename(Predicted_posterior = posterior_probability)
+
+  # TO DO: calculate likelihood for whole data set here
+
+  saveRDS(df.normalized, filename.df)
+  d_for_ASP.for_normalization <- NULL
+} else {
+  best_performing_parameters.normalization <- readRDS(filename.parameter)
+  df.normalized <- readRDS(filename.df)
+}
+
+cat("Changes in normalization achieve maximum log-likelihood of", best_performing_parameters.normalization$value, "on", sample_proportion_of_participants_per_exposure_test_condition * 100, "percent of the data for kappa =", exp(best_performing_parameters.normalization$par))
+cat("The same kappa achieved log-likelihood of", NA, "one whole data set.")
+```
+
+```{r, fig.width=7, fig.height=6, fig.cap="Ideal Adapter predicted categorization behavior"}
+df.normalized %>% 
+  plot_predicted_vs_actual_categorization_responses()
+```
+
+## Changes in decision-making
+
+```{r}
+filename.parameter <- "../models/best_performing_parameters.decision_making.rds"
+filename.df <- "../models/best_performing_data.decision_making.rds"
+
+if (RESET_MODELS || !file.exists(filename.parameter)) {
+  history.optimization_bias <- tibble(.rows = 0)
+  range.beta <- c(10^-3, 10^3)
+
+  d_for_ASP.for_decision_changes <-
+    d_for_ASP %>%
+    ungroup() %>%
+    # Include all test observations but only the exposure groups that contain all 3 exposure
+    # blocks (which then are reformatted as part of the updating function in order to derive
+    # the predicted updated decision biases after each of the three exposure blocks).
+    filter(
+      # We exclude the no exposure group since its likelihood does not depend on
+      # beta, and thus cannot affect the optimization of beta.
+      ExposureGroup != "no exposure",
+      Phase == "test" | grepl(x = ExposureGroup, pattern = ".*Up to test7")) %>%
+    # Sample proportion of participants from each exposure condition
+    mutate(ExposureGroup_withoutBlock = gsub("_Up to test.*", "", ExposureGroup)) %>%
+    group_by(ExposureGroup_withoutBlock) %>%
+    filter(ParticipantID %in%
+             sample(
+               x = unique(ParticipantID),
+               size = round(length(unique(ParticipantID)) * sample_proportion_of_participants_per_exposure_test_condition))) %>%
+    arrange(ParticipantID, Block, ExposureGroup, Phase, Trial) %>%
+    droplevels()
+
+  # Calculating exposure and test data outside of the optimization loop, in order to minimize
+  # computations that need to be conducted on each optimization step.
+  d_for_ASP.for_decision_changes.exposure <-
+    d_for_ASP.for_decision_changes %>%
+    ungroup() %>%
+    filter(Phase == "exposure") %>%
+    group_by(ExposureGroup, ParticipantID, Phase) %>%
+    droplevels() %>%
+    mutate(
+      (!! sym(cues[1])) := map_dbl(x, ~ .x[1]),
+      (!! sym(cues[2])) := map_dbl(x, ~ .x[2])) %>%
+    group_by(ExposureGroup, ParticipantID)
+
+  d_for_ASP.for_decision_changes.test <-
+    d_for_ASP.for_decision_changes %>%
+    filter(Phase == "test") %>%
+    ungroup() %>%
+    select(ExposureGroup, ParticipantID, x, Response.Category) %>%
+    group_by(ExposureGroup, ParticipantID) %>%
+    nest(data = c(x, Response.Category))
+
+  best_performing_parameters.bias <-
+    optim(
+      par = mean(log(range.beta)),
+      fn = get_likelihood_from_updated_bias,
+      method = "L-BFGS-B",
+      lower = log(min(range.beta)),
+      upper = log(max(range.beta)),
+      control = list(
+        fnscale = -1,
+        factr = 10^8))
+
+  saveRDS(best_performing_parameters.bias, filename.parameter)
+
+  # Use the optimal parameter to update the model's decision biases for *all* observations and then apply
+  # the model to the test data to calculate the log-likelihood and predicted responses for the entire data.
+  df.bias <-
+    update_decision_bias_by_group(
+      prior = m_IO.VOT_f0,
+      beta = exp(best_performing_parameters.bias$par),
+      data =  
+        d_for_ASP %>%
+        group_by(ExposureGroup, ParticipantID, Phase) %>%
+        filter(Phase == "exposure", grepl(x = ExposureGroup, pattern = ".*Up to test7")) %>%
+        arrange(ParticipantID, Phase, Block) %>%
+        droplevels() %>%
+        mutate(
+          (!! sym(cues[1])) := map_dbl(x, ~ .x[1]),
+          (!! sym(cues[2])) := map_dbl(x, ~ .x[2])) %>%
+        group_by(ExposureGroup, ParticipantID)) %>%
+    format_updated_bias_models_and_join_test_data(
+      prior = m_IO.VOT_f0,
+      # Here we do *not* exclude the "no exposure" condition since we want to calculate the likelihood for
+      # the entire data set.
+      data.test = d_for_ASP %>%
+        filter(Phase == "test") %>%
+        select(ExposureGroup, ParticipantID, x, Response.Category) %>%
+        group_by(ExposureGroup, ParticipantID) %>%
+        nest(data = c(x, Response.Category)))
+
+  # TO DO: get ll for entire data here
+
+  df.bias %<>%
+    # Categorize test tokens
+    mutate(
+      categorization = future_map2(
+        model,
+        data,
+        ~ get_categorization_from_MVG_ideal_observer(
+          model = .x,
+          x = .y$x,
+          decision_rule = "proportional",
+          noise_treatment = "marginalize",
+          lapse_treatment = "marginalize") %>%
+          filter(category == "/t/"))) %>%
+    # Prepare the data frame for plotting by renaming variable names to those
+    # expected by plot_predicted_vs_actual_categorization_responses
+    mutate(Response = map(data, ~ ifelse(.x$Response.Category == "/t/", 1, 0))) %>%
+    select(-c(model, data)) %>%
+    unnest(c(categorization, Response)) %>%
+    mutate(VOT = map_dbl(x, ~ .x[1])) %>%
+    rename(Predicted_posterior = response)
+
+  saveRDS(df.bias, filename.df)
+  d_for_ASP.for_decision_changes <- NULL
+} else {
+  best_performing_parameters.bias <- readRDS(filename.parameter)
+  df.bias <- readRDS(filename.df)
+}
+
+cat("Changes in decision-making achieve maximum likelihood of", best_performing_parameters.bias$value, "on", sample_proportion_of_participants_per_exposure_test_condition * 100, "percent of the data for beta =", exp(best_performing_parameters.bias$par))
+cat("The same kappa achieved log-likelihood of", NA, "one whole data set.")
+```
+
+
+
+```{r, fig.width=7, fig.height=6}
+df.bias %>% plot_predicted_vs_actual_categorization_responses()
+```
+
+## Changes in category representations
+
+```{r, eval=FALSE}
+# NOT YET IMPLEMENTED
+filename <- "../models/best_performing_parameters.representation.rds"
+
+# This function is intended for the optimization run right below it
+history.optimization_representation <- tibble(.rows = 0)
+range.prior_kappa.representation <- c(3, 10^5)
+range.prior_nu.representation <- c(3, 10^5)
+
+update_representations <- function(
+  prior,
+  data
+) {
+  cues <- get_cue_labels_from_model(prior)
+
+  data %>%
+    filter(Phase == "exposure")
+    mutate(
+      (!!! syms(cues))[1] := map_dbl(x, ~ .x[1]),
+      (!!! syms(cues))[2] := map_dbl(x, ~ .x[2])) %>%
+      group_by(ExposureGroup) %>%
+      group_map(
+        .f = ~ update_NIW_ideal_adaptor_incrementally(
+          prior = prior,
+          exposure = .x,
+          exposure.category = "Item.ExpectedResponse",
+          exposure.cues = cues,
+          noise_treatment = "marginalize",
+          lapse_treatment = "marginalize",
+          method = "label-certain",
+          keep.update_history = FALSE,
+          keep.exposure_data = FALSE) %>%
+          nest(posterior = everything())) %>%
+      reduce(bind_rows)
+}
+
+get_likelihood_from_updated_representation <- function(
+    par,
+    prior = m_IA.VOT_f0,
+    data = d_for_ASP
+) {
+  kappa <- exp(par[1])
+
+  ll <-
+    update_representations(
+      kappa = kappa,
+      data = data) %>%
+    get_likelihood_from_grouped_data(model = prior)
+
+  history.optimization_representation <<-
+    bind_rows(
+      history.optimization_representation,
+      tibble(kappa = kappa, nu = nu, log_likelihood = ll))
+
+  return(ll)
+}
+
+if (RESET_MODELS || !file.exists(filename)) {
+  best_performing_parameters.representation <-
+    optim(
+      par = log(mean(range.prior_kappanu.representation)),
+      fn = get_likelihood_from_updated_normalization,
+      method = "L-BFGS-B",
+      lower = log(min(range.prior_kappanu.representation)),
+      upper = log(max(range.prior_kappanu.representation)),
+      control = list(
+        fnscale = -1,
+        factr = 10^8))
+
+  best_performing_parameters.representation <- exp(best_performing_parameters.representation$par[1])
+  saveRDS(best_performing_parameters.representation, filename)
+} else {
+  best_performing_parameters.representation <- readRDS(filename)
+}
+```
+
+## Fit IA with 3-cue prior
+
+```{r}
+cues <- c("VOT", "f0_Mel", "vowel_duration")
+
+m_MVG.VOT_f0_vowel <-
+  make_MVG_from_data(
+  data = d.chodroff_wilson.isolated,
+  category = "category",
+  cues = cues)
+
+m_IO.VOT_f0_vowel <-
+  m_MVG.VOT_f0_vowel %>%
+  lift_MVG_to_MVG_ideal_observer(
+      Sigma_noise = matrix(c(80, 0, 0, 0, 878, 0, 0, 0, 80), ncol = 3, dimnames = list(names(first(.$mu)), names(first(.$mu)))),
+      prior = c("/d/" = .5, "/t/" = .5),
+      # TO DO: set to lapse rate inferred in psychometric model fit to participants
+      lapse_rate = plogis(fixef(fit_test)[[2]]),
+      lapse_bias = c("/d/" = .5, "/t/" = .5))
+
+
+# fit ideal adaptor with 3 cues priors
+m_IA.VOT_f0_vowelduration_informedpriors <-
+  infer_prior_beliefs(
+    exposure = d_for_ASP %>% filter(Phase == "exposure"),
+    test = d_for_ASP %>% filter(Phase == "test"),
+    cues = c("VOT", "f0_Mel", "vowel_duration"),  
+    category = "Item.ExpectedResponse.Category",
+    response = "Response.Category",
+    group = "ParticipantID",
+    group.unique = "ExposureGroup",
+    center.observations = T,   
+    scale.observations = T,
+    pca.observations = F,
+    lapse_rate = NULL,
+    mu_0 = m_IO.VOT_f0_vowel$mu,
+    Sigma_0 = m_IO.VOT_f0_vowel$Sigma,
+    sample = T,
+    file = "../models/IBBU_VOT+f0+vowelduration_test_priors.RDS",
+    warmup = 3000, iter = 4000,
+    control = list(adapt_delta = .995, max_treedepth = 15))
+
+```
+
+###DMMMM
+<!-- ### DMMM: A distributional multivariate mixed-effects model -->
+<!-- Here we use a distributional multivariate mixed-effects model (DMMM) to fit the data from both isolated and connected speech, separately for /d/ and /t/. The model fits not only the mean but higher-level statistical moments of the *distribution* of cues for each category. Specifically, we assume /d/ and /t/ categories that are normally distributed with unknown mean and variance but also can exhibit unknown skew. The ability to model skew should help to fit distributions along cues with soft or hard bounds, such VOT [especially, if 'negative VOTs' are considered the combination of a VOT of 0 and the presence of a second cue, pre-voicing]. -->
+
+<!-- The model is multivariate because we fit the data simultaneously to all three cues (VOT, f0, and vowel duration). This allows us to capture correlations between these cues, as well as correlations between any of the parameters of the talker-specific cue distributions for each category (e.g., the category means and variances).^[Since we fit separate models to each category, our implementation only captures such cross-talker correlations *within* each category, but not those that are known to exist *across* categories [@REF]. We made this decision since current implementations of DMMMs assume that residual (population-level) correlations between cues are identical across the data. As Figure XXX above shows,  this is clearly not the case for the, for instance, the correlation between VOT and vowel duration across /d/ and /t/.] -->
+<!-- TO DO: figure that shows pairwise cue correlations -->
+<!-- Finally, the model is a multilevel or mixed-effects model since we recognize the hierarchical grouping structure of the data (talkers). -->
+
+<!-- ```{r DMMM-setup, eval=FALSE} -->
+<!-- d.chodroff_wilson.for_analysis <- -->
+<!--   d.chodroff_wilson %>% -->
+<!--   select(Talker, category, VOT, f0_Mel, vowel_duration) %>% -->
+<!--   # Remove pitch-halving and extreme vowel duration outlier -->
+<!--   # (vowel duration is also truncated at > 30ms because of the automatic alignment that -->
+<!--   # was used by Chodroff and Wilson to get those measures) -->
+<!--   filter(f0_Mel > 200, vowel_duration < 450) -->
+
+<!-- scale_f0 <- scale(d.chodroff_wilson.for_analysis$f0_Mel) -->
+<!-- scale_vowel_duration <- scale(d.chodroff_wilson.for_analysis$vowel_duration) -->
+<!-- d.chodroff_wilson.for_analysis %<>% -->
+<!--   mutate( -->
+<!--     across( -->
+<!--       c(VOT, f0_Mel, vowel_duration), -->
+<!--       ~ (.x - mean(.x, na.rm = T)) / (2 * sd(.x, na.rm = T)))) -->
+
+<!-- # Recognizing that f0 was censored at lower end -->
+<!-- # Recognizing that vowel duration was censored at lower and upper end -->
+<!-- bounds <- list() -->
+<!-- bounds[["f0_Mel"]] <- range(d.chodroff_wilson.for_analysis$f0_Mel) * 1.0001 -->
+<!-- bounds[["vowel_duration"]] <- range(d.chodroff_wilson.for_analysis$vowel_duration) * 1.0001 -->
+
+<!-- my.priors.DMMM <- -->
+<!--   c( -->
+<!--     # Uncomment if we'd like to include speechstyle as a predictor, or if we'd like to fit -->
+<!--     # the data from both categories in one model (in which case, we'd need to add category -->
+<!--     # as predictor) -->
+<!--     # -->
+<!--     # MU: COEFFICIENTS IN LINEAR PREDICTOR -->
+<!--     prior(student_t(3, 0, 2.5), class = b, resp = VOT, dpar = mu), -->
+<!--     prior(student_t(3, 0, 2.5), class = b, resp = f0Mel, dpar = mu), -->
+<!--     prior(student_t(3, 0, 2.5), class = b, resp = vowelduration, dpar = mu), -->
+<!--     prior(cauchy(0, 2.5), class = sd, resp = VOT, dpar = mu), -->
+<!--     prior(cauchy(0, 2.5), class = sd, resp = f0Mel, dpar = mu), -->
+<!--     prior(cauchy(0, 2.5), class = sd, resp = vowelduration, dpar = mu), -->
+<!--     # SIGMA: VARIANCE OF RANDOM EFFECTS -->
+<!--     prior(student_t(3, 0, 2.5), class = b, resp = VOT, dpar = sigma), -->
+<!--     prior(student_t(3, 0, 2.5), class = b, resp = f0Mel, dpar = sigma), -->
+<!--     prior(student_t(3, 0, 2.5), class = b, resp = vowelduration, dpar = sigma), -->
+<!--     prior(cauchy(0, 2.5), class = sd, resp = VOT, dpar = sigma), -->
+<!--     prior(cauchy(0, 2.5), class = sd, resp = f0Mel, dpar = sigma), -->
+<!--     prior(cauchy(0, 2.5), class = sd, resp = vowelduration, dpar = sigma), -->
+<!--     prior(student_t(3, 0, 2.5), class = b, resp = VOT, dpar = alpha), -->
+<!--     prior(student_t(3, 0, 2.5), class = b, resp = vowelduration, dpar = alpha), -->
+<!--     # prior(cauchy(0, 2.5), class = sd, resp = VOT, dpar = alpha), -->
+<!--     # prior(cauchy(0, 2.5), class = sd, resp = vowelduration, dpar = alpha), -->
+<!--     # COR: CORRELATION OF RANDOM EFFECTS -->
+<!--     prior(lkj(1), class = cor) -->
+<!-- ) -->
+
+<!-- # TO DO: consider using a gaussian after all. -->
+<!-- # formula + set_rescor(rescor = TRUE) is only implemented for gaussian and student models -->
+<!-- # -->
+<!-- # holding grouping index p constant across mu, sigma, alpha allows us to fit correlations -->
+<!-- # across statistical moments (mu, log sigma, and skew). Fitting across both categories -->
+<!-- # allows us to do so across categories. -->
+<!-- bf_VOT <- -->
+<!--   bf(VOT ~ 1 + category + (1 + category | p | Talker)) + -->
+<!--   lf(sigma ~ 1 + category + (1 + category | q | Talker)) + -->
+<!--   # lf(alpha ~ 1 + category + (1 + category | o | Talker)) + -->
+<!--   lf(alpha ~ 1 + category) + -->
+<!--   brmsfamily( -->
+<!--     "skew_normal", -->
+<!--     link = "identity", -->
+<!--     link_sigma = "log", -->
+<!--     link_alpha = "identity") -->
+
+<!-- bf_f0 <-   -->
+<!--   # bf(paste0("f0_Mel | trunc(lb = ", bounds[["f0_Mel"]][1], ") ~ 1 + category + (1 + category | p | Talker)")) + -->
+<!--   bf(f0_Mel ~ 1 + category + (1 + category | p | Talker)) + -->
+<!--   lf(sigma ~ 1 + category + (1 + category | q | Talker)) + -->
+<!--   brmsfamily( -->
+<!--     "gaussian", -->
+<!--     link = "identity", -->
+<!--     link_sigma = "log") -->
+
+<!-- bf_vowel_duration <-   -->
+<!--   # bf(paste0("vowel_duration | trunc(lb = ", bounds[["vowel_duration"]][1], ", ub = ", bounds[["vowel_duration"]][2], ") ~ 1 + category + (1 + category | p | Talker)")) + -->
+<!--  bf(vowel_duration ~ 1 + category + (1 + category | p | Talker)) + -->
+<!--   lf(sigma ~ 1 + category + (1 + category | q | Talker)) + -->
+<!-- #  lf(alpha ~ 1 + category + (1 + category | o | Talker)) + -->
+<!--   lf(alpha ~ 1 + category) + -->
+<!--   brmsfamily( -->
+<!--     "skew_normal", -->
+<!--     link = "identity", -->
+<!--     link_sigma = "log", -->
+<!--     link_alpha = "identity") -->
+
+<!-- inits <-  -->
+
+<!--   list( -->
+<!--     b_alpha_VOT_Intercept = 5, -->
+<!--     b_alpha_VOT_categoryD = 1, -->
+<!--     b_alpha_vowelduration_Intercept = 5, -->
+<!--     b_alpha_duration_categoryD = 1, -->
+<!--   ) -->
+
+<!-- # TO DO: consider using *all* talkers here (currently subset to female talkers) -->
+<!-- # (inclusion of male talkers would require taking care of pitch-halving separately -->
+<!-- # for both sexes, and it probably would require including talker sex in the f0 model) -->
+<!-- contrasts(d.chodroff_wilson.for_analysis$category) <- cbind("D" = c(-1, 1)) -->
+<!-- DMMM <- -->
+<!--   brm( -->
+<!--   formula = bf_VOT + bf_f0 + bf_vowel_duration + set_rescor(rescor = FALSE), -->
+<!--   data = d.chodroff_wilson.for_analysis, -->
+<!--   prior = my.priors.DMMM, -->
+<!--   chains = 4, -->
+<!--   cores = 4, -->
+<!--   warmup = 1500, -->
+<!--   iter = 4000, -->
+<!--   thin = 1, -->
+<!--   threads = threading(threads = 2), -->
+<!--   control = list(adapt_delta = .85, max_treedepth = 15)) -->
+
+<!-- save_model = "../models/DMMM.stan" -->
+<!-- saveRDS(DMMM, file = "../models/DMMM-attempt4.rds") -->
+<!-- DMMM <- readRDS(file = "../models/DMMM-attempt3.rds") -->
+<!-- ``` -->
+
+<!-- ```{r checking-posterior-predictive, eval=FALSE} -->
+<!-- pp_check(DMMM, resp = "VOT") -->
+<!-- pp_check(DMMM, resp = "f0Mel") -->
+<!-- pp_check(DMMM, resp = "vowelduration") -->
+<!-- ``` -->
+
+<!-- ```{r draw-samples-from-DMMM, eval=FALSE} -->
+<!-- # 1. Get estimates of each talker model. This could be a. or b. -->
+<!-- #   a. use mean/median estimates -->
+<!-- #   b. marginalize over all parameters that go into each talker model. -->
+<!-- # 2. Calculate marginal density of test tokens under each (draw of each) talker model.  -->
+<!-- #    This could be done in a number of ways: -->
+<!-- #   a. for each test token, take density under category that maximizes the density -->
+<!-- #   b. for each test token, take average density by weighting density under each  -->
+<!-- #      category proporotional to the density of the observation under that category. -->
+<!-- #   c. ... -->
+<!-- #    -->
+<!-- # OR select model based on stimulus *mean* (mean generated under talker model is most  -->
+<!-- # similar to currently observed mean)   -->
+<!-- #    -->
+<!-- # 3. Calculate categorization function over test tokens conditional on the relative  -->
+<!-- #    probability of the different talker models, by either -->
+<!-- #   a. selecting the talker model that achieved the highest density, or  -->
+<!-- #   b. weighting each talker model relative to the density the test tokens have under  -->
+<!-- #      that model. -->
+<!-- s.DMMM <- -->
+<!--   DMMM %>% -->
+<!--   spread_draws( -->
+<!--     # fixed effects for mu, sigma, and alpha  -->
+<!--     !!! syms(pmap_chr( -->
+<!--       expand_grid( -->
+<!--         parameter = c("b", "b_sigma", "b_alpha"),  -->
+<!--         cue = c("VOT", "f0Mel", "vowelduration"),  -->
+<!--         coef = c("Intercept", "categoryD")) %>% -->
+<!--         # Filter an variables for which alpha was not modeled -->
+<!--         filter(!(cue == "f0Mel" & parameter == "b_alpha")), -->
+<!--       ~ paste(..., sep = "_"))), -->
+<!--     # random effects for mu, sigma, and alpha -->
+<!--     r_Talker__VOT[TalkerID, coef], -->
+<!--     r_Talker__f0Mel[TalkerID, coef], -->
+<!--     r_Talker__vowelduration[TalkerID, coef], -->
+<!--     r_Talker__sigma_VOT[TalkerID, coef],   -->
+<!--     r_Talker__sigma_f0Mel[TalkerID, coef], -->
+<!--     r_Talker__sigma_vowelduration[TalkerID, coef]) %>% -->
+<!--   # The followoing only applies the indices to the first element to the list of random effect names -->
+<!--   # { !!! syms(pmap_chr( -->
+<!--   #   expand_grid( -->
+<!--   #     parameter = c("r_Talker_", "r_Talker__sigma", "r_Talker__alpha"),  -->
+<!--   #     cue = c("VOT", "f0Mel", "vowelduration")) %>% -->
+<!--   #     # Filter an variables for which *random effects* of alpha were not modeled -->
+<!--   #     filter(!(cue %in% c("VOT", "f0Mel", "vowelduration") & parameter == "r_Talker__alpha")), -->
+<!--   #   ~ paste(..., sep = "_"))) }[TalkerID, coef]  -->
+<!--   # Spread the random effects -->
+<!--   pivot_wider( -->
+<!--     values_from = starts_with("r_"), -->
+<!--     names_from = coef) %>% -->
+<!--   # Add random effects to fixed effects  -->
+<!--   # (and add 0 if no random effect matching the fixed effect is found) -->
+<!--   mutate( -->
+<!--     across( -->
+<!--       starts_with("b_"), -->
+<!--       function(x) { -->
+<!--         r_name <- gsub("^b", "r_Talker_", cur_column()) -->
+<!--         r_value <- if (r_name %in% names(.)) get(r_name) else 0 -->
+<!--         x + r_value  -->
+<!--       })) %>% -->
+<!--   select(-starts_with("r_")) %>% -->
+<!--   # Get the predicted values for all category parameters -->
+<!--   mutate( -->
+<!--     across( -->
+<!--       ends_with("Intercept"), -->
+<!--       list( -->
+<!--         "catD" = function(x) { -->
+<!--           r_name <- gsub("Intercept", "categoryD", cur_column()) -->
+<!--           x + get(r_name)  -->
+<!--         }, -->
+<!--         "catT" = function(x) { -->
+<!--           r_name <- gsub("Intercept", "categoryD", cur_column()) -->
+<!--           x - get(r_name)  -->
+<!--         }), -->
+<!--       .names = "{.col}_{.fn}")) %>% -->
+<!--   select(TalkerID, .chain, .draw, ends_with(c("catD", "catT"))) %>% -->
+<!--   rename_with(~ gsub("Intercept_", "", .x)) %>% -->
+<!--   rename_with(~ gsub("b_(VOT|f0Mel|vowelduration)", "b_mu_\\1", .x))  -->
+
+<!-- s.DMMM %>% -->
+<!--   # Add sampling functions for all three cues -->
+<!--   mutate( -->
+<!--     marginal_VOT =  -->
+<!--       pmap( -->
+<!--         list(b_mu_VOT_catD, b_sigma_VOT_catD, b_alpha_VOT_catD, b_mu_VOT_catT, b_sigma_VOT_catT, b_alpha_VOT_catT), -->
+<!--         ~ function(muD, sigmaD, alphaD, muT, sigmaT, alphaT) { -->
+<!--           dD <- dskew_normal(x, mu = muD, sigma = sigmaD, alpha = alphaD) -->
+<!--           dT <- dskew_normal(x, mu = muT, sigma = sigmaT, alpha = alphaT) -->
+<!--           (dD + dT) -->
+<!--           }), -->
+<!--     posterior_VOT_T =  -->
+<!--       pmap( -->
+<!--         list(b_mu_VOT_catD, b_sigma_VOT_catD, b_alpha_VOT_catD, b_mu_VOT_catT, b_sigma_VOT_catT, b_alpha_VOT_catT), -->
+<!--         ~ function(muD, sigmaD, alphaD, muT, sigmaT, alphaT) { -->
+<!--           dD <- dskew_normal(x, mu = muD, sigma = sigmaD, alpha = alphaD) -->
+<!--           dT <- dskew_normal(x, mu = muT, sigma = sigmaT, alpha = alphaT) -->
+<!--           dT / (dD + dT) -->
+<!--           }), -->
+<!--     marginal_f0Mel =  -->
+<!--       pmap( -->
+<!--         list(b_mu_f0Mel_catD, b_sigma_f0Mel_catD, b_mu_f0Mel_catT, b_sigma_f0Mel_catT), -->
+<!--         ~ function(muD, sigmaD, muT, sigmaT) { -->
+<!--           dD <- dnorm(x, mu = muD, sigma = sigmaD) -->
+<!--           dT <- dnorm(x, mu = muT, sigma = sigmaT) -->
+<!--           (dD + dT) -->
+<!--           }), -->
+<!--     posterior_f0Mel_T =  -->
+<!--       pmap( -->
+<!--         list(b_mu_f0Mel_catD, b_sigma_f0Mel_catD, b_mu_f0Mel_catT, b_sigma_f0Mel_catT), -->
+<!--         ~ function(muD, sigmaD, muT, sigmaT) { -->
+<!--           dD <- dnorm(x, mu = muD, sigma = sigmaD) -->
+<!--           dT <- dnorm(x, mu = muT, sigma = sigmaT) -->
+<!--           dT / (dD + dT) -->
+<!--           }), -->
+<!--     marginal_vowelduration =  -->
+<!--       pmap( -->
+<!--         list(b_mu_vowelduration_catD, b_sigma_vowelduration_catD, b_alpha_vowelduration_catD, b_mu_vowelduration_catT, b_sigma_vowelduration_catT, b_alpha_vowelduration_catT), -->
+<!--         ~ function(muD, sigmaD, alphaD, muT, sigmaT, alphaT) { -->
+<!--           dD <- dskew_normal(x, mu = muD, sigma = sigmaD, alpha = alphaD) -->
+<!--           dT <- dskew_normal(x, mu = muT, sigma = sigmaT, alpha = alphaT) -->
+<!--           (dD + dT) -->
+<!--           }), -->
+<!--     posterior_vowelduration_T =  -->
+<!--       pmap( -->
+<!--         list(b_mu_vowelduration_catD, b_sigma_vowelduration_catD, b_alpha_vowelduration_catD, b_mu_vowelduration_catT, b_sigma_vowelduration_catT, b_alpha_vowelduration_catT), -->
+<!--         ~ function(muD, sigmaD, alphaD, muT, sigmaT, alphaT) { -->
+<!--           dD <- dskew_normal(x, mu = muD, sigma = sigmaD, alpha = alphaD) -->
+<!--           dT <- dskew_normal(x, mu = muT, sigma = sigmaT, alpha = alphaT) -->
+<!--           dT / (dD + dT) -->
+<!--           })) %>% -->
+<!--     select(TalkerID, .chain, .draw, ends_with(c("_D", "_T"))) -->
+<!-- ``` -->
+
+<!-- advantages for regression-based approach fitting categories -->
+<!-- - understands structure of data; doesn't assume balanced data -->
+<!-- - weights talkers with less data appropriate. -->
+<!-- - considers cues relative to the category the come from -->
+<!-- - can model correlation of category means across cues and talkers, while modeling correlation within categories separately (and separately for each category, if fit separately to each category) -->
+<!-- - can model correlation of category variances across cues and talkers -->
+<!-- - can generate hypotheses about new talkers -->
+
+<!-- Following @xie2023, the ideal observers included perceptual noise [estimates taken from @kronrod2016]. -->

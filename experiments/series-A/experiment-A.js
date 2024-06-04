@@ -32,12 +32,13 @@ $(document).ready(function() {
   // General setup
   ////////////////////////////////////////////////////////////////////////
   // take break every k trials
-  var breakEvery = 50;
+  var breakEvery = 68;
 
   ////////////////////////////////////////////////////////////////////////
   // Create experiment
   ////////////////////////////////////////////////////////////////////////
   e = new Experiment({
+      platform: 'mturk',
       rsrbProtocolNumber: 'RSRB00045955',
       rsrbConsentFormURL: 'https://www.hlp.rochester.edu/mturk/consent/RSRB45955_Consent_2022-02-04.pdf',
       survey: 'surveys/post_survey.html',
@@ -51,22 +52,15 @@ $(document).ready(function() {
 
   // Use the following parameter to skip parts of the experiment for debugging:
   var skipTo = e.urlparams['skipTo'];             // pre-[l]oading, p[ractice], e[xposure], t[est], s[urvey]
-  var cond_exp = e.urlparams['cond_exp'];         // no_exposure, lvar, or hvar
-  if ($.inArray(cond_exp, ['no_exposure', 'lvar', 'hvar']) < 0) throwError('unrecognized cond_exp.');
-  var list_exp = e.urlparams['list_exp'];       // name of test list (without path or file extension)
-  if (typeof(list_exp) === 'undefined') list_exp = 'builtin';
-  if ($.inArray(list_exp, ['builtin']) < 0) throwError('unrecognized list_exp.');
-  // var cond_test = e.urlparams['cond_test'];       // lvar or hvar
-  // if ($.inArray(cond_test, ['lvar', 'hvar']) < 0) throwError('unrecognized cond_test.');
+  var list_exp = e.urlparams['list_exp'];       // name of exposure list (without path or file extension)
   var list_test = e.urlparams['list_test'];       // name of test list (without path or file extension)
-  if (typeof(list_test) === 'undefined') list_test = 'builtin';
-  if ($.inArray(list_test, ['builtin', 'NORM-A-forward-test', 'NORM-A-backward-test']) < 0) throwError('unrecognized list_test.');
+  if ($.inArray(list_test, ['builtin', 'pseudo-randomized', 'NORM-A-forward-test', 'NORM-A-backward-test']) < 0) throwError('unrecognized list_test.');
 
   // set instructions based on experimental condition (based on whether there is an exposure phase or not)
   var instruction_payment, instruction_experiment, instruction_test;
-  if (cond_exp === 'no_exposure') {
-    experiment_duration = 15;
-    experiment_payment = '$1.50';
+  if (typeof(list_exp) === 'undefined') {
+    experiment_duration = 25;
+    experiment_payment = '$2.50';
     instruction_experiment = 'In this experiment, you will hear a female speaker saying words. Your task is to determine which word the speaker is saying by using ' +
                              'your mouse to click on the correct answer.';
     instruction_test = "<p>Now let's begin the experiment.<p>" +
@@ -209,6 +203,7 @@ $(document).ready(function() {
   var practiceStimuli, exposureStimuli, testStimuli;
   var all_audio_filenames = [];
   var continue_experiment = function(block, stimuli) {
+    throwMessage("Starting blocks");
     // Add stimuli to those that need to be preloaded and add path prefix to all filenames
     var filenames = [];
     for (var i = 0; i < stimuli.filenames.length; i++) { filenames[i] = stimuli.prefix + stimuli.filenames[i]; }
@@ -251,16 +246,16 @@ $(document).ready(function() {
       ////////////////////////////////////////////////////////////////////////
       // Create and add PRACTICE block
       ////////////////////////////////////////////////////////////////////////
-      if ($.inArray(skipTo, ['e', 't', 's']) < 0 && cond_exp !== 'no_exposure') {
-        throwMessage("Preparing practice block.");
-        throwMessage("... practice block not yet implemented");
+      if ($.inArray(skipTo, ['e', 't', 's']) < 0 && typeof(list_exp) !== 'undefined') {
+        throwMessage("Starting practice block.");
+        throwError("... practice block not yet implemented");
       } // end of practice block
 
       ////////////////////////////////////////////////////////////////////////
       // Create and add EXPOSURE block
       ////////////////////////////////////////////////////////////////////////
-      if ($.inArray(skipTo, ['t', 's']) < 0 && cond_exp !== 'no_exposure') {
-        throwMessage("Preparing exposure block.");
+      if ($.inArray(skipTo, ['t', 's']) < 0 && typeof(list_exp) !== 'undefined') {
+        throwMessage("Starting exposure block.");
 
         var exposureBlock = new VisualGridBlock({
           stimuli: exposureStimuli,
@@ -268,20 +263,18 @@ $(document).ready(function() {
           instructions: instruction_exposure,
           imageMapping: imageMapping,
           namespace: 'exposure',
-          allowFeedback: true,
+          allowFeedback: false,
           autoAdvanceReady: true,
           ITI_trialStartToImages: 500,  // time from trial start to showing pictures
           ITI_imagesToAudioStart: 1000,  // time from trial to start to audio play (only relevant if autoAdvanceReady == T)
-          ITI_responseToTrialEnd: 1500,
+          ITI_responseToTrialEnd: 0,
           OnNegativeFeedback_blinkInterval: 200, // how long is the blink on and off?
           OnNegativeFeedback_blinkNumber: 4,     // how many blinks are shown? (takes blinkInterval ms per blink)
+          stimOrderMethod: 'dont_randomize',
           breakEvery: breakEvery,  // Take a break every x trials
           imagePositions: [
-            'topleft', 'topcenter', 'topright',
-            'midleft', 'midright',
-            'bottomleft', 'bottomcenter', 'bottomright'],
+            'topleft', 'topright'],
             randomizeImagePositions: false, // Is true by default. If false, then just uses the list order above
-            randomizationMethod: 'shuffle_blocks', // Can also be set to "dont_randomize"
             showFamiliarization: false,
             debugMode: e.debugMode
         });
@@ -297,6 +290,8 @@ $(document).ready(function() {
       // Create and add TEST block
       ////////////////////////////////////////////////////////////////////////
       if ($.inArray(skipTo, ['s']) < 0) {
+        throwMessage("Starting test block.");
+
         /* Create visual world block using the stimuli above */
         var testBlock = new VisualGridBlock({
           stimuli: testStimuli,
@@ -309,11 +304,11 @@ $(document).ready(function() {
           ITI_trialStartToImages: 500,  // time from trial start to showing pictures
           ITI_imagesToAudioStart: 1000,  // time from trial to start to audio play (only relevant if autoAdvanceReady == T)
           ITI_responseToTrialEnd: 0,
+          stimOrderMethod: 'shuffle_across_blocks',
           breakEvery: breakEvery,  // Take a break every x trials
           imagePositions: [
             'topleft', 'topright'],
             randomizeImagePositions: false, // Is true by default. If false, then just uses the list order above
-            randomizationMethod: 'shuffle_blocks', // Can also be set to "dont_randomize"
             showFamiliarization: false,
             debugMode: e.debugMode
         });
@@ -324,8 +319,6 @@ $(document).ready(function() {
           showInTest: true
         });
       } // end of test block
-
-
 
       // All blocks have been added
       $("#continue").hide();
@@ -378,70 +371,97 @@ $(document).ready(function() {
         tin: 'stimuli/images/tin_image.png',
         dip: 'stimuli/images/dip_image.png',
         tip: 'stimuli/images/tip_image.png',
+        flare: 'stimuli/images/flare_image.png',
+        share: 'stimuli/images/share_image.png',
+        rare: 'stimuli/images/rare_image.png',
+        mock: 'stimuli/images/mock_image.png',
+        space: 'stimuli/images/space_image.png',
+        luck: 'stimuli/images/luck_image.png',
         other: 'stimuli/images/other_image.png'
     };
 
     // Define which images will show for a given word depending on the the condition (forward/backward) of that trial
     //
     //    'condition_name': {
-    //           'word_1': ['img_1', .., 'img_k'],
+    //           'target word_1': ['img_1', .., 'img_k'],
     //           ..
-    //           'word_j': ['img_1', .., 'img_k'],
+    //           'target word_j': ['img_1', .., 'img_k'],
     //     }
     var imageMapping = {
       'forward': {
         'TEST': ['dill', 'till', 'dim', 'tim', 'din', 'tin', 'dip', 'tip'],
-        'TEST.dilltill': ['dill', 'till'],
-        'TEST.dimtim': ['dim', 'tim'],
-        'TEST.dintin': ['din', 'tin'],
-        'TEST.diptip': ['dip', 'tip'],
+        'dilltill': ['dill', 'till'],
         'dill': ['dill', 'till'],
         'till': ['dill', 'till'],
+        'dimtim': ['dim', 'tim'],
         'dim': ['dim', 'tim'],
         'tim': ['dim', 'tim'],
+        'dintin': ['din', 'tin'],
         'din': ['din', 'tin'],
         'tin': ['din', 'tin'],
+        'diptip': ['dip', 'tip'],
         'dip': ['dip', 'tip'],
-        'tip': ['dip', 'tip']},
+        'tip': ['dip', 'tip'],
+        'flare': ['flare', 'share'],
+        'share': ['share', 'rare'],
+        'rare': ['flare', 'rare'],
+        'mock': ['mock', 'dip'],
+        'space': ['dill', 'space'],
+        'luck': ['din', 'luck']},
       'backward': {
         'TEST': ['dill', 'till', 'dim', 'tim', 'din', 'tin', 'dip', 'tip'].reverse(),
-        'TEST.dilltill': ['dill', 'till'].reverse(),
-        'TEST.dimtim': ['dim', 'tim'].reverse(),
-        'TEST.dintin': ['din', 'tin'].reverse(),
-        'TEST.diptip': ['dip', 'tip'].reverse(),
+        'dilltill': ['dill', 'till'].reverse(),
         'dill': ['dill', 'till'].reverse(),
         'till': ['dill', 'till'].reverse(),
+        'dimtim': ['dim', 'tim'].reverse(),
         'dim': ['dim', 'tim'].reverse(),
         'tim': ['dim', 'tim'].reverse(),
+        'dintin': ['din', 'tin'].reverse(),
         'din': ['din', 'tin'].reverse(),
         'tin': ['din', 'tin'].reverse(),
+        'diptip': ['dip', 'tip'].reverse(),
         'dip': ['dip', 'tip'].reverse(),
-        'tip': ['dip', 'tip'].reverse()}
+        'tip': ['dip', 'tip'].reverse(),
+        'flare': ['flare', 'share'].reverse(),
+        'share': ['share', 'rare'].reverse(),
+        'rare': ['flare', 'rare'].reverse(),
+        'mock': ['mock', 'dip'].reverse(),
+        'space': ['dill', 'space'].reverse(),
+        'luck': ['din', 'luck'].reverse()}
     };
 
     ////////////////////////////////////////////////////////////////////////
     // Create and add EXPOSURE stimuli
     ////////////////////////////////////////////////////////////////////////
-    throwMessage("Preparing exposure block.");
     var exposureStimuli;
 
     if (list_exp === 'builtin') {
-      // manually defined stimulus list
+      throwMessage("Preparing builtin exposure block.");
+
       var exposureStimuli = new ExtendedStimuliFileList({
         prefix: 'stimuli/exposure/',
         filenames: [
-
+         'dilltill_VOT110_F0250.wav', 'flare.wav', 'dilltill_VOT40_F0248.wav', 'share.wav', 'diptip_VOT-100_F0242.wav','diptip_VOT120_F0251.wav', 'rare.wav'
         ],
         target_words: [
-
+          'dilltill',
+          'flare',
+          'dilltill',
+          'share',
+          'diptip',
+          'diptip',
+          'rare'
         ],
-        image_selections: ['forward', 'forward', 'forward', 'forward', 'forward', 'forward', 'forward', 'forward'],
-        feedback: ['true', 'true', 'true', 'true', 'true', 'true', 'true', 'true'],
-        reps: [1, 1, 1, 1, 1, 1, 1, 1]
+        image_selections: ['forward', 'forward', 'forward', 'forward', 'backward', 'backward', 'backward'],
+        feedback: ['false', 'false', 'false', 'false', 'false', 'false', 'false'],
+        reps: [1, 1, 1, 1, 1, 1, 1]
       });
-    } else {
-      var exposureList = 'lists/exposure_sample_' + cond_exp + '.csv';
+      continue_experiment('exposure', exposureStimuli);
+    } else if (typeof(list_exp) !== 'undefined') {
+      throwMessage("Preparing exposure block from list input.");
+      var exposureList = 'lists/' + list_exp + '.csv';
 
+      throwMessage("Parsing exposure list: " + exposureList);
       Papa.parse(exposureList, {
         download: true,
         header: true,
@@ -456,40 +476,52 @@ $(document).ready(function() {
             feedback: getFromPapa(list, 'feedback'),
             reps: getFromPapa(list, 'reps')
           });
-          throwMessage('Parsed exposure list.');
+          throwMessage("Done parsing exposure list.");
           continue_experiment('exposure', exposureStimuli);
         }
       });
+    } else {
+      throwWarning("No exposure stimuli provided.");
     }
+
 
     ////////////////////////////////////////////////////////////////////////
     // Create and add TEST stimuli
     ////////////////////////////////////////////////////////////////////////
-    throwMessage("Preparing test block.");
     var testStimuli;
 
     if (list_test === 'builtin') {
+      throwMessage("Preparing builtin test block.");
+
       testStimuli = new ExtendedStimuliFileList({
         prefix: 'stimuli/test/',
         filenames: [
-         'dill_VOT0_PV0_F0246.wav', 'dill_VOT40_PV0_F0248.wav', 'dim_VOT0_PV50_F0244.wav', 'dim_VOT30_PV0_F0247.wav',
-         'din_VOT60_PV0_F0248.wav', 'din_VOT10_PV0_F0246.wav', 'dip_VOT0_PV100_F0242.wav','dip_VOT85_PV0_F0249.wav'
+         'dilltill_VOT110_F0250.wav', 'flare.wav', 'dilltill_VOT40_F0248.wav', 'dimtim_VOT-50_F0244.wav', 'dimtim_VOT30_F0247.wav',
+         'dintin_VOT60_F0248.wav', 'dintin_VOT130_F0251.wav', 'share.wav', 'diptip_VOT-100_F0242.wav','diptip_VOT120_F0251.wav', 'rare.wav'
         ],
         target_words: [
-          'dill', 'dill',
-          'dim', 'dim',
-          'din', 'din',
-          'dip', 'dip'
+          'dilltill',
+          'flare',
+          'dilltill',
+          'dimtim',
+          'dimtim',
+          'dintin',
+          'dintin',
+          'share',
+          'diptip',
+          'diptip',
+          'rare'
         ],
-        image_selections: ['forward', 'forward', 'forward', 'forward', 'forward', 'forward', 'forward', 'forward'],
-        feedback: ['false', 'false', 'false', 'false', 'false', 'false', 'false', 'false'],
-        reps: [1, 1, 1, 1, 1, 1, 1, 1]
+        image_selections: ['forward', 'forward', 'forward', 'forward', 'forward', 'forward', 'forward', 'forward',  'forward',  'forward', 'forward'],
+        feedback: ['false', 'false', 'false', 'false', 'false', 'false', 'false', 'false', 'false', 'false', 'false'],
+        reps: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
       });
       continue_experiment('test', testStimuli);
-    } else {
+    } else if (typeof(list_test) !== 'undefined') {
+      throwMessage("Preparing test block from list input.");
       var testList = 'lists/' + list_test + '.csv';
 
-      throwMessage("Parsing test list.");
+      throwMessage("Parsing test list: " + testList);
       Papa.parse(testList, {
         download: true,
         header: true,
@@ -504,11 +536,12 @@ $(document).ready(function() {
             feedback: getFromPapa(list, 'feedback'),
             reps: getFromPapa(list, 'reps')
           });
-          throwMessage('Parsed test list.');
+          throwMessage("Done parsing test list.");
           continue_experiment('test', testStimuli);
         }
       });
-      throwMessage("Done parsing test list.");
+    } else {
+      throwWarning("No test stimuli provided.");
     }
   } // end of everything that is only shown when not in preview mode
 }); // end of document ready function

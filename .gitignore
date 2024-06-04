@@ -1,6 +1,5 @@
 .DS_Store
 *.Rproj
-*.rds
 *.log
 *.gz
 *.Rproj
@@ -10,6 +9,10 @@
 .RData
 .Ruserdata
 *_cache*
-*.pdf
 *_files/
-*_cache/
+scripts/*_files/
+*.pdf
+*.rds
+r-references.bib
+scripts/debugging-validation.R
+scripts/debugging-validation.Rmd

@@ -1,3 +1,9 @@
-[submodule "experiments/series-A/template-R-project"]
-	path = experiments/series-A/template-R-project
-	url = https://github.com/hlplab/template-R-project.git
+[submodule "experiments/series-A/HeadphoneCheck_Test"]
+	path = experiments/series-A/HeadphoneCheck_Test
+	url = https://github.com/ChaitLabUCL/HeadphoneCheck_Test.git
+[submodule "experiments/series-A/HeadphoneCheck"]
+	path = experiments/series-A/HeadphoneCheck
+	url = https://github.com/mcdermottLab/HeadphoneCheck.git
+[submodule "experiments/series-A/JSEXP"]
+	path = experiments/series-A/JSEXP
+	url = https://github.com/hlplab/JSEXP

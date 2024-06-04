@@ -1,0 +1,146 @@
+---
+title             : |
+                    | Learning to understand an unfamiliar talker: 
+                    | Testing models of adaptive speech perception
+shorttitle        : "Learning to understand an unfamiliar talker"
+date              : "`r format(Sys.time(), '%B %d, %Y')`"
+
+author: 
+  - name          : "Maryann Tan"
+    affiliation   : "1, 2"
+    corresponding : yes    # Define only one corresponding author
+    address       : "Centre for Research on Bilingualism, Stockholm University, Sweden"
+    email         : "maryann.tan@biling.su.se"
+  - name          : "T. Florian Jaeger"
+    affiliation   : "2,3"
+
+affiliation:
+  - id            : "1"
+    institution   : "Centre for Research on Bilingualism, Stockholm University"
+  - id            : "2"
+    institution   : "Brain and Cognitive Sciences, University of Rochester"
+  - id            : "3"
+    institution   : "Computer Science, University of Rochester"
+
+authornote: |
+  Earlier versions of this work were presented at ### **ommitted for review** ###<!-- the Center for Research on Bilingualism at Stockholm University, ASA 2023 in Chicago, and the 2023 Experimental Linguistics conference in Paris-->. The authors are grateful to these audiences, as well as ### **ommitted for review** ###<!-- Chigusa Kurumada, Xin Xie, Anna Persson, Shawn Cummings, Rachel Sabatello, Carla Barrow, and Iva Savic --> for helpful discussions that affected experiment design and interpretation. Parts of this work were funded by awards from ### **ommitted for review** ###<!-- the Royal Swedish Academy to MT, the Stockholm University Board of Human Science and a Kvalitatessäkrande medel grant to TFJ, and the Helge Ax:son Johnsons foundation to both MT and TFJ-->. 
+
+abstract: |
+  Human speech perception is a computational feat. Now recognized as critical to this human ability is *adaptivity*: a few minutes of exposure can significantly reduce the processing difficulty listeners experience during initial encounters with an unfamiliar accent. How such adaptation unfolds incrementally, however, remains largely unknown, leaving basic predictions by theories of adaptive speech perception untested. This includes questions about how listeners' prior expectations based on lifelong experiences are integrated with the unfamiliar speech input, as well as questions about the speed and success of adaptation. We begin to address these knowledge gaps in a novel incremental exposure-test paradigm. We expose US English listeners to shifted phonetic distributions of word-initial stops (e.g., "dill" vs. "till"), while incrementally assessing cumulative changes in listeners' perception. We use Bayesian mixed-effects psychometric models to characterize these changes, and compare listeners' behavior against both idealized learners (ideal observers that know the exposure statistics) and a model of adaptive speech perception (ideal adaptors that have to infer those statistics). Our findings support several previously untested predictions of distributional learning models of adaptive speech perception. We do, however, also identify previously unrecognized limits on adaptivity that are unexpected under *any* existing model.
+keywords          : "speech perception; adaptation; incremental; distributional learning; error-driven learning; ideal adaptor"
+# wordcount         : "X" # Check knitting output, which provides full word count estimate (incl. references, tables, and figures)
+
+bibliography      : ["latex-stuff/library.bib", "latex-stuff/r-references.bib"]
+link-citations    : yes
+csl               : latex-stuff/apa-6th-edition.csl
+
+floatsintext      : yes
+figurelist        : no
+tablelist         : no
+footnotelist      : no
+# Check before first submission:
+numbersections    : no  # APA style is "no" but check journal guidelines
+linenumbers       : yes # If journal generates line numbers, change to "no" before submission
+draft             : no # Change to "no" before initial submission
+# Check before final submission:
+mask              : yes # Unmask for final submission
+
+header-includes: 
+ - \usepackage{sectsty}
+ - \usepackage{animate}
+ - \usepackage{amsmath}
+ - \usepackage{tikz}
+ - \usetikzlibrary{bayesnet}
+ - \usepackage{booktabs}
+ - \usepackage{siunitx}
+ - \usepackage{soul}
+ - \usepackage{tabto}
+ - \usepackage{xcolor}
+ - \usepackage{placeins}
+ - \setstcolor{red}
+ - \sectionfont{\color{black}}
+ - \subsectionfont{\color{black}}
+ - \subsubsectionfont{\color{black}}
+ - \usepackage{setspace}\doublespacing
+ - \usepackage{subfig}
+ - \usepackage{float} 
+ - \floatplacement{figure}{H} 
+ - \usepackage{multirow}
+ - \usepackage{lscape}
+ - \usepackage{pdflscape}
+ 
+documentclass     : "apa6"
+classoption       : "man"
+fontsize          : 11pt
+output: 
+  papaja::apa6_pdf:
+    latex_engine: xelatex
+    citation_package: biblatex
+    extra_dependencies: "subfig" 
+    includes:
+      in_header: latex-stuff/header.tex
+always_allow_html: true
+---
+
+\setcounter{secnumdepth}{5}
+
+```{r, include=FALSE, message=FALSE}
+if (!exists("PREAMBLE_LOADED")) source("preamble.R")
+```
+
+```{r knitr-setup, include=FALSE}
+# To keep figure sizes comparable across the paper, you can define a basic width and height (e.g., for each panel)
+# and then refer to those variables in the knitr chunk options that describe the figure width and height for a 
+# specific R chunk.
+options(width = 200, digits = 2, OutDec = ".", tinytex.verbose = TRUE)
+base.width = 1.33
+base.height = 1.33
+
+knitr::opts_chunk$set(
+  echo = FALSE, message = FALSE, warning = FALSE, 
+  results = "markup", cache = TRUE, cache.lazy = F,
+  interval = .2,
+  fig.align = "center", fig.height = base.height, fig.width = base.width,
+  tidy.opts = list(width.cutoff=80), tidy=TRUE)
+
+# Some useful formatting for warnings and error messages, so that they are not easily missed.
+knitr::knit_hooks$set(document = function(x) {
+  sub('\\usepackage[]{color}', '\\usepackage{xcolor}', x, fixed = TRUE)})
+color_block = function(color) { 
+  function(x, options) sprintf('\\color{%s}\\begin{verbatim}%s\\end{verbatim}\\color{black}', color, x) }
+knitr::knit_hooks$set(error = color_block('red'))
+knitr::knit_hooks$set(warning = color_block('orange'))
+knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
+knitr::knit_hooks$set(inline = function(x) { if (is.numeric(x)) prettyNum(x, big.mark=",") else x })
+```
+
+```{r}
+INCLUDE_TODO <- F           # switch on/off to get to do list.
+```
+
+```{r sec-to-do, child="section-0-TO-DO.Rmd", eval= if (INCLUDE_TODO) TRUE else FALSE}
+```
+
+\setcounter{page}{1}
+\setcounter{section}{0}
+\brefsection
+
+```{r sec-intro, child="section-1-introduction.Rmd", eval=TRUE}
+```
+
+```{r sec-methods, child="section-2-methods.Rmd", eval=TRUE}
+```
+
+```{r sec-results, child="section-3-results-analysis.Rmd", eval=TRUE}
+```
+
+```{r sec-discussion, child="section-4-general-discussion.Rmd", eval=TRUE}
+```
+
+```{r sec-references, child="section-5-references.Rmd", eval=TRUE}
+```
+
+\erefsection
+
+```{r, child="supplementary-information.Rmd", eval = TRUE}
+```
