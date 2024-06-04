@@ -217,7 +217,7 @@ if (file.exists("../models/d.IA_predicted_test_informedprior.rds")) {
       data = data.test,
       groups = get_group_levels_from_stanfit(m_IA.VOT_f0_vowelduration_informedprior))
 
-  saveRDS(d.IA_predicted_test_informedprior, "../models/d.IA_predicted_informedprior.rds")
+  saveRDS(d.IA_predicted_test_informedprior, "../models/d.IA_predicted_test_informedprior.rds")
 }
 
 if (file.exists("../models/d.IA_predicted_PSE_informedprior.rds")) {
