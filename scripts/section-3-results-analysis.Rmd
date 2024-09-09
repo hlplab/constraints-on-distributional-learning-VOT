@@ -844,7 +844,7 @@ p.human_psych_accuracy <-
     geom = "line", position = position_dodge2(.5)) +
   labs(x = "Block") +
   scale_y_continuous("Accuracy\n(of psychometric model)", breaks = c(.6, .8, 1)) +
-  scale_colour_manual("Condition", values = colours.condition, labels = c("baseline", "+10", "+40"), guide = F) +
+  scale_colour_manual("Condition", values = colours.condition, labels = c("baseline", "+10", "+40"), guide = "none") +
   scale_shape_manual("Accuracy", values = c(16, 17), labels = c("psychometric model", "human", "")) +
   coord_cartesian(ylim = c(.6, 1)) +
   facet_grid(
