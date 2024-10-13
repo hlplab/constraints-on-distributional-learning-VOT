@@ -1876,8 +1876,8 @@ summarize.NIW_ideal_adaptor_stanfit <- function(
     rename(
       parameter = .variable,
       !! sym(unique(.$.point)) := .value,
-      !! sym(unique(paste0("lower ", unique(.$.width * 100), "% ", toupper(unique(.$.interval))))) := .lower,
-      !! sym(unique(paste0("upper ", unique(.$.width * 100), "% ", toupper(unique(.$.interval))))) := .upper) %>%
+      !! sym(unique(paste0("lower ", unique(.$.width * 100), "\\% ", toupper(unique(.$.interval))))) := .lower,
+      !! sym(unique(paste0("upper ", unique(.$.width * 100), "\\% ", toupper(unique(.$.interval))))) := .upper) %>%
     select(-c(.width, .point, .interval)) %>% 
     # Simplifying for present paper
     ungroup() %>%
@@ -1890,7 +1890,10 @@ summarize.NIW_ideal_adaptor_stanfit <- function(
           parameter == "kappa" ~ "strength of prior beliefs about $\\mu_c$ ($\\kappa_{0}$)",
           parameter == "nu" ~ "strength of prior beliefs about $\\Sigma_c$ ($\\nu_{0}$)",
           parameter == "lapse_rate" ~ "lapse rate ($\\lambda$)")) %>%
-    kable(caption = "Summary of the ideal adaptor model's parameters fit to participants' behavior.")
+    kable(
+      caption = "Summary of the ideal adaptor model's parameters fit to participants' behavior.",
+      format = "latex",
+      escape = FALSE)
 }
 
 # TO DO: consider making plots a bit pretty, e.g., by grouping participant responses together
@@ -2000,7 +2003,7 @@ prep_posterior_draws_for_plotting <- function(
 }
 ```
 
-```{r ideal-adaptor-parameter-summary}
+```{r ideal-adaptor-parameter-summary, results='asis'}
 fit <- m_IA.VOT_f0_vowelduration_informedprior
 
 summarize.NIW_ideal_adaptor_stanfit(fit) 
