@@ -400,7 +400,7 @@ get_prop_shift_by_draw <- function(data) {
 }
 
 
-get_conditional_effects <- function(model, data, phase) {
+get_conditional_effects <- function(model, data, phase, method = "posterior_epred") {
   conditional_effects(
     x = model,
     effects = "VOT_gs:Condition.Exposure",
@@ -409,7 +409,7 @@ get_conditional_effects <- function(model, data, phase) {
         filter(Phase == .env$phase & Item.Labeled == FALSE) %>%
         prepVars(test_mean = VOT.mean_test, levels.Condition = levels_Condition.Exposure),
       vars = c("Block")),
-    method = "posterior_epred",
+    method = method,
     ndraws = 500,
     re_formula = NA)
 }
@@ -839,7 +839,8 @@ get_IBBU_predicted_response <- function(
     target_category = 2, # target category "/d/" = 1, "/t/" = 2
     predict_test = T,
     seed = 583,
-    ndraws = 1000
+    ndraws = NULL,
+    logit = F
 ) {
   # Get and summarize posterior draws from fitted model
   d.pars <-
@@ -857,7 +858,7 @@ get_IBBU_predicted_response <- function(
   # Categorize data
   d.pars %<>%
     group_by(group, .chain, .iteration, .draw) %>%
-    do(f = get_categorization_function_from_grouped_ibbu_stanfit_draws(., logit = F)) %>%
+    do(f = get_categorization_function_from_grouped_ibbu_stanfit_draws(., logit = logit)) %>%
     right_join(data, by = "group") %>%
     group_by(group, .chain, .iteration, .draw) %>%
     mutate(
@@ -868,12 +869,13 @@ get_IBBU_predicted_response <- function(
     select(-f) %>%
     unnest(c(cues_joint, cues_separate, Predicted_posterior)) %>%
     # Repair estimates that yield infinite posteriors
-    mutate(
+    { if (predict_test & logit == F) . else mutate(
+      .,
       Predicted_posterior =
         case_when(
           is.infinite(Predicted_posterior) & sign(Predicted_posterior) == 1 ~ 1,
           is.infinite(Predicted_posterior) & sign(Predicted_posterior) == -1 ~ 0,
-          T ~ Predicted_posterior)) %>%
+          T ~ Predicted_posterior)) } %>%
     # for posterior predictions of exposure stimuli, get categorisations based on proportion and criterion decision rules
     { if (predict_test) . else mutate(
       .,

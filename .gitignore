@@ -4,6 +4,11 @@
 *.gz
 *.Rproj
 *.tex
+*.tex.blg
+*.tex.bbl
+*.run.xml
+*.aux
+*.bcf
 .Rproj.user
 .Rhistory
 .RData
@@ -16,3 +21,4 @@ scripts/*_files/
 r-references.bib
 scripts/debugging-validation.R
 scripts/debugging-validation.Rmd
+debug.Rmd
