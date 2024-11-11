@@ -36,21 +36,18 @@ left_join(d.for_IA_predictions,
   mutate(Block = as.numeric(Block))
 
 
-# prepare data for fit
-write_csv(d.for_IA_predictions, "~/Desktop/d.for_IA_prediction_model.csv")
-d.for_IA_predictions <- 
-  read_csv("~/Desktop/d.for_IA_prediction_model.csv", show_col_types = FALSE)
-
 d.for_IA_predictions %<>% 
   filter(Block %in% c(1, 3, 5, 7)) %>% 
 ungroup() %>% 
   droplevels() %>% 
   drop_na()
 
+# for scaling
 mean_IA_posterior <- 
   mean(d.for_IA_predictions$IA_predicted_logodds, na.rm = T)
 sd_IA_posterior <- 
   sd(d.for_IA_predictions$IA_predicted_logodds, na.rm = T)
+# for scaling if block is linear predictor
 mean_block <- mean(d.for_IA_predictions$Block, na.rm = T)
 sd_block <- sd(d.for_IA_predictions$Block, na.rm = T)
 
@@ -59,14 +56,13 @@ d.for_IA_predictions %<>%
     IA_predicted_logodds_gs = IA_predicted_logodds - mean_IA_posterior / (2 * sd_IA_posterior),
     Block_gs = Block - mean_block / (2 * sd_block)) 
 
-
+# contrasts if block is a factor
 contrasts(d.for_IA_predictions$Block) <- MASS::fractions(MASS::contr.sdif(4))
 dimnames(contrasts(d.for_IA_predictions$Block))[[2]] <- c("_Block2 vs. Block1", "_Block3 vs. Block2", "_Block4 vs. Block3")
 
 contrasts(d.for_IA_predictions$Block)
-d.for_IA_predictions <- 
-  read_csv("~/Desktop/d.for_IA_prediction_model.csv", show_col_types = FALSE)
 
+# set priors 
 my_priors <- c(
   prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),
   prior(cauchy(0, 2.5), class = "sd", dpar = "mu2"),
