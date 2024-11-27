@@ -1,0 +1,87 @@
+\setcounter {tocdepth}{-10}
+\babel@toc {english}{}\relax 
+\contentsline {section}{\normalfont \normalsize \bbl@ensure@english {Abstract}}{2}{section*.1}%
+\contentsline {section}{\normalfont {Learning to understand an unfamiliar talker:\\ Testing models of adaptive speech perception}}{1}{section*.2}%
+\contentsline {section}{\numberline {1}Introduction}{1}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Open science}{9}{subsection.1.1}%
+\contentsline {section}{\numberline {2}Methods}{10}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Participants}{10}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Materials}{11}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Procedure}{12}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Exclusions}{16}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}Developing normative predictions to guide analysis}{17}{subsection.2.5}%
+\contentsline {section}{\numberline {3}Results}{18}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Analysis approach}{18}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Conceptual replication (averaging over test blocks)}{19}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Overview of incremental analyses}{21}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}How early does exposure begin to affect listeners' categorization responses? (comparing exposure conditions within each test block)}{24}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.5}Incremental adaptation from prior expectations (comparing block-to-block changes within exposure conditions)}{26}{subsection.3.5}%
+\contentsline {subsection}{\numberline {3.6}Constraints on cumulative adaptation (comparing exposure effects against idealized learner models)}{30}{subsection.3.6}%
+\contentsline {subsection}{\numberline {3.7}Effects of repeated testing}{33}{subsection.3.7}%
+\contentsline {section}{\numberline {4}General discussion}{34}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Incremental adaptation based on the amount and distribution of phonetic evidence (Predictions 1 and 2a,b)}{35}{subsection.4.1}%
+\contentsline {subsubsection}{\numberline {4.1.1}Prediction 1: Adaptation begins with, and integrates, listeners' prior experience}{36}{subsubsection.4.1.1}%
+\contentsline {subsubsection}{\numberline {4.1.2}Prediction 2a: Adaptation increases with the amount of exposure}{37}{subsubsection.4.1.2}%
+\contentsline {subsubsection}{\numberline {4.1.3}Prediction 2b: Adaptation depends on the phonetic distribution in the exposure input}{38}{subsubsection.4.1.3}%
+\contentsline {subsection}{\numberline {4.2}Prediction 4: Rapid adaptation with \emph {diminishing returns}}{40}{subsection.4.2}%
+\contentsline {subsubsection}{\numberline {4.2.1}How quickly can listeners adapt their speech perception?}{40}{subsubsection.4.2.1}%
+\contentsline {subsubsection}{\numberline {4.2.2}First fast, then slow: \emph {diminishing returns} of exposure}{42}{subsubsection.4.2.2}%
+\contentsline {subsection}{\numberline {4.3}Prediction 3: Constraints on the early moments of adaptive speech perception?}{43}{subsection.4.3}%
+\contentsline {subsubsection}{\numberline {4.3.1}Why is premature convergence theoretically relevant?}{44}{subsubsection.4.3.1}%
+\contentsline {subsubsection}{\numberline {4.3.2}Does our data speak to the distinction between model learning and model selection?}{46}{subsubsection.4.3.2}%
+\contentsline {subsubsection}{\numberline {4.3.3}But is premature convergence real?}{49}{subsubsection.4.3.3}%
+\contentsline {subsection}{\numberline {4.4}Limitations and future directions}{50}{subsection.4.4}%
+\contentsline {section}{\numberline {5}Conclusions}{52}{section.5}%
+\contentsline {section}{Supplementary information}{1}{section*.16}%
+\setcounter {tocdepth}{3}
+\contentsline {section}{\numberline {\S 1}Required software}{2}{section.sisection. 1}%
+\contentsline {subsection}{\numberline {\S 1.1}Interested in using R markdown do create APA formatted documents that integrate your code with your writing?}{3}{subsection.sisection. 1.1}%
+\contentsline {section}{\numberline {\S 2}Additional information about Materials}{4}{section.sisection. 2}%
+\contentsline {subsection}{\numberline {\S 2.1}Recordings}{4}{subsection.sisection. 2.1}%
+\contentsline {subsection}{\numberline {\S 2.2}Resynthesis}{4}{subsection.sisection. 2.2}%
+\contentsline {subsubsection}{\numberline {\S 2.2.1}Annotation of original recordings}{4}{subsubsection.sisection. 2.2.1}%
+\contentsline {subsubsection}{\numberline {\S 2.2.2}Tokens with positive VOTs}{5}{subsubsection.sisection. 2.2.2}%
+\contentsline {subsubsection}{\numberline {\S 2.2.3}Tokens with pre-voicing (`negative VOTs')}{6}{subsubsection.sisection. 2.2.3}%
+\contentsline {subsubsection}{\numberline {\S 2.2.4}Annotation of resynthesized stimuli (used in visualizations and for ideal observer/adaptor analyses)}{6}{subsubsection.sisection. 2.2.4}%
+\contentsline {subsection}{\numberline {\S 2.3}Placement of exposure stimuli relative to phonetic distributions in listeners' prior experience}{7}{subsection.sisection. 2.3}%
+\contentsline {section}{\numberline {\S 3}Additional information on participant exclusions}{7}{section.sisection. 3}%
+\contentsline {subsection}{\numberline {\S 3.1}Performance on catch and labelled trials}{9}{subsection.sisection. 3.1}%
+\contentsline {section}{\numberline {\S 4}Obtaining predictions of idealized listeners}{9}{section.sisection. 4}%
+\contentsline {subsection}{\numberline {\S 4.1}General structure of the idealized models}{9}{subsection.sisection. 4.1}%
+\contentsline {subsection}{\numberline {\S 4.2}Idealized pre-exposure listeners}{10}{subsection.sisection. 4.2}%
+\contentsline {subsubsection}{\numberline {\S 4.2.1}A database of L1-US English word-initial /d/ and /t/ productions}{10}{subsubsection.sisection. 4.2.1}%
+\contentsline {subsubsection}{\numberline {\S 4.2.2}A model of listeners representations of /d/ and /t/ categories}{12}{subsubsection.sisection. 4.2.2}%
+\contentsline {subsubsection}{\numberline {\S 4.2.3}A procedure to fit the parameters of the model}{12}{subsubsection.sisection. 4.2.3}%
+\contentsline {subsection}{\numberline {\S 4.3}Idealized learners that have fully learned the exposure distribution}{15}{subsection.sisection. 4.3}%
+\contentsline {subsection}{\numberline {\S 4.4}Putting models and listeners on the same scale: equating potential biases in the estimation of intercepts, slopes, and PSEs}{16}{subsection.sisection. 4.4}%
+\contentsline {section}{\numberline {\S 5}The Bayesian psychometric mixed-effects model: additional information and hypothesis tests}{17}{section.sisection. 5}%
+\contentsline {subsection}{\numberline {\S 5.1}Additional information about the Bayesian psychometric mixed-effects model}{18}{subsection.sisection. 5.1}%
+\contentsline {subsection}{\numberline {\S 5.2}PSE results for test blocks}{19}{subsection.sisection. 5.2}%
+\contentsline {subsubsection}{\numberline {\S 5.2.1}Differences in the rate of change between exposure conditions and block}{19}{subsubsection.sisection. 5.2.1}%
+\contentsline {subsection}{\numberline {\S 5.3}PSE results for exposure blocks}{19}{subsection.sisection. 5.3}%
+\contentsline {subsubsection}{\numberline {\S 5.3.1}Simple effects of condition within each exposure block}{21}{subsubsection.sisection. 5.3.1}%
+\contentsline {subsubsection}{\numberline {\S 5.3.2}Simple effects of block within each exposure condition}{21}{subsubsection.sisection. 5.3.2}%
+\contentsline {subsubsection}{\numberline {\S 5.3.3}Differences in the rate of change between exposure conditions and block}{22}{subsubsection.sisection. 5.3.3}%
+\contentsline {subsection}{\numberline {\S 5.4}Slope results for test blocks}{23}{subsection.sisection. 5.4}%
+\contentsline {subsubsection}{\numberline {\S 5.4.1}Simple effects of condition within each test block}{23}{subsubsection.sisection. 5.4.1}%
+\contentsline {subsubsection}{\numberline {\S 5.4.2}Simple effects of block within each exposure condition}{24}{subsubsection.sisection. 5.4.2}%
+\contentsline {subsubsection}{\numberline {\S 5.4.3}Difference in the rate of change between exposure conditions and test block}{26}{subsubsection.sisection. 5.4.3}%
+\contentsline {subsection}{\numberline {\S 5.5}Slope results for exposure blocks}{26}{subsection.sisection. 5.5}%
+\contentsline {subsubsection}{\numberline {\S 5.5.1}Simple effects of condition within each exposure block}{27}{subsubsection.sisection. 5.5.1}%
+\contentsline {subsubsection}{\numberline {\S 5.5.2}Simple effects of block within each exposure condition}{27}{subsubsection.sisection. 5.5.2}%
+\contentsline {subsubsection}{\numberline {\S 5.5.3}Differences in the rate of change between exposure conditions and block}{28}{subsubsection.sisection. 5.5.3}%
+\contentsline {subsection}{\numberline {\S 5.6}Lapse rates by exposure and test blocks}{29}{subsection.sisection. 5.6}%
+\contentsline {subsection}{\numberline {\S 5.7}Changes in participants' recognition accuracy as a function of exposure}{30}{subsection.sisection. 5.7}%
+\contentsline {subsection}{\numberline {\S 5.8}Comparing changes in participants' behavior against idealized learner models}{30}{subsection.sisection. 5.8}%
+\contentsline {subsubsection}{\numberline {\S 5.8.1}Testing convergence against idealized learner model}{31}{subsubsection.sisection. 5.8.1}%
+\contentsline {subsubsection}{\numberline {\S 5.8.2}Testing `shrinkage': Do exposure conditions differ in the degree to which they converged against idealized learner models?}{31}{subsubsection.sisection. 5.8.2}%
+\contentsline {subsubsection}{\numberline {\S 5.8.3}Discussion of shrinkage}{35}{subsubsection.sisection. 5.8.3}%
+\contentsline {subsection}{\numberline {\S 5.9}Relaxing the linearity assumption for VOT}{37}{subsection.sisection. 5.9}%
+\contentsline {subsubsection}{\numberline {\S 5.9.1}Substituting GAMMs for GLMMs in our psychometric mixed-effects model}{37}{subsubsection.sisection. 5.9.1}%
+\contentsline {subsubsection}{\numberline {\S 5.9.2}Results}{38}{subsubsection.sisection. 5.9.2}%
+\contentsline {section}{\numberline {\S 6}Visual analysis of reaction times}{40}{section.sisection. 6}%
+\contentsline {section}{\numberline {\S 7}Comparing participants' responses against predictions of ideal learning model}{41}{section.sisection. 7}%
+\contentsline {subsection}{\numberline {\S 7.1}The ideal adaptor model}{43}{subsection.sisection. 7.1}%
+\contentsline {subsection}{\numberline {\S 7.2}Fitting the model to participants' responses}{44}{subsection.sisection. 7.2}%
+\contentsline {subsection}{\numberline {\S 7.3}Results}{44}{subsection.sisection. 7.3}%
+\contentsline {section}{\numberline {8}Session Info}{52}{section.8}%
