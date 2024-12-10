@@ -301,6 +301,19 @@ d.talkerPSEs <-
 #   stat_summary(fun.data = mean_cl_boot, geom = "pointrange", position = pos) +
 #   geom_point(position = "jitter", alpha = .5)
 
+d.talkerPSEs %>%
+  select(c(speechstyle, starts_with("PSE"))) %>%
+  pivot_longer(
+    cols = starts_with("PSE"),
+    names_to = "PSE_type",
+    values_to = "PSE") %>%
+  # Filter implausible PSEs (there's one talker with a < - 100 PSE)
+  filter(PSE > 0, PSE_type == "PSE_actual", speechstyle == "isolated") %>%
+  ggplot(aes(x = PSE)) +
+  #geom_histogram(aes(y = ..density..), fill = NA, colour = "black", position = "identity") +
+  geom_density() +
+  scale_x_continuous(limits = c(22, 70))
+
 d.talkerPSEs %<>%
   summarise(
     across(
@@ -495,20 +508,49 @@ d.IA_predicted_logodds <-
 
 write_csv(d.IA_predicted_logodds, "../models/d.IA_predicted_logodds.csv")
 }
-
 ```
 
 
 ```{r fit-IA-predicted-logodds-human-responses}
+
 # fit linear model to human responses with IA-predicted-logodds as predictor
 # to assess how well IA predictions fit listeners' behaviour and how it changes from block to block
+# block is treated as linear 
 d.IA_predicted_logodds %<>%
   mutate(Block = as.numeric(
     case_when(
       Block == "1" ~ 1,
       Block == "3" ~ 2,
       Block == "5" ~ 3,
-      Block == "7" ~ 4))) 
+      Block == "7" ~ 4)),
+    Condition.Exposure = factor(Condition.Exposure))
+
+# get params for scaling
+Block.mean = mean(d.IA_predicted_logodds$Block)
+Block.SD = sd(d.IA_predicted_logodds$Block)
+IA.logodds_delta.mean = mean(d.IA_predicted_logodds$IA.logodds_delta)
+IA.logodds_delta.SD = sd(d.IA_predicted_logodds$IA.logodds_delta)
+IA.logodds_block1.mean = mean(d.IA_predicted_logodds$IA.logodds_block1)
+IA.logodds_block1.SD = sd(d.IA_predicted_logodds$IA.logodds_block1)
+IA.logodds_changes_in_intercept_across_block_condition.mean = mean(d.IA_predicted_logodds$IA.logodds_changes_in_intercept_across_block_condition)
+IA.logodds_changes_in_intercept_across_block_condition.SD = sd(d.IA_predicted_logodds$IA.logodds_changes_in_intercept_across_block_condition)
+IA.logodds_changes_in_slope_across_block_condition.mean = mean(d.IA_predicted_logodds$IA.logodds_changes_in_slope_across_block_condition)
+IA.logodds_changes_in_slope_across_block_condition.SD = sd(d.IA_predicted_logodds$IA.logodds_changes_in_slope_across_block_condition)
+
+# contrasts for Condition in the REs for comparability
+contrasts(d.IA_predicted_logodds$Condition.Exposure) <- MASS::fractions(MASS::contr.sdif(3))
+dimnames(contrasts(d.IA_predicted_logodds$Condition.Exposure))[[2]] <- c("_Shift10 vs. Shift0", "_Shift40 vs. Shift10")
+
+d.IA_predicted_logodds %<>%
+  mutate(
+    IA.logodds_delta_gs = IA.logodds_delta - IA.logodds_delta.mean / (2 * IA.logodds_delta.SD),
+    IA.logodds_block1_gs = IA.logodds_block1 - IA.logodds_block1.mean / (2 * IA.logodds_block1.SD),
+    IA.logodds_changes_in_intercept_across_block_condition_gs = IA.logodds_changes_in_intercept_across_block_condition -IA.logodds_changes_in_intercept_across_block_condition.mean / (2 * IA.logodds_changes_in_intercept_across_block_condition.SD),
+    IA.logodds_changes_in_slope_across_block_condition_gs = IA.logodds_changes_in_slope_across_block_condition - IA.logodds_changes_in_slope_across_block_condition.mean/ (2 * IA.logodds_changes_in_slope_across_block_condition.SD),
+    Block_gs = Block - Block.mean / (2 * Block.SD),
+    VOT_gs = Item.VOT - VOT.mean_test / (2 * VOT.sd_test)
+  )
+
 
 my_priors <- c(
   prior(student_t(3, 0, 2.5), class = "b", dpar = "mu2"),
@@ -520,8 +562,8 @@ fit_test.IA_predicted_logodds <-
     bf(
       Response.Voiceless ~ 1,
       mu1 ~ 0 + offset(0),
-      mu2 ~ 1 + (Block * IA.logodds_delta) + IA.logodds_block1 +
-        (1 + VOT_gs * Block | ParticipantID) + (1 + VOT_gs * Condition.Exposure * Block | Item.MinimalPair),
+      mu2 ~ 1 + (Block_gs * IA.logodds_delta_gs) + IA.logodds_block1_gs +
+        (1 + VOT_gs * Block_gs | ParticipantID) + (1 + VOT_gs * Condition.Exposure * Block_gs | Item.MinimalPair),
       theta1 ~ 1),
     data = d.IA_predicted_logodds,
     prior = my_priors,
@@ -534,16 +576,20 @@ fit_test.IA_predicted_logodds <-
     control = list(adapt_delta = .995), 
     file ="~/Desktop/constraints-on-distributional-learning-VOT/models/test_IA_predicted_logodds.rds",
     file_refit = "on_change")
+```
 
+
+
+``` {r fit-IA-predicted-logodds-intercept-slope}
 fit_test.IA_predicted_logodds_intercept_slope <-
   brm(
     bf(
       Response.Voiceless ~ 1,
       mu1 ~ 0 + offset(0),
       mu2 ~ 1 + 
-        Block * (IA.logodds_changes_in_intercept_across_block_condition  + IA.logodds_changes_in_slope_across_block_condition) + 
-        IA.logodds_block1 +
-        (1 + VOT_gs * Block | ParticipantID) + (1 + VOT_gs * Condition.Exposure * Block | Item.MinimalPair),
+        Block_gs * (IA.logodds_changes_in_intercept_across_block_condition_gs  + IA.logodds_changes_in_slope_across_block_condition_gs) + 
+        IA.logodds_block1_gs +
+        (1 + VOT_gs * Block_gs | ParticipantID) + (1 + VOT_gs * Condition.Exposure * Block_gs | Item.MinimalPair),
       theta1 ~ 1),
     data = d.IA_predicted_logodds,
     prior = my_priors,
@@ -553,11 +599,12 @@ fit_test.IA_predicted_logodds_intercept_slope <-
     iter = 4000,
     warmup = 2000,
     family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
-    control = list(adapt_delta = .995), 
+    control = list(adapt_delta = .999), 
     file ="~/Desktop/constraints-on-distributional-learning-VOT/models/test-IA-predicted_logodds_intercept_slope.rds",
     file_refit = "on_change")
+```
 
-
+```{r fit-IA-predicted-logodds-nested}
 # Code Block as categorical for the nested model
 d.IA_predicted_logodds %<>%
   ungroup() %>% 
@@ -573,8 +620,9 @@ fit_test.IA_predicted_logodds_nested <-
     bf(
       Response.Voiceless ~ 1,
       mu1 ~ 0 + offset(0),
-      mu2 ~ 1 + Block / IA.logodds_delta + IA.logodds_block1 +
-        (1 + VOT_gs * Block | ParticipantID) + (1 + VOT_gs * Condition.Exposure * Block | Item.MinimalPair),
+      mu2 ~ 1 + Block / IA.logodds_delta_gs + IA.logodds_block1_gs +
+        (0 + Block / VOT_gs | ParticipantID) +
+      (0 + Block / (Condition.Exposure * VOT_gs) | Item.MinimalPair),
       theta1 ~ 1),
     data = d.IA_predicted_logodds,
     prior = my_priors,
