@@ -574,7 +574,7 @@ fit_test.IA_predicted_logodds <-
     warmup = 2000,
     family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
     control = list(adapt_delta = .995), 
-    file ="~/Desktop/constraints-on-distributional-learning-VOT/models/test_IA_predicted_logodds.rds",
+    file ="../models/test_IA_predicted_logodds.rds",
     file_refit = "on_change")
 ```
 
@@ -600,7 +600,7 @@ fit_test.IA_predicted_logodds_intercept_slope <-
     warmup = 2000,
     family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
     control = list(adapt_delta = .999), 
-    file ="~/Desktop/constraints-on-distributional-learning-VOT/models/test_IA_predicted_logodds_intercept_slope.rds",
+    file ="../models/test_IA_predicted_logodds_intercept_slope.rds",
     file_refit = "on_change")
 ```
 
@@ -633,7 +633,7 @@ fit_test.IA_predicted_logodds_nested <-
     warmup = 2000,
     family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
     control = list(adapt_delta = .995), 
-    file ="~/Desktop/constraints-on-distributional-learning-VOT/models/test_IA_predicted_logodds_nested.rds",
+    file ="../models/test_IA_predicted_logodds_nested.rds",
     file_refit = "on_change")
 ```
 
