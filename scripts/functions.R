@@ -365,8 +365,7 @@ fit_model <- function(
     save_pars = save_pars(all = TRUE),
     family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
     control = list(adapt_delta = adapt_delta),
-    file = paste0("../models/", phase, "-", formulation, "-priorSD", priorSD, "-", adapt_delta, ".rds"),
-    file_refit = "on_change"
+    file = paste0("../models/", phase, "-", formulation, "-priorSD", priorSD, "-", adapt_delta, ".rds")
   )
 }
 

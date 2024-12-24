@@ -31,8 +31,6 @@ fit_test <-
     priorSD = 15,
     adapt_delta = .995)
 
-fit_test <- add_criterion(fit_test, criterion = "loo", moment_match = TRUE)
-
 fit_exposure <-
   fit_model(
     data = d.for_analysis,
