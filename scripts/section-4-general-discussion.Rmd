@@ -552,7 +552,8 @@ fit_test.upto.test4 <-
     save_pars = save_pars(all = TRUE),
     family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
     control = list(adapt_delta = 0.995),
-    file = "../models/test-standard-SD15-upto-block4.rds"
+    file = "../models/test-standard-SD15-upto-block4.rds",
+    file_refit = "on_change"
   )
 
 fit_test.upto.test4 <- add_criterion(fit_test.upto.test4, criterion = "loo", moment_match = TRUE)
@@ -591,10 +592,10 @@ dimnames(contrasts(d.IA_predicted_logodds$Condition.Exposure))[[2]] <- c("_Shift
 
 d.IA_predicted_logodds %<>%
   mutate(
-    IA.logodds_change_gs = IA.logodds_change - IA.logodds_change.mean / (2 * IA.logodds_change.SD),
-    IA.logodds_prior_gs = IA.logodds_prior - IA.logodds_prior.mean / (2 * IA.logodds_prior.SD),
-    IA.logodds_changes_in_intercept_across_block_condition_gs = IA.logodds_changes_in_intercept_across_block_condition -IA.logodds_changes_in_intercept_across_block_condition.mean / (2 * IA.logodds_changes_in_intercept_across_block_condition.SD),
-    IA.logodds_changes_in_slope_across_block_condition_gs = IA.logodds_changes_in_slope_across_block_condition - IA.logodds_changes_in_slope_across_block_condition.mean/ (2 * IA.logodds_changes_in_slope_across_block_condition.SD),
+    IA.logodds_change_gs = (IA.logodds_change - IA.logodds_change.mean) / (2 * IA.logodds_change.SD),
+    IA.logodds_prior_gs = (IA.logodds_prior - IA.logodds_prior.mean) / (2 * IA.logodds_prior.SD),
+    IA.logodds_changes_in_intercept_across_block_condition_gs = (IA.logodds_changes_in_intercept_across_block_condition -IA.logodds_changes_in_intercept_across_block_condition.mean) / (2 * IA.logodds_changes_in_intercept_across_block_condition.SD),
+    IA.logodds_changes_in_slope_across_block_condition_gs = (IA.logodds_changes_in_slope_across_block_condition - IA.logodds_changes_in_slope_across_block_condition.mean)/ (2 * IA.logodds_changes_in_slope_across_block_condition.SD),
     Block_gs = Block - Block.mean / (2 * Block.SD),
     VOT_gs = Item.VOT - VOT.mean_test / (2 * VOT.sd_test)
   )
@@ -622,26 +623,52 @@ fit_test.IA_predicted_logodds <-
     file ="../models/test_IA_predicted_logodds.rds",
     file_refit = "on_change") 
 
-# fit_test.IA_predicted_logodds.prior.change <-
-#   brm(
-#     bf(
-#       Response.Voiceless ~ 1 + (Block_gs * IA.logodds_change_gs) + logodds_prior_gs +
-#         (1 | ParticipantID) + (1 | Item.MinimalPair)),
-#     data = d.IA_predicted_logodds,
-#     prior = priors_logodds_model,
-#     cores = 4,
-#     chains = 4,
-#     init = 0,
-#     iter = 4000,
-#     warmup = 2000,
-#     save_pars = save_pars(all = TRUE),
-#     family = bernoulli("logit"),
-#     control = list(adapt_delta = .999), 
-#     file ="../models/test_IA_predicted_logodds.rds",
-#     file_refit = "on_change") 
-
 fit_test.IA_predicted_logodds <- add_criterion(fit_test.IA_predicted_logodds, criterion = c("loo"), moment_match = T)
 loo_compare(fit_test.IA_predicted_logodds, fit_test.upto.test4)
+
+fit_test.IA_predicted_logodds.prior.change <-
+  brm(
+    bf(
+      Response.Voiceless ~ 1 + IA.logodds_prior_gs + IA.logodds_change_gs + 
+        (1 | ParticipantID) + (1 | Item.MinimalPair)),
+    data = d.IA_predicted_logodds,
+    prior = priors_logodds_model,
+    cores = 4,
+    chains = 4,
+    init = 0,
+    iter = 4000,
+    warmup = 2000,
+    save_pars = save_pars(all = TRUE),
+    family = bernoulli("logit"),
+    control = list(adapt_delta = .9995, max_treedepth = 15),
+    file ="../models/test_IA_predicted_logodds.prior.change.rds",
+    file_refit = "on_change")
+
+fit_test.IA_predicted_logodds.prior.change <- add_criterion(fit_test.IA_predicted_logodds.prior.change, criterion = c("loo"), moment_match = T)
+loo_compare(fit_test.IA_predicted_logodds.prior.change, fit_test.upto.test4)
+
+fit_test.IA_predicted_logodds.prior.change.interaction <-
+  brm(
+    bf(
+      Response.Voiceless ~ 1 + (Block_gs * IA.logodds_change_gs) + IA.logodds_prior_gs +
+        (1 | ParticipantID) + (1 | Item.MinimalPair)),
+    data = d.IA_predicted_logodds,
+    prior = priors_logodds_model,
+    cores = 4,
+    chains = 4,
+    init = 0,
+    iter = 4000,
+    warmup = 2000,
+    save_pars = save_pars(all = TRUE),
+    family = bernoulli("logit"),
+    control = list(adapt_delta = .9995),
+    file ="../models/test_IA_predicted_logodds.prior.change.interaction.rds",
+    file_refit = "on_change")
+
+fit_test.IA_predicted_logodds.prior.change.interaction <- add_criterion(fit_test.IA_predicted_logodds.prior.change.interaction, criterion = c("loo"), moment_match = T)
+loo_compare(fit_test.IA_predicted_logodds.prior.change.interaction, fit_test.upto.test4)
+
+loo_compare(fit_test.IA_predicted_logodds, fit_test.IA_predicted_logodds.prior.change, fit_test.IA_predicted_logodds.prior.change.interaction)
 ```
 
 
