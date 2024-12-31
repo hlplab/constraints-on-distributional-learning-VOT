@@ -2,4 +2,12 @@
 
 # TO-DO
 
+ + highlight intent to move towards stronger test of the idea we adapt to distribution, while taking substantial steps towards more ecologically valid inputs
+    + natural sounding speech
+    + natural correlations between cues
+    + natural asymmetry in variances 
+    + sampled, natural distributions, rather than symmetric
+    + large number of unique locations and thus phonetic inputs, combine with different lexical context
+    + mix of unlabeled and labeled, plus zero explicit supervision/feedback
+
 Moved to https://docs.google.com/document/d/13zCqk-DHP0iSMxin2tExrt7woiJQAUGN_3SlsFWQC8c/
