@@ -3,6 +3,33 @@ logit_to_prob <- function(model, term, index = 1) {
   paste0(round(plogis(as.numeric(summary(model)$fixed[term, index])) * 100, 1), "%")
 }
 
+gs_scale <- function(data, variable_name) {
+  # Ensure variable_name is a string
+  if (!is.character(variable_name)) {
+    stop("variable_name must be a string representing the column name.")
+  }
+  
+  # Check if the variable exists in the data frame
+  if (!variable_name %in% names(data)) {
+    stop(paste("The variable", variable_name, "does not exist in the data frame."))
+  }
+  
+  # Calculate mean and standard deviation
+  var_mean <- mean(data[[variable_name]], na.rm = TRUE)
+  var_sd <- sd(data[[variable_name]], na.rm = TRUE)
+  
+  # Scale the variable
+  scaled_var <- (data[[variable_name]] - var_mean) / (2 * var_sd)
+  
+  # Add mean and SD as attributes
+  attr(scaled_var, paste0(variable_name, ".mean")) <- var_mean
+  attr(scaled_var, paste0(variable_name, ".SD")) <- var_sd
+  
+  # Return the scaled variable
+  return(scaled_var)
+}
+
+
 # function to transform Gelman-scaled values back
 descale <- function(x, mean, sd) {
   (x * 2 * sd) + mean
@@ -221,11 +248,11 @@ prepVars <- function(
 ) {
   d %<>%
     drop_na(Condition.Exposure, Phase, Block, Item.MinimalPair, ParticipantID, Item.VOT, Response)
-
+  
   message("VOT mean:", signif(mean(d$Item.VOT, na.rm = T)))
   message("VOT sd:", signif(sd(d$Item.VOT, na.rm = T)))
   message(paste("VOT test mean:", test_mean))
-
+  
   d %<>%
     ungroup() %>%
     mutate(
@@ -235,22 +262,27 @@ prepVars <- function(
     drop_na(Block, Response, Item.VOT) %>%
     mutate(VOT_gs = (Item.VOT - test_mean) / (2 * sd(Item.VOT, na.rm = TRUE))) %>%
     droplevels()
-
+  
   contrasts(d$Condition.Exposure) <- cbind("_Shift10 vs. Shift0" = c(-2/3, 1/3, 1/3),
                                            "_Shift40 vs. Shift10" = c(-1/3,-1/3, 2/3))
   message(contrasts(d$Condition.Exposure))
-
-  if (all(d$Phase == "test") & n_distinct(d$Block) > 1) {
+  
+  if (all(d$Phase == "test") & n_distinct(d$Block) == 6) {
     contrasts(d$Block) <- MASS::fractions(MASS::contr.sdif(6))
     dimnames(contrasts(d$Block))[[2]] <- c("_Test2 vs. Test1", "_Test3 vs. Test2", "_Test4 vs. Test3", "_Test5 vs. Test4", "_Test6 vs. Test5")
     message("Condition contrast is:", contrasts(d$Condition.Exposure))
     message("Block contrast is:", contrasts(d$Block))
-  } else if (all(d$Phase == "exposure") & n_distinct(d$Block) > 1) {
+  } else if (all(d$Phase == "test") & n_distinct(d$Block) == 4) {
+    contrasts(d$Block) <- MASS::fractions(MASS::contr.sdif(4))
+    dimnames(contrasts(d$Block))[[2]] <- c("_Test2 vs. Test1", "_Test3 vs. Test2", "_Test4 vs. Test3")
+    message("Condition contrast is:", contrasts(d$Condition.Exposure))
+    message("Block contrast is:", contrasts(d$Block))
+  } else if (all(d$Phase == "exposure") & n_distinct(d$Block) == 3) {
     contrasts(d$Block) <- cbind("_Exposure2 vs. Exposure1" = c(-2/3, 1/3, 1/3),
                                 "_Exposure3 vs. Exposure2" = c(-1/3,-1/3, 2/3))
     message("Condition contrast is:", MASS::fractions(contrasts(d$Condition.Exposure)))
     message("Block contrast is:", MASS::fractions(contrasts(d$Block)))
-  } else if (n_distinct(d$Block) > 1) {
+  } else if (n_distinct(d$Block) == 9) {
     contrasts(d$Block) <- MASS::fractions(MASS::contr.sdif(9))
     dimnames(contrasts(d$Block))[[2]] <- c("_Exp1 vs. Test1", "_Test2 vs. Exp1", "_Exp2 vs. Test2", "_Test3 vs. Exp2", "_Exp3 vs. Test3", "_Test4 vs. Exp3", "_Test5 vs. Test4", "_Test6 vs. Test5")
     message("Condition contrast is:", MASS::fractions(contrasts(d$Condition.Exposure)))
