@@ -92,7 +92,7 @@ if (!exists("PREAMBLE_LOADED")) source("preamble.R")
 # To keep figure sizes comparable across the paper, you can define a basic width and height (e.g., for each panel)
 # and then refer to those variables in the knitr chunk options that describe the figure width and height for a 
 # specific R chunk.
-options(width = 200, digits = 2, OutDec = ".", tinytex.verbose = TRUE)
+options(width = 200, digits = 3, OutDec = ".", tinytex.verbose = TRUE)
 base.width = 1.33
 base.height = 1.33
 
