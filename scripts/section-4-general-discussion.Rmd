@@ -301,19 +301,6 @@ d.talkerPSEs <-
 #   stat_summary(fun.data = mean_cl_boot, geom = "pointrange", position = pos) +
 #   geom_point(position = "jitter", alpha = .5)
 
-d.talkerPSEs %>%
-  select(c(speechstyle, starts_with("PSE"))) %>%
-  pivot_longer(
-    cols = starts_with("PSE"),
-    names_to = "PSE_type",
-    values_to = "PSE") %>%
-  # Filter implausible PSEs (there's one talker with a < - 100 PSE)
-  filter(PSE > 0, PSE_type == "PSE_actual", speechstyle == "isolated") %>%
-  ggplot(aes(x = PSE)) +
-  #geom_histogram(aes(y = ..density..), fill = NA, colour = "black", position = "identity") +
-  geom_density() +
-  scale_x_continuous(limits = c(22, 70))
-
 d.talkerPSEs %<>%
   summarise(
     across(
@@ -615,6 +602,24 @@ fit_test.IA_predicted_logodds.prior.change.interaction <-
 
 fit_test.IA_predicted_logodds.prior.change.interaction <- 
   add_criterion(fit_test.IA_predicted_logodds.prior.change.interaction, criterion = c("loo"), moment_match = T)
+
+fit_test.IA_predicted_logodds.r_slopes <-
+  brm(
+    bf(
+      Response.Voiceless ~ 1 + IA_predicted_logodds + 
+        (1 + IA_predicted_logodds | ParticipantID) + (1 | Item.MinimalPair)),
+    data = d.IA_predicted_logodds,
+    prior = priors_logodds_model,
+    cores = 4,
+    chains = 4,
+    init = 0,
+    iter = 4000,
+    warmup = 2000,
+    save_pars = save_pars(all = TRUE),
+    family = bernoulli("logit"),
+    control = list(adapt_delta = .9995),
+    file ="../models/test_IA_predicted_logodds.r_slopes.rds",
+    file_refit = "on_change")
 ```
 
 
@@ -631,7 +636,7 @@ bind_cols(
     format = "latex",
     booktabs = TRUE) %>% 
   kable_styling(latex_options = "HOLD_position", full_width = FALSE) %>%
-    column_spec(1, width = "15em")
+    column_spec(1, width = "25em")
 ```
 
 ```{r hypothesis-table-IA-logodds-interaction, results='asis'}
@@ -719,3 +724,8 @@ Research on adaptive changes in speech perception has made great strides since f
 In line with these theories, we found that listeners initially draw on prior experience with other talkers to recognize input from the unfamiliar talker. With increasing exposure, listeners then adapted their categorization responses, improving recognition accuracy. The incremental unfolding of these changes followed the prediction of distributional learning accounts---in particular, accounts that predict changes in listeners' perception to depend on the prediction error (or the amount of new information) associated with each new exposure input. Finally, we found suggestive evidence that adaptivity, at least during the earliest moments of exposure, is constrained: while adaptation was rapid, it also slowed down and seemed to converge against a stable state long before listeners approached the recognition accuracy expected from an idealized learner. The specific nature of these constraints strikes us as an important target for future work, as they potentially impose novel constraints on theories of adaptive speech perception.
 
 Our findings were facilitated by both Bayesian psychometric mixed-effects analysis [e.g., @prins2019bayesian; @kuss2005] and normative models of adaptive speech perception [@kleinschmidt-jaeger2015]. We extended the former to fit a single model across all participants, while correcting for participant-specific lapse rates and while modeling block-by-block changes in participants' psychometric functions. While such models used to require expensive software, freely available software has substantially lowered the entry cost for such approaches [e.g., \texttt{R}, @R-base; \texttt{brms}, @R-brms_a]. Similarly, there are now R libraries that facilitate the fitting and evaluation of ideal observers and adaptors [\texttt{MVBeliefUpdatr}, @R-MVBeliefUpdatr; \texttt{beliefupdatr}, @beliefupdatr]. The R markdown available on OSF provides a starting point for other researchers interested in either type of model.
+
+```{r}
+rm(fit_test.upto.test4)
+```
+
