@@ -3,27 +3,18 @@ logit_to_prob <- function(model, term, index = 1) {
   paste0(round(plogis(as.numeric(summary(model)$fixed[term, index])) * 100, 1), "%")
 }
 
-gs_scale <- function(data, variable_name) {
-  # Ensure variable_name is a string
-  if (!is.character(variable_name)) {
-    stop("variable_name must be a string representing the column name.")
-  }
-  
-  # Check if the variable exists in the data frame
-  if (!variable_name %in% names(data)) {
-    stop(paste("The variable", variable_name, "does not exist in the data frame."))
-  }
+gs_scale <- function(variable_name) {
   
   # Calculate mean and standard deviation
-  var_mean <- mean(data[[variable_name]], na.rm = TRUE)
-  var_sd <- sd(data[[variable_name]], na.rm = TRUE)
+  var_mean <- mean({{variable_name}}, na.rm = TRUE)
+  var_sd <- sd({{variable_name}}, na.rm = TRUE)
   
   # Scale the variable
-  scaled_var <- (data[[variable_name]] - var_mean) / (2 * var_sd)
+  scaled_var <- ({{variable_name}} - var_mean) / (2 * var_sd)
   
   # Add mean and SD as attributes
-  attr(scaled_var, paste0(variable_name, ".mean")) <- var_mean
-  attr(scaled_var, paste0(variable_name, ".SD")) <- var_sd
+  attr(scaled_var, paste0(substitute(variable_name), ".mean")) <- var_mean
+  attr(scaled_var, paste0(substitute(variable_name), ".SD")) <- var_sd
   
   # Return the scaled variable
   return(scaled_var)

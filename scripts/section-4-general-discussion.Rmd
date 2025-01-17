@@ -524,14 +524,15 @@ d.IA_predicted_logodds %<>%
       Block == "7" ~ 4)),
     Condition.Exposure = factor(Condition.Exposure))
 
+# scale predictors
 d.IA_predicted_logodds %<>%
   mutate(
-  IA.logodds_change_gs = gs_scale(., "IA.logodds_change"),
-  IA.logodds_prior_gs = gs_scale(., "IA.logodds_prior"),
-  IA.logodds_changes_in_intercept_across_block_condition_gs = gs_scale(., "IA.logodds_changes_in_intercept_across_block_condition"),
-  IA.logodds_changes_in_slope_across_block_condition_gs = gs_scale(., "IA.logodds_changes_in_slope_across_block_condition"),
-  Block_gs = gs_scale(., "Block"),
-  VOT_gs = gs_scale(., "VOT"))
+    across(c(IA.logodds_change, 
+             IA.logodds_prior,
+             IA.logodds_changes_in_intercept_across_block_condition,
+             IA.logodds_changes_in_slope_across_block_condition,
+             Block,
+             VOT), ~ gs_scale(.x), .names = "{.col}_gs"))
 
 # use new priors for the predicted logodds model since it is not a mixture but a plain logistic regression model
 priors_logodds_model <- 
