@@ -4,11 +4,12 @@
 *.gz
 *.Rproj
 *.tex
-*.tex.blg
-*.tex.bbl
 *.run.xml
 *.aux
 *.bcf
+*.bbl
+*.toc
+*.blg
 .Rproj.user
 .Rhistory
 .RData
