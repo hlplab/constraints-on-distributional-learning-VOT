@@ -40,6 +40,7 @@ library(tidybayes)          # posterior samples and plots in tidy format
 library(broom.mixed)        # extracting effects from lmer models
 library(posterior)
 library(rsample)            # bootstrapping
+library(modeest)            # obtain estimates of mode
 
 library(phonR)              # normalization of f0
 library(supunsup)           # Kleinschmidt & Jaeger 2016 data
