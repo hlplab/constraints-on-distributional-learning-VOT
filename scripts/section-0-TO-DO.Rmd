@@ -2,6 +2,10 @@
 
 # TO-DO
 
+ + Get back to concept of informative incompatibility
+ + Get back to number of combinations of tests (128 data points vs binary contrast)
+
+
  + highlight intent to move towards stronger test of the idea we adapt to distribution, while taking substantial steps towards more ecologically valid inputs
     + natural sounding speech
     + natural correlations between cues
@@ -11,3 +15,12 @@
     + mix of unlabeled and labeled, plus zero explicit supervision/feedback
 
 Moved to https://docs.google.com/document/d/13zCqk-DHP0iSMxin2tExrt7woiJQAUGN_3SlsFWQC8c/
+
+
+
+
+
+
+# Keeping some text around
+Stronger tests and models are needed to address this latter question: paradigms and analyses that go beyond dichotomous comparisons, instead measuring changes in listeners' perception as they incrementally unfold with different amounts and types of distributional exposure. 
+
