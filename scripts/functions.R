@@ -533,7 +533,7 @@ geom_linefit <- function(
     labs(x = "VOT (ms)", y = "Proportion \"t\"-responses"),
     scale_color_manual(
       "Condition",
-      labels = c("baseline", "+10ms", "+40ms"),
+      labels = c("-18ms", "-8ms", "+22ms"),
       values = colours.condition,
       aesthetics = c("color", "fill")),
     theme(
