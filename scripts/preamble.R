@@ -37,9 +37,11 @@ library(latexdiffr)         # track changes
 
 library(brms)               # fit Bayesian regression models
 library(tidybayes)          # posterior samples and plots in tidy format
+library(posterior)          # working with Bayesian output
+library(bayestestR)
 library(broom.mixed)        # extracting effects from lmer models
-library(posterior)
-library(rsample)            # bootstrapping
+library(modeest)            # estimate mode
+#library(rsample)           # bootstrapping
 
 library(phonR)              # normalization of f0
 library(supunsup)           # Kleinschmidt & Jaeger 2016 data
