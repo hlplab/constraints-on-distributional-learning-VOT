@@ -553,6 +553,22 @@ align_tab <- function(hyp) {
   map_chr(hyp, ~ ifelse(class(.x) == "numeric", "r","l"))
 }
 
+
+get_hyp_table <- function (model.fit, hyp.list) {
+  
+  hyp_table <- 
+    hypothesis(
+      model.fit,
+      hyp.list,
+      robust = T) 
+  
+  hyp_table %>% 
+    .$hypothesis %>% 
+    dplyr::select(-Star) %>% 
+    bind_cols(p_direction(hyp_table$samples)["pd"])  
+}
+
+
 make_hyp_table <- function(model = NULL, hypothesis, hypothesis_names, caption, col1_width = "15em", digits = 2) {
   bind_cols(
     tibble(Hypothesis = hypothesis_names), hypothesis) %>%
@@ -562,12 +578,13 @@ make_hyp_table <- function(model = NULL, hypothesis, hypothesis_names, caption, 
         c(Estimate, Est.Error, CI.Lower, CI.Upper),
         ~ round(., digits = digits)),
       across(
-        c(Post.Prob),
+        c(Post.Prob, pd),
         ~ round(., digits = 3)),
       Evid.Ratio = ifelse((is.infinite(Evid.Ratio)), paste("$\\geq", get_nsamples(model), "$"), round(Evid.Ratio, digits = 1)),
       CI = paste0("[", CI.Lower, ", ", CI.Upper, "]")) %>%
     dplyr::select(-c(CI.Upper, CI.Lower)) %>%
-    relocate(CI, .before = "Evid.Ratio") %>%
+    relocate(CI, .after = "Est.Error") %>%
+    relocate(pd, .before = "Evid.Ratio") %>% 
     kbl(
       caption = caption,
       digits = digits,
@@ -575,7 +592,7 @@ make_hyp_table <- function(model = NULL, hypothesis, hypothesis_names, caption, 
       format = "latex",
       booktabs = TRUE,
       escape = FALSE,
-      col.names = c("Hypothesis", "Est.", "SE", "90\\%-CI", "BF", "$p_{post}$")) %>%
+      col.names = c("Hypothesis", "Est.", "SE", "90\\%-CI", "$p_{direction}$", "BF", "$p_{post}$")) %>%
     # HOLD_position for latex table placement H and hold_position for latex h!, neither if placement is left to latex
     kable_styling(latex_options = "HOLD_position", full_width = FALSE) %>%
     column_spec(1, width = col1_width)

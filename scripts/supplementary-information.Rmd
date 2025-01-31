@@ -738,7 +738,7 @@ The main text contains summary tables for the simple effects of exposure conditi
 
 ```{r hypothesis-table-interaction-condition-block, fig.pos="H", results='asis'}
 hyp_interaction.condition_block <-
-  hypothesis(
+  get_hyp_table(
     fit_test,
     c(
       "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 < 0",
@@ -769,10 +769,7 @@ hyp_interaction.condition_block <-
     "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 > 0",
     "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
     "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 +
-   mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0"),
-   robust = T) %>%
-  .$hypothesis %>%
-  dplyr::select(-Star)
+   mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0"))
 
 make_hyp_table(
     fit_test,
@@ -874,7 +871,7 @@ The effects of VOT (slope) did not change significantly between conditions withi
 
 ```{r hypothesis-table-exposure-simple-effects-condition, fig.pos="H"}
 hyp.exposure_simple_effects_condition <- 
-  hypothesis(
+  get_hyp_table(
     fit_exposure.simple_effects_condition, 
     c(
       "mu2_Block2:Condition.Exposure_Shift10vs.Shift0 < 0",
@@ -885,10 +882,7 @@ hyp.exposure_simple_effects_condition <-
       "mu2_Block4:Condition.Exposure_Shift40vs.Shift10 + mu2_Block4:Condition.Exposure_Shift10vs.Shift0 < 0",
       "mu2_Block6:Condition.Exposure_Shift10vs.Shift0 < 0",
       "mu2_Block6:Condition.Exposure_Shift40vs.Shift10 < 0",
-      "mu2_Block6:Condition.Exposure_Shift40vs.Shift10 + mu2_Block6:Condition.Exposure_Shift10vs.Shift0 < 0"),
-    robust = T) %>%
-  .$hypothesis %>% 
-  dplyr::select(-Star)
+      "mu2_Block6:Condition.Exposure_Shift40vs.Shift10 + mu2_Block6:Condition.Exposure_Shift10vs.Shift0 < 0"))
 
 make_hyp_table(
   fit_exposure.simple_effects_condition, 
@@ -904,7 +898,7 @@ make_hyp_table(
 
 ```{r hypothesis-table-exposure-simple-effects-block, fig.pos="H"}
 hyp.exposure_simple_effects_block <- 
-  hypothesis(
+  get_hyp_table(
     fit_exposure.simple_effects_block, 
     c(
       "mu2_Condition.ExposureShift0:Block_Exposure2vs.Exposure1 > 0",
@@ -917,10 +911,7 @@ hyp.exposure_simple_effects_block <-
 
       "mu2_Condition.ExposureShift40:Block_Exposure2vs.Exposure1 < 0",
       "mu2_Condition.ExposureShift40:Block_Exposure3vs.Exposure2 < 0",
-      "mu2_Condition.ExposureShift40:Block_Exposure2vs.Exposure1 + mu2_Condition.ExposureShift40:Block_Exposure3vs.Exposure2 < 0"),
-    robust = T) %>%
-  .$hypothesis %>% 
-  dplyr::select(-Star)
+      "mu2_Condition.ExposureShift40:Block_Exposure2vs.Exposure1 + mu2_Condition.ExposureShift40:Block_Exposure3vs.Exposure2 < 0"))
 
   make_hyp_table(
     fit_exposure.simple_effects_block,
@@ -945,7 +936,7 @@ hyp.exposure_simple_effects_block <-
 
 ```{r hypothesis-table-exposure-interaction-condition-block, fig.pos="H"}
 hyp.interaction.exposure.condition_block <- 
-  hypothesis(
+  get_hyp_table(
     fit_exposure, 
     c(
       "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 < 0",
@@ -958,10 +949,7 @@ hyp.interaction.exposure.condition_block <-
       
       "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 < 0",
       "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure3vs.Exposure2  < 0",
-      "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure3vs.Exposure2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure3vs.Exposure2  < 0"),
-    robust = T) %>%
-  .$hypothesis %>% 
-  dplyr::select(-Star)
+      "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure3vs.Exposure2 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 + mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure3vs.Exposure2  < 0"))
 
   make_hyp_table(
     fit_exposure,
@@ -991,7 +979,7 @@ In contrast to PSEs, there was also little evidence that slopes differed between
 
 ```{r hypothesis-table-simple-slopes-condition, fig.pos="H"}
 hyp.simple_slopes_condition <- 
-  hypothesis(
+  get_hyp_table(
     fit_test.simple_effects_condition, 
     c(
       "mu2_Block1:Condition.Exposure_Shift10vs.Shift0:VOT_gs = 0",
@@ -1011,10 +999,7 @@ hyp.simple_slopes_condition <-
       "mu2_Block8:Condition.Exposure_Shift40vs.Shift10:VOT_gs + mu2_Block7:Condition.Exposure_Shift10vs.Shift0:VOT_gs = 0",
       "mu2_Block9:Condition.Exposure_Shift10vs.Shift0:VOT_gs = 0",
       "mu2_Block9:Condition.Exposure_Shift40vs.Shift10:VOT_gs = 0",
-      "mu2_Block9:Condition.Exposure_Shift40vs.Shift10:VOT_gs + mu2_Block7:Condition.Exposure_Shift10vs.Shift0:VOT_gs = 0"),
-    robust = T) %>%
-  .$hypothesis %>% 
-  dplyr::select(-Star)
+      "mu2_Block9:Condition.Exposure_Shift40vs.Shift10:VOT_gs + mu2_Block7:Condition.Exposure_Shift10vs.Shift0:VOT_gs = 0"))
 
 make_hyp_table(
   fit_test.simple_effects_condition,
@@ -1038,7 +1023,7 @@ As also visible in Figure \@ref(fig:plot-fit-pars), we found little evidence tha
 
 ```{r hypothesis-table-simple-slopes-block, fig.pos="H"}
 hyp.simple_slopes_block <- 
-  hypothesis(
+  get_hyp_table(
     fit_test.simple_effects_block, 
     c(
       "mu2_Condition.ExposureShift0:Block_Test2vs.Test1:VOT_gs > 0",
@@ -1065,10 +1050,7 @@ hyp.simple_slopes_block <-
     
       "mu2_Condition.ExposureShift40:Block_Test5vs.Test4:VOT_gs > 0",
       "mu2_Condition.ExposureShift40:Block_Test6vs.Test5:VOT_gs > 0",
-      "mu2_Condition.ExposureShift40:Block_Test5vs.Test4:VOT_gs + mu2_Condition.ExposureShift40:Block_Test6vs.Test5:VOT_gs > 0"),
-    robust = T) %>%
-  .$hypothesis %>% 
-  dplyr::select(-Star)
+      "mu2_Condition.ExposureShift40:Block_Test5vs.Test4:VOT_gs + mu2_Condition.ExposureShift40:Block_Test6vs.Test5:VOT_gs > 0"))
 
   make_hyp_table(
     fit_test.simple_effects_block,
@@ -1101,7 +1083,7 @@ Figure \@ref(fig:plot-fit-pars) also reveals that participants' slopes were cons
 
 ```{r hypothesis-table-interaction-condition-block-VOT, results='asis', fig.pos="H"}
 hyp_interaction.condition_block_VOT <-
-  hypothesis(
+  get_hyp_table(
     fit_test,
     c(
       "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 > 0",
@@ -1132,10 +1114,7 @@ hyp_interaction.condition_block_VOT <-
     "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 > 0",
     "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0",
     "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test5vs.Test4 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test5vs.Test4 +
-   mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0"),
-   robust = T) %>%
-  .$hypothesis %>%
-  dplyr::select(-Star)
+   mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test6vs.Test5 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Test6vs.Test5 > 0"))
 
   make_hyp_table(
     fit_test,
@@ -1162,7 +1141,7 @@ hyp_interaction.condition_block_VOT <-
 
 ```{r hypothesis-table-exposure-simple-slopes-condition, fig.pos="H"}
 hyp.exposure_simple_slopes_condition <- 
-  hypothesis(
+  get_hyp_table(
     fit_exposure.simple_effects_condition, 
     c(
       "mu2_Block2:Condition.Exposure_Shift10vs.Shift0:VOT_gs > 0",
@@ -1173,10 +1152,7 @@ hyp.exposure_simple_slopes_condition <-
       "mu2_Block4:Condition.Exposure_Shift40vs.Shift10:VOT_gs + mu2_Block4:Condition.Exposure_Shift10vs.Shift0:VOT_gs > 0",
       "mu2_Block6:Condition.Exposure_Shift10vs.Shift0:VOT_gs > 0",
       "mu2_Block6:Condition.Exposure_Shift40vs.Shift10:VOT_gs > 0",
-      "mu2_Block6:Condition.Exposure_Shift40vs.Shift10 + mu2_Block6:Condition.Exposure_Shift10vs.Shift0:VOT_gs > 0"),
-    robust = T) %>%
-  .$hypothesis %>% 
-  dplyr::select(-Star)
+      "mu2_Block6:Condition.Exposure_Shift40vs.Shift10 + mu2_Block6:Condition.Exposure_Shift10vs.Shift0:VOT_gs > 0"))
 
 make_hyp_table(
   fit_exposure.simple_effects_condition,
@@ -1194,7 +1170,7 @@ rm(fit_exposure.simple_effects_condition)
 
 ```{r hypothesis-table-exposure-simple-slopes-block, fig.pos="H"}
 hyp.exposure_simple_slopes_block <- 
-  hypothesis(
+  get_hyp_table(
     fit_exposure.simple_effects_block, 
     c(
       "mu2_Condition.ExposureShift0:Block_Exposure2vs.Exposure1:VOT_gs > 0",
@@ -1207,10 +1183,7 @@ hyp.exposure_simple_slopes_block <-
 
       "mu2_Condition.ExposureShift40:Block_Exposure2vs.Exposure1:VOT_gs > 0",
       "mu2_Condition.ExposureShift40:Block_Exposure3vs.Exposure2:VOT_gs > 0",
-      "mu2_Condition.ExposureShift40:Block_Exposure2vs.Exposure1:VOT_gs + mu2_Condition.ExposureShift40:Block_Exposure3vs.Exposure2:VOT_gs > 0"),
-    robust = T) %>%
-  .$hypothesis %>% 
-  dplyr::select(-Star)
+      "mu2_Condition.ExposureShift40:Block_Exposure2vs.Exposure1:VOT_gs + mu2_Condition.ExposureShift40:Block_Exposure3vs.Exposure2:VOT_gs > 0"))
 
 make_hyp_table(
   fit_exposure.simple_effects_block,
@@ -1230,7 +1203,7 @@ rm(fit_exposure.simple_effects_block)
 
 ```{r hypothesis-table-exposure-interaction-condition-block-VOT, fig.pos="H"}
 hyp.interaction.exposure.condition_block_VOT <- 
-  hypothesis(
+  get_hyp_table(
     fit_exposure, 
     c(
       "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 < 0",
@@ -1243,10 +1216,7 @@ hyp.interaction.exposure.condition_block_VOT <-
       
       "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 < 0",
       "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Exposure3vs.Exposure2  < 0",
-      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 + mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Exposure3vs.Exposure2 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Exposure3vs.Exposure2  < 0"),
-    robust = T) %>%
-  .$hypothesis %>% 
-  dplyr::select(-Star)
+      "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 + mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Exposure3vs.Exposure2 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 + mu2_VOT_gs:Condition.Exposure_Shift40vs.Shift10:Block_Exposure3vs.Exposure2  < 0"))
 
   make_hyp_table(
     fit_exposure,
@@ -1282,9 +1252,7 @@ The estimated lapse rate for each block is shown in Table \@ref(tab:hypothesis-t
 
 ```{r hypothesis-table-lapse-by-block, fig.pos="H"}
 hyp.lapse <- 
-  hypothesis(fit_lapse_by_block, map_chr(.x = 1:9, ~ c(get_lapse_hypothesis(fit_lapse_by_block, .x)))) %>% 
-  .$hypothesis %>% 
-  dplyr::select(-Star)
+  get_hyp_table(fit_lapse_by_block, map_chr(.x = 1:9, ~ c(get_lapse_hypothesis(fit_lapse_by_block, .x))))
 
 make_hyp_table(
   model = fit_lapse_by_block, 
@@ -1321,7 +1289,7 @@ Table \@ref(tab:hypothesis-table-no-convergence) reproduces Table \@ref(tab:hypo
 
 ```{r hypothesis-table-no-convergence, fig.pos="H"}
 hyp.convergence <-
-  hypothesis(
+  get_hyp_table(
     fit_test_nested_within_condition_and_block,
     c(
       str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs  - " , predictedPSE_scaled_0, ") > 0" ),
@@ -1338,10 +1306,7 @@ hyp.convergence <-
       
       str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs - ", predictedPSE_scaled_0, ") > 0" ),
       str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs - ", predictedPSE_scaled_10, ") > 0" ),
-      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs - ", predictedPSE_scaled_40, ") > 0" )), 
-    robust = T) %>%
-  .$hypothesis %>%
-  dplyr::select(-Star)
+      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs - ", predictedPSE_scaled_40, ") > 0" )))
 
 make_hyp_table(
   fit_test_nested_within_condition_and_block,
@@ -1389,7 +1354,7 @@ However, equation \@ref(eq:proportion-convergence) contains a researcher degree 
 
 ```{r hypothesis-table-shrinkage-against-prior-IO, echo=FALSE, message=FALSE, fig.pos="H"}
 hyp.shrinkage <-
-  hypothesis(
+  get_hyp_table(
     fit_test_nested_within_condition_and_block,
     c(
       # block 1
@@ -1407,10 +1372,7 @@ hyp.shrinkage <-
       # block 7
       str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs)  -", predictedPSE_scaled_prior, ")/(", predictedPSE_scaled_10, "-", predictedPSE_scaled_prior, ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", predictedPSE_scaled_prior, ")/(", predictedPSE_scaled_0, "-", predictedPSE_scaled_prior, ")"),
       
-      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs)  -", predictedPSE_scaled_prior, ")/(", predictedPSE_scaled_40, "-", predictedPSE_scaled_prior, ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", predictedPSE_scaled_prior, ")/(", predictedPSE_scaled_0, "-", predictedPSE_scaled_prior, ")")),
-    robust = T) %>%
-  .$hypothesis %>%
-  dplyr::select(-Star)
+      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs)  -", predictedPSE_scaled_prior, ")/(", predictedPSE_scaled_40, "-", predictedPSE_scaled_prior, ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", predictedPSE_scaled_prior, ")/(", predictedPSE_scaled_0, "-", predictedPSE_scaled_prior, ")")))
 
 make_hyp_table(
   fit_test_nested_within_condition_and_block,
@@ -1437,7 +1399,7 @@ make_hyp_table(
 
 ```{r hypothesis-table-shrinkage-against-Test1-same-condition, echo=FALSE, message=FALSE}
 hyp.shrinkage <-
-  hypothesis(
+  get_hyp_table(
     fit_test_nested_within_condition_and_block,
     c(
       # block 1
@@ -1457,10 +1419,7 @@ hyp.shrinkage <-
       # block 7
       str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs))/(", predictedPSE_scaled_10, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs)) >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs))/(", predictedPSE_scaled_0, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs))"),
       
-      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs))/(", predictedPSE_scaled_40, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs)) >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", " (-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs))/(", predictedPSE_scaled_0, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs))")),
-    robust = T) %>%
-  .$hypothesis %>%
-  dplyr::select(-Star)
+      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs)  -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs))/(", predictedPSE_scaled_40, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs)) >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", " (-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs))/(", predictedPSE_scaled_0, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs))")))
 
 make_hyp_table(
   fit_test_nested_within_condition_and_block,
@@ -1488,7 +1447,7 @@ make_hyp_table(
 
 ```{r hypothesis-table-shrinkage-against-Test1-across-conditions, echo=FALSE, message=FALSE}
 hyp.shrinkage <-
-  hypothesis(
+  get_hyp_table(
     fit_test_nested_within_condition_and_block,
     c(
       # block 1
@@ -1508,10 +1467,7 @@ hyp.shrinkage <-
       # block 7
       str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs)  -", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")/(", predictedPSE_scaled_10, "-", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")/(", predictedPSE_scaled_0, "-", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")"),
       
-      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs)  -", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")/(", predictedPSE_scaled_40, "-", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")/(", predictedPSE_scaled_0, "-", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")")),
-    robust = T) %>%
-  .$hypothesis %>%
-  dplyr::select(-Star)
+      str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs)  -", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")/(", predictedPSE_scaled_40, "-", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs)  -", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")/(", predictedPSE_scaled_0, "-", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")")))
 
 make_hyp_table(
   fit_test_nested_within_condition_and_block,

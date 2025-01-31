@@ -642,11 +642,8 @@ bind_cols(
 
 ```{r hypothesis-table-IA-logodds-interaction, results='asis'}
 hyp.IA_predicted_logodds.prior.change.interaction <-
-  hypothesis(fit_test.IA_predicted_logodds.prior.change.interaction,
-             "Block_gs:IA.logodds_change_gs < 0",
-             robust = T) %>% 
-  .$hypothesis %>%
-  dplyr::select(-Star)
+  get_hyp_table(fit_test.IA_predicted_logodds.prior.change.interaction,
+             "Block_gs:IA.logodds_change_gs < 0")
 
 make_hyp_table(
   fit_test.IA_predicted_logodds.prior.change.interaction,
