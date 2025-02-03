@@ -738,7 +738,7 @@ The main text contains summary tables for the simple effects of exposure conditi
 
 ```{r hypothesis-table-interaction-condition-block, fig.pos="H", results='asis'}
 hyp_interaction.condition_block <-
-  get_hyp_table(
+  get_hyp_data(
     fit_test,
     c(
       "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 < 0",
@@ -871,7 +871,7 @@ The effects of VOT (slope) did not change significantly between conditions withi
 
 ```{r hypothesis-table-exposure-simple-effects-condition, fig.pos="H"}
 hyp.exposure_simple_effects_condition <- 
-  get_hyp_table(
+  get_hyp_data(
     fit_exposure.simple_effects_condition, 
     c(
       "mu2_Block2:Condition.Exposure_Shift10vs.Shift0 < 0",
@@ -898,7 +898,7 @@ make_hyp_table(
 
 ```{r hypothesis-table-exposure-simple-effects-block, fig.pos="H"}
 hyp.exposure_simple_effects_block <- 
-  get_hyp_table(
+  get_hyp_data(
     fit_exposure.simple_effects_block, 
     c(
       "mu2_Condition.ExposureShift0:Block_Exposure2vs.Exposure1 > 0",
@@ -936,7 +936,7 @@ hyp.exposure_simple_effects_block <-
 
 ```{r hypothesis-table-exposure-interaction-condition-block, fig.pos="H"}
 hyp.interaction.exposure.condition_block <- 
-  get_hyp_table(
+  get_hyp_data(
     fit_exposure, 
     c(
       "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 < 0",
@@ -979,7 +979,7 @@ In contrast to PSEs, there was also little evidence that slopes differed between
 
 ```{r hypothesis-table-simple-slopes-condition, fig.pos="H"}
 hyp.simple_slopes_condition <- 
-  get_hyp_table(
+  get_hyp_data(
     fit_test.simple_effects_condition, 
     c(
       "mu2_Block1:Condition.Exposure_Shift10vs.Shift0:VOT_gs = 0",
@@ -1023,7 +1023,7 @@ As also visible in Figure \@ref(fig:plot-fit-pars), we found little evidence tha
 
 ```{r hypothesis-table-simple-slopes-block, fig.pos="H"}
 hyp.simple_slopes_block <- 
-  get_hyp_table(
+  get_hyp_data(
     fit_test.simple_effects_block, 
     c(
       "mu2_Condition.ExposureShift0:Block_Test2vs.Test1:VOT_gs > 0",
@@ -1083,7 +1083,7 @@ Figure \@ref(fig:plot-fit-pars) also reveals that participants' slopes were cons
 
 ```{r hypothesis-table-interaction-condition-block-VOT, results='asis', fig.pos="H"}
 hyp_interaction.condition_block_VOT <-
-  get_hyp_table(
+  get_hyp_data(
     fit_test,
     c(
       "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Test2vs.Test1 > 0",
@@ -1141,7 +1141,7 @@ hyp_interaction.condition_block_VOT <-
 
 ```{r hypothesis-table-exposure-simple-slopes-condition, fig.pos="H"}
 hyp.exposure_simple_slopes_condition <- 
-  get_hyp_table(
+  get_hyp_data(
     fit_exposure.simple_effects_condition, 
     c(
       "mu2_Block2:Condition.Exposure_Shift10vs.Shift0:VOT_gs > 0",
@@ -1170,7 +1170,7 @@ rm(fit_exposure.simple_effects_condition)
 
 ```{r hypothesis-table-exposure-simple-slopes-block, fig.pos="H"}
 hyp.exposure_simple_slopes_block <- 
-  get_hyp_table(
+  get_hyp_data(
     fit_exposure.simple_effects_block, 
     c(
       "mu2_Condition.ExposureShift0:Block_Exposure2vs.Exposure1:VOT_gs > 0",
@@ -1203,7 +1203,7 @@ rm(fit_exposure.simple_effects_block)
 
 ```{r hypothesis-table-exposure-interaction-condition-block-VOT, fig.pos="H"}
 hyp.interaction.exposure.condition_block_VOT <- 
-  get_hyp_table(
+  get_hyp_data(
     fit_exposure, 
     c(
       "mu2_VOT_gs:Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 < 0",
@@ -1252,7 +1252,7 @@ The estimated lapse rate for each block is shown in Table \@ref(tab:hypothesis-t
 
 ```{r hypothesis-table-lapse-by-block, fig.pos="H"}
 hyp.lapse <- 
-  get_hyp_table(fit_lapse_by_block, map_chr(.x = 1:9, ~ c(get_lapse_hypothesis(fit_lapse_by_block, .x))))
+  get_hyp_data(fit_lapse_by_block, map_chr(.x = 1:9, ~ c(get_lapse_hypothesis(fit_lapse_by_block, .x))))
 
 make_hyp_table(
   model = fit_lapse_by_block, 
@@ -1289,7 +1289,7 @@ Table \@ref(tab:hypothesis-table-no-convergence) reproduces Table \@ref(tab:hypo
 
 ```{r hypothesis-table-no-convergence, fig.pos="H"}
 hyp.convergence <-
-  get_hyp_table(
+  get_hyp_data(
     fit_test_nested_within_condition_and_block,
     c(
       str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs  - " , predictedPSE_scaled_0, ") > 0" ),
@@ -1354,7 +1354,7 @@ However, equation \@ref(eq:proportion-convergence) contains a researcher degree 
 
 ```{r hypothesis-table-shrinkage-against-prior-IO, echo=FALSE, message=FALSE, fig.pos="H"}
 hyp.shrinkage <-
-  get_hyp_table(
+  get_hyp_data(
     fit_test_nested_within_condition_and_block,
     c(
       # block 1
@@ -1399,7 +1399,7 @@ make_hyp_table(
 
 ```{r hypothesis-table-shrinkage-against-Test1-same-condition, echo=FALSE, message=FALSE}
 hyp.shrinkage <-
-  get_hyp_table(
+  get_hyp_data(
     fit_test_nested_within_condition_and_block,
     c(
       # block 1
@@ -1447,7 +1447,7 @@ make_hyp_table(
 
 ```{r hypothesis-table-shrinkage-against-Test1-across-conditions, echo=FALSE, message=FALSE}
 hyp.shrinkage <-
-  get_hyp_table(
+  get_hyp_data(
     fit_test_nested_within_condition_and_block,
     c(
       # block 1
