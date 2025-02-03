@@ -554,18 +554,19 @@ align_tab <- function(hyp) {
 }
 
 
-get_hyp_table <- function (model.fit, hyp.list) {
+get_hyp_data <- function (model.fit, hyp.list) {
   
-  hyp_table <- 
+  hyp_data <- 
     hypothesis(
       model.fit,
       hyp.list,
       robust = T) 
   
-  hyp_table %>% 
+  hyp_data %>% 
     .$hypothesis %>% 
     dplyr::select(-Star) %>% 
-    bind_cols(p_direction(hyp_table$samples)["pd"])  
+    bind_cols(p_direction(hyp_data$samples)["pd"]) %>% 
+    mutate(Post.Prob = ifelse(str_detect(Hypothesis, "="), 1-(pd-.5), Post.Prob))
 }
 
 

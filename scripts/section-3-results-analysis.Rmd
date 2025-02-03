@@ -422,7 +422,8 @@ rm(fit_exposure, fit_exposure_nested_within_condition_and_block, p.fit_1to7)
 ## How early does exposure begin to affect listeners' categorization responses? (comparing exposure conditions within each test block)
 
 ```{r hypothesis-table-simple-effects-condition, results='asis'}
-hyp.simple_effects_condition <- get_hyp_table(
+hyp.simple_effects_condition <- 
+  get_hyp_data(
   fit_test.simple_effects_condition,
   hyp.list = c(
       "mu2_Block1:Condition.Exposure_Shift10vs.Shift0 = 0",
@@ -454,7 +455,7 @@ make_hyp_table(
     rep(c("$PSE_{-8ms} > PSE_{-18ms}$", 
           "$PSE_{+22ms}  > PSE_{-8ms}$", 
           "$PSE_{+22ms} > PSE_{-18ms}$"), 5)),
-    caption = "The simple effects of the exposure conditions for each test block. This analysis asks how early exposure starts to affect participants’ categorization responses, and when (if ever) these changes were undone with repeated testing. Note that rightward shifts of the categorization function (and its PSE) correspond to negative estimates (lower intercepts in predicting the log-odds of \`\`t\'\'-responses). Predicted nulls for Test 1 were tested using the Savage-Dickey density ratio.") %>%
+    caption = "The simple effects of the exposure conditions for each test block. This analysis asks how early exposure starts to affect participants’ categorization responses, and when (if ever) these changes were undone with repeated testing. Note that rightward shifts of the categorization function (and its PSE) correspond to negative estimates (lower intercepts in predicting the log-odds of \`\`t\'\'-responses). Predicted nulls for Test 1 were tested using the Savage-Dickey density ratio---BF > 1 indicates increased evidence in favout of the null.") %>%
   pack_rows("Test block 1 (pre-exposure)", 1, 3) %>%
   pack_rows("Test block 2", 4, 6) %>%
   pack_rows("Test block 3", 7, 9) %>%
@@ -507,7 +508,7 @@ fit_test.simple_effects_block <-
 
 ```{r hypothesis-table-simple-effects-block, results='asis'}
 hyp.simple_effects_block <-
-  get_hyp_table(
+  get_hyp_data(
     fit_test.simple_effects_block,
     c(
       "mu2_Condition.ExposureShift0:Block_Test2vs.Test1 > 0",
@@ -649,7 +650,7 @@ This explains the reduction in the difference between the -8ms and -18ms conditi
 
 ```{r hypothesis-table-convergence-test4-pre-exposure-PSE, results='asis'}
 hyp.shrinkage <-
-  get_hyp_table(
+  get_hyp_data(
     fit_test_nested_within_condition_and_block,
     c(
       str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs  - ", predictedPSE_scaled_0, ") > 0" ),
