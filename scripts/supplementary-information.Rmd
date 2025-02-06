@@ -2078,6 +2078,78 @@ d.pars %>%
     PSE = -intercept_unscaled/slope_unscaled)
 ```
 
+## Testing correlation between ideal adaptor predictions and human responses 
+In the general discussion we discussed the inability of the ideal adaptor in its present form to reflect the plateauing of learning gains in latter test blocks. This can be observed in Figure \@ref(fig:plot-IA-human-PSE). To quantify the relationship between the ideal adaptor model's predictions and human responses we fit a logistic regression that predicts the latter with the ideal adaptor's predicted log-odds for the first 4 test blocks. We also included test block and the change in predicted log-odds at each test point. The change in predicted log-odds is the difference in predicted log-odds at each test point relative to the predicted log-odds prior to exposure. To verify that the ideal adaptor predictions diverge from human behavior as they receive more exposure we include an interaction of the change in predicted log-odds with block which we treat as a linear predictor. All predictors in this model were centered and scaled to two times their standard deviation. The hypotheses tests in Table \@ref(tab:hypothesis-table-IA-logodds-interaction) confirm that while the change in ideal adaptor-predicted log-odds positively correlate with human responses well this direction reverses with more exposure (block), as indicated by the negative coefficient of the interaction term.
+
+```{r model-logistic-IA-logodds-interaction}
+# model with additive effect of IA-predicted logodds before exposure and 
+# change in IA-predicted logodds
+fit_test.IA_predicted_logodds.prior.change <-
+  brm(
+    bf(
+      Response.Voiceless ~ 1 + IA.logodds_prior_gs + IA.logodds_change_gs + 
+        (1 | ParticipantID) + (1 | Item.MinimalPair)),
+    data = d.IA_predicted_logodds,
+    prior = priors_logodds_model,
+    cores = 4,
+    chains = 4,
+    init = 0,
+    iter = 4000,
+    warmup = 2000,
+    save_pars = save_pars(all = TRUE),
+    family = bernoulli("logit"),
+    control = list(adapt_delta = .9995, max_treedepth = 15),
+    file ="../models/test_IA_predicted_logodds.prior.change.rds",
+    file_refit = "on_change")
+
+fit_test.IA_predicted_logodds.prior.change <- add_criterion(fit_test.IA_predicted_logodds.prior.change, criterion = c("loo"), moment_match = T)
+
+# model with interaction of block and change in IA-predicted logodds 
+fit_test.IA_predicted_logodds.prior.change.interaction <-
+  brm(
+    bf(
+      Response.Voiceless ~ 1 + IA.logodds_prior_gs + (Block_gs * IA.logodds_change_gs) + 
+        (1 | ParticipantID) + (1 | Item.MinimalPair)),
+    data = d.IA_predicted_logodds,
+    prior = priors_logodds_model,
+    cores = 4,
+    chains = 4,
+    init = 0,
+    iter = 4000,
+    warmup = 2000,
+    save_pars = save_pars(all = TRUE),
+    family = bernoulli("logit"),
+    control = list(adapt_delta = .9995),
+    file ="../models/test_IA_predicted_logodds.prior.change.interaction.rds",
+    file_refit = "on_change")
+
+fit_test.IA_predicted_logodds.prior.change.interaction <- 
+  add_criterion(fit_test.IA_predicted_logodds.prior.change.interaction, criterion = c("loo"), moment_match = T)
+```
+
+
+
+```{r hypothesis-table-IA-logodds-interaction, results='asis'}
+hyp.IA_predicted_logodds.prior.change.interaction <-
+  get_hyp_data(fit_test.IA_predicted_logodds.prior.change.interaction,
+             c(
+               "IA.logodds_prior_gs > 0",
+               "IA.logodds_change_gs > 0",
+               "Block_gs:IA.logodds_change_gs < 0"))
+
+make_hyp_table(
+  fit_test.IA_predicted_logodds.prior.change.interaction,
+  hyp.IA_predicted_logodds.prior.change.interaction,
+  c(
+    "Predicted log-odds pre-exposure",
+    "$\\Delta$ Predicted log-odds",
+    "$\\Delta$ Predicted log-odds across block"),
+  caption = "How well does the ideal adaptor predict human behaviour and how does that prediction change with greater exposure? This table summarizes the main effects of the ideal adaptor's predicted log-odds prior to exposure and the change in the predicted log-odds as well as the interaction of the change in predicted log-odds with test block.")
+```
+
+
+
+
 \printbibliography
 \erefsection
 
