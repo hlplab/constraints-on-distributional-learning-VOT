@@ -145,5 +145,5 @@ INCLUDE_TODO <- F           # switch on/off to get to do list.
 
 \erefsection
 
-```{r, child="supplementary-information.Rmd", eval = FALSE}
+```{r, child="supplementary-information.Rmd", eval = TRUE}
 ```

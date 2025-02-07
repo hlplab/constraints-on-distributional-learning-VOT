@@ -36,7 +36,7 @@ Prediction 2b---that the direction and magnitude of changes in listeners' catego
 
 For example, @kleinschmidt-jaeger2016 exposed five different groups of listeners to VOT distributions for /b/ and /p/ that were shifted to different degrees. The five different exposure conditions were each shifted by 10ms in VOT relative to the other, but held constant the distance between the /b/ and /p/ mean (always 40ms) and the variance of /b/ and /p/ (both always 8.3ms$^2$). All groups of listeners were exposed to 222 trials of exposure input. As is the norm for DL experiments, Kleinschmidt and Jaeger did not include a pre-test or incremental intermittent testing. Instead, the effect of exposure was evaluated by estimating listeners' categorization functions over the last third of the 222 trials [another common approach is to average over *all* trials, e.g., @clayards2008; @nixon2016]. This revealed that listeners' categorization functions differed between exposure conditions in ways consistent with distributional learning models: the more the exposure distribution was shifted rightwards relative to each other, the more listeners' categorization functions also were shifted in the same direction.
 
-The present work extends these findings in three ways. First, as already mentioned above, it is the first demonstration that both prior experience and the exposure input need to be taken into account in order to correctly predict changes in listeners' categorization function. Second, we demonstrated gradient *incremental* adaptation towards the exposure distribution. We found that the direction of the shift of the /d/ and /t/ category means in the exposure input correctly predicted the relative ordering of listeners' PSEs in Test 1-4. We also found that shifts in category means of larger magnitude (+40 vs. -18ms compared to -8ms vs. -18ms) yielded larger absolute shifts in listeners' PSE. 
+The present work extends these findings in three ways. First, as already mentioned above, it is the first demonstration that both prior experience and the exposure input need to be taken into account in order to correctly predict changes in listeners' categorization function. Second, we demonstrated gradient *incremental* adaptation towards the exposure distribution. We found that the direction of the shift of the /d/ and /t/ category means in the exposure input correctly predicted the relative ordering of listeners' PSEs in Test 1-4. We also found that shifts in category means of larger magnitude (+22ms vs. -18ms compared to -8ms vs. -18ms) yielded larger absolute shifts in listeners' PSE. 
 
 Third and finally, these changes in listeners' categorization functions were observed for natural-sounding speech that followed the types of heterogeneous distributions of phonetic cues listeners would be likely to experience during everyday speech perception. The use of natural-sounding stimuli contrasts with the type of clearly robotic sounding speech used in most previous DL experiments [for notable exceptions, see @chladkova2017; @theodore-monto2019]. Robotic speech which might lead listeners to adopt different strategies than they would normally use. In particular, such speech provides a clear signal to listeners that some of their expectations about typical speech inputs are unlikely to extend to the current input, which might inflate listeners' readiness to adapt their perception. Similarly, our use of naturalistic *phonetic distributions* contrasts with the use of exposure distributions that are perfectly symmetric around their mean, or that in other ways differ from the distributions listeners experience in real life [for a notable exception, @chladkova2017]. 
 
@@ -95,7 +95,7 @@ d.exposure_surprisal %<>%
   summarise(across(surprisal, list(mean = mean, sd = sd)))
 ```
 
-Such *diminishing returns* of exposure are explicitly predicted only by some distributional learning models. This includes error-driven learning models [e.g., @davis-sohoglu2020; @harmon2019; @olejarczuk2018; @sohoglu-davis2016] and models of ideal information integration [ideal adaptors, @kleinschmidt-jaeger2015; @kleinschmidt-jaeger2016]. Prior to adaptation, an idealized listener (horizontal gray ribbons in Figure \@ref(fig:plot-fit-PSE)C) would, on average, experience larger prediction errors (mean surprisal per exposure input in -18ms condition ${\rm E}[-\log_2 p(category | VOT, f0, vowel\ duration)] =$ `r d.exposure_surprisal %>% filter(Condition.Exposure == "Shift0", str_starts(IO.Type, "prior")) %>% pull(surprisal_mean) %>% mean(.) %>% round(., 2)` bits; -8ms condition = `r d.exposure_surprisal %>% filter(Condition.Exposure == "Shift10", str_starts(IO.Type, "prior")) %>% pull(surprisal_mean) %>% mean(.) %>% round(., 2)` bits; +40 condition = `r d.exposure_surprisal %>% filter(Condition.Exposure == "Shift40", str_starts(IO.Type, "prior")) %>% pull(surprisal_mean) %>% mean(.) %>% round(., 2)` bits). As listeners converge towards the distribution of /d/ and /t/ in the exposure condition, they should experience increasingly smaller prediction errors (or equivalently: less new information) processing the exposure tokens. An idealized learner that has fully converged against the exposure distributions (colored lines in Figure \@ref(fig:plot-fit-PSE)C) would, on average, experience only `r d.exposure_surprisal %>% filter(Condition.Exposure == IO.Type) %>% pull(surprisal_mean) %>% mean(.) %>% round(., 2)` bits of surprisal per exposure input.
+Such *diminishing returns* of exposure are explicitly predicted only by some distributional learning models. This includes error-driven learning models [e.g., @davis-sohoglu2020; @harmon2019; @olejarczuk2018; @sohoglu-davis2016] and models of ideal information integration [ideal adaptors, @kleinschmidt-jaeger2015; @kleinschmidt-jaeger2016]. Prior to adaptation, an idealized listener (horizontal gray ribbons in Figure \@ref(fig:plot-fit-PSE)C) would, on average, experience larger prediction errors (mean surprisal per exposure input in -18ms condition ${\rm E}[-\log_2 p(category | VOT, f0, vowel\ duration)] =$ `r d.exposure_surprisal %>% filter(Condition.Exposure == "Shift0", str_starts(IO.Type, "prior")) %>% pull(surprisal_mean) %>% mean(.) %>% round(., 2)` bits; -8ms condition = `r d.exposure_surprisal %>% filter(Condition.Exposure == "Shift10", str_starts(IO.Type, "prior")) %>% pull(surprisal_mean) %>% mean(.) %>% round(., 2)` bits; +22ms condition = `r d.exposure_surprisal %>% filter(Condition.Exposure == "Shift40", str_starts(IO.Type, "prior")) %>% pull(surprisal_mean) %>% mean(.) %>% round(., 2)` bits). As listeners converge towards the distribution of /d/ and /t/ in the exposure condition, they should experience increasingly smaller prediction errors (or equivalently: less new information) processing the exposure tokens. An idealized learner that has fully converged against the exposure distributions (colored lines in Figure \@ref(fig:plot-fit-PSE)C) would, on average, experience only `r d.exposure_surprisal %>% filter(Condition.Exposure == IO.Type) %>% pull(surprisal_mean) %>% mean(.) %>% round(., 2)` bits of surprisal per exposure input.
 
 Models of adaptive speech perception that predict adaptation to be a positive monotonic function of the prediction error, thus offer an explanation for the diminishing returns of exposure observed in the present study. Of note, they do so without introducing arbitrary changes in learning rates or other parameters: it is the decrease in additional information gained from additional exposure that drives the decreasing rate of change in listeners' behavior.<!-- TO DO: revisit after review whether we'd like to include this: ^[This also highlights that the observable behavior---e.g., changes in listeners' categorization responses---ought not to be confused with the mechanism itself. For example, a *lack* of changes in behavior does not *necessarily* imply a lack of learning (even beyond the usual caveats that apply to null effects). This would only follow if it is also shown that learning would be expected to lead to changes in behavior. But this would require a learning model, a linking hypothesis, and their application to the exposure input---something that is usually lacking from the interpretation of null effects [cf. @zheng-samuel2020].] --> If the pattern of diminishing returns is replicated in future work, this would raise questions as to whether similar predictions follow from other distributional learning accounts [e.g., C-CuRE normalization, @mcmurray-jongman2011; exemplar models, @johnson1997; DNNs, @magnuson2020]. If, on the other hand, future tests reliably fail to replicate these findings, this would constitute a serious challenge to models that predict adaptation to be sensitive to the prediction error.
 
@@ -511,7 +511,6 @@ fit_test.upto.test4 <- add_criterion(fit_test.upto.test4, criterion = "loo", mom
 
 
 ```{r fit-IA-predicted-logodds-human-responses}
-
 # fit linear model to human responses with IA-predicted-logodds as predictor
 # to assess how well IA predictions fit listeners' behaviour and how it changes from block to block
 # block is treated as linear 
@@ -560,50 +559,6 @@ fit_test.IA_predicted_logodds <-
 
 fit_test.IA_predicted_logodds <- add_criterion(fit_test.IA_predicted_logodds, criterion = c("loo"), moment_match = T)
 
-# model with additive effect of IA-predicted logodds before exposure and 
-# change in IA-predicted logodds
-fit_test.IA_predicted_logodds.prior.change <-
-  brm(
-    bf(
-      Response.Voiceless ~ 1 + IA.logodds_prior_gs + IA.logodds_change_gs + 
-        (1 | ParticipantID) + (1 | Item.MinimalPair)),
-    data = d.IA_predicted_logodds,
-    prior = priors_logodds_model,
-    cores = 4,
-    chains = 4,
-    init = 0,
-    iter = 4000,
-    warmup = 2000,
-    save_pars = save_pars(all = TRUE),
-    family = bernoulli("logit"),
-    control = list(adapt_delta = .9995, max_treedepth = 15),
-    file ="../models/test_IA_predicted_logodds.prior.change.rds",
-    file_refit = "on_change")
-
-fit_test.IA_predicted_logodds.prior.change <- add_criterion(fit_test.IA_predicted_logodds.prior.change, criterion = c("loo"), moment_match = T)
-
-# model with interaction of block and change in IA-predicted logodds 
-fit_test.IA_predicted_logodds.prior.change.interaction <-
-  brm(
-    bf(
-      Response.Voiceless ~ 1 + IA.logodds_prior_gs + (Block_gs * IA.logodds_change_gs) + 
-        (1 | ParticipantID) + (1 | Item.MinimalPair)),
-    data = d.IA_predicted_logodds,
-    prior = priors_logodds_model,
-    cores = 4,
-    chains = 4,
-    init = 0,
-    iter = 4000,
-    warmup = 2000,
-    save_pars = save_pars(all = TRUE),
-    family = bernoulli("logit"),
-    control = list(adapt_delta = .9995),
-    file ="../models/test_IA_predicted_logodds.prior.change.interaction.rds",
-    file_refit = "on_change")
-
-fit_test.IA_predicted_logodds.prior.change.interaction <- 
-  add_criterion(fit_test.IA_predicted_logodds.prior.change.interaction, criterion = c("loo"), moment_match = T)
-
 fit_test.IA_predicted_logodds.r_slopes <-
   brm(
     bf(
@@ -621,12 +576,13 @@ fit_test.IA_predicted_logodds.r_slopes <-
     control = list(adapt_delta = .9995),
     file ="../models/test_IA_predicted_logodds.r_slopes.rds",
     file_refit = "on_change")
+
 ```
 
 
-The results are shown in Figure \@ref(fig:plot-IA-human-PSE). For the present data, the ideal adaptor model predicts the proportion of listeners' "t"-responses with a high $R^2 =$ `r round(cor(IA.prediction$Predicted_posterior, IA.prediction$Response) %>% . ^2, 3) * 100`$\%$, comparable to that of the psychometric model ($R^2 =$ `r round(cor(psych.model_prediction$predicted_proportion_voiceless, psych.model_prediction$proportion_voiceless) %>% . ^2, 3) * 100`$\%$). This suggests that the ideal adaptor provides a decent explanation for participants' behavior with substantially fewer degrees of freedom (for additional visualizations of the fit against participants' behavior, see SI, \@ref(sec:ideal-adaptor)). To more directly compare the fit of the ideal adaptor learning model to the psychometric data analysis model, we estimated the pairwise difference in the two models' expected log predictive density.^[The (log) predictive density can be thought of as the Bayesian equivalent of the (log) data likelihood in frequentist statistics (but the Bayesian approach incorporates prior beliefs). The *expected* log posterior density (ELPD) is the mean log posterior density of the data, estimated here using leave-one-out (with moment matching) through the `add_criterion()` function of `brms` [@R-brms_a]. This ELPD estimate provides a measure of the predictive accuracy of the model, essentially estimating how predictable a held-out datapoint is if the model is fit on all other data. Differences in the ELPD of more than 4-5 standard errors are often taken to be credible, whereas differences of 2-3 standard errors should be interpreted with more caution.] This comparison suggests that the psychometric model captures participants' responses better than the ideal adaptor ($\Delta_{elpd}=$ `r loo_compare(fit_test.IA_predicted_logodds, fit_test.upto.test4)[2, 1]`; SE$_\Delta=$ `r loo_compare(fit_test.IA_predicted_logodds, fit_test.upto.test4)[2, 2]`).
+The results are shown in Figure \@ref(fig:plot-IA-human-PSE). For the present data, the ideal adaptor model predicts the proportion of listeners' "t"-responses with a high $R^2 =$ `r round(cor(IA.prediction$Predicted_posterior, IA.prediction$Response) %>% . ^2, 3) * 100`$\%$, comparable to that of the psychometric model ($R^2 =$ `r round(cor(psych.model_prediction$predicted_proportion_voiceless, psych.model_prediction$proportion_voiceless) %>% . ^2, 3) * 100`$\%$). This suggests that the ideal adaptor provides a decent explanation for participants' behavior with substantially fewer degrees of freedom (for additional visualizations of the fit against participants' behavior, see SI, \@ref(sec:ideal-adaptor)). To more directly compare the fit of the ideal adaptor learning model to the psychometric data analysis model, we estimated the pairwise difference in the two models' expected log-predictive density.^[The (log) predictive density can be thought of as the Bayesian equivalent of the (log) data likelihood in frequentist statistics (but the Bayesian approach incorporates prior beliefs). The *expected* log predictive density (ELPD) is the mean log posterior density of the data, estimated here using leave-one-out (with moment matching) through the `add_criterion()` function of `brms` [@R-brms_a]. This ELPD estimate provides a measure of the predictive accuracy of the model, essentially estimating how predictable a held-out datapoint is if the model is fit on all other data. Differences in the ELPD of more than 4-5 standard errors are often taken to be credible, whereas differences of 2-3 standard errors should be interpreted with more caution.] This comparison suggests that the psychometric model captures participants' responses better than the ideal adaptor ($\Delta_{elpd}=$ `r loo_compare(fit_test.IA_predicted_logodds, fit_test.upto.test4)[2, 1]`; SE$_\Delta=$ `r loo_compare(fit_test.IA_predicted_logodds, fit_test.upto.test4)[2, 2]`).
 
-```{r table-elpd-comparison}
+```{r table-elpd-comparison, eval=FALSE}
 bind_cols(
   "Model" = row.names(loo_compare(fit_test.IA_predicted_logodds, fit_test.IA_predicted_logodds.prior.change, fit_test.IA_predicted_logodds.prior.change.interaction)),
   loo_compare(fit_test.IA_predicted_logodds, fit_test.IA_predicted_logodds.prior.change, fit_test.IA_predicted_logodds.prior.change.interaction)) %>% 
@@ -640,22 +596,10 @@ bind_cols(
     column_spec(1, width = "25em")
 ```
 
-```{r hypothesis-table-IA-logodds-interaction, results='asis'}
-hyp.IA_predicted_logodds.prior.change.interaction <-
-  hypothesis(fit_test.IA_predicted_logodds.prior.change.interaction,
-             "Block_gs:IA.logodds_change_gs < 0",
-             robust = T) %>% 
-  .$hypothesis %>%
-  dplyr::select(-Star)
 
-make_hyp_table(
-  fit_test.IA_predicted_logodds.prior.change.interaction,
-  hyp.IA_predicted_logodds.prior.change.interaction,
-  "Interaction of block and change in IA-predicted logodds",
-  caption = "Testing the strength of evidence for interaction of block and deal adaptor predicted logodds of responding 't'.")
-```
 
-Most relevant to the present purpose is a systematic deficiency of the model, evident in Figure \@ref(fig:plot-IA-human-PSE): the ideal adaptor substantially *under*-predicts changes in listeners' PSEs  during initial exposure, and *over*-predicts changes in listeners' PSE following exposure (see, in particular, the -18ms and -8ms conditions in Test 4). Why? Simply put, it is the best the model can do in order to accommodate all three of (i) listeners' pre-exposure behavior, (ii) the rapid changes in listeners' PSEs during initial exposure, and (iii) the premature flattening off of changes in listeners' PSEs. Put differently, an ideal adaptor can *either* explain the fact that listeners' PSEs changed rapidly at the start of exposure *or* that there seem to be little to no changes in listeners' PSE after the second exposure block. But it cannot explain both.  
+Most relevant to the present purpose is a systematic deficiency of the model, evident in Figure \@ref(fig:plot-IA-human-PSE): the ideal adaptor substantially *under*-predicts changes in listeners' PSEs  during initial exposure, and *over*-predicts changes in listeners' PSE following exposure (see, in particular, the -18ms and -8ms conditions in Test 4). Why? Simply put, it is the best the model can do in order to accommodate all three of (i) listeners' pre-exposure behavior, (ii) the rapid changes in listeners' PSEs during initial exposure, and (iii) the premature flattening off of changes in listeners' PSEs. Put differently, an ideal adaptor can *either* explain the fact that listeners' PSEs changed rapidly at the start of exposure *or* that there seem to be little to no changes in listeners' PSE after the second exposure block. But it cannot explain both. (see SI \@ref(sec:ideal-adaptor) for analysis of the IA's predictions and its relationship to human responses)
+
 
 <!-- To understand this pattern, it is helpful to recognize that rational models of distributional learning describe listeners' expectations after exposure as the weighted mean of prior expectations and the observed exposure statistics [@kleinschmidt-jaeger2015]. This means that the speed with which a learner adapts at the start of exposure is expected to be predictive of how fast a learner adapts after additional exposure. Put differently, ideal adaptors constrain the rate at which PSEs can change across exposure trials. This means that an ideal adaptor can *either* explain the fact that listeners' PSEs changed rapidly at the start of exposure *or* that there seem to be little to no changes in listeners' PSE after the second exposure block. But it cannot explain both aspects of our data. It thus appears that participants indeed converged prematurely in their behavior, relative to what would be expected under the specific model of ideal information integration that we employed. -->
 
@@ -704,7 +648,7 @@ d.test_surprisal %<>%
 
 Other possible explanations appeal to assumptions we made for the idealized learner who has fully learned the exposure distributions, and how these assumptions mismatch the information that is available to listeners. Under this explanation, what appears as premature convergence in reality reflects adequate convergence against what would be expected from an idealized learner that has access to the same information as listeners. For example, our idealized learner models have perfectly learned the statistics of the exposure stimuli, while ignoring all test stimuli. Listeners, however, might learn even from unlabeled test stimuli [for demonstration, see @xie-kurumada2024]. Indeed, the effects of repeated testing without intermittent exposure (Test 4-6) suggests as much.
 
-Critically, test tokens had by design identical phonetic properties across all exposure conditions. Inevitably then, the location of test tokens relative to the exposure tokens *differed* between conditions. If listeners integrate test tokens into their estimate of the talker's accent [@xie-kurumada2024], this might explain the appearance of premature convergence: at the end of Test 4, 36 out of 180 trials (20%) that participants had experienced were test tokens.^[If listeners adapt over a moving time-window (rather than over all inputs from a talker), or in other ways weight more recent information more strongly, this would further increase the relative impact of test tokens on listeners' categorization responses during test.] While it is difficult to evaluate this explanation without a specific model of how listener learn from unlabeled tokens, one consideration suggests that it is not sufficient to explain our data. To estimate how much learning test tokens alone would support in the different conditions, we calculated the surprisal of the test token under the idealized learners. For an idealized learner that has *fully* learned the exposure distribution (cf. colored dashed lines in Figure \@ref(fig:plot-fit-PSE)C), test stimuli would convey about the same amount of surprisal in the -18ms and -8ms conditions (both ${\rm E}[-\log_2 p(VOT |$ idealized learner$)] =$ `r d.test_surprisal %>% filter(Condition.Exposure == "Shift10") %>% pull(surprisal_mean) %>% round(., 1)` bits), compared to larger surprisal in the + 40 condition (`r d.test_surprisal %>% filter(Condition.Exposure == "Shift40") %>% pull(surprisal_mean) %>% round(., 1)` bits). At least based on these general considerations, learning from test tokens alone would thus predict even earlier premature convergence in the +40 conditions, compared to the other two conditions---the opposite of what we observed. Future work can further address this question by developing and applying unsupervised adaptation models to our data [e.g., @harmon2019; @olejarczuk2018; @yan-jaeger2018]. Future work could more decisively address this alternative explanation by replicating our experiment while using test tokens that are placed identically *relative to the exposure distributions* (which comes with its own analysis challenges).
+Critically, test tokens had by design identical phonetic properties across all exposure conditions. Inevitably then, the location of test tokens relative to the exposure tokens *differed* between conditions. If listeners integrate test tokens into their estimate of the talker's accent [@xie-kurumada2024], this might explain the appearance of premature convergence: at the end of Test 4, 36 out of 180 trials (20%) that participants had experienced were test tokens.^[If listeners adapt over a moving time-window (rather than over all inputs from a talker), or in other ways weight more recent information more strongly, this would further increase the relative impact of test tokens on listeners' categorization responses during test.] While it is difficult to evaluate this explanation without a specific model of how listener learn from unlabeled tokens, one consideration suggests that it is not sufficient to explain our data. To estimate how much learning test tokens alone would support in the different conditions, we calculated the surprisal of the test token under the idealized learners. For an idealized learner that has *fully* learned the exposure distribution (cf. colored dashed lines in Figure \@ref(fig:plot-fit-PSE)C), test stimuli would convey about the same amount of surprisal in the -18ms and -8ms conditions (both ${\rm E}[-\log_2 p(VOT |$ idealized learner$)] =$ `r d.test_surprisal %>% filter(Condition.Exposure == "Shift10") %>% pull(surprisal_mean) %>% round(., 1)` bits), compared to larger surprisal in the + 40 condition (`r d.test_surprisal %>% filter(Condition.Exposure == "Shift40") %>% pull(surprisal_mean) %>% round(., 1)` bits). At least based on these general considerations, learning from test tokens alone would thus predict even earlier premature convergence in the +22ms conditions, compared to the other two conditions---the opposite of what we observed. Future work can further address this question by developing and applying unsupervised adaptation models to our data [e.g., @harmon2019; @olejarczuk2018; @yan-jaeger2018]. Future work could more decisively address this alternative explanation by replicating our experiment while using test tokens that are placed identically *relative to the exposure distributions* (which comes with its own analysis challenges).
 
 For now, we conclude that our results *might* be identifying a previously unrecognized limitation of adaptive speech perception, and that this limitation might point to a need to revisit how we think about the processes that underlie such adaptation (in terms of model selection, rather than model learning). 
 
