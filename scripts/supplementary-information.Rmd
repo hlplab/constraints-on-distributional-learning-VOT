@@ -254,7 +254,7 @@ p.labelled.group <-
 p.catch | p.labelled.group
 ```
 
-# Obtaining predictions of idealized listeners
+# Obtaining predictions of idealized listeners {#sec:model-guided}
 In the main text, we employ ideal observers to relate our results to those expected from idealized listeners. This includes predictions based on a *'typical' listener's prior experience* and predictions based on *idealized learners for each exposure condition* that have fully learned the exposure distributions. The former provides a baseline against which to compare listeners' behavior at the start of the experiment. The latter provides a baseline against which to compare changes in listeners' behavior as a function of exposure. In this section, we describe how we derived those predictions. 
 
 ## General structure of the idealized models {#sec:ASP}
