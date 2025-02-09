@@ -164,7 +164,7 @@ Beyond the participants mentioned in the main text, an additional 115 participan
 Next, we provide additional information on participants' performance during catch trials and on labelled trials (for which there is a clearly correct response). Both of these measures were used to exclude participants.
 
 ## Performance on catch and labelled trials
-Of the 122 participants that completed the experiment, 1 committed more than 3 errors (< 84% accuracy). Labelled trials provided another measure to check participant attention during the experiment. Performance on labelled trials was good across all exposure conditions with participants in the +22ms condition committing the most errors. This is not unexpected as the +22ms condition was the furthest shifted distribution with the most unexpected cue-category mappings. 
+Of the 122 participants that completed the experiment, 1 committed more than 3 errors (< 84% accuracy). Labelled trials provided another measure to check participant attention during the experiment. Performance on labelled trials was good across all exposure conditions with participants in the +20ms condition committing the most errors. This is not unexpected as the +20ms condition was the furthest shifted distribution with the most unexpected cue-category mappings. 
 
 (ref:plot-catch-labeled-trial-performance) Total errors committed on catch trials and labelled trials. Percentage values indicate the proportion of participants in the respective groups.
 
@@ -239,7 +239,7 @@ p.labelled.group <-
     inherit.aes = F) +
   scale_colour_manual("Condition",
                       aesthetics = c("colour", "fill"),
-                      labels = c("-18ms", "-8ms", "+22ms"),
+                      labels = c("-20ms", "-10ms", "+20ms"),
                       values = colours.condition) +
   scale_x_continuous("Total labelled trial errors") +
   coord_cartesian(ylim = c(0, 45)) +
@@ -249,7 +249,7 @@ p.labelled.group <-
   facet_grid(Condition.Exposure ~ Block, 
              labeller = labeller(
     .cols = c("2" = "Exposure 1", "4" = "Exposure 2", "6" = "Exposure 3"), 
-    .rows = c(Shift0 = "-18ms", Shift10 = "-8ms", Shift40 = "+22ms")))   
+    .rows = c(Shift0 = "-20ms", Shift10 = "-10ms", Shift40 = "+20ms")))   
 
 p.catch | p.labelled.group
 ```
@@ -557,7 +557,7 @@ d.IO.bias.corrected_intercept.slope.PSE %>%
   scale_x_continuous(breaks = seq(-50, 130, 20)) +
   scale_y_continuous('Proportion "t"-responses') +
   facet_wrap( ~ Phase, ncol = 1) +
-  scale_color_manual("Exposure condition", labels = c("-18ms", "-8ms", "+22ms"), values = colours.condition) +
+  scale_color_manual("Exposure condition", labels = c("-20ms", "-10ms", "+20ms"), values = colours.condition) +
   theme(legend.position = "top")
 
 rm(arrow_df, tokens)
@@ -727,7 +727,7 @@ heights = c(1, 1, 2)) +
 We first present some additional information about the psychometric mixed-effects model used for the analysis of participants' categorization responses. Then we present detailed summary tables of the Bayesian hypothesis tests about listeners' *PSE* for the test and exposure blocks, followed by parallel summary tables for the *slope* of listeners' categorization function. Then, we present an auxiliary analysis that assess changes in lapse rates across the exposure and test blocks (the main analyses assumed constant lapse rates within each type of block). These analyses validate our decision to assume constant lapse rates within each type of block. Finally, we present analyses that combined the exposure and test data, while relaxing the linearity assumption for the effects of VOT. All analyses presented in this section are variants of the same psychometric mixed-effects model, which we introduce next.
 
 ## Additional information about the Bayesian psychometric mixed-effects model {#sec:analysis-approach}
-We analyzed participants' categorization responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric model [@kuss2005; @prins2011; @prins2019; @schutt2015]. The psychometric model is an extension of mixed-effects logistic regression that also takes into account attentional lapses. The mixed-effects psychometric model describes the probability of "t"-responses as a weighted mixture of a perceptual and a lapsing model. The perceptual model predicts responses on trials where participants pay attention and respond based on the stimulus. We implemented the perceptual model as a mixed-effects logistic regression, predicting "t"-responses from exposure condition (backward difference coded, comparing the -8ms against the -18ms condition, and the +22ms against the -8ms shift condition), test block (backward difference coded from the first to last test block), VOT (Gelman scaled), and their full factorial interaction. The model included by-participant random intercepts and slopes for all within-participant manipulations (block and VOT) and by-item random intercepts and slopes for all within-participant manipulations (exposure condition, block, VOT).
+We analyzed participants' categorization responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric model [@kuss2005; @prins2011; @prins2019; @schutt2015]. The psychometric model is an extension of mixed-effects logistic regression that also takes into account attentional lapses. The mixed-effects psychometric model describes the probability of "t"-responses as a weighted mixture of a perceptual and a lapsing model. The perceptual model predicts responses on trials where participants pay attention and respond based on the stimulus. We implemented the perceptual model as a mixed-effects logistic regression, predicting "t"-responses from exposure condition (backward difference coded, comparing the -10ms against the -20ms condition, and the +20ms against the -10ms shift condition), test block (backward difference coded from the first to last test block), VOT (Gelman scaled), and their full factorial interaction. The model included by-participant random intercepts and slopes for all within-participant manipulations (block and VOT) and by-item random intercepts and slopes for all within-participant manipulations (exposure condition, block, VOT).
 
 We fit the two psychometric models for exposure and test blocks using the package \texttt{brms} [@R-brms_a] in R [@R; @RStudio].^[Here and throughout the text, we refer to one model for the test blocks and one model for the exposure blocks. However, more specifically, we fit several variants of each model that only differed in the way that predictors were nested within the perceptual model. In addition to the standard formulation of the perceptual model, which expressed the effect the effects of exposure condition, block, and VOT as the full factorial interactions (\texttt{response $\sim$ condition * block * VOT}), we also fit variants that yielded the simple effects of block within each condition (\texttt{response $\sim$ condition / (block * VOT)}), the simple effects of condition within each block (\texttt{response $\sim$ block / (condition * VOT)}), or separate intercept and VOT slope estimates for each exposure condition and block (\texttt{response $\sim$ 0 + (condition * block) / VOT}). All of these variants are prediction-equivalent (except for minor effects of the weakly regularizing priors, which might affect the models differently due the differences in parameterization), but each variant facilitates the formulation of different hypothesis tests of relevance to our questions. For details, we refer to the R markdown document that this SI is generated from. The R markdown contains the R code used to specify the different models and hypothesis tests.] Predictor coding and priors were identical across both models. To facilitate comparison of effect sizes across predictors, we standardized continuous predictors (VOT) by dividing through twice their standard deviation [@gelman2008]. We also centered VOT based on the mean of the *test* blocks. This makes sure that all other effects---e.g., the effects of exposure condition and block---are analyzed at the same VOT across the two separate models. Following previous work from our lab ### **ommitted for review** ###<!--[@horberg-jaeger2021; @xie2021jep]--> we used weakly regularizing priors to facilitate model convergence. For fixed effect parameters, we used Student priors centered around zero with a scale of 2.5 units [following @gelman-prior2008] and 3 degrees of freedom, with the exception of VOT which had a wider scale of 15 units because of convergence issues (see \@ref(sec:SI-exposure-block-analysis) for elaboration). For the lapse rate we used the \texttt{brms} default logistic prior centered around 0 with a scale of 1 unit. This assumes uniformity for $0 < lapse rates < 1$ while down-weighting the extreme values. For random effect standard deviations, we used a Cauchy prior with location 0 and scale 2, and for random effect correlations, we used an uninformative LKJ-Correlation prior with its only parameter set to 1, describing a uniform prior over correlation matrices [@lewandowski2009]. Four chains with 2000 warm-up samples and 2000 posterior samples each were fit. No divergent transitions after warm-up were observed, and all $1 < \hat{R} < 1.01$.
 
@@ -775,7 +775,7 @@ make_hyp_table(
     fit_test,
     hyp_interaction.condition_block,
     rep(c(
-  # Comparing differences in -8ms vs. -18ms between blocks
+  # Comparing differences in -10ms vs. -20ms between blocks
   "Block 1 to 2: increased $\\Delta_{PSE}$",
   "Block 2 to 3: increased $\\Delta_{PSE}$",
   "Block 3 to 4: increased $\\Delta_{PSE}$",
@@ -784,9 +784,9 @@ make_hyp_table(
   "Block 5 to 6: decreased $\\Delta_{PSE}$",
   "{\\em Block 4 to 6: decreased $\\Delta_{PSE}$}"), 3),
     caption = "Did the rate of block-to-block changes in PSEs differ across exposure conditions? This table summarizes the interactions between exposure condition and block---specifically, whether the differences between exposure conditions changed from test block to test block.") %>%
-  pack_rows("Difference in -8ms vs. -18ms", 1, 7) %>%
-  pack_rows("Difference in +22ms vs. -8ms", 8, 14) %>%
-  pack_rows("Difference in +22ms vs. -18ms", 15, 21)
+  pack_rows("Difference in -10ms vs. -20ms", 1, 7) %>%
+  pack_rows("Difference in +20ms vs. -10ms", 8, 14) %>%
+  pack_rows("Difference in +20ms vs. -20ms", 15, 21)
 ```
 
 ## PSE results for exposure blocks {#sec:SI-exposure-block-analysis}
@@ -860,12 +860,12 @@ fit_exposure.simple_effects_block <-
     file ="../models/exposure-nested-block.rds")
 ```
 
-Consistent with the trend observed in test blocks, categorization boundaries were clearly separated between the conditions in all exposure blocks and grew progressively larger with more exposure (Table \@ref(tab:hypothesis-table-exposure-simple-effects-condition)). Evidence for this effect was stronger in the +22ms vs. -8ms comparison 
-(`r get_bf(fit_exposure.simple_effects_condition, "mu2_Block6:Condition.Exposure_Shift10vs.Shift0 < 0", bf = T)` $\leq$ BFs $\leq$ `r get_bf(fit_exposure.simple_effects_condition, "mu2_Block4:Condition.Exposure_Shift40vs.Shift10 + mu2_Block4:Condition.Exposure_Shift10vs.Shift0 < 0", bf = T)`) with the difference in PSE reaching its maximum in the final exposure block (`r get_bf(fit_exposure.simple_effects_condition, "mu2_Block6:Condition.Exposure_Shift40vs.Shift10 < 0")`). The difference between -8ms and -18ms widened in exposure block 2 (`r get_bf(fit_exposure.simple_effects_condition, "mu2_Block4:Condition.Exposure_Shift10vs.Shift0 < 0")`) but narrowed in the final block (`r get_bf(fit_exposure.simple_effects_condition, "mu2_Block6:Condition.Exposure_Shift10vs.Shift0 < 0")`). The smaller difference in PSE between the -8ms and -18ms conditions reflected the pattern in test blocks. 
+Consistent with the trend observed in test blocks, categorization boundaries were clearly separated between the conditions in all exposure blocks and grew progressively larger with more exposure (Table \@ref(tab:hypothesis-table-exposure-simple-effects-condition)). Evidence for this effect was stronger in the +20ms vs. -10ms comparison 
+(`r get_bf(fit_exposure.simple_effects_condition, "mu2_Block6:Condition.Exposure_Shift10vs.Shift0 < 0", bf = T)` $\leq$ BFs $\leq$ `r get_bf(fit_exposure.simple_effects_condition, "mu2_Block4:Condition.Exposure_Shift40vs.Shift10 + mu2_Block4:Condition.Exposure_Shift10vs.Shift0 < 0", bf = T)`) with the difference in PSE reaching its maximum in the final exposure block (`r get_bf(fit_exposure.simple_effects_condition, "mu2_Block6:Condition.Exposure_Shift40vs.Shift10 < 0")`). The difference between -10ms and -20ms widened in exposure block 2 (`r get_bf(fit_exposure.simple_effects_condition, "mu2_Block4:Condition.Exposure_Shift10vs.Shift0 < 0")`) but narrowed in the final block (`r get_bf(fit_exposure.simple_effects_condition, "mu2_Block6:Condition.Exposure_Shift10vs.Shift0 < 0")`). The smaller difference in PSE between the -10ms and -20ms conditions reflected the pattern in test blocks. 
 
-Analysis of boundary shifts between exposure blocks show a similar incremental pattern albeit with weaker evidential support (`r get_bf(fit_exposure.simple_effects_block, "mu2_Condition.ExposureShift0:Block_Exposure3vs.Exposure2 > 0", bf = T)` $\leq$ BFs $\leq$ `r get_bf(fit_exposure.simple_effects_block, "mu2_Condition.ExposureShift10:Block_Exposure3vs.Exposure2 > 0", bf = T)` Table \@ref(tab:hypothesis-table-exposure-simple-effects-block)). In the -8ms condition, categorization functions shifted leftwards with greater exposure while in the +22ms condition categorization moved further rightwards. Categorization in the -18ms condition showed an overall smaller shift between exposure blocks 1 to 3.
+Analysis of boundary shifts between exposure blocks show a similar incremental pattern albeit with weaker evidential support (`r get_bf(fit_exposure.simple_effects_block, "mu2_Condition.ExposureShift0:Block_Exposure3vs.Exposure2 > 0", bf = T)` $\leq$ BFs $\leq$ `r get_bf(fit_exposure.simple_effects_block, "mu2_Condition.ExposureShift10:Block_Exposure3vs.Exposure2 > 0", bf = T)` Table \@ref(tab:hypothesis-table-exposure-simple-effects-block)). In the -10ms condition, categorization functions shifted leftwards with greater exposure while in the +20ms condition categorization moved further rightwards. Categorization in the -20ms condition showed an overall smaller shift between exposure blocks 1 to 3.
 
-The effects of VOT (slope) did not change significantly between conditions within each exposure block (Table \@ref(tab:hypothesis-table-exposure-simple-slopes-condition)) and between blocks within exposure condition (Table \@ref(tab:hypothesis-table-exposure-simple-slopes-block)). This conforms to the trend found in slope analyses for test blocks as well as the predictions of the ideal observers. Table \@ref(tab:hypothesis-table-exposure-interaction-condition-block) and Table \@ref(tab:hypothesis-table-exposure-interaction-condition-block-VOT) report the effects of interactions between exposure condition and block (PSE); and exposure, condition, block and VOT respectively (slope). With respect to PSE changes, the difference between -8ms and -18ms held constant from exposure block 1 to exposure block 2 and increased marginally from exposure block 2 to exposure block 3 (`r get_bf(fit_exposure, "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 < 0", est = T)` $\leq$ estimates $\leq$ `r get_bf(fit_exposure, "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure3vs.Exposure2  < 0", est = T)`; `r get_bf(fit_exposure, "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 < 0", bf = T)` $\leq$ BFs $\leq$ `r get_bf(fit_exposure, "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure3vs.Exposure2  < 0", est = T)`). Between the +22ms and -8ms conditions, PSE differences increased  with more exposure as did PSE differences between +22ms and the -18ms condition. This trend reflects that of test blocks but evidential support was weaker than that found in test block comparisons (`r get_bf(fit_exposure, "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 < 0", bf = T)` $\leq$ BFs $\leq$ `r get_bf(fit_exposure, "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 < 0", bf = T)`).  
+The effects of VOT (slope) did not change significantly between conditions within each exposure block (Table \@ref(tab:hypothesis-table-exposure-simple-slopes-condition)) and between blocks within exposure condition (Table \@ref(tab:hypothesis-table-exposure-simple-slopes-block)). This conforms to the trend found in slope analyses for test blocks as well as the predictions of the ideal observers. Table \@ref(tab:hypothesis-table-exposure-interaction-condition-block) and Table \@ref(tab:hypothesis-table-exposure-interaction-condition-block-VOT) report the effects of interactions between exposure condition and block (PSE); and exposure, condition, block and VOT respectively (slope). With respect to PSE changes, the difference between -10ms and -20ms held constant from exposure block 1 to exposure block 2 and increased marginally from exposure block 2 to exposure block 3 (`r get_bf(fit_exposure, "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 < 0", est = T)` $\leq$ estimates $\leq$ `r get_bf(fit_exposure, "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure3vs.Exposure2  < 0", est = T)`; `r get_bf(fit_exposure, "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 < 0", bf = T)` $\leq$ BFs $\leq$ `r get_bf(fit_exposure, "mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure3vs.Exposure2  < 0", est = T)`). Between the +20ms and -10ms conditions, PSE differences increased  with more exposure as did PSE differences between +20ms and the -20ms condition. This trend reflects that of test blocks but evidential support was weaker than that found in test block comparisons (`r get_bf(fit_exposure, "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 < 0", bf = T)` $\leq$ BFs $\leq$ `r get_bf(fit_exposure, "mu2_Condition.Exposure_Shift40vs.Shift10:Block_Exposure2vs.Exposure1 + mu2_Condition.Exposure_Shift10vs.Shift0:Block_Exposure2vs.Exposure1 < 0", bf = T)`).  
 
 ### Simple effects of condition within each exposure block
 
@@ -887,7 +887,7 @@ hyp.exposure_simple_effects_condition <-
 make_hyp_table(
   fit_exposure.simple_effects_condition, 
   hyp.exposure_simple_effects_condition, 
-  rep(c("-8ms vs. -18ms < 0", "+22ms vs. -8ms < 0", "+22ms vs. -18ms < 0"), 3), 
+  rep(c("-10ms vs. -20ms < 0", "+20ms vs. -10ms < 0", "+20ms vs. -20ms < 0"), 3), 
     caption = "This table summarizes the simple effects of the exposure conditions for each exposure block. Note that rightward shifts of the categorization function (and its PSE) correspond to negative estimates (lower intercepts in predicting the log-odds of \`\`t\'\'-responses).") %>% 
   pack_rows("Exposure block 1", 1, 3) %>%
   pack_rows("Exposure block 2", 4, 6) %>% 
@@ -925,9 +925,9 @@ hyp.exposure_simple_effects_block <-
       "Block 2 to 3: increased PSE",
       "{\\em Block 1 to 3: increased PSE}"),
     caption = "Was there incremental change from exposure block 1 to 3? This table summarizes the simple effects of block for each exposure condition. Note that rightward shifts of the categorization function (and its PSE) correspond to negative estimates (lower intercepts in predicting the log-odds of \`\`t\'\'-responses).") %>% 
-  pack_rows("Difference between blocks: -18ms", 1, 3) %>%
-  pack_rows("Difference between blocks: -8ms", 4, 6) %>%
-  pack_rows("Difference between blocks: +22ms", 7, 9)
+  pack_rows("Difference between blocks: -20ms", 1, 3) %>%
+  pack_rows("Difference between blocks: -10ms", 4, 6) %>%
+  pack_rows("Difference between blocks: +20ms", 7, 9)
 ```
 
 \pagebreak
@@ -955,14 +955,14 @@ hyp.interaction.exposure.condition_block <-
     fit_exposure,
     hyp.interaction.exposure.condition_block,
     rep(c(
-  # Comparing differences in -8ms vs. -18ms between blocks
+  # Comparing differences in -10ms vs. -20ms between blocks
   "Block 1 to 2: increased $\\Delta_{PSE}$",
   "Block 2 to 3: increased $\\Delta_{PSE}$",
   "{\\em Block 1 to 3: increased $\\Delta_{PSE}$}"), 3),
     caption = "Did the rate of block-to-block changes in PSEs differ between exposure conditions? This table summarizes the interactions between exposure condition and block---specifically, whether the differences between exposure conditions changed from exposure block to exposure block.") %>%
-  pack_rows("Difference in -8ms vs. -18ms", 1, 3) %>%
-  pack_rows("Difference in +22ms vs. -8ms", 4, 6) %>% 
-  pack_rows("Difference in +22ms vs. -18ms", 7, 9)
+  pack_rows("Difference in -10ms vs. -20ms", 1, 3) %>%
+  pack_rows("Difference in +20ms vs. -10ms", 4, 6) %>% 
+  pack_rows("Difference in +20ms vs. -20ms", 7, 9)
 ```
 
 \pagebreak
@@ -1004,7 +1004,7 @@ hyp.simple_slopes_condition <-
 make_hyp_table(
   fit_test.simple_effects_condition,
   hyp.simple_slopes_condition, 
-  c("-8ms vs. -18ms = 0", "+22ms vs. -8ms = 0", "+22ms vs. -18ms = 0", rep(c("-8ms vs. -18ms = 0", "+22ms vs. -8ms = 0", "+22ms vs. -18ms = 0"), 5)), 
+  c("-10ms vs. -20ms = 0", "+20ms vs. -10ms = 0", "+20ms vs. -20ms = 0", rep(c("-10ms vs. -20ms = 0", "+20ms vs. -10ms = 0", "+20ms vs. -20ms = 0"), 5)), 
     caption = "Did exposure condition affect the slope of categorization responses? This table summarizes the differences in slopes between the exposure conditions within each test block. Since there was little reason to expect differences across conditions, all hypothesis tests contained in this table test the null (using the Savage-Dickey density ratio). We note that such tests depend on the prior.") %>% 
   pack_rows("Test block 1 (pre-exposure)", 1, 3) %>%
   pack_rows("Test block 2", 4, 6) %>% 
@@ -1019,7 +1019,7 @@ rm(fit_test.simple_effects_condition)
 ### Simple effects of block within each exposure condition
 With regard to how categorization slopes (in all conditions) would change relative to the *pre*-exposure test, our expectations were less clear until we constructed the idealized learner reference lines in Figure \@ref(fig:plot-fit-PSE)C (after the experiment). On the one hand, we had designed the category variances of /d/ and /t/ to be somewhat plausible given the distribution VOT in American English. We did, for example, make sure that /t/ had larger VOT variance than /d/. So, to the extent that we created category variances that successfully resembled those that participants would expected based on their prior experience, exposure should not result in changes in participants' categorization slopes. On the other hand, methodological limitations (see Procedure in main text) kept us from most closely mimicking the distribution of VOTs in the database of American English that guided our design [@chodroff-wilson2018, as described in \@ref(sec:idealized-prior-listeners)]. 
 
-As also visible in Figure \@ref(fig:plot-fit-pars), we found little evidence that slopes changed throughout exposure. Three exceptions included the final three test blocks of the -18ms condition and the first to second block in the -8ms condition, which exhibited moderate support for the hypothesis that slopes increased. There never was more than anecdotal support for the hypothesis that slopes decreased. 
+As also visible in Figure \@ref(fig:plot-fit-pars), we found little evidence that slopes changed throughout exposure. Three exceptions included the final three test blocks of the -20ms condition and the first to second block in the -10ms condition, which exhibited moderate support for the hypothesis that slopes increased. There never was more than anecdotal support for the hypothesis that slopes decreased. 
 
 ```{r hypothesis-table-simple-slopes-block, fig.pos="H"}
 hyp.simple_slopes_block <- 
@@ -1072,9 +1072,9 @@ hyp.simple_slopes_block <-
       "Block 5 to 6: increased slope",
       "{\\em Block 4 to 6: increased slope}"),
     caption = "Did participants' categorization slopes change between test blocks? This table summarizes the interactions between exposure condition and block---specifically whether the differences in slopes between exposure condition changed between blocks.") %>%
-  pack_rows("Difference between blocks: -18ms", 1, 7) %>%
-  pack_rows("Difference between blocks: -8ms", 8, 14) %>%
-  pack_rows("Difference between blocks: +22ms", 15, 21)
+  pack_rows("Difference between blocks: -20ms", 1, 7) %>%
+  pack_rows("Difference between blocks: -10ms", 8, 14) %>%
+  pack_rows("Difference between blocks: +20ms", 15, 21)
 ```
 
 Figure \@ref(fig:plot-fit-pars) also reveals that participants' slopes were consistently *larger* than expected under both the idealized pre-exposure listener and the idealized learner model. This suggests that the mismatch between the idealized models and listeners' actual behavior cannot be explained by a failure of listeners' to adjust the slope of their categorization function. One explanation for the mismatch in slopes is that our idealized models might have over-estimated the perceptual noiseor the category variability of /d/ and /t/, compared to listeners internal representations. With regard to the former possibility, recall that the idealized models included perceptual noise estimates obtained in experiments reported in Kronrod et al [@kronrod2016, see Section \@ref(sec:idealized-prior-listeners)]. It is possible that these estimates were inflated, or that listeners in our experiment for some reason had less noisy perception. Alternatively or additional, it is possible that at least the model for the idealized pre-exposure listener over-estimates the category variability in listeners' internal representations of /d/ and /t/. For example, one reason participants might estimate the variability of /d/ and /t/ to be smaller than estimated in our idealized pre-exposure listener model is that listeners might benefit from pre-linguistic normalization mechanisms that remove inter-talker variability (which we did not include in our idealized models).
@@ -1120,7 +1120,7 @@ hyp_interaction.condition_block_VOT <-
     fit_test,
     hyp_interaction.condition_block_VOT,
     rep(c(
-  # Comparing slope differences in -8ms vs. -18ms between blocks
+  # Comparing slope differences in -10ms vs. -20ms between blocks
   "Block 1 to 2: increased $\\Delta_{slope}$",
   "Block 2 to 3: increased $\\Delta_{slope}$",
   "Block 3 to 4: increased $\\Delta_{slope}$",
@@ -1129,9 +1129,9 @@ hyp_interaction.condition_block_VOT <-
   "Block 5 to 6: decreased $\\Delta_{slope}$",
   "{\\em Block 4 to 6: decreased $\\Delta_{slope}$}"), 3),
     caption = "Did the slope differences between exposure conditions change from block to block? This table summarizes the interactions between exposure condition, block, and VOT---specifically, whether the differences in slopes between exposure conditions changed from test block to test block.") %>%
-  pack_rows("Difference in slopes: -8ms vs. -18ms", 1, 7) %>%
-  pack_rows("Difference in slopes: +22ms vs. -8ms", 8, 14) %>%
-  pack_rows("Difference in slopes: +22ms vs. -18ms", 15, 21)
+  pack_rows("Difference in slopes: -10ms vs. -20ms", 1, 7) %>%
+  pack_rows("Difference in slopes: +20ms vs. -10ms", 8, 14) %>%
+  pack_rows("Difference in slopes: +20ms vs. -20ms", 15, 21)
 ```
 
 
@@ -1157,7 +1157,7 @@ hyp.exposure_simple_slopes_condition <-
 make_hyp_table(
   fit_exposure.simple_effects_condition,
   hyp.exposure_simple_slopes_condition, 
-  rep(c("-8ms vs. -18ms < 0", "+22ms vs. -8ms < 0", "+22ms vs. -18ms < 0"), 3), 
+  rep(c("-10ms vs. -20ms < 0", "+20ms vs. -10ms < 0", "+20ms vs. -20ms < 0"), 3), 
     caption = "Did exposure condition affect the slope of categorization responses? This table summarizes the differences in slopes between the exposure conditions within each exposure block") %>% 
   pack_rows("Exposure block 1", 1, 3) %>%
   pack_rows("Exposure block 2", 4, 6) %>% 
@@ -1190,9 +1190,9 @@ make_hyp_table(
   hyp.exposure_simple_slopes_block, 
   rep(c("Block 1 to 2: increased slope", "Block 2 to 3: increased slope", "Block 1 to 3: increased slope"), 3), 
     caption = "Did participants’ categorization slopes change between exposure blocks? This table summarizes the interactions between exposure condition and block --- specifically whether the differences in slopes between exposure condition changed between exposure blocks") %>% 
-  pack_rows("Difference between blocks: -18ms", 1, 3) %>%
-  pack_rows("Difference between blocks: -8ms", 4, 6) %>% 
-  pack_rows("Difference between blocks: +22ms", 7, 9)
+  pack_rows("Difference between blocks: -20ms", 1, 3) %>%
+  pack_rows("Difference between blocks: -10ms", 4, 6) %>% 
+  pack_rows("Difference between blocks: +20ms", 7, 9)
 
 rm(fit_exposure.simple_effects_block)
 ```
@@ -1222,14 +1222,14 @@ hyp.interaction.exposure.condition_block_VOT <-
     fit_exposure,
     hyp.interaction.exposure.condition_block_VOT,
     rep(c(
-  # Comparing differences in -8ms vs. -18ms between blocks
+  # Comparing differences in -10ms vs. -20ms between blocks
   "Block 1 to 2: increased $\\Delta_{slope}$",
   "Block 2 to 3: increased $\\Delta_{slope}$",
   "{\\em Block 1 to 3: increased $\\Delta_{slope}$}"), 3),
     caption = "Did the rate of block-to-block changes differ across exposure conditions? This table summarizes the interactions between between VOT, exposure condition, and block ---specifically, whether the differences between exposure conditions changed from exposure block to exposure block.") %>%
-  pack_rows("Difference in -8ms vs. -18ms", 1, 3) %>%
-  pack_rows("Difference in +22ms vs. -8ms", 4, 6) %>% 
-  pack_rows("Difference in +22ms vs. -18ms", 7, 9)
+  pack_rows("Difference in -10ms vs. -20ms", 1, 3) %>%
+  pack_rows("Difference in +20ms vs. -10ms", 4, 6) %>% 
+  pack_rows("Difference in +20ms vs. -20ms", 7, 9)
 ```
 
 \pagebreak
@@ -1282,7 +1282,7 @@ p.human_psych_accuracy
 ## Comparing changes in participants' behavior against idealized learner models {#sec:comparison-to-idealized-learners}
 This section elaborates on Table \@ref(tab:hypothesis-table-convergence-test4-pre-exposure-PSE) in the main text, comparing changes in participants' behavior against idealized learner models. In the main text, we reported that participants' behavior in Test 4 had not converged against the behavior of an idealized learner, who has fully learned the exposure distributions. Here, we first report the same test for all exposure and test blocks, confirming the lack of full learning for all blocks. 
 
-Then we report hypothesis tests that assess whether the *degree* of convergence---quantified by the percentage labels in Figure \@ref(fig:plot-fit-PSE)C in the main text--- differed between exposure conditions. We are aware of only two previous studies that speak to this question [@kleinschmidt-jaeger2016; @kleinschmidt2020]. Both studies compared the degree of convergence between multiple exposure distributions that were left- or rightward-shifted along the VOT continuum. Both studies observed the same two trends we observe here: (1) the degree of convergence was proportionally lower for more extreme shifts (see -18ms vs. -8ms condition in Test 4) and (2) the degree of convergence was lower for shifts that were leftward rather than rightward (-18ms vs. +22ms condition, which are shifted about equally far relative to listeners' prior expectations). We refer to finding (1) as *shrinkage* and to finding (2) as *asymmetric shrinkage*. However, neither of the two previous studies assessed the credibility of findings (1) and (2). As we detail below, such differences---if confirmed---would have consequences for theories of adaptive speech perception.
+Then we report hypothesis tests that assess whether the *degree* of convergence---quantified by the percentage labels in Figure \@ref(fig:plot-fit-PSE)C in the main text--- differed between exposure conditions. We are aware of only two previous studies that speak to this question [@kleinschmidt-jaeger2016; @kleinschmidt2020]. Both studies compared the degree of convergence between multiple exposure distributions that were left- or rightward-shifted along the VOT continuum. Both studies observed the same two trends we observe here: (1) the degree of convergence was proportionally lower for more extreme shifts (see -20ms vs. -10ms condition in Test 4) and (2) the degree of convergence was lower for shifts that were leftward rather than rightward (-20ms vs. +20ms condition, which are shifted about equally far relative to listeners' prior expectations). We refer to finding (1) as *shrinkage* and to finding (2) as *asymmetric shrinkage*. However, neither of the two previous studies assessed the credibility of findings (1) and (2). As we detail below, such differences---if confirmed---would have consequences for theories of adaptive speech perception.
 
 ### Testing convergence against idealized learner model {#sec:convergence-test-all}
 Table \@ref(tab:hypothesis-table-no-convergence) reproduces Table \@ref(tab:hypothesis-table-convergence-test4-pre-exposure-PSE) for all test blocks. 
@@ -1313,22 +1313,22 @@ make_hyp_table(
   hyp.convergence,
   c(
     # test block 1
-    "$|\\Delta(PSE_{ideal_{-18ms}}, PSE_{actual_{-18ms}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{-8ms}}, PSE_{actual_{-8ms}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{+22ms}}, PSE_{actual_{+22ms}})| > 0$",
+    "$|\\Delta(PSE_{ideal_{-20ms}}, PSE_{actual_{-20ms}})| > 0$",
+    "$|\\Delta(PSE_{ideal_{-10ms}}, PSE_{actual_{-10ms}})| > 0$",
+    "$|\\Delta(PSE_{ideal_{+20ms}}, PSE_{actual_{+20ms}})| > 0$",
     # test block 2
-    "$|\\Delta(PSE_{ideal_{-18ms}}, PSE_{actual_{-18ms}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{-8ms}}, PSE_{actual_{-8ms}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{+22ms}}, PSE_{actual_{+22ms}})| > 0$",
+    "$|\\Delta(PSE_{ideal_{-20ms}}, PSE_{actual_{-20ms}})| > 0$",
+    "$|\\Delta(PSE_{ideal_{-10ms}}, PSE_{actual_{-10ms}})| > 0$",
+    "$|\\Delta(PSE_{ideal_{+20ms}}, PSE_{actual_{+20ms}})| > 0$",
     # test block 3
-    "$|\\Delta(PSE_{ideal_{-18ms}}, PSE_{actual_{-18ms}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{-8ms}}, PSE_{actual_{-8ms}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{+22ms}}, PSE_{actual_{+22ms}})| > 0$",
+    "$|\\Delta(PSE_{ideal_{-20ms}}, PSE_{actual_{-20ms}})| > 0$",
+    "$|\\Delta(PSE_{ideal_{-10ms}}, PSE_{actual_{-10ms}})| > 0$",
+    "$|\\Delta(PSE_{ideal_{+20ms}}, PSE_{actual_{+20ms}})| > 0$",
     
     # test block 4
-    "$|\\Delta(PSE_{ideal_{-18ms}}, PSE_{actual_{-18ms}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{-8ms}}, PSE_{actual_{-8ms}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{+22ms}}, PSE_{actual_{+22ms}})| > 0$"),
+    "$|\\Delta(PSE_{ideal_{-20ms}}, PSE_{actual_{-20ms}})| > 0$",
+    "$|\\Delta(PSE_{ideal_{-10ms}}, PSE_{actual_{-10ms}})| > 0$",
+    "$|\\Delta(PSE_{ideal_{+20ms}}, PSE_{actual_{+20ms}})| > 0$"),
   caption = "Have participants converged against the PSE expected from idealized learner? This table compares changes in participants' categorization function against those expected from idealized learners, complementing Table \\ref{tab:hypothesis-table-convergence-test4-pre-exposure-PSE}.",
   col1_width = "22em") %>%
   pack_rows("Test block 1", 1, 3) %>% 
@@ -1338,7 +1338,7 @@ make_hyp_table(
 ```
 
 ### Testing 'shrinkage': Do exposure conditions differ in the degree to which they converged against idealized learner models? {#sec:shrinkage-test-all}
-Recall that all three exposure conditions had the expected qualitative effects both relative to each other, and relative to participants' pre-exposure expectations: the absolute magnitude of the shift qualitatively followed the predictions of distributional learning models. This leaves open, however, whether the *degree* of adaptation was comparable across exposure conditions. That is, after the same amount of exposure, did participants in exposure conditions with more extreme shifts (e.g., the -18ms condition) exhibit *proportionally* smaller changes in their categorization functions, compared to participants in exposure conditions with less extreme shifts (e.g., the +0 condition)? To assess whether adaptive changes in participants' behavior exhibited such 'shrinkage', it is necessary to quantify the degree to which participants in different exposure conditions converged against the categorization functions expected from idealized learners. Here we do so by estimating the distance of participants' PSE from the PSE expected prior to exposure, and then comparing this distance to the distance of the idealized learner's PSE from that same prior PSE:
+Recall that all three exposure conditions had the expected qualitative effects both relative to each other, and relative to participants' pre-exposure expectations: the absolute magnitude of the shift qualitatively followed the predictions of distributional learning models. This leaves open, however, whether the *degree* of adaptation was comparable across exposure conditions. That is, after the same amount of exposure, did participants in exposure conditions with more extreme shifts (e.g., the -20ms condition) exhibit *proportionally* smaller changes in their categorization functions, compared to participants in exposure conditions with less extreme shifts (e.g., the +0 condition)? To assess whether adaptive changes in participants' behavior exhibited such 'shrinkage', it is necessary to quantify the degree to which participants in different exposure conditions converged against the categorization functions expected from idealized learners. Here we do so by estimating the distance of participants' PSE from the PSE expected prior to exposure, and then comparing this distance to the distance of the idealized learner's PSE from that same prior PSE:
 
 \begin{equation}
 \label{eq:proportion-convergence}
@@ -1347,8 +1347,8 @@ Recall that all three exposure conditions had the expected qualitative effects b
 
 This proportion can then be compared across different exposure conditions, allowing us to ask two questions of theoretical relevance. 
 
- 1. **Is there shrinkage?** Is proportion convergence smaller for the more extreme leftward-shifted -18ms condition, compared to the less extreme leftward-shifted -8ms condition?
- 2. **Is there asymmetric shrinkage?** Is proportion convergence smaller for the *left*ward-shifted -18ms condition, compared to the equally extreme *right*ward-shifted +22ms condition?
+ 1. **Is there shrinkage?** Is proportion convergence smaller for the more extreme leftward-shifted -20ms condition, compared to the less extreme leftward-shifted -10ms condition?
+ 2. **Is there asymmetric shrinkage?** Is proportion convergence smaller for the *left*ward-shifted -20ms condition, compared to the equally extreme *right*ward-shifted +20ms condition?
  
 However, equation \@ref(eq:proportion-convergence) contains a researcher degree of freedom: the approach to estimating $PSE_{pre-exposure}$. Here, we entertained three different ways of estimating $PSE_{pre-exposure}$, all of which yield similar results: anecdotal, and by no means convincing, evidence of asymmetric shrinkage. The hypothesis tests for the three different approaches are summarized in Tables \@ref(tab:hypothesis-table-shrinkage-against-prior-IO) to \@ref(tab:hypothesis-table-shrinkage-against-Test1-across-conditions). Table \@ref(tab:hypothesis-table-shrinkage-against-prior-IO) compares participants' actual PSE (and the idealized learner's PSE) against the pre-exposure PSE expected from an idealized pre-exposure listener. **This is the approach we used to calculate the percentage labels in Figure \@ref(fig:plot-fit-PSE)C in the main text**. Table \@ref(tab:hypothesis-table-shrinkage-against-Test1-same-condition) compares against the PSE that participants in the same condition had prior to any exposure---i.e., participants' PSE in Test 1. Finally, Table \@ref(tab:hypothesis-table-shrinkage-against-Test1-across-conditions) compares against the participants' pre-exposure PSE in Test 1 while averaging over all three conditions.
 
@@ -1378,17 +1378,17 @@ make_hyp_table(
   fit_test_nested_within_condition_and_block,
   hyp.shrinkage,
   c(
-    "$\\frac{\\Delta(PSE_{actual_{-8ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{-8ms}}, PSE_{prior})} > \\frac{\\Delta(PSE_{actual_{-18ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{-18ms}}, PSE_{prior})}$",
-    "$\\frac{\\Delta(PSE_{actual_{+22ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{+22ms}}, PSE_{prior})} > \\frac{\\Delta(PSE_{actual_{-18ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{-18ms}}, PSE_{prior})}$",
+    "$\\frac{\\Delta(PSE_{actual_{-10ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{-10ms}}, PSE_{prior})} > \\frac{\\Delta(PSE_{actual_{-20ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{-20ms}}, PSE_{prior})}$",
+    "$\\frac{\\Delta(PSE_{actual_{+20ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{+20ms}}, PSE_{prior})} > \\frac{\\Delta(PSE_{actual_{-20ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{-20ms}}, PSE_{prior})}$",
     
-    "$\\frac{\\Delta(PSE_{actual_{-8ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{-8ms}}, PSE_{prior})} > \\frac{\\Delta(PSE_{actual_{-18ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{-18ms}}, PSE_{prior})}$",
-    "$\\frac{\\Delta(PSE_{actual_{+22ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{+22ms}}, PSE_{prior})} > \\frac{\\Delta(PSE_{actual_{-18ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{-18ms}}, PSE_{prior})}$",
+    "$\\frac{\\Delta(PSE_{actual_{-10ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{-10ms}}, PSE_{prior})} > \\frac{\\Delta(PSE_{actual_{-20ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{-20ms}}, PSE_{prior})}$",
+    "$\\frac{\\Delta(PSE_{actual_{+20ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{+20ms}}, PSE_{prior})} > \\frac{\\Delta(PSE_{actual_{-20ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{-20ms}}, PSE_{prior})}$",
     
-    "$\\frac{\\Delta(PSE_{actual_{-8ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{-8ms}}, PSE_{prior})} > \\frac{\\Delta(PSE_{actual_{-18ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{-18ms}}, PSE_{prior})}$",
-    "$\\frac{\\Delta(PSE_{actual_{+22ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{+22ms}}, PSE_{prior})} > \\frac{\\Delta(PSE_{actual_{-18ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{-18ms}}, PSE_{prior})}$",
+    "$\\frac{\\Delta(PSE_{actual_{-10ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{-10ms}}, PSE_{prior})} > \\frac{\\Delta(PSE_{actual_{-20ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{-20ms}}, PSE_{prior})}$",
+    "$\\frac{\\Delta(PSE_{actual_{+20ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{+20ms}}, PSE_{prior})} > \\frac{\\Delta(PSE_{actual_{-20ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{-20ms}}, PSE_{prior})}$",
     
-    "$\\frac{\\Delta(PSE_{actual_{-8ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{-8ms}}, PSE_{prior})} > \\frac{\\Delta(PSE_{actual_{-18ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{-18ms}}, PSE_{prior})}$",
-    "$\\frac{\\Delta(PSE_{actual_{+22ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{+22ms}}, PSE_{prior})} > \\frac{\\Delta(PSE_{actual_{-18ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{-18ms}}, PSE_{prior})}$"),
+    "$\\frac{\\Delta(PSE_{actual_{-10ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{-10ms}}, PSE_{prior})} > \\frac{\\Delta(PSE_{actual_{-20ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{-20ms}}, PSE_{prior})}$",
+    "$\\frac{\\Delta(PSE_{actual_{+20ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{+20ms}}, PSE_{prior})} > \\frac{\\Delta(PSE_{actual_{-20ms}}, PSE_{prior})}{\\Delta(PSE_{ideal_{-20ms}}, PSE_{prior})}$"),
   caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. Both participants' and the idealized learner's PSEs are compared against the median PSE of the five cross-validated idealized pre-exposure listeners.",
   col1_width = "15em") %>% 
   pack_rows("Test block 1", 1, 2) %>% 
@@ -1425,17 +1425,17 @@ make_hyp_table(
   fit_test_nested_within_condition_and_block,
   hyp.shrinkage,
   c(
-    "$\\frac{\\Delta(PSE_{actual_{-8ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-8ms}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{-18ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-18ms}}, PSE_{actual_{pre}})}$",
-    "$\\frac{\\Delta(PSE_{actual_{+22ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+22ms}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{-18ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-18ms}}, PSE_{actual_{pre}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{-10ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-10ms}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{-20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-20ms}}, PSE_{actual_{pre}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{+20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+20ms}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{-20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-20ms}}, PSE_{actual_{pre}})}$",
     
-    "$\\frac{\\Delta(PSE_{actual_{-8ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-8ms}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{-18ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-18ms}}, PSE_{actual_{pre}})}$",
-    "$\\frac{\\Delta(PSE_{actual_{+22ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+22ms}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{-18ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-18ms}}, PSE_{actual_{pre}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{-10ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-10ms}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{-20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-20ms}}, PSE_{actual_{pre}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{+20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+20ms}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{-20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-20ms}}, PSE_{actual_{pre}})}$",
     
-    "$\\frac{\\Delta(PSE_{actual_{-8ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-8ms}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{-18ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-18ms}}, PSE_{actual_{pre}})}$",
-    "$\\frac{\\Delta(PSE_{actual_{+22ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+22ms}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{-18ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-18ms}}, PSE_{actual_{pre}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{-10ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-10ms}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{-20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-20ms}}, PSE_{actual_{pre}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{+20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+20ms}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{-20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-20ms}}, PSE_{actual_{pre}})}$",
     
-    "$\\frac{\\Delta(PSE_{actual_{-8ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-8ms}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{-18ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-18ms}}, PSE_{actual_{pre}})}$",
-    "$\\frac{\\Delta(PSE_{actual_{+22ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+22ms}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{-18ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-18ms}}, PSE_{actual_{pre}})}$"),
+    "$\\frac{\\Delta(PSE_{actual_{-10ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-10ms}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{-20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-20ms}}, PSE_{actual_{pre}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{+20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+20ms}}, PSE_{actual_{pre}})} > \\frac{\\Delta(PSE_{actual_{-20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-20ms}}, PSE_{actual_{pre}})}$"),
   caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. Both participants' and the ideal learner's PSEs are compared against the PSE of participants during Test 1 (averaging across all three conditions).",
   col1_width = "27em") %>% 
   pack_rows("Test block 1", 1, 2) %>% 
@@ -1473,17 +1473,17 @@ make_hyp_table(
   fit_test_nested_within_condition_and_block,
   hyp.shrinkage,
   c(
-    "$\\frac{\\Delta(PSE_{actual_{-8ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-8ms}}, PSE_{actual_{pre_{all}}})} > \\frac{\\Delta(PSE_{actual_{-18ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-18ms}}, PSE_{actual_{pre_{all}}})}$",
-    "$\\frac{\\Delta(PSE_{actual_{+22ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+22ms}}, PSE_{actual_{pre_{all}}})} > \\frac{\\Delta(PSE_{actual_{-18ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-18ms}}, PSE_{actual_{pre_{all}}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{-10ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-10ms}}, PSE_{actual_{pre_{all}}})} > \\frac{\\Delta(PSE_{actual_{-20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-20ms}}, PSE_{actual_{pre_{all}}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{+20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+20ms}}, PSE_{actual_{pre_{all}}})} > \\frac{\\Delta(PSE_{actual_{-20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-20ms}}, PSE_{actual_{pre_{all}}})}$",
     
-    "$\\frac{\\Delta(PSE_{actual_{-8ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-8ms}}, PSE_{actual_{pre_{all}}})} > \\frac{\\Delta(PSE_{actual_{-18ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-18ms}}, PSE_{actual_{pre_{all}}})}$",
-    "$\\frac{\\Delta(PSE_{actual_{+22ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+22ms}}, PSE_{actual_{pre_{all}}})} > \\frac{\\Delta(PSE_{actual_{-18ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-18ms}}, PSE_{actual_{pre_{all}}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{-10ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-10ms}}, PSE_{actual_{pre_{all}}})} > \\frac{\\Delta(PSE_{actual_{-20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-20ms}}, PSE_{actual_{pre_{all}}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{+20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+20ms}}, PSE_{actual_{pre_{all}}})} > \\frac{\\Delta(PSE_{actual_{-20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-20ms}}, PSE_{actual_{pre_{all}}})}$",
     
-    "$\\frac{\\Delta(PSE_{actual_{-8ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-8ms}}, PSE_{actual_{pre_{all}}})} > \\frac{\\Delta(PSE_{actual_{-18ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-18ms}}, PSE_{actual_{pre_{all}}})}$",
-    "$\\frac{\\Delta(PSE_{actual_{+22ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+22ms}}, PSE_{actual_{pre_{all}}})} > \\frac{\\Delta(PSE_{actual_{-18ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-18ms}}, PSE_{actual_{pre_{all}}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{-10ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-10ms}}, PSE_{actual_{pre_{all}}})} > \\frac{\\Delta(PSE_{actual_{-20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-20ms}}, PSE_{actual_{pre_{all}}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{+20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+20ms}}, PSE_{actual_{pre_{all}}})} > \\frac{\\Delta(PSE_{actual_{-20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-20ms}}, PSE_{actual_{pre_{all}}})}$",
     
-    "$\\frac{\\Delta(PSE_{actual_{-8ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-8ms}}, PSE_{actual_{pre_{all}}})} > \\frac{\\Delta(PSE_{actual_{-18ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-18ms}}, PSE_{actual_{pre_{all}}})}$",
-    "$\\frac{\\Delta(PSE_{actual_{+22ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+22ms}}, PSE_{actual_{pre_{all}}})} > \\frac{\\Delta(PSE_{actual_{-18ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-18ms}}, PSE_{actual_{pre_{all}}})}$"),
+    "$\\frac{\\Delta(PSE_{actual_{-10ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-10ms}}, PSE_{actual_{pre_{all}}})} > \\frac{\\Delta(PSE_{actual_{-20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-20ms}}, PSE_{actual_{pre_{all}}})}$",
+    "$\\frac{\\Delta(PSE_{actual_{+20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+20ms}}, PSE_{actual_{pre_{all}}})} > \\frac{\\Delta(PSE_{actual_{-20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-20ms}}, PSE_{actual_{pre_{all}}})}$"),
   caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. Both participants' and the idealized learner's PSEs are compared against the PSE of participants during Test 1 (averaging across all three conditions).",
   col1_width = "14em")%>% 
   pack_rows("Test block 1", 1, 2) %>% 
@@ -1495,7 +1495,7 @@ make_hyp_table(
 ### Discussion of shrinkage {#sec:discussion-shrinkage}
 As mentioned above, we are aware of only two previous studies that measured the degree of convergence across multiple exposure conditions. @kleinschmidt-jaeger2016 exposed different groups of listeners to different VOT distributions for /b/ and /p/ that were shifted to different degrees left- or rightwards relative to listeners' prior expectations. An unpublished follow-up analysis of the same data [@kleinschmidt2020] revealed asymmetric shrinkage patterns that closely resemble those found here. First, larger shifts in the exposure distribution yielded shifts in listeners' categorization functions that were *proportionally smaller* relative to the shifts expected from an idealized learner (shrinkage). Second, shrinkage effects were more pronounced for leftward- than rightward-shifted exposure distribution (asymmetric shrinkage). @kleinschmidt2020 also presents additional experiments with extreme examples of leftward-shifted exposures. In his Experiment 4, different groups of listeners were exposed to /b/-/p/ distributions for which the /b/ mean was shifted to -20ms, -50ms, or even -80ms, while the /p/ mean remained at 50ms VOT. This experiment replicated the strong shrinkage effects for such leftward shifts: even in the most extreme condition (-80ms), listeners' average PSE was still larger than 20ms.^[This second set of results has to be interpreted with caution given potential issues with the data quality [cf. @kleinschmidt2020, p. 25].] Across a total of ten left- and right-wards shifted exposure conditions, the findings in Kleinschmidt support both shrinkage and that this shrinkage is (much) more pronounced for left-wards shifts along the VOT continuum.<!-- TO DO: could put shrinkage figure here that is mentioned as possible addition in the to do. But could wait until submission? -->  It is, however, important to emphasize that Kleinschmidt presents no statistical tests that assessed the credibility of this pattern.
 
-As our own tests of the shrinkage hypothesis in Tables \@ref(tab:hypothesis-table-shrinkage-against-prior-IO) to \@ref(tab:hypothesis-table-shrinkage-against-Test1-across-conditions) show, even seemingly striking shrinkage patterns do not necessarily provide convincing evidence for shrinkage. In the present case, we find that the median degree of convergence at Test 4 relative to listeners' pre-exposure PSE ranged from `r d.psychometric_intercept.slope.PSE.median %>% filter(Condition.Exposure == "Shift0" & Block == 7) %>% pull(prop.shift_unscaled) %>% percent()` in the -18ms condition to `r d.psychometric_intercept.slope.PSE.median %>% filter(Condition.Exposure == "Shift10" & Block == 7) %>% pull(prop.shift_unscaled) %>% percent()` in the -8ms condition and `r d.psychometric_intercept.slope.PSE.median %>% filter(Condition.Exposure == "Shift40" & Block == 7) %>% pull(prop.shift_unscaled) %>% percent()` in the +22ms condition. At first blush, this would seem to support rather large difference in the degree of convergence. For the two leftward-shifted exposure conditions, the more extreme -18ms condition achieved less than 50% of the degree of convergence found in the less extreme -8ms condition. And even though the -18ms and +22ms conditions were shifted about equally far relative to participants' prior expectations, the leftward-shifted -18ms condition elicited in less than 50% of the degree of convergence observed for the rightward-shifted +22ms condition. Together, this would seem to suggest shrinkage that is asymmetric, in that it is more pronounced for exposure conditions that leftward-shifted along the VOT continuum (relative to listeners' prior expectations). However, none of the three approaches considered above finds more than anecdotal evidence (BFs < 3) that this shrinkage pattern is credible. 
+As our own tests of the shrinkage hypothesis in Tables \@ref(tab:hypothesis-table-shrinkage-against-prior-IO) to \@ref(tab:hypothesis-table-shrinkage-against-Test1-across-conditions) show, even seemingly striking shrinkage patterns do not necessarily provide convincing evidence for shrinkage. In the present case, we find that the median degree of convergence at Test 4 relative to listeners' pre-exposure PSE ranged from `r d.psychometric_intercept.slope.PSE.median %>% filter(Condition.Exposure == "Shift0" & Block == 7) %>% pull(prop.shift_unscaled) %>% percent()` in the -20ms condition to `r d.psychometric_intercept.slope.PSE.median %>% filter(Condition.Exposure == "Shift10" & Block == 7) %>% pull(prop.shift_unscaled) %>% percent()` in the -10ms condition and `r d.psychometric_intercept.slope.PSE.median %>% filter(Condition.Exposure == "Shift40" & Block == 7) %>% pull(prop.shift_unscaled) %>% percent()` in the +20ms condition. At first blush, this would seem to support rather large difference in the degree of convergence. For the two leftward-shifted exposure conditions, the more extreme -20ms condition achieved less than 50% of the degree of convergence found in the less extreme -10ms condition. And even though the -20ms and +20ms conditions were shifted about equally far relative to participants' prior expectations, the leftward-shifted -20ms condition elicited in less than 50% of the degree of convergence observed for the rightward-shifted +20ms condition. Together, this would seem to suggest shrinkage that is asymmetric, in that it is more pronounced for exposure conditions that leftward-shifted along the VOT continuum (relative to listeners' prior expectations). However, none of the three approaches considered above finds more than anecdotal evidence (BFs < 3) that this shrinkage pattern is credible. 
 
 We note this anecdotal trend here primarily because of its theoretical relevance, if found credible by future studies. Existing distributional learning models would *not* seem to predict **shrinkage** or **asymmetric shrinkage**. However, the model selection approach we discussed in the general discussion would arguably predict asymmetric shrinkage, provided sufficient statistical power to detect it. Specifically, most L1-US English listeners should be unlikely to shift their categorization functions particularly far *leftwards* because they are unlikely to have experienced many talkers with such leftward-shifted PSEs. This asymmetry is due to the fact that the distribution of VOT values is bounded at zero (see Figure \@ref(fig:exposure-means-database-matrix-plot)), leaving only very limited room for leftward shifts along the VOT continuum.^[Readers familiar with the literature on syllable-initial stop-voicing might object that pre-voicing---sometimes treated as negative VOT---even occurs in languages like English, in which it is not considered a primary cue to stop-voicing [@chodroff-wilson2018 did not annotate pre-voicing]. However, it is an empirical question whether listeners treat pre-voicing as a separate phonetic cue, in which case VOT would be bounded at zero (by definition). Even if listeners interpret pre-voicing as negative VOT, this does not change that L1-US English talkers' categorization functions have very little room to move leftwards along the VOT continuum. This is the case because even L1-US English talkers that frequently produce pre-voicing tend to *also* produce positive VOTs for the voiced category (including /d/). That is, talkers like the synthetic talkers that @kleinschmidt2020 created, who produce the voiced category with large negative VOTs (pre-voicing) but produce the voiceless category with large positive VOTs are rarely, if ever, experienced by a typical L1 listeners of US English. As a consequence, the category boundaries of the vast majority of talkers (and thus the ideal PSEs for speech from those talkers) that most L1 listeners of US English have experienced are positive.] In other words, how talkers of US English realize syllable-initial stop-voicing contrasts imposes a strong constraint on the extent to which listeners can shift their categorization functions leftwards along the VOT continuum---at least if rapid adaptation during the initial moments of encountering an unfamiliar talker relies primarily on model selection. This predicted inability to accommodate leftward shifts along the VOT continuum should be particularly pronounced for the bilabial stops (/b/-/p/), as the VOT distributions of /b/ is particular close to 0.  
 
@@ -1581,9 +1581,9 @@ m <- brm(
 ```
 
 ### Results
-Figure \@ref(fig:GAMM-figure) shows the predicted log-odds of "t"-responses that result from the fitted GAMM. The GAMM results replicate the directional effects of exposure both within and across exposure conditions. For the -18ms condition, the contour lines largely shift downwards with exposure. This means that the same VOT is more likely to be categorized as "t" with increasing exposure. For the +22ms condition, the opposite trend is observed (and much more clearly), indicating that the same VOT is *less* likely to be categorized as "t" with increasing exposure. The -8ms condition falls between the -18ms and +22ms condition.
+Figure \@ref(fig:GAMM-figure) shows the predicted log-odds of "t"-responses that result from the fitted GAMM. The GAMM results replicate the directional effects of exposure both within and across exposure conditions. For the -20ms condition, the contour lines largely shift downwards with exposure. This means that the same VOT is more likely to be categorized as "t" with increasing exposure. For the +20ms condition, the opposite trend is observed (and much more clearly), indicating that the same VOT is *less* likely to be categorized as "t" with increasing exposure. The -10ms condition falls between the -20ms and +20ms condition.
 
-The GAMM results also confirm that the changes introduced by exposure are undone with repeated testing. This shows in the contour lines over trials 160-175, which trend towards reverting the changes introduced by the preceding exposure. The trend shows most clearly for the -18ms and +22ms condition (in opposite directions since the exposure effects are in opposite directions for these two conditions). 
+The GAMM results also confirm that the changes introduced by exposure are undone with repeated testing. This shows in the contour lines over trials 160-175, which trend towards reverting the changes introduced by the preceding exposure. The trend shows most clearly for the -20ms and +20ms condition (in opposite directions since the exposure effects are in opposite directions for these two conditions). 
 
 (ref:GAMM-figure) Predicted log-odds of "t"-response by trial (across all exposure and test blocks) and VOT for each of the three exposure conditions. Combinations of trial and VOT that did not occur in any of the three exposure conditions are left white (the reduced VOT range of test blocks makes them easily identifiable).
 
@@ -1605,7 +1605,7 @@ p[[1]] +
   scale_fill_viridis_c('log-odds of "t"-response') +
   coord_cartesian(expand = F) + 
   facet_wrap(~ Condition.Exposure, 
-             labeller = labeller(Condition.Exposure = c("Shift0" = "-18ms", "Shift10" = "-8ms", "Shift40" = "+22ms"))) + 
+             labeller = labeller(Condition.Exposure = c("Shift0" = "-20ms", "Shift10" = "-10ms", "Shift40" = "+20ms"))) + 
   theme(legend.position = "top") 
 ```
 
@@ -1631,7 +1631,7 @@ p.RT_scatter <-
   scale_color_manual(
     "Exposure condition",
     aesthetics = c("colour", "fill"),
-    labels = c("-18ms", "-8ms", "+22ms"),
+    labels = c("-20ms", "-10ms", "+20ms"),
     values = colours.condition) +
   guides(colour = "none", text = "none") +
   coord_trans(x = "log10", y = "log10") +
@@ -1662,13 +1662,13 @@ p.RT_line <-
   scale_color_manual(
     "Exposure condition",
     aesthetics = c("colour", "fill"),
-    labels = c("-18ms", "-8ms", "+22ms"),
+    labels = c("-20ms", "-10ms", "+20ms"),
     values = colours.condition) +
   facet_grid(
     Condition.Exposure ~ Block, 
     scales = "free_x", space = "free_x",
     labeller = labeller(
-      .rows = c("Shift0" = "-18ms", "Shift10" = "-8ms", "Shift40" = "+22ms"),
+      .rows = c("Shift0" = "-20ms", "Shift10" = "-10ms", "Shift40" = "+20ms"),
       .cols = c("1" = "Test\n 1", "2" = "Exposure\n 1", "3" = "Test\n 2", "4" = "Exposure\n 2", "5" = "Test\n 3", "6" = "Exposure\n 3", "7" = "Test\n 4", "8" = "Test\n 5", "9" = "Test\n 6"))) +
   theme(legend.position = "top")
 
