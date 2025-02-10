@@ -551,6 +551,7 @@ fit_test.IA_predicted_logodds <-
     init = 0,
     iter = 4000,
     warmup = 2000,
+    sample_prior = "yes",
     save_pars = save_pars(all = TRUE),
     family = bernoulli("logit"),
     control = list(adapt_delta = .999), 
@@ -571,35 +572,17 @@ fit_test.IA_predicted_logodds.r_slopes <-
     init = 0,
     iter = 4000,
     warmup = 2000,
+    sample_prior = "yes",
     save_pars = save_pars(all = TRUE),
     family = bernoulli("logit"),
     control = list(adapt_delta = .9995),
     file ="../models/test_IA_predicted_logodds.r_slopes.rds",
     file_refit = "on_change")
-
 ```
-
-
 The results are shown in Figure \@ref(fig:plot-IA-human-PSE). For the present data, the ideal adaptor model predicts the proportion of listeners' "t"-responses with a high $R^2 =$ `r round(cor(IA.prediction$Predicted_posterior, IA.prediction$Response) %>% . ^2, 3) * 100`$\%$, comparable to that of the psychometric model ($R^2 =$ `r round(cor(psych.model_prediction$predicted_proportion_voiceless, psych.model_prediction$proportion_voiceless) %>% . ^2, 3) * 100`$\%$). This suggests that the ideal adaptor provides a decent explanation for participants' behavior with substantially fewer degrees of freedom (for additional visualizations of the fit against participants' behavior, see SI, \@ref(sec:ideal-adaptor)). To more directly compare the fit of the ideal adaptor learning model to the psychometric data analysis model, we estimated the pairwise difference in the two models' expected log-predictive density.^[The (log) predictive density can be thought of as the Bayesian equivalent of the (log) data likelihood in frequentist statistics (but the Bayesian approach incorporates prior beliefs). The *expected* log predictive density (ELPD) is the mean log posterior density of the data, estimated here using leave-one-out (with moment matching) through the `add_criterion()` function of `brms` [@R-brms_a]. This ELPD estimate provides a measure of the predictive accuracy of the model, essentially estimating how predictable a held-out datapoint is if the model is fit on all other data. Differences in the ELPD of more than 4-5 standard errors are often taken to be credible, whereas differences of 2-3 standard errors should be interpreted with more caution.] This comparison suggests that the psychometric model captures participants' responses better than the ideal adaptor ($\Delta_{elpd}=$ `r loo_compare(fit_test.IA_predicted_logodds, fit_test.upto.test4)[2, 1]`; SE$_\Delta=$ `r loo_compare(fit_test.IA_predicted_logodds, fit_test.upto.test4)[2, 2]`).
-
-```{r table-elpd-comparison, eval=FALSE}
-bind_cols(
-  "Model" = row.names(loo_compare(fit_test.IA_predicted_logodds, fit_test.IA_predicted_logodds.prior.change, fit_test.IA_predicted_logodds.prior.change.interaction)),
-  loo_compare(fit_test.IA_predicted_logodds, fit_test.IA_predicted_logodds.prior.change, fit_test.IA_predicted_logodds.prior.change.interaction)) %>% 
-  select(1:3) %>% 
-  mutate(Model = str_replace(Model, "fit_test\\.(.)", "\\1")) %>% 
-  kbl(
-    caption = "Comparing the expected log predicted density of models with ideal adaptor predicted logodds as a predictor of human behaviour",
-    format = "latex",
-    booktabs = TRUE) %>% 
-  kable_styling(latex_options = "HOLD_position", full_width = FALSE) %>%
-    column_spec(1, width = "25em")
-```
-
 
 
 Most relevant to the present purpose is a systematic deficiency of the model, evident in Figure \@ref(fig:plot-IA-human-PSE): the ideal adaptor substantially *under*-predicts changes in listeners' PSEs  during initial exposure, and *over*-predicts changes in listeners' PSE following exposure (see, in particular, the -20ms and -10ms conditions in Test 4). Why? Simply put, it is the best the model can do in order to accommodate all three of (i) listeners' pre-exposure behavior, (ii) the rapid changes in listeners' PSEs during initial exposure, and (iii) the premature flattening off of changes in listeners' PSEs. Put differently, an ideal adaptor can *either* explain the fact that listeners' PSEs changed rapidly at the start of exposure *or* that there seem to be little to no changes in listeners' PSE after the second exposure block. But it cannot explain both. (see SI \@ref(sec:ideal-adaptor) for analysis of the IA's predictions and its relationship to human responses)
-
 
 <!-- To understand this pattern, it is helpful to recognize that rational models of distributional learning describe listeners' expectations after exposure as the weighted mean of prior expectations and the observed exposure statistics [@kleinschmidt-jaeger2015]. This means that the speed with which a learner adapts at the start of exposure is expected to be predictive of how fast a learner adapts after additional exposure. Put differently, ideal adaptors constrain the rate at which PSEs can change across exposure trials. This means that an ideal adaptor can *either* explain the fact that listeners' PSEs changed rapidly at the start of exposure *or* that there seem to be little to no changes in listeners' PSE after the second exposure block. But it cannot explain both aspects of our data. It thus appears that participants indeed converged prematurely in their behavior, relative to what would be expected under the specific model of ideal information integration that we employed. -->
 
@@ -609,7 +592,6 @@ Unlike unconstrained model learning, model selection---listeners selecting betwe
 
 ### But is premature convergence real?
 The first type of alternative explanation appeals to methodological confounds. For example, we considered whether the appearance of premature convergence could be a trivial result of priors we used in fitting the psychometric mixed-effects model. Following standards in the literature, we employed a weakly regularizing Student $t$ prior for all population-level effects. This prior favors small coefficient estimates, regularizing the estimated shifts in PSEs towards zero. As this regularization is particularly strong for more extreme shifts in the PSE, it is theoretically possible that our priors caused the psychometric model to 'hallucinate' premature convergence. This would make these findings artifacts of our data analysis approach, rather than findings of theoretical interest. Given how weakly regularizing the priors we employed were, this explanation struck us as unlikely: even the largest estimated shifts were well within the 95% highest density interval of the prior. Still, we decided to address this possibility more directly. We refit the psychometric model once with a substantially weaker prior (SD of Student $t$ = 5) and once with an even weaker uniform prior. In both cases, results changed only numerically and premature convergence was still observed.
-
 ```{r calculate-test-surprisal}
 d.test_surprisal <-
   d.for_analysis %>%
