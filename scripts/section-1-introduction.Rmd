@@ -109,21 +109,47 @@ p.cat <-
     arrow = arrow(type = "open" , length = unit(0.04, "npc")),
     inherit.aes = F) +
   scale_x_continuous(limits = c(15, 90), breaks = c(37, 72)) +
-  scale_colour_manual(values = c("grey", "#02427e"))
+  scale_colour_manual(values = c("grey", "#02427e")) +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank())
 
+
+# 
+#   d.talker_IO.VOT %>% 
+#   filter(Talker %in% c("typical", "unfamiliar"), category == "/t/") %>%
+#   select(Talker, category, PSE) %>% 
+#   ggplot() +
+#   geom_hline(aes(yintercept = PSE), linetype = 1, alpha = .8, colour = "grey") +
+#   geom_hline(aes(yintercept = PSE), linetype = 4, alpha = .8, colour = "#02427e") +
+#   scale_y_continuous("Ideal PSE (ms VOT)", limits = c(30, 75), breaks = c(37, 72)) +
+#   #scale_y_continuous("Talker") +
+#   theme(axis.text.y = element_text(angle = 90, vjust = .5, hjust = 0.5))
 
 p.PSE <- 
-  d.talker_IO.VOT %>% 
-  filter(Talker %in% c("typical", "unfamiliar")) %>%
+d.talker_IO.VOT %>% 
+  filter(Talker %in% c("typical", "unfamiliar"), category == "/t/") %>%
   select(Talker, category, PSE) %>% 
-  group_by(Talker) %>% 
-  filter(category == "/t/") %>% 
-  ggplot(aes(x = PSE, y = Talker, colour = Talker)) +
-  geom_point(size = 1.5) +
-  scale_colour_manual(values = c("grey", "#02427e"), guide = "none") + 
-  scale_x_continuous("Ideal PSE (ms VOT)", limits = c(30, 75), breaks = c(37, 72)) +
-  scale_y_discrete("Talker") +
-  theme(axis.text.y = element_text(angle = 90, vjust = .5, hjust = 0.5))
+  mutate(PSE = round(PSE)) %>% 
+  ggplot() +
+  geom_hline(data = . %>% filter(Talker == "typical"), aes(yintercept = PSE), 
+             color = "grey", linewidth = 1.5, linetype = 1) +
+  geom_hline(data = . %>% filter(Talker == "unfamiliar"), aes(yintercept = PSE), 
+             color = "#02427e", linewidth = 1.5, linetype = 4) +
+  scale_y_continuous("Ideal PSE (ms VOT)", limits = c(30, 75), breaks = c(37, 72)) +
+  scale_x_continuous("", limits = c(0, .5), breaks = NULL) +
+   annotate(
+       geom = "text",
+       x = c(0.05, 0.09), 
+       y = c(39, 70),
+       label = c("typical", "unfamiliar"),
+       fontface = "bold",
+       size = 2.5) +
+  theme(
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank())
  
 PSE_change <- 
   expand_grid(
@@ -184,11 +210,11 @@ Few existing studies meet these criteria. The most common paradigms expose one g
 
 For example, there is now substantial evidence that long-term prior experience with a particular second language accent over months and years can facilitate more accurate understanding, as well as faster adaptation, to unfamiliar talkers of that accent [@porretta2017; @witteman2013]. Findings like these demonstrate that prior experience affects speech perception, in line with prediction 1 of distributional learning theories. These findings leave open, however, whether the specific benefits of prior experiences are predicted by the *distributions of phonetic cues* that listeners have previously experienced, rather than some other non-distributional learning algorithm. Only a handful of studies have begun to address this question, testing whether differences in the adaptation *outcome* between participant groups can at least qualitatively be accounted for by an estimate of the distributions of phonetic cues in participants' prior experience [@kang-schertz2021; @schertz2016; @tan2021; @xie2021cognition]. Here we build on those studies, assessing how well distributional learning models can explain the quantitative effects of listeners' prior experience both before and during exposure to different phonetic distributions. 
 
-Similar considerations apply to findings that repeated exposure can result in a gradient, cumulative build-up of changes in listeners perception---in line with prediction 2a [e.g., @cummings-theodore2023; @liu-jaeger2018; @poellmann2011; @vroomen2007; @REF-ANY-OTHER-FROM-REVIEWERS]. None of these studies analyzed the phonetic distributions listeners were exposed to, or linked those distributions to the observed incremental changes in listener's behavior. This leaves open whether the observed changes are due to distributional learning rather than alternative mechanism, such as changes in decision biases [see discussion in @xie2023]. Even if we were to take for granted that distributional learning is the most plausible explanation for these results, previous studies leave open whether distributional learning can explain a non-trivial share of the observed incremental changes in listeners' perception---as predicted if distributional learning is an important component of rapid adaptation to unfamiliar talkers. A better understanding of the extent to which changes in listeners' perception quantitatively follow the predictions of distributional learning models also will facilitate the interpretation of otherwise arbitrary seeming findings. For example, some recent findings suggest that adaptation only accumulated up to a certain number of exposure stimuli, after which no further changes were observed [@cummings-theodore2023; @liu-jaeger2018]. Does this 'ceiling' effect reflect convergence against the phonetic distributions of the exposure stimuli, or does it point to constraints on adaptive speech perception that are *not* predicted by distributional learning [see discussion in @kleinschmidt-jaeger2015]? To answer questions like these, it is necessary to compare incremental changes in listeners' perception against quantitative predictions of distributional learning models. This in turn requires paradigms that deliver more fine-grained data, providing sufficiently constraining evidence to evaluate such models.
+Similar considerations apply to findings that repeated exposure can result in a gradient, cumulative build-up of changes in listeners perception---in line with prediction 2a [e.g., @cummings-theodore2023; @liu-jaeger2018; @poellmann2011; @vroomen2007]. None of these studies analyzed the phonetic distributions listeners were exposed to, or linked those distributions to the observed incremental changes in listener's behavior. This leaves open whether the observed changes are due to distributional learning rather than alternative mechanism, such as changes in decision biases [see discussion in @xie2023]. Even if we were to take for granted that distributional learning is the most plausible explanation for these results, previous studies leave open whether distributional learning can explain a non-trivial share of the observed incremental changes in listeners' perception---as predicted if distributional learning is an important component of rapid adaptation to unfamiliar talkers. A better understanding of the extent to which changes in listeners' perception quantitatively follow the predictions of distributional learning models also will facilitate the interpretation of otherwise arbitrary seeming findings. For example, some recent findings suggest that adaptation only accumulated up to a certain number of exposure stimuli, after which no further changes were observed [@cummings-theodore2023; @liu-jaeger2018]. Does this 'ceiling' effect reflect convergence against the phonetic distributions of the exposure stimuli, or does it point to constraints on adaptive speech perception that are *not* predicted by distributional learning [see discussion in @kleinschmidt-jaeger2015]? To answer questions like these, it is necessary to compare incremental changes in listeners' perception against quantitative predictions of distributional learning models. This in turn requires paradigms that deliver more fine-grained data, providing sufficiently constraining evidence to evaluate such models.
 
-"Distributional learning" experiments take a step in this direction by explicitly manipulate the phonetic distributions during exposure [e.g., @chladkova2017; @clayards2008; @escudero2011; @goudbeek2008; @idemaru-holt2011; @maye2002; @pisoni1982; @zhang-holt2018]. These experiments have found that the outcome of exposure is qualitatively compatible with prediction 2b. <!-- In some cases, this includes comparisons of more than two exposure conditions, making those results more informative (the probability that outcomes of different exposure conditions qualitatively order in the way predicted by distributional learning decreases with the number of conditions). --> Of particular note are studies that further applied distributional learning models to the exposure inputs of those experiments, and qualitatively or quantitatively compared the predictions of these models to listeners' behavior [@bejjanki2011; @clayards2008; @hitczenko-feldman2016; @harmon2019; @kleinschmidt2015]. <!-- Could be omitted up to next para: --> For example, in an important early study, @clayards2008 exposed two different groups of US English listeners to instances of "b" and "p" that differed in their distribution along the voice onset time continuum (VOT). VOT is the primary phonetic cue to word-initial stops in US English: the voiced category (e.g., /b/, /d/, or /g/) is produced with lower VOT than the voiceless category (/p/, /t/, /k/). Clayards and colleagues held the VOT means of /b/ and /p/ constant between the two exposure groups, but manipulated whether both /b/ and /p/ had wide or narrow variance along VOT. Using a distributional learning model similar to the idealized learners we presented below, Clayards and colleagues predicted that listeners in the wide variance group would exhibit a more shallow categorization function than the narrow variance group. This is precisely what they found, providing support for prediction 2b that the distribution of phonetic cues in the exposure input causes changes in listeners' behavior [see also @nixon2016; @theodore-monto2019]. Findings like these suggests that the outcome of adaptation is compatible with prediction (2b) of distributional learning models.<!-- ^[A related line of work has used distributional learning or explicit training paradigms to study the acquisition of *novel* sound contrasts [e.g., @maye2002; @mccandliss2002; @pajak-levy2012; @pisoni1982]. These studies, too, have observed outcomes predicted by distributional learning models [for review, see @pajak2016].] -->
+"Distributional learning" experiments take a step in this direction by explicitly manipulate the phonetic distributions during exposure [e.g., @chladkova2017; @clayards2008; @escudero2011; @goudbeek2008; @goudbeek2009; @idemaru-holt2011; @maye2002; @pisoni1982; @zhang-holt2018]. These experiments have found that the outcome of exposure is qualitatively compatible with prediction 2b. <!-- In some cases, this includes comparisons of more than two exposure conditions, making those results more informative (the probability that outcomes of different exposure conditions qualitatively order in the way predicted by distributional learning decreases with the number of conditions). --> Of particular note are studies that further applied distributional learning models to the exposure inputs of those experiments, and qualitatively or quantitatively compared the predictions of these models to listeners' behavior [@bejjanki2011; @clayards2008; @hitczenko-feldman2016; @harmon2019; @kleinschmidt2015]. <!-- Could be omitted up to next para: --> For example, in an important early study, @clayards2008 exposed two different groups of US English listeners to instances of "b" and "p" that differed in their distribution along the voice onset time continuum (VOT). VOT is the primary phonetic cue to word-initial stops in US English: the voiced category (e.g., /b/, /d/, or /g/) is produced with lower VOT than the voiceless category (/p/, /t/, /k/). Clayards and colleagues held the VOT means of /b/ and /p/ constant between the two exposure groups, but manipulated whether both /b/ and /p/ had wide or narrow variance along VOT. Using a distributional learning model similar to the idealized learners we presented below, Clayards and colleagues predicted that listeners in the wide variance group would exhibit a more shallow categorization function than the narrow variance group. This is precisely what they found, providing support for prediction 2b that the distribution of phonetic cues in the exposure input causes changes in listeners' behavior [see also @nixon2016; @theodore-monto2019]. Findings like these suggests that the outcome of adaptation is compatible with prediction (2b) of distributional learning models.<!-- ^[A related line of work has used distributional learning or explicit training paradigms to study the acquisition of *novel* sound contrasts [e.g., @maye2002; @mccandliss2002; @pajak-levy2012; @pisoni1982]. These studies, too, have observed outcomes predicted by distributional learning models [for review, see @pajak2016].] -->
 
-Studies like those by Clayards and colleagues come particularly close to the standard called for by @xie2023, and they form the inspiration for the present work. Previous studies have, however, used much longer exposure than what we aim for here [an order of magnitude more than the earliest test in our study, @chladkova2017; @clayards2008; @colby2018; @escudero2011; @goudbeek2008; @logan1991]. Next, we describe how we build on these works, including stronger joint tests of predictions 1 and 2a,b, as well as the first test of predictions 3 and 4 for adaptive speech perception. 
+Studies like those by Clayards and colleagues come particularly close to the standard called for by @xie2023, and they form the inspiration for the present work. Previous studies have, however, used much longer exposure than what we aim for here [an order of magnitude more than the earliest test in our study, @chladkova2017; @clayards2008; @colby2018; @escudero2011; @goudbeek2008; @goudbeek2009; @logan1991]. Next, we describe how we build on these works, including stronger joint tests of predictions 1 and 2a,b, as well as the first test of predictions 3 and 4 for adaptive speech perception. 
 
 \begin{table}[!ht]
 \begin{small}
