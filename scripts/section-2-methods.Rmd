@@ -155,7 +155,7 @@ p.histogram_conditions
 
 Following @kleinschmidt2015, half of the /d/ and half of the /t/ trials in each exposure block were labeled, and the other half were unlabeled. Unlabeled trials were identical to test trials except that the distribution of VOTs across those trials was bimodal (rather than uniform), and determined by the exposure condition (see Figure \@ref(fig:design-distribution)). Labeled trials followed the same distribution but instead presented two response options with identical stop onsets---e.g., *din* and *dill* to label the input as a /d/. <!-- Earlier distributional learning studies have mostly used fully unlabeled exposure [@clayards2008; @nixon2016; @theodore-monto2019]. This contrasts with visually- or lexically-guided perceptual learning studies, which use labeled exposure [@bertelson2003; @norris2003; @kraljic-samuel2005; @vroomen2007]. Such labeling is known to facilitate adaptation [@burchill2018; @burchill2023]---indeed, if shifted pronunciations are embedded in minimal pair or nonce-word contexts, listeners do not shift their categorization boundary [@norris2003]. --> While lexical context often disambiguates and labels sounds in everyday speech [facilitating adaptation, @burchill2023; @burchill2018], disambiguating context is not *always* available. Especially with unfamiliar accents, listeners often have uncertainty about the word sequences they hear. This reduces the labeling information available to them during typical listening. Here, we thus struck a compromise between never or always labeling the input.
 
-Next, we created the two additional exposure conditions by shifting all VOTs sampled for the -20ms condition by +10 or +20ms ms (see Figure \@ref(fig:design-distribution)). This approach exposes participants to heterogeneous samples of VOT distributions for /d/ and /t/ that varied within and across blocks, while holding all aspects of the input constant across conditions except for the shift in VOT---including the placement of labeled and unlabeled trials relative to the exposure condition's category means. The order of trials was randomized within each block and participant, with no more than two catch trials in a row. Participants were randomly assigned to one of 18 lists, crossing 3 (exposure condition) x 3 (block order) x 2 (placement of response options during unlabeled test and exposure trials). In total, this list design resulted in 36 exposure-test combinations (Test 1-4 x 3 exposure condition x 3 block order that differed somewhat in the sampled statistics for exposure block 1-3). Together with the 12 VOT locations in each test block, the present experiment assessed participants' perception for 432 unique combinations of exposure and test stimuli, each of which can be compared against the predictions of distributional learning models. This is a marked improvement compared to previous studies, and allows us to submit distributional learning models to a much stronger quantitative test.
+Next, we created the two additional exposure conditions by shifting all VOTs sampled for the -20ms condition by +10 or +40ms ms (see Figure \@ref(fig:design-distribution)). This approach exposes participants to heterogeneous samples of VOT distributions for /d/ and /t/ that varied within and across blocks, while holding all aspects of the input constant across conditions except for the shift in VOT---including the placement of labeled and unlabeled trials relative to the exposure condition's category means. The order of trials was randomized within each block and participant, with no more than two catch trials in a row. Participants were randomly assigned to one of 18 lists, crossing 3 (exposure condition) x 3 (block order) x 2 (placement of response options during unlabeled test and exposure trials). In total, this list design resulted in 36 exposure-test combinations (Test 1-4 x 3 exposure condition x 3 block order that differed somewhat in the sampled statistics for exposure block 1-3). Together with the 12 VOT locations in each test block, the present experiment assessed participants' perception for 432 unique combinations of exposure and test stimuli, each of which can be compared against the predictions of distributional learning models. This is a marked improvement compared to previous studies, and allows us to submit distributional learning models to a much stronger quantitative test.
 <!-- ^[The actual number of unique predictions for these 432 combinations is lower. For example, all distributional learning models predict no difference in Test 1, regardless of exposure condition and block order. Order-insensitive distribution learning models additionally predict that the Latin-square design for block order---which results in slightly different exposure statistics in the different exposure blocks---has no effect in Test 4, after all three exposure blocks have been experienced. Still, even with these considerations in mind, our design resulted in 264 combinations of exposure and test stimuli that should differ in terms of the predictions made by distributional learning models.]  -->
 
 ## Exclusions
@@ -254,7 +254,7 @@ Next, we describe how we developed normative models to derive strong, falsifiabl
 
 The model for the idealized pre-exposure listener allows us to test whether listeners' categorization functions prior to any exposure---in Test block 1---are predicted by the distribution of phonetic cues to /d/ and /t/ experienced by a 'typical' L1 listeners of US English. To this end, we used a phonetic database of L1-US English productions of syllable-initial stop productions [@chodroff-wilson2018]. The database contains information for three important cues to the word-initial /d/-/t/ contrast in L1-US English: VOT, f0, and vowel duration (for details, see SI \@ref(sec:phonetic-database)). We used this database to train Bayesian ideal observers on the distributions over VOT, f0, and vowel durations for /d/ and /t/. Specifically, since each listener is expected to have slightly different representations of /d/ and/t/ based on individual differences in listeners' previous exposure, we used five fold cross-validation to train five separate Bayesian ideal observers. This provided us with a (very rough) estimate of the range of categorization behavior that would be expected prior to any exposure to the unfamiliar talker based on the phonetic distributions of US English (for details, see SI, \@ref(sec:idealized-prior-listeners)).
 
-(ref:conditions-predicted-PSE) The expected categorization functions of the respective conditions by idealized listeners who fully learn the exposure talker's phonetic distributions. The gray band marks the range of five-fold cross validated PSEs of idealized pre-exposure listeners estimated from a database of female talkers. Arrows point to the direction of the shift of the pre-exposure PSE after full exposure. Condition labels refer to the amount of shift relative to the median value of listeners' pre-exposure PSEs.
+(ref:conditions-predicted-PSE) The expected categorization functions of the respective conditions by idealized learners who fully learn the exposure talker's phonetic distributions. The gray band marks the range of five-fold cross validated PSEs of idealized pre-exposure listeners estimated from a database of female talkers. Arrows point toward the direction of the shift of the pre-exposure PSE by an idealized learner after full exposure. Condition labels refer to the amount of shift relative to the median value of listeners' pre-exposure PSEs.
 
 ```{r conditions-relative-pre-exposure-PSE, fig.height=base.height*2.8, fig.width=base.width*3.8, fig.cap="(ref:conditions-predicted-PSE)"}
 # Store parameters for model fitting
@@ -371,6 +371,67 @@ d.condition.exposure.IO %>%
 ```
 For the idealized learner model, we followed the same general procedure but instead fit Bayesian ideal observers against the labeled VOT distributions of each exposure condition. This makes it possible to assess how far participants in the different exposure conditions have converged against the exposure distributions. Unlike for the idealized pre-exposure listeners, which used five-fold cross-validation, we trained only one ideal observer per exposure condition. As mentioned above, attentional lapses during the experiment were very low, suggesting that listeners largely paid attention on all trials, and thus got more or less identical inputs.^[Some previous studies has similarly used idealized learners to test whether [@bejjanki2011; @clayards2008] or how far [@kleinschmidt-jaeger2016; @kleinschmidt2020] listeners have converged against the exposure distributions. These works have typically found that the categorization functions predicted by idealized learners are steeper than those of human listeners. Going beyond these previous works, we included an estimate of perceptual noise [obtained from @kronrod2016] in both the idealized pre-exposure listeners and the idealized learners. This turned out to improve the fit against listeners' perception. For details, see SI, \@ref(sec:model-guided).] Below, we use the predicted PSEs derived from these idealized models to better understand the adaptive changes participants' behavior.
 
+(ref:exposure-means-database-matrix-plot) Placement of exposure conditions (category means of /d/ and /t/, shown in color) relative to an estimate of L1 US English listeners' prior expectations. After VOT, f0 and vowel duration are two of the most informative cues to word-initial /d/-/t/ in L1 US English. As an estimate of listeners' prior expectations about these distributions, we show `r nrow(d.chodroff_wilson.isolated)` word-initial /d/ and /t/ productions for words produced in isolation by `r length(unique(d.chodroff_wilson.isolated$Talker))` female L1 talkers in @chodroff-wilson2018. The upper off-diagonal shows each of these productions as a point. The diagonal shows their marginal density, with a data rug at the bottom indicating the placement of exposure means. The lower off-diagonal shows bivariate Gaussians fit to the distribution of the /d/ and /t/ productions, with the exposure means for each condition indicated by the /d/ and /t/ labels. 
+
+```{r exposure-means-database-matrix-plot, fig.width=base.width*4, fig.height=base.height*2.5+1, fig.cap="(ref:exposure-means-database-matrix-plot)", fig.pos="!ht"}
+p.placement_of_exposure_means_relative_to_prior <-
+  d.chodroff_wilson.isolated %>%
+  group_by(speechstyle, category) %>%
+  filter(if_all(c(VOT, f0_Mel, vowel_duration), ~ abs(scale(.x)[,1]) < 3.5)) %>%
+  ggplot(aes(color = category, fill = category)) +
+  geom_autopoint(aes(shape = speechstyle), alpha = .4) +
+  geom_autodensity(aes(linetype = speechstyle), position = "identity", alpha = .5) +
+  stat_ellipse(aes(x = .panel_x, y = .panel_y, linetype = speechstyle)) +
+  scale_color_manual(
+    "Category",
+    labels = c("/d/", "/t/"),
+    values = colours.category_greyscale,
+    aesthetics = c("color", "fill"),
+    guide = guide_legend(title = "Category", order = 2)) +
+  scale_shape_manual(
+    breaks = c("isolated", "connected"),
+    values = c(18,4)) +
+  scale_linetype_manual(
+    breaks = c("isolated", "connected"),
+    values = c(1,2)) +
+  new_scale_color() +
+  geom_text(
+    data =
+      d.for_analysis %>%
+      filter(Phase == "exposure") %>%
+      group_by(Condition.Exposure, category) %>%
+      summarise(across(c(VOT, f0_Mel, vowel_duration), mean)),
+    mapping = aes(x = .panel_x, y = .panel_y, label = category, colour = Condition.Exposure),
+    alpha = .8, size = 3,
+    show.legend = F,
+    inherit.aes = F) +
+  geom_rug(
+    d.for_analysis %>%
+      filter(Phase == "exposure") %>%
+      group_by(Condition.Exposure, category) %>%
+      summarise(across(c(VOT, f0_Mel, vowel_duration), mean)),
+    mapping = aes(x = .panel_x, colour = Condition.Exposure),
+    sides = "b") +
+  guides(
+    colour = guide_legend(title = "Condition", order = 1),
+    linetype = "none",
+    shape = "none") +
+  # Currently ignored by ggforce::facet_matrix (https://github.com/thomasp85/ggforce/issues/163)
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 3)) +
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 3)) +
+  scale_colour_manual(
+    labels = c("-20ms", "-10ms", "+20ms"),
+    values = colours.condition) +
+  facet_matrix(
+    vars(c(VOT, f0_Mel, vowel_duration)),
+    layer.lower = c(3:4), layer.diag = c(2, 5:6), layer.upper = c(1),
+    labeller = labeller(
+      .rows = c(VOT = "VOT\n(ms)", f0_Mel = "f0\n(Mel)", vowel_duration = "Vowel duration\n(ms)"),
+      .cols = c(VOT = "VOT\n(ms)", f0_Mel = "f0\n(Mel)", vowel_duration = "Vowel duration\n(ms)"))) +
+  theme(legend.position = "top", axis.text.x = element_text(angle = 45, hjust = 1))
+
+p.placement_of_exposure_means_relative_to_prior
+```
 
 ```{r}
 rm(
