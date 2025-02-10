@@ -568,68 +568,6 @@ To understand this pattern, it is helpful to relate the three exposure condition
 
 Figure \@ref(fig:exposure-means-database-matrix-plot) offers an explanation as to why the -20ms condition (and to some extent the -10ms condition) shift leftwards with increasing exposure, whereas the +20ms condition shifts rightwards: relative to the distribution of VOT for /d/ and /t/ in listeners' prior experience, only the +20ms condition presents category means that are clearly larger than expected along VOT, whereas the -20ms condition and, to some extent, the -10ms condition presented lower-than-expected category means. That is, once we take into account how our exposure conditions relate to listeners' prior experience (prediction 1), both the direction of changes from Test 1 to 4 *within* each exposure condition (Table \@ref(tab:hypothesis-table-simple-effects-block)), and the direction of differences *between* exposure conditions receive an explanation (Table \@ref(tab:hypothesis-table-simple-effects-condition)). To further illustrate this point, the horizontal gray ribbon in Figure \@ref(fig:plot-fit-PSE)C shows the range of PSEs predicted by an idealized pre-exposure listener (see Methods). 
 
-(ref:exposure-means-database-matrix-plot) Placement of exposure conditions (category means of /d/ and /t/, shown in color) relative to an estimate of L1 US English listeners' prior expectations. After VOT, f0 and vowel duration are two of the most informative cues to word-initial /d/-/t/ in L1 US English. As an estimate of listeners' prior expectations about these distributions, we show `r nrow(d.chodroff_wilson.isolated)` word-initial /d/ and /t/ productions for words produced in isolation by `r length(unique(d.chodroff_wilson.isolated$Talker))` female L1 talkers in @chodroff-wilson2018. The upper off-diagonal shows each of these productions as a point. The diagonal shows their marginal density, with a data rug at the bottom indicating the placement of exposure means. The lower off-diagonal shows bivariate Gaussians fit to the distribution of the /d/ and /t/ productions, with the exposure means for each condition indicated by the /d/ and /t/ labels. 
-
-```{r exposure-means-database-matrix-plot, fig.width=base.width*4, fig.height=base.height*2.5+1, fig.cap="(ref:exposure-means-database-matrix-plot)", fig.pos="!ht"}
-p.placement_of_exposure_means_relative_to_prior <-
-  d.chodroff_wilson.isolated %>%
-  group_by(speechstyle, category) %>%
-  filter(if_all(c(VOT, f0_Mel, vowel_duration), ~ abs(scale(.x)[,1]) < 3.5)) %>%
-  ggplot(aes(color = category, fill = category)) +
-  geom_autopoint(aes(shape = speechstyle), alpha = .4) +
-  geom_autodensity(aes(linetype = speechstyle), position = "identity", alpha = .5) +
-  stat_ellipse(aes(x = .panel_x, y = .panel_y, linetype = speechstyle)) +
-  scale_color_manual(
-    "Category",
-    labels = c("/d/", "/t/"),
-    values = colours.category_greyscale,
-    aesthetics = c("color", "fill"),
-    guide = guide_legend(title = "Category", order = 2)) +
-  scale_shape_manual(
-    breaks = c("isolated", "connected"),
-    values = c(18,4)) +
-  scale_linetype_manual(
-    breaks = c("isolated", "connected"),
-    values = c(1,2)) +
-  new_scale_color() +
-  geom_text(
-    data =
-      d.for_analysis %>%
-      filter(Phase == "exposure") %>%
-      group_by(Condition.Exposure, category) %>%
-      summarise(across(c(VOT, f0_Mel, vowel_duration), mean)),
-    mapping = aes(x = .panel_x, y = .panel_y, label = category, colour = Condition.Exposure),
-    alpha = .8, size = 3,
-    show.legend = F,
-    inherit.aes = F) +
-  geom_rug(
-    d.for_analysis %>%
-      filter(Phase == "exposure") %>%
-      group_by(Condition.Exposure, category) %>%
-      summarise(across(c(VOT, f0_Mel, vowel_duration), mean)),
-    mapping = aes(x = .panel_x, colour = Condition.Exposure),
-    sides = "b") +
-  guides(
-    colour = guide_legend(title = "Condition", order = 1),
-    linetype = "none",
-    shape = "none") +
-  # Currently ignored by ggforce::facet_matrix (https://github.com/thomasp85/ggforce/issues/163)
-  scale_x_continuous(breaks = scales::pretty_breaks(n = 3)) +
-  scale_y_continuous(breaks = scales::pretty_breaks(n = 3)) +
-  scale_colour_manual(
-    labels = c("-20ms", "-10ms", "+20ms"),
-    values = colours.condition) +
-  facet_matrix(
-    vars(c(VOT, f0_Mel, vowel_duration)),
-    layer.lower = c(3:4), layer.diag = c(2, 5:6), layer.upper = c(1),
-    labeller = labeller(
-      .rows = c(VOT = "VOT\n(ms)", f0_Mel = "f0\n(Mel)", vowel_duration = "Vowel duration\n(ms)"),
-      .cols = c(VOT = "VOT\n(ms)", f0_Mel = "f0\n(Mel)", vowel_duration = "Vowel duration\n(ms)"))) +
-  theme(legend.position = "top", axis.text.x = element_text(angle = 45, hjust = 1))
-
-p.placement_of_exposure_means_relative_to_prior
-```
-
 Second, we find support for prediction 4 about the *diminishing returns* of additional exposure predicted by some theories of adaptive speech perception. The estimates in Table \@ref(tab:hypothesis-table-simple-effects-block) suggest that listeners' PSEs changed most substantially from Test 1 to Test 2, and then changed less and less with additional exposure up to Test 4 (smaller magnitude of estimates compared to earlier test blocks). This seems to be particularly pronounced for the -20ms condition and the +20ms condition---the two conditions that exhibited the largest shifts relative to pre-exposure. As mentioned in our Open Science statement, our experiment was not designed to have high power to assess such *changes in the magnitude of the shifts* across the block within each condition. We did, however, conduct post-hoc hypothesis tests to assess the support for this pattern. These tests found anecdotal to moderately strong evidence in support of prediction (4 - *diminishing returns*). For the +20ms condition, the shift from Test 1 to 2 was larger than the shift from Test 2 to 3 (`r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift40:Block_Test2vs.Test1 < mu2_Condition.ExposureShift40:Block_Test3vs.Test2")`), which was larger than the shift from Test 3 to 4 (`r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift40:Block_Test3vs.Test2 < mu2_Condition.ExposureShift40:Block_Test4vs.Test3")`). Comparing the change from Test 1 to 2 against the change from Test 3 to 4, there was stronger support that the speed of changes in the PSE decreased (`r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift40:Block_Test2vs.Test1 < mu2_Condition.ExposureShift40:Block_Test4vs.Test3")`). For the -20ms condition, the shift from Test 1 to 2 was larger than the shift from Test 2 to 3 (`r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift0:Block_Test2vs.Test1 > mu2_Condition.ExposureShift0:Block_Test3vs.Test2")`), which was almost identical, but slightly smaller, than the shift from Test 3 to 4 (`r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift0:Block_Test4vs.Test3 > mu2_Condition.ExposureShift0:Block_Test3vs.Test2")`). Again, a comparison of the change from Test 1 to 2 against the change from Test 3 to 4, yielded the strongest support that the speed of changes in the PSE decreased (`r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift0:Block_Test2vs.Test1 > mu2_Condition.ExposureShift0:Block_Test4vs.Test3")`). For both the +20ms and the -20ms condition, there was only anecdotal evidence that the final exposure block resulted in *any additional* shift in listeners' PSE (BFs $\leq$ `r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift0:Block_Test4vs.Test3 > 0", bf = T)`, cf. Table \@ref(tab:hypothesis-table-simple-effects-block)). 
 
 ```{r, include=F}
