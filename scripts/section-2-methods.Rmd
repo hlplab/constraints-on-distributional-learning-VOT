@@ -50,7 +50,7 @@ The assignment of VOTs to minimal pair continua was randomized for each particip
 
 The distribution of VOTs across the 48 /d/-/t/ trials depended on the exposure condition. We created three conditions that shifted exposure distributions to different degrees relative to listeners' prior expectations. This combination of different exposure distributions (between participants) and incremental testing (within participants) provides us with the type of more fine-grained data we mentioned in the introduction, required for stronger tests of predictions 1-4. Following the advice of an anonymous reviewer, we name the three exposure conditions based on the *predicted* shift in listeners' categorization function that is expected if participants fully learn the exposure distribution. We describe how we derived this prediction in a separate *Methods* section below. 
 
-We first created the *-18ms* condition. We set the VOT means to 5ms for /d/ and 50ms for /t/. We took three steps to increase the ecological validity of the VOT distributions, compared to similar previous work. First, participants heard 21 distinct VOT locations during exposure and 12 during test, spanning the entire phonetic continuum and distributed across three minimal pairs. This makes the stimuli distribution in the present study considerably less repetitive, and more fine-grained than in previous work [representative examples include 12 total locations in @clayards2008; 6 exposure and 5 test locations, @colby2018; 10 exposure and 3 test locations, @zhang-holt2018; @idemaru-holt2020; for a notable exception, see @chladkova2017]. This more closely resembles the range of stimuli listeners might encounter during everyday speech perception, and makes it less likely that participants tailor their test responses to specific stimuli (each condition had more than 50 unique stimuli for 144 trials), rather than adapting their categorization functions through distributional learning. Second, previous studies exposed each group of listeners to categories with identical variance [see e.g., @clayards2008; @kleinschmidt2020; @theodore-monto2019]. We instead set the variance for /d/ to  80 ms$^2$ (SD = `r (80)^(1/2)`) and for /t/ to 270 ms$^2$ (SD = `r (270)^(1/2)`) VOT. This qualitatively follows the natural asymmetry in the variance of VOT for /d/ and /t/ found in everyday speech [@lisker-abramson1964; @docherty1992; @chodroff-wilson2017].^[The specific variance values we chose strike a compromise between the variance observed in natural productions [e.g, mean by-talker variances of `r round(d.chodroff_wilson.talker_stats %>% filter(speechstyle == "isolated", category == "/d/") %>% pull(VOT_var_mean), 1)` ms$^2$ for /d/ and `r round(d.chodroff_wilson.talker_stats %>% filter(speechstyle == "isolated", category == "/t/") %>% pull(VOT_var_mean), 1)` ms$^2$ for /t/ in hyper-articulated isolated word productions, and `r round(d.chodroff_wilson.talker_stats %>% filter(speechstyle == "connected", category == "/d/") %>% pull(VOT_var_mean), 1)` ms$^2$ for /d/ and `r round(d.chodroff_wilson.talker_stats %>% filter(speechstyle == "connected", category == "/t/") %>% pull(VOT_var_mean), 1)` ms$^2$ for /t/ in connected speech, @chodroff-wilson2017], and the range of natural-sounding VOTs that we were able to generate with our procedure (for VOTs > 130ms, some recordings would not have sounded natural).] Third, rather than to expose listeners to fully symmetric *designed* distributions that would never be experienced in everyday speech [as remains the norm in distributional learning studies, @colby2018; @escudero-williams2014; @idemaru-holt2020; @kleinschmidt2020], we *randomly sampled* from the intended VOT distribution (see top row of Figure \@ref(fig:design-distribution)). Specifically, we sampled VOTs for three exposure blocks, and then created three Latin-square designed lists that counter-balanced the order of these blocks across participants.
+We first created the *-20ms* condition. We set the VOT means to 5ms for /d/ and 50ms for /t/. We took three steps to increase the ecological validity of the VOT distributions, compared to similar previous work. First, participants heard 21 distinct VOT locations during exposure and 12 during test, spanning the entire phonetic continuum and distributed across three minimal pairs. This makes the stimuli distribution in the present study considerably less repetitive, and more fine-grained than in previous work [representative examples include 12 total locations in @clayards2008; 6 exposure and 5 test locations, @colby2018; 10 exposure and 3 test locations, @zhang-holt2018; @idemaru-holt2020; for a notable exception, see @chladkova2017]. This more closely resembles the range of stimuli listeners might encounter during everyday speech perception, and makes it less likely that participants tailor their test responses to specific stimuli (each condition had more than 50 unique stimuli for 144 trials), rather than adapting their categorization functions through distributional learning. Second, previous studies exposed each group of listeners to categories with identical variance [see e.g., @clayards2008; @kleinschmidt2020; @theodore-monto2019]. We instead set the variance for /d/ to  80 ms$^2$ (SD = `r (80)^(1/2)`) and for /t/ to 270 ms$^2$ (SD = `r (270)^(1/2)`) VOT. This qualitatively follows the natural asymmetry in the variance of VOT for /d/ and /t/ found in everyday speech [@lisker-abramson1964; @docherty1992; @chodroff-wilson2017].^[The specific variance values we chose strike a compromise between the variance observed in natural productions [e.g, mean by-talker variances of `r round(d.chodroff_wilson.talker_stats %>% filter(speechstyle == "isolated", category == "/d/") %>% pull(VOT_var_mean), 1)` ms$^2$ for /d/ and `r round(d.chodroff_wilson.talker_stats %>% filter(speechstyle == "isolated", category == "/t/") %>% pull(VOT_var_mean), 1)` ms$^2$ for /t/ in hyper-articulated isolated word productions, and `r round(d.chodroff_wilson.talker_stats %>% filter(speechstyle == "connected", category == "/d/") %>% pull(VOT_var_mean), 1)` ms$^2$ for /d/ and `r round(d.chodroff_wilson.talker_stats %>% filter(speechstyle == "connected", category == "/t/") %>% pull(VOT_var_mean), 1)` ms$^2$ for /t/ in connected speech, @chodroff-wilson2017], and the range of natural-sounding VOTs that we were able to generate with our procedure (for VOTs > 130ms, some recordings would not have sounded natural).] Third, rather than to expose listeners to fully symmetric *designed* distributions that would never be experienced in everyday speech [as remains the norm in distributional learning studies, @colby2018; @escudero-williams2014; @idemaru-holt2020; @kleinschmidt2020], we *randomly sampled* from the intended VOT distribution (see top row of Figure \@ref(fig:design-distribution)). Specifically, we sampled VOTs for three exposure blocks, and then created three Latin-square designed lists that counter-balanced the order of these blocks across participants.
 
 (ref:design-distribution) Histogram of VOTs for each of the three exposure blocks A-C by exposure condition and trial type (labeled or unlabeled, sampled from /d/ or /t/). Each exposure block contained 12 labeled /d/, 12 labeled /t/, 12 unlabeled /d/, and 12 unlabeled /t/ trials, as well as 6 catch trials (not shown). Except for the shift in VOTs, the VOT distribution of these trials--as well as the relative placement of labeled and unlabeled trials---was identical across exposure conditions. The order of exposure blocks A-C was counter-balanced across participants within each exposure condition using a Latin-square design. Tick marks along the x-axis show the location of the twelve *test* tokens, which were identical across conditions.
 
@@ -258,7 +258,7 @@ The model for the idealized pre-exposure listener allows us to test whether list
 
 (ref:prior-distributions-and-exposure-conditions) How our exposure distributions relate to a 'typical' listener's prior experience. **Panel A: ** Estimate of phonetic distributions of word-initial /d/ and /t/ in listeners' prior experience. Shown are three important cues to the perception of word-initial /d/-/t/ in L1-US English: VOT (ms), f0 (Mel) and vowel duration (ms). Based on `r nrow(d.chodroff_wilson.isolated)` words produced in isolation by `r length(unique(d.chodroff_wilson.isolated$Talker))` female L1 talkers in @chodroff-wilson2018. The upper off-diagonal shows each of these productions as a point. The diagonal shows their marginal density, with a data rug at the bottom indicating the placement of our exposure conditions (exposure means). The lower off-diagonal shows bivariate Gaussians fit to the distribution of the /d/ and /t/ productions, with the exposure means for each condition indicated by the /d/ and /t/ labels. **Panel B: ** Predicted categorization functions if idealized pre-exposure listeners (gray) and idealized learners (colored dashed lines). See text for details. Arrows indicate predicted shift relative to pre-exposure. **Panel C: ** Predicted points of subjective equality (PSEs) of idealized pre-exposure listeners and idealized learners. 
 
-```{r prior-distributions-and-exposure-conditions, fig.width=base.width*4, fig.height=base.height*2.5+1, fig.cap="(ref:prior-distributions-and-exposure-conditions)", fig.pos="!ht"}
+```{r prior-distributions-and-exposure-conditions, fig.width=base.width*4, fig.height=base.height*3.2+1, fig.cap="(ref:prior-distributions-and-exposure-conditions)", fig.pos="!ht"}
 p.placement_of_exposure_means_relative_to_prior <-
   d.chodroff_wilson.isolated %>%
   group_by(speechstyle, category) %>%
@@ -311,29 +311,10 @@ p.placement_of_exposure_means_relative_to_prior <-
     vars(c(VOT, f0_Mel, vowel_duration)),
     layer.lower = c(3:4), layer.diag = c(2, 5:6), layer.upper = c(1),
     labeller = labeller(
-      .rows = c(VOT = "VOT", f0_Mel = "f0", vowel_duration = "Vowel duration"),
-      .cols = c(VOT = "VOT", f0_Mel = "f0", vowel_duration = "Vowel duration"))) +
-  theme(legend.position = "top", axis.text.x = element_text(angle = 45, hjust = 1))
-
-p.placement_of_exposure_means_relative_to_prior
-```
-
-```{r conditions-relative-pre-exposure-PSE, fig.height=base.height*2.8, fig.width=base.width*3.8, fig.cap="(ref:conditions-predicted-PSE)"}
-# Store parameters for model fitting
-d.mean_sd_scaling <-
-  d.for_analysis %>%
-  group_by(Phase) %>%
-  filter(Item.Labeled == FALSE) %>%
-  summarise(across(Item.VOT, list(mean = mean, sd = sd)))
-
-VOT.mean_exposure <- (d.mean_sd_scaling %>% pull(Item.VOT_mean))[1]
-VOT.sd_exposure <- (d.mean_sd_scaling %>% pull(Item.VOT_sd))[1]
-VOT.mean_test <- (d.mean_sd_scaling %>% pull(Item.VOT_mean))[2]
-VOT.sd_test <- (d.mean_sd_scaling %>% pull(Item.VOT_sd))[2]
-rm(d.mean_sd_scaling)
-
-levels_Condition.Exposure = c("Shift0", "Shift10", "Shift40")
-
+      .rows = c(VOT = "VOT", f0_Mel = "f0", vowel_duration = "V duration"),
+      .cols = c(VOT = "VOT", f0_Mel = "f0", vowel_duration = "V duration"))) +
+  theme(legend.position = "top", axis.text.x = element_text(angle = 45, hjust = 1)) 
+  #coord_fixed(ratio = 1.1)
 
 d.condition.exposure.IO <-
   make_IOs_from_data (
@@ -356,42 +337,57 @@ d.prior <-
   group_by(Talker, category) %>%
   mutate(fold = sample(1:5, n(), replace = T))
 
-# Prior based on Chodroff & Wilson (2018). Note that this database has substantially higher
-# VOT variance than our exposure conditions, which we based on estimates from Kronrod et al.
-# (2016). Uses all three cues; duration and spectral noise taken from Kronrod et al.
+# Prior based on Chodroff & Wilson (2018). 
 d.prior.io <-
- make_IOs_from_data(
-      data = d.prior,
-      cues = c("VOT", "f0_Mel", "vowel_duration"),
-      group = "fold") %>%
-      nest(io = -fold) %>%
-      mutate(fold = str_c("prior", fold)) %>%
-      rename(Condition.Exposure = fold) %>%
-      ungroup() %>%
-     # Join in the data that the pre-exposure IOs will be applied to:
-      cross_join(
-        d.for_analysis %>%  
-          filter(Phase == "test") %>%
-          distinct(Condition.Exposure, Item.VOT, Item.f0_Mel, Item.VowelDuration) %>%
-          mutate(x = pmap(.l = list(Item.VOT, Item.f0_Mel, Item.VowelDuration), ~ c(...))) %>%
-          select(x) %>%
-          nest(x = x))
+  make_IOs_from_data(
+    data = d.prior,
+    cues = c("VOT", "f0_Mel", "vowel_duration"),
+    group = "fold") %>%
+  nest(io = -fold) %>%
+  mutate(fold = str_c("prior", fold)) %>%
+  rename(Condition.Exposure = fold) %>% 
+  add_x_to_IO() %>%
+  add_PSE_and_categorization_to_IO() 
 
-d.prior.PSE <-
-    get_logistic_parameters_from_model(
-      model = d.prior.io,
-      model_col = "io",
-      groups = "Condition.Exposure") %>%
-  select(Condition.Exposure, intercept_unscaled, slope_unscaled, intercept_scaled, slope_scaled, PSE) %>%
-  ungroup()
+# get the average IO of the five
+d.marginal.prior.io <- 
+  d.prior.io %>%
+  unnest(io) %>%
+  # get the Condition column and change the name
+  select(-c(mu, Sigma)) %>%
+  filter(Condition.Exposure == "prior1") %>%
+  mutate(Condition.Exposure = "CV_prior.mean") %>%
+  # join with the averaged and nested means
+  right_join(
+d.prior.io %>%
+  unnest(io) %>%
+  unnest_wider(mu) %>%
+    group_by(category) %>%
+  summarise(across(c(VOT, f0_Mel, vowel_duration), mean)) %>%
+  mutate(mu = pmap(
+    .l = list(VOT, f0_Mel, vowel_duration),
+    # Ensure names else it won't be recognised as an MVG IO
+    ~ set_names(c(...), c("VOT", "f0_Mel", "vowel_duration")))) %>%
+  select(category, mu)) %>%
+  # join with averaged and nested covariance matrices
+  right_join(
+  d.prior.io %>%
+  unnest(io) %>%
+  select(Condition.Exposure, category, Sigma) %>%
+  group_by(category) %>%
+  summarise(Sigma = list(reduce(Sigma, `+`)/length(Sigma))) %>%
+  group_by(category)) %>% 
+  ungroup() %>%
+  nest(io = -Condition.Exposure) %>% 
+  add_x_to_IO() %>%
+  add_PSE_and_categorization_to_IO() 
 
+p.predicted.cat <-  
 d.condition.exposure.IO %>%
   ggplot(aes(x = VOT, y = response, colour = Condition.Exposure)) +
-  geom_line(linewidth = 1.2) +
-   geom_rect(
+  geom_rect(
     data =
-      d.prior.PSE %>%
-      filter(str_starts(Condition.Exposure, "prior")) %>%
+      d.prior.io %>%
       summarise(
         PSE.lower = mean(PSE) - sd(PSE) / sqrt(length(PSE)) * 1.96,
         PSE.upper = mean(PSE) + sd(PSE) / sqrt(length(PSE)) * 1.96),
@@ -399,39 +395,91 @@ d.condition.exposure.IO %>%
     fill = "#d2d4dc",
     alpha = .3,
     inherit.aes = F) +
+  geom_line(linewidth = 0.8, linetype = 2) +
+  geom_line(
+    data = d.marginal.prior.io %>% 
+  select(-x) %>% 
+  unnest(categorization) %>% 
+  filter(category == "/t/") %>% 
+  group_by(Condition.Exposure),
+    mapping = aes(x = VOT, y = response, group = Condition.Exposure),
+    linewidth = .5,
+    alpha = .9,
+      colour = "darkgrey",
+    inherit.aes = F) +
   scale_colour_manual("Condition",
     labels = c("-20ms", "-10ms", "+20ms"),
     values = c("#cc0000", "#12D432", "#0481F3")) +
-  geom_segment(
+  ylab('Proportion "t"-responses') +
+  scale_x_continuous(limits = c(-10, 95), breaks = c(25, 35, 45, 65)) +
+  guides(colour = "none")
+
+p.predicted.shift <- 
+  d.condition.exposure.IO %>% 
+  group_by(Condition.Exposure, PSE) %>% summarise() %>% 
+ggplot() +
+  geom_hline(
+    mapping = aes(yintercept = round(PSE), colour = Condition.Exposure),
+    linewidth = 0.6,
+    linetype = 2,
+    colour = colours.condition) +
+  geom_rect(
     data =
-      d.prior.PSE %>%
-      summarise(PSE_median = median(PSE)) %>%
+      d.prior.io %>%
+      summarise(
+        PSE.lower = mean(PSE) - sd(PSE) / sqrt(length(PSE)) * 1.96,
+        PSE.upper = mean(PSE) + sd(PSE) / sqrt(length(PSE)) * 1.96),
+    mapping = aes(xmin = -Inf, ymin = PSE.lower, ymax = PSE.upper , xmax = Inf),
+    fill = "#d2d4dc",
+    alpha = .3,
+    inherit.aes = F) +
+ geom_segment(
+    data =
+      d.prior.io %>%
+      summarise(PSE_median = floor(median(PSE))) %>%
       uncount(3) %>%
-      mutate(x = PSE_median) %>% bind_cols(xend = c(25, 35, 65), y = c(.45, .5, .55), yend = c(.45, .5, .55)),
+      mutate(y = PSE_median) %>% 
+      bind_cols(yend = c(25, 35, 65), x = c(.89, .86, .92), xend = c(.89, .86, .92)),
     mapping = aes(x = x, xend = xend, y = y , yend = yend),
     alpha = 0.3,
-    arrow = arrow(type = "closed", length = unit(0.02, "npc")),
-    linetype = 2,
+    linewidth = .3,
+    linetype = 3,
+    arrow = arrow(type = "closed", length = unit(0.05, "npc")),
     inherit.aes = F) +
   annotate(
        geom = "text",
-       x = c(35, 40, 55), 
-       y = c(.4, .55, .6),
-       label = d.prior.PSE %>%
-      summarise(PSE_median = median(PSE)) %>%
-      uncount(3) %>%
-        bind_cols(d.condition.exposure.IO %>%
-                    group_by(Condition.Exposure) %>%
-                    distinct(PSE)) %>%
-        mutate(distance = paste(round(PSE - PSE_median), "ms")) %>% pull(distance),
+       x = c(rep(1.2, 3)),
+       y = c(25, 35, 65),
+       label = d.prior.io %>%
+         summarise(PSE_median = floor(median(PSE))) %>%
+         uncount(3) %>%
+         bind_cols(d.condition.exposure.IO %>%
+                     group_by(Condition.Exposure) %>%
+                     distinct(PSE)) %>%
+         mutate(distance = paste("\u2248", round(PSE - PSE_median), "ms"),
+                distance = ifelse(str_detect(distance, " 20 ms"), paste0("\u2248 ", "+", "20 ms"), distance)) %>% 
+         pull(distance),
        colour = colours.condition,
        fontface = "bold",
-       size = 2.7) +
-  ylab('Proportion "t"-responses') +
-  scale_x_continuous(limits = c(-10, 95), breaks = c(25, 35, 45.1, 65)) +
-  theme(legend.position = "top")
-```
+       size = 2.5) +
+  scale_y_continuous("PSE (ms VOT)", limits = c(18, 68), breaks = c(25, 35, 45, 65)) +
+  coord_cartesian(xlim = c(0.5, 1), clip = "off") +
+  theme(axis.ticks.x = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        plot.margin = unit(c(1,2,1,1), "lines"))
 
+p.placement_of_exposure_means_relative_to_prior +
+  p.predicted.cat + p.predicted.shift +
+  plot_layout(
+    design = "AAAA
+              BBBC",
+    heights = c(2.4, 1.3, 1.3)) +
+  plot_annotation(tag_levels = 'A', tag_suffix = ")") &
+  theme(plot.tag = element_text(face = "bold"))
+```
 For the idealized learner model, we followed the same general procedure but instead fit Bayesian ideal observers against the labeled VOT distributions of each exposure condition. This makes it possible to assess how far participants in the different exposure conditions have converged against the exposure distributions, as shown in Figure \@ref(fig:prior-distributions-and-exposure-conditions)B-C. Unlike for the idealized pre-exposure listeners, which used five-fold cross-validation, we trained only one ideal observer per exposure condition: attentional lapses during the experiment were very low, suggesting that listeners paid attention on all trials, and thus got more or less identical inputs. Of particular importance, Panel C shows the shift in PSE predicted for the idealized learners, relative to the predicted pre-exposure PSEs. Below, we present our data in a similar way, focusing on shifts in listeners' PSE, and using the idealized listener and learner models to interpret those shifts. As already mentioned, we also use the approximate predicted shift in the PSE to name our exposure conditions. We note, however, that we started data collection prior to developing the idealized learners.
 
 ```{r}
