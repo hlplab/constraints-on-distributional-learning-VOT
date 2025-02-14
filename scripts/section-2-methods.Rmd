@@ -452,15 +452,17 @@ ggplot() +
        geom = "text",
        x = c(rep(1.2, 3)),
        y = c(25, 35, 65),
-       label = d.prior.io %>%
-         summarise(PSE_median = floor(median(PSE))) %>%
-         uncount(3) %>%
-         bind_cols(d.condition.exposure.IO %>%
-                     group_by(Condition.Exposure) %>%
-                     distinct(PSE)) %>%
-         mutate(distance = paste("\u2248", round(PSE - PSE_median), "ms"),
-                distance = ifelse(str_detect(distance, " 20 ms"), paste0("\u2248 ", "+", "20 ms"), distance)) %>% 
-         pull(distance),
+       label = c(expression("" %~~% "-20 ms"), expression("" %~~% "-10 ms"), expression("" %~~% "+20 ms")),
+# this is the only way I can get Rmd to render the approximate symbol. Tried with the UTF code but it doesn't render
+# d.prior.io %>%
+#          summarise(PSE_median = floor(median(PSE))) %>%
+#          uncount(3) %>%
+#          bind_cols(d.condition.exposure.IO %>%
+#                      group_by(Condition.Exposure) %>%
+#                      distinct(PSE)) %>%
+#          mutate(distance = paste("\u2248", round(PSE - PSE_median), "ms"),
+#                 distance = ifelse(str_detect(distance, " 20 ms"), paste0("\u2248 ", "+", "20 ms"), distance)) %>% 
+#          pull(distance)
        colour = colours.condition,
        fontface = "bold",
        size = 2.5) +
