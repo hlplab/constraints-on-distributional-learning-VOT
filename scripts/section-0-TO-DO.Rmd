@@ -3,9 +3,11 @@
 # TO-DO
 
  + Get back to concept of informative incompatibility
- + Get back to number of combinations of tests (128 data points vs binary contrast)
 
-
+ + restructure overview of our goals:
+    + focus on rapid adaptation rather than long-terms learning, anticipating that those might be subject to other constraints.
+    + submit DL to stronger, quantitative test, advancing the standard of analysis in our field. While this might in many cases yield confirmations of what we believe to be known, it also has to potential to discover unexpected findings. We'll only know once we take this route.
+    + increase ecological validity in order to increase probability of generalization to everyday speech perception
  + highlight intent to move towards stronger test of the idea we adapt to distribution, while taking substantial steps towards more ecologically valid inputs
     + natural sounding speech
     + natural correlations between cues
