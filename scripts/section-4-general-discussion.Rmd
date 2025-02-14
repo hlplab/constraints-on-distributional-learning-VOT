@@ -168,7 +168,9 @@ m_IO.VOT_f0_vowel <-
   unnest_wider(mu) %>% 
     group_by(category) %>% 
   summarise(across(c(VOT, f0_Mel, vowel_duration), mean)) %>% 
-  mutate(mu = pmap(.l = list(VOT, f0_Mel, vowel_duration), ~ c(...))) %>% 
+  mutate(mu = pmap(.l = list(VOT, f0_Mel, vowel_duration), 
+    # Ensure names else it won't be recognised as an MVG IO
+    ~ set_names(c(...), c("VOT", "f0_Mel", "vowel_duration")))) %>% 
   select(category, mu)) %>% 
   right_join(
     io %>% 
@@ -200,7 +202,8 @@ m_IA.VOT_f0_vowelduration_informedprior <-
     sample = T,
     file = "../models/IBBU_VOT+f0+vowelduration_informative_priors.RDS",
     warmup = 3000, iter = 4000,
-    control = list(adapt_delta = .995, max_treedepth = 15))
+    control = list(adapt_delta = .995, max_treedepth = 15),
+    file_refit = "on_change")
 ```
 
 ```{r summarise-PSE-predictions-of-IA}
