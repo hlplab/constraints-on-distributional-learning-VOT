@@ -157,26 +157,25 @@ set.seed(920)
 # (estimated in Kronrod et al., 2016) to make their perception more human-like.
 io <-    
   bind_rows(
-    d.prior.io,
     # Add prior based on Chodroff & Wilson (2018). Note that this database has substantially higher
     # VOT variance than our exposure conditions, which we based on estimates from Kronrod et al.
     # (2016). Uses all three cues; duration and spectral noise taken from Kronrod et al.
-    # make_IOs_from_data(
-    #   data = d.prior,
-    #   cues = c("VOT", "f0_Mel", "vowel_duration"),
-    #   group = "fold") %>%
-    #   nest(io = -fold) %>%
-    #   mutate(fold = str_c("prior", fold)) %>%
-    #   rename(Condition.Exposure = fold) %>%
-    #   ungroup() %>%
+    make_IOs_from_data(
+      data = d.prior,
+      cues = c("VOT", "f0_Mel", "vowel_duration"),
+      group = "fold") %>%
+      nest(io = -fold) %>%
+      mutate(fold = str_c("prior", fold)) %>%
+      rename(Condition.Exposure = fold) %>%
+      ungroup() %>%
       # Join in the data that the pre-exposure IOs will be applied to:
-      # cross_join(
-      #   d.for_analysis %>%  
-      #     filter(Phase == "test") %>%
-      #     distinct(Condition.Exposure, Item.VOT, Item.f0_Mel, Item.VowelDuration) %>%
-      #     mutate(x = pmap(.l = list(Item.VOT, Item.f0_Mel, Item.VowelDuration), ~ c(...))) %>%
-      #     select(x) %>%
-      #     nest(x = x)),
+      cross_join(
+        d.for_analysis %>%
+          filter(Phase == "test") %>%
+          distinct(Condition.Exposure, Item.VOT, Item.f0_Mel, Item.VowelDuration) %>%
+          mutate(x = pmap(.l = list(Item.VOT, Item.f0_Mel, Item.VowelDuration), ~ c(...))) %>%
+          select(x) %>%
+          nest(x = x)),
     # Add idealized learner IOs for each exposure condition
    make_IOs_from_data(
       d.for_analysis %>%
