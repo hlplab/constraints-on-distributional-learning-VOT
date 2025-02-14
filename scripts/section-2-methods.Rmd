@@ -412,7 +412,9 @@ d.condition.exposure.IO %>%
     values = c("#cc0000", "#12D432", "#0481F3")) +
   ylab('Proportion "t"-responses') +
   scale_x_continuous(limits = c(-10, 95), breaks = c(25, 35, 45, 65)) +
-  guides(colour = "none")
+  guides(colour = "none") +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank())
 
 p.predicted.shift <- 
   d.condition.exposure.IO %>% 
