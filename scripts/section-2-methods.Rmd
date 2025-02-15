@@ -258,7 +258,7 @@ The model for the idealized pre-exposure listener allows us to test whether list
 
 (ref:prior-distributions-and-exposure-conditions) How our exposure distributions relate to a 'typical' listener's prior experience. **Panel A: ** Estimate of phonetic distributions of word-initial /d/ and /t/ in listeners' prior experience. Shown are three important cues to the perception of word-initial /d/-/t/ in L1-US English: VOT (ms), f0 (Mel) and vowel duration (ms). Based on `r nrow(d.chodroff_wilson.isolated)` words produced in isolation by `r length(unique(d.chodroff_wilson.isolated$Talker))` female L1 talkers in @chodroff-wilson2018. The upper off-diagonal shows each of these productions as a point. The diagonal shows their marginal density, with a data rug at the bottom indicating the placement of our exposure conditions (exposure means). The lower off-diagonal shows bivariate Gaussians fit to the distribution of the /d/ and /t/ productions, with the exposure means for each condition indicated by the /d/ and /t/ labels. **Panel B: ** Predicted categorization functions if idealized pre-exposure listeners (gray) and idealized learners (colored dashed lines). See text for details. Arrows indicate predicted shift relative to pre-exposure. **Panel C: ** Predicted points of subjective equality (PSEs) of idealized pre-exposure listeners and idealized learners. 
 
-```{r prior-distributions-and-exposure-conditions, fig.width=base.width*4, fig.height=base.height*3.2+1, fig.cap="(ref:prior-distributions-and-exposure-conditions)", fig.pos="!ht"}
+```{r prior-distributions-and-exposure-conditions, fig.width=base.width*4.2, fig.height=base.height*3.5+1, fig.cap="(ref:prior-distributions-and-exposure-conditions)", fig.pos="!ht"}
 p.placement_of_exposure_means_relative_to_prior <-
   d.chodroff_wilson.isolated %>%
   group_by(speechstyle, category) %>%
@@ -452,17 +452,17 @@ ggplot() +
        geom = "text",
        x = c(rep(1.2, 3)),
        y = c(25, 35, 65),
-       label = c(expression("" %~~% "-20 ms"), expression("" %~~% "-10 ms"), expression("" %~~% "+20 ms")),
+       label = #c(expression("" %~~% "-20 ms"), expression("" %~~% "-10 ms"), expression("" %~~% "+20 ms")),
 # this is the only way I can get Rmd to render the approximate symbol. Tried with the UTF code but it doesn't render
-# d.prior.io %>%
-#          summarise(PSE_median = floor(median(PSE))) %>%
-#          uncount(3) %>%
-#          bind_cols(d.condition.exposure.IO %>%
-#                      group_by(Condition.Exposure) %>%
-#                      distinct(PSE)) %>%
-#          mutate(distance = paste("\u2248", round(PSE - PSE_median), "ms"),
-#                 distance = ifelse(str_detect(distance, " 20 ms"), paste0("\u2248 ", "+", "20 ms"), distance)) %>% 
-#          pull(distance)
+d.prior.io %>%
+         summarise(PSE_median = floor(median(PSE))) %>%
+         uncount(3) %>%
+         bind_cols(d.condition.exposure.IO %>%
+                     group_by(Condition.Exposure) %>%
+                     distinct(PSE)) %>%
+         mutate(distance = paste("\u2248", round(PSE - PSE_median), "ms"),
+                distance = ifelse(str_detect(distance, " 20 ms"), paste0("\u2248 ", "+", "20 ms"), distance)) %>%
+         pull(distance),
        colour = colours.condition,
        fontface = "bold",
        size = 2.5) +
