@@ -391,8 +391,9 @@ p.fit_1to7 +
      annotate(
        geom = "text",
        data = d.psychometric_intercept.slope.PSE.median %>%
+         filter(Block ==1) %>% 
          mutate(true_shift = predictedPSE_unscaled - PSE_unscaled) %>% 
-         filter(Block == 1) %>% pull(true_shift),
+         pull(true_shift),
        x = c(rep(10, 3)), 
        y = c(25, 35, 65),
        label = d.psychometric_intercept.slope.PSE.median %>%
