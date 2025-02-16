@@ -311,8 +311,8 @@ p.placement_of_exposure_means_relative_to_prior <-
     vars(c(VOT, f0_Mel, vowel_duration)),
     layer.lower = c(3:4), layer.diag = c(2, 5:6), layer.upper = c(1),
     labeller = labeller(
-      .rows = c(VOT = "VOT", f0_Mel = "f0", vowel_duration = "V duration"),
-      .cols = c(VOT = "VOT", f0_Mel = "f0", vowel_duration = "V duration"))) +
+      .rows = c(VOT = "VOT", f0_Mel = "f0", vowel_duration = "V \nduration"),
+      .cols = c(VOT = "VOT", f0_Mel = "f0", vowel_duration = "V \nduration"))) +
   theme(legend.position = "top", axis.text.x = element_text(angle = 45, hjust = 1)) 
   #coord_fixed(ratio = 1.1)
 
