@@ -24,6 +24,7 @@ library(assertthat)         # asserts (in functions)
 library(here)               # convenient console debugging
 
 library(patchwork)          # plot layouts
+library(ragg)               # graphics rendering
 library(magick)
 library(webshot)
 library(ggstance)
