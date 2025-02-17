@@ -1,5 +1,7 @@
 <!-- Do NOT knit this document. It is part of a larger document. Instead knit the main document (my-apa-formatted-article) -->
 
+<!-- ^[A related line of work has used distributional learning or explicit training paradigms to study the acquisition of *novel* sound contrasts [e.g., @maye2002; @mccandliss2002; @pajak-levy2012; @pisoni1982]. These studies, too, have observed outcomes predicted by distributional learning models [for review, see @pajak2016].] -->
+
 # General discussion
 Over the last 20+ years, landmark studies in adaptive speech perception have demonstrated that listeners' interpretation of speech is not static. It can change with recent exposure, accommodating differences in pronunciation across talkers [for reviews, see @bent-baeseberk2021; @schertz-clare2020]. Research on accent adaptation [AA, @eisner2013; @schertz2016; @xie2017], perceptual learning [visually-guided perceptual learning (VGPL)/LGPL, @eisner-mcqueen2005; @kraljic-samuel2006; @kurumada2018; @norris2003; @reinisch-holt2014; @vroomen2007], and distributional learning [DL, @bejjanki2011; @idemaru-holt2020; @kleinschmidt2020; @nixon2016; @theodore-monto2019] suggests that this flexibility is achieved through changes in listeners' *categorization functions*---the mapping from acoustic or phonetic cues to the phonological categories that form the input to spoken language understanding: after exposure to an unfamiliar talker, listeners interpret physically identical speech input differently. 
 
