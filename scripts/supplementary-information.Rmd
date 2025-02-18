@@ -19,6 +19,7 @@ fit_exposure_nested_within_condition_and_block <- readRDS("../models/exposure-ne
 # Supplementary information {-}
 \singlespacing
 
+
 \setcounter{page}{1}
 \setcounter{section}{0}
 \setcounter{footnote}{0}
