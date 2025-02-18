@@ -104,8 +104,9 @@ knitr::opts_chunk$set(
   interval = .2,
   fig.align = "center", fig.height = base.height, fig.width = base.width,
   tidy.opts = list(width.cutoff=80), tidy=TRUE,
-  dev = "ragg_png", dpi = 300,
-  global.device = TRUE)
+  dev = "ragg_png", dpi = 300)
+
+if (file.exists("cache")) unlink("cache", recursive = TRUE)
 
 # Some useful formatting for warnings and error messages, so that they are not easily missed.
 knitr::knit_hooks$set(document = function(x) {

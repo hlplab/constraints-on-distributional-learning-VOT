@@ -379,7 +379,7 @@ p.across_blocks <-
    theme(plot.margin = unit(c(1, 3.2, 1, 1), "lines"), legend.position = "none")
 ```
 
-```{r plot-fit-PSE, fig.width=12.5, fig.height=7, fig.cap="(ref:plot-fit-PSE)"}
+```{r plot-fit-PSE, fig.width=12.5, fig.height=7, fig.cap="(ref:plot-fit-PSE)", cache=FALSE, fig.keep='all'}
 p.fit_1to7 + 
   p.fit_7to9 + 
   (p.PSE_1to9 + 
