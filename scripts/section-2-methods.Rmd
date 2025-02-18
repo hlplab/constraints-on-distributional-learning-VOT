@@ -84,7 +84,7 @@ d.means <-
   mutate(
     Block = "Block A",
     Condition.Exposure = fct_relevel(Condition.Exposure, c("-20ms", "-10ms", "+20ms")),
-    mu = c(15, 60, 45, 90, 5, 50),
+    mu = c(15, 60, 5, 50, 45, 90),
     sigma = (c(80, 270, 80, 270, 80, 270))^(1/2),
     mu_label = map2(category, mu, ~ bquote(mu[.(.x)]==.(.y))),
     sigma_label = map2(category, sigma, ~ bquote({sigma}[.(.x)]==.(round(.y, 1)))),
@@ -384,13 +384,13 @@ d.prior.io %>%
 p.predicted.cat <-  
 d.condition.exposure.IO %>%
   ggplot(aes(x = VOT, y = response, colour = Condition.Exposure)) +
-  geom_rect(
+  geom_ribbon(
     data =
-      d.prior.io %>%
-      summarise(
-        PSE.lower = mean(PSE) - sd(PSE) / sqrt(length(PSE)) * 1.96,
-        PSE.upper = mean(PSE) + sd(PSE) / sqrt(length(PSE)) * 1.96),
-    mapping = aes(xmin = PSE.lower, ymin = -Inf, ymax = Inf, xmax = PSE.upper),
+      d.prior.io %>% select(-x) %>% 
+      unnest(categorization) %>% 
+      group_by(VOT) %>% 
+      summarise(min_response = min(response), max_response = (max(response))),
+    mapping = aes(x = VOT, ymin = min_response, ymax = max_response),
     fill = "#d2d4dc",
     alpha = .3,
     inherit.aes = F) +
