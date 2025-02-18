@@ -390,15 +390,19 @@ p.fit_1to7 +
        position = position_dodge(.5)) +
      annotate(
        geom = "text",
-       data = d.psychometric_intercept.slope.PSE.median %>%
-         filter(Block ==1) %>% 
-         mutate(true_shift = predictedPSE_unscaled - PSE_unscaled) %>% 
-         pull(true_shift),
        x = c(rep(10, 3)), 
        y = c(25, 35, 65),
        label = d.psychometric_intercept.slope.PSE.median %>%
          mutate(true_shift = paste(round(predictedPSE_unscaled - PSE_unscaled), "(100%)")) %>% 
          filter(Block == 1) %>% pull(true_shift),
+       colour = colours.condition,
+       fontface = "bold",
+       size = 2.7) +
+     annotate(
+       geom = "text",
+       x = c(rep(10, 3)), 
+       y = c(23, 33, 63),
+       label = c(rep("idealized learner", 3)),
        colour = colours.condition,
        fontface = "bold",
        size = 2.7)) +
