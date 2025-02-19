@@ -1,7 +1,7 @@
 ---
 title             : |
                     | Learning to understand an unfamiliar talker: 
-                    | Testing models of adaptive speech perception
+                    | Testing distributional learning as a model of rapid adaptive speech perception
 shorttitle        : "Learning to understand an unfamiliar talker"
 date              : "`r format(Sys.time(), '%B %d, %Y')`"
 
@@ -70,7 +70,8 @@ header-includes:
  - \usepackage{lscape}
  - \usepackage{pdflscape}
  - \pagenumbering{gobble}
- 
+ - \usepackage{ragged2e}
+
 documentclass     : "apa6"
 classoption       : "man"
 fontsize          : 11pt
