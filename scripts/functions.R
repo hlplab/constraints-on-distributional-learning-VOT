@@ -533,7 +533,7 @@ geom_linefit <- function(
     labs(x = "VOT (ms)", y = "Proportion \"t\"-responses"),
     scale_color_manual(
       "Condition",
-      labels = c("baseline", "+10ms", "+40ms"),
+      labels = c("-20ms", "-10ms", "+20ms"),
       values = colours.condition,
       aesthetics = c("color", "fill")),
     theme(
@@ -553,6 +553,23 @@ align_tab <- function(hyp) {
   map_chr(hyp, ~ ifelse(class(.x) == "numeric", "r","l"))
 }
 
+
+get_hyp_data <- function (model.fit, hyp.list) {
+  
+  hyp_data <- 
+    hypothesis(
+      model.fit,
+      hyp.list,
+      robust = T) 
+  
+  hyp_data %>% 
+    .$hypothesis %>% 
+    dplyr::select(-Star) %>% 
+    bind_cols(p_direction(hyp_data$samples)["pd"]) %>% 
+    mutate(Post.Prob = ifelse(str_detect(Hypothesis, "="), 1-(pd-.5), Post.Prob))
+}
+
+
 make_hyp_table <- function(model = NULL, hypothesis, hypothesis_names, caption, col1_width = "15em", digits = 2) {
   bind_cols(
     tibble(Hypothesis = hypothesis_names), hypothesis) %>%
@@ -562,12 +579,13 @@ make_hyp_table <- function(model = NULL, hypothesis, hypothesis_names, caption, 
         c(Estimate, Est.Error, CI.Lower, CI.Upper),
         ~ round(., digits = digits)),
       across(
-        c(Post.Prob),
+        c(Post.Prob, pd),
         ~ round(., digits = 3)),
       Evid.Ratio = ifelse((is.infinite(Evid.Ratio)), paste("$\\geq", get_nsamples(model), "$"), round(Evid.Ratio, digits = 1)),
       CI = paste0("[", CI.Lower, ", ", CI.Upper, "]")) %>%
     dplyr::select(-c(CI.Upper, CI.Lower)) %>%
-    relocate(CI, .before = "Evid.Ratio") %>%
+    relocate(CI, .after = "Est.Error") %>%
+    relocate(pd, .before = "Evid.Ratio") %>% 
     kbl(
       caption = caption,
       digits = digits,
@@ -575,7 +593,7 @@ make_hyp_table <- function(model = NULL, hypothesis, hypothesis_names, caption, 
       format = "latex",
       booktabs = TRUE,
       escape = FALSE,
-      col.names = c("Hypothesis", "Est.", "SE", "90\\%-CI", "BF", "$p_{post}$")) %>%
+      col.names = c("Hypothesis", "Est.", "SE", "90\\%-CI", "$p_{direction}$", "BF", "$p_{post}$")) %>%
     # HOLD_position for latex table placement H and hold_position for latex h!, neither if placement is left to latex
     kable_styling(latex_options = "HOLD_position", full_width = FALSE) %>%
     column_spec(1, width = col1_width)
