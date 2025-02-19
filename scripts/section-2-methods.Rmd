@@ -404,11 +404,12 @@ d.condition.exposure.IO %>%
     alpha = .9,
       colour = "darkgrey",
     inherit.aes = F) +
+  geom_rug(data = d %>% filter(Phase == "test") %>% distinct(VOT), aes(x = VOT), colour = "grey", inherit.aes = F) +
   scale_colour_manual("Condition",
     labels = c("-20ms", "-10ms", "+20ms"),
     values = c("#cc0000", "#12D432", "#0481F3")) +
   ylab('Proportion "t"-responses') +
-  scale_x_continuous(limits = c(-10, 95), breaks = c(25, 35, 45, 65)) +
+  scale_x_continuous(limits = c(-10, 95), breaks = c(0, 20, 40, 60)) +
   guides(colour = "none") +
   theme(panel.grid.major.x = element_blank(),
         panel.grid.minor.x = element_blank())
@@ -449,9 +450,7 @@ ggplot() +
        geom = "text",
        x = c(rep(1.2, 3)),
        y = c(25, 35, 65),
-       label = #c(expression("" %~~% "-20 ms"), expression("" %~~% "-10 ms"), expression("" %~~% "+20 ms")),
-# this is the only way I can get Rmd to render the approximate symbol. Tried with the UTF code but it doesn't render
-d.prior.io %>%
+       label = d.prior.io %>%
          summarise(PSE_median = floor(median(PSE))) %>%
          uncount(3) %>%
          bind_cols(d.condition.exposure.IO %>%
@@ -463,7 +462,7 @@ d.prior.io %>%
        colour = colours.condition,
        fontface = "bold",
        size = 2.5) +
-  scale_y_continuous("PSE (ms VOT)", limits = c(18, 68), breaks = c(25, 35, 45, 65)) +
+  scale_y_continuous("PSE (ms VOT)", limits = c(18, 68), breaks = c(30, 40, 50, 60)) +
   coord_cartesian(xlim = c(0.5, 1), clip = "off") +
   theme(axis.ticks.x = element_blank(),
         axis.title.x = element_blank(),
@@ -474,7 +473,7 @@ d.prior.io %>%
 ```
 
 (ref:prior-distributions-and-exposure-conditions) How our exposure distributions relate to a 'typical' listener's prior experience. **Panel A: ** Estimate of phonetic distributions of word-initial /d/ and /t/ in listeners' prior experience. Shown are three important cues to the perception of word-initial /d/-/t/ in L1-US English: VOT (ms), f0 (Mel) and vowel duration (ms). Based on `r nrow(d.chodroff_wilson.isolated)` words produced in isolation by `r length(unique(d.chodroff_wilson.isolated$Talker))` female L1 talkers in @chodroff-wilson2018. The upper off-diagonal shows each of these productions as a point. The diagonal shows their marginal density, with a data rug at the bottom indicating the placement of our exposure conditions (exposure means). The lower off-diagonal shows bivariate Gaussians fit to the distribution of the /d/ and /t/ productions, with the exposure means for each condition indicated by the /d/ and /t/ labels. **Panel B: ** Predicted categorization functions if idealized pre-exposure listeners (gray) and idealized learners (colored dashed lines). See text for details. **Panel C: ** Predicted points of subjective equality (PSEs) of idealized pre-exposure listeners and idealized learners. Arrows indicate predicted shift relative to pre-exposure. 
-```{r prior-distributions-and-exposure-conditions, fig.cap="(ref:prior-distributions-and-exposure-conditions)", fig.width=base.width*4.2, fig.height=base.height*3.5+1, fig.pos="!h", cache=FALSE, fig.keep='all'}
+```{r prior-distributions-and-exposure-conditions, fig.cap="(ref:prior-distributions-and-exposure-conditions)", fig.width=base.width*4.2, fig.height=base.height*3.5+1, fig.pos="!ht", cache=FALSE, fig.keep='all'}
 p.placement_of_exposure_means_relative_to_prior +
   p.predicted.cat + p.predicted.shift +
   plot_layout(
