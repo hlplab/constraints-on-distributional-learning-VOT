@@ -197,4 +197,3 @@ d.chodroff_wilson.talker_stats <-
       list(mean = mean, sd = sd, var = var)))
 
 PREAMBLE_LOADED <- TRUE
-
