@@ -127,9 +127,9 @@ d.talker_IO.VOT %>%
   scale_x_continuous("", limits = c(0, .5), breaks = NULL) +
    annotate(
        geom = "text",
-       x = 0.01, 
+       x = 0.1, 
        y = c(41, 69),
-       justify = 0,
+       justify = 1,
        label = c("typical", "unfamiliar"),
        color = c("grey", "#02427e"),
        fontface = "bold",
@@ -201,7 +201,7 @@ Some readers might thus consider predictions 3 and 4 to be of most interest, or-
 \begin{small}
 \begin{tabular}{p{0.25\textwidth}p{0.75\textwidth}}
 \hline
-Prediction & & Supported by evidence from \\
+Prediction & Supported by evidence from \\
 \hline
 (1) - {\em prior expectations} &  (e.g., Kang \& Schertz, 2021; Schertz et al., 2016; Tan et al., 2021; Xie et al., 2021) \\
 
