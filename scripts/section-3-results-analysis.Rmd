@@ -450,7 +450,7 @@ make_hyp_table(
     rep(c("$PSE_{-10ms} > PSE_{-20ms}$",
           "$PSE_{+20ms}  > PSE_{-10ms}$",
           "$PSE_{+20ms} > PSE_{-20ms}$"), 5)),
-    caption = "The simple effects of the exposure conditions for each test block. This analysis asks how early exposure starts to affect participants’ categorization responses, and when (if ever) these changes were undone with repeated testing. Note that rightward shifts of the categorization function (and its PSE) correspond to negative estimates (lower intercepts in predicting the log-odds of \`\`t\'\'-responses). Predicted nulls for Test 1 were tested using the Savage-Dickey density ratio---BF > 1 indicates increased evidence in favor of the null.") %>%
+    caption = "The simple effects of the exposure conditions for each test block. This analysis asks how early exposure starts to affect participants’ categorization responses, and when (if ever) these changes were undone with repeated testing. Note that rightward shifts of the categorization function (and its PSE) correspond to negative estimates (lower intercepts in predicting the log-odds of \`\`t\'\'-responses). Predicted nulls for Test 1 were tested using the Savage-Dickey density ratio (where BF > 1 indicates evidence in favor of the null).") %>%
   pack_rows("Test block 1 (pre-exposure)", 1, 3) %>%
   pack_rows("Test block 2", 4, 6) %>%
   pack_rows("Test block 3", 7, 9) %>%
@@ -1131,7 +1131,6 @@ IA.prediction <-
 ```
 
 Unlike the psychometric model we used for analysis, a distributional learning model specifies how information is integrated across exposure trials and blocks. As a consequence, listeners' responses during different test blocks and across different exposure conditions jointly constrain the parameters of model (due to assumption of ideal information integration within and across exposure blocks). This substantially decreases the degrees of freedom the model has to fit listeners' responses. For example, the ideal adaptor we fit to listeners' responses in the first four test blocks has a total of 3 parameters (lapse rate, and confidence in the prior means and covariance matrices of /d/ and /t/; for details, see SI \@ref(sec:ideal-adaptor)), compared to `r sum(str_detect(rownames(fixef(fit_test)), "mu2")) - sum(str_detect(rownames(fixef(fit_test)), "Test5vs.Test4|Test6vs.Test5"))` population-level ('fixed') and `r length(get_variables(fit_test)[grep("^sd_|^cor_", get_variables(fit_test))]) - sum(str_detect(get_variables(fit_test)[grep("^sd_|^cor_", (get_variables(fit_test)))], "Block_Test6vs.Test5|Block_Test5vs.Test4"))` group-level ('random') effect parameters for the psychometric mixed-effect model fit to the same data.
-
 
 ```{r data-prep-IA-logodds-prediction-human-responses}
 # prep data to obtain IA predicted logodds by condition and VOT up to test block 4
