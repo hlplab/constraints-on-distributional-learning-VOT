@@ -464,12 +464,12 @@ get_nsamples <- function(model) {
 }
 
 
-get_bf <- function(model, hypothesis, est = F, bf = F, digits = 2) {
-  h <- hypothesis(model, hypothesis)[[1]]
+get_bf <- function(model, hypothesis, est = F, bf = F, digits = 2, robust = T) {
+  h <- hypothesis(model, hypothesis, robust = robust)[[1]]
   BF <- if (is.infinite(h$Evid.Ratio)) paste("\\geq", get_nsamples(model)) else paste("=", round(h$Evid.Ratio, digits = digits))
   if (est == T & bf == T) {  str_c("Est. = ", round(h[[2]], digits = digits), "; BF ", BF) }
   else if (est) { h[[2]] }
-  else if (bf) { round(hypothesis(model, hypothesis)[[1]][[6]], digits = digits) }
+  else if (bf) { round(hypothesis(model, hypothesis, robust = robust)[[1]][[6]], digits = digits) }
   else {
     paste0(
     "\\(\\hat{\\beta} = ", round(h$Estimate, digits = digits),
@@ -593,7 +593,7 @@ make_hyp_table <- function(model = NULL, hypothesis, hypothesis_names, caption, 
       format = "latex",
       booktabs = TRUE,
       escape = FALSE,
-      col.names = c("Hypothesis", "Est.", "SE", "90\\%-CI", "$p_{direction}$", "BF", "$p_{post}$")) %>%
+      col.names = c("Hypothesis", "$\\hat{\\beta}$", "SE", "90\\%-CI", "$p_{direction}$", "BF", "$p_{post}$")) %>%
     # HOLD_position for latex table placement H and hold_position for latex h!, neither if placement is left to latex
     kable_styling(latex_options = "HOLD_position", full_width = FALSE) %>%
     column_spec(1, width = col1_width)
