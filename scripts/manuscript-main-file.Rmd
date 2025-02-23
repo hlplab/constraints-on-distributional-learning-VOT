@@ -66,6 +66,7 @@ header-includes:
  - \usepackage{subfig}
  - \usepackage{float} 
  - \floatplacement{figure}{H} 
+ - \usepackage{afterpage}
  - \usepackage{multirow}
  - \usepackage{lscape}
  - \usepackage{pdflscape}
