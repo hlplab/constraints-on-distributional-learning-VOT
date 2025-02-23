@@ -71,6 +71,7 @@ fit_exposure_nested_within_condition_and_block <-
     adapt_delta = .999)
 ```
 
+
 ```{r fit-simple-effects-condition, results='hide'}
 # Get simple effects of Condition nested under block
 my_priors <- c(
@@ -1321,5 +1322,6 @@ For now, we conclude that our results *might* be identifying a previously unreco
 <!-- Finally, other explanations appeal to mismatches between listeners and the ideal adaptor model refers to knowledge of cross-category correlations  [for a detailed list of assumptions, see appendix of @kleinschmidt-jaeger2015]. It is known, for example, that the VOT and f0 means of L1-US English /d/ and /t/ categories are correlated [@house-fairbanks1953; @lehiste-peterson1961; @ohde1984; @chodroff-wilson2018; @clayards2017]. The ideal adaptor model in Figure \@ref(fig:plot-IA-human-PSE) did not model these correlations. It is thus conceivable that prior expectations about these or other cross-category correlations were violated by our exposure distributions, keeping listeners from fully adapting. The present experiment cannot rule out this explanation. We note, however, that correlations between category means alone would seem unlikely to explain our result. First, these correlations are known to be comparatively weak across voiced and voiceless categories like /d/ and /t/ [@chodroff-wilson2018], thus carrying little information. Second, as far as we can tell, integration of these correlations into the ideal adaptor would be expected to lead to *faster* convergence against the exposure distribution, rather than to premature convergence. -->
 
 ```{r}
-rm(d.psychometric_intercept.slope.PSE.draws, fit_test.simple_effects_condition, fit_test.simple_effects_block)
+rm(d.psychometric_intercept.slope.PSE.draws, #fit_test.simple_effects_condition, 
+   fit_test.simple_effects_block)
 ```
