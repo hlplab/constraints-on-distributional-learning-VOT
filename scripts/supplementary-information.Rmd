@@ -1331,22 +1331,22 @@ make_hyp_table(
   hyp.convergence,
   c(
     # test block 1
-    "$|\\Delta(PSE_{ideal_{-20ms}}, PSE_{actual_{-20ms}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{-10ms}}, PSE_{actual_{-10ms}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{+20ms}}, PSE_{actual_{+20ms}})| > 0$",
+    "$|\\Delta(PSE_{idealized_{-20ms}}, PSE_{actual_{-20ms}})| > 0$",
+    "$|\\Delta(PSE_{idealized_{-10ms}}, PSE_{actual_{-10ms}})| > 0$",
+    "$|\\Delta(PSE_{idealized_{+20ms}}, PSE_{actual_{+20ms}})| > 0$",
     # test block 2
-    "$|\\Delta(PSE_{ideal_{-20ms}}, PSE_{actual_{-20ms}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{-10ms}}, PSE_{actual_{-10ms}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{+20ms}}, PSE_{actual_{+20ms}})| > 0$",
+    "$|\\Delta(PSE_{idealized_{-20ms}}, PSE_{actual_{-20ms}})| > 0$",
+    "$|\\Delta(PSE_{idealized_{-10ms}}, PSE_{actual_{-10ms}})| > 0$",
+    "$|\\Delta(PSE_{idealized_{+20ms}}, PSE_{actual_{+20ms}})| > 0$",
     # test block 3
-    "$|\\Delta(PSE_{ideal_{-20ms}}, PSE_{actual_{-20ms}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{-10ms}}, PSE_{actual_{-10ms}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{+20ms}}, PSE_{actual_{+20ms}})| > 0$",
+    "$|\\Delta(PSE_{idealized_{-20ms}}, PSE_{actual_{-20ms}})| > 0$",
+    "$|\\Delta(PSE_{idealized_{-10ms}}, PSE_{actual_{-10ms}})| > 0$",
+    "$|\\Delta(PSE_{idealized_{+20ms}}, PSE_{actual_{+20ms}})| > 0$",
     
     # test block 4
-    "$|\\Delta(PSE_{ideal_{-20ms}}, PSE_{actual_{-20ms}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{-10ms}}, PSE_{actual_{-10ms}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{+20ms}}, PSE_{actual_{+20ms}})| > 0$"),
+    "$|\\Delta(PSE_{idealized_{-20ms}}, PSE_{actual_{-20ms}})| > 0$",
+    "$|\\Delta(PSE_{idealized_{-10ms}}, PSE_{actual_{-10ms}})| > 0$",
+    "$|\\Delta(PSE_{idealized_{+20ms}}, PSE_{actual_{+20ms}})| > 0$"),
   caption = "Have participants converged against the PSE expected from idealized learner? This table compares changes in participants' categorization function against those expected from idealized learners, complementing Table \\ref{tab:hypothesis-table-convergence-test4-pre-exposure-PSE}.",
   col1_width = "22em") %>%
   pack_rows("Test block 1", 1, 3) %>% 
@@ -1507,7 +1507,8 @@ make_hyp_table(
   pack_rows("Test block 1", 1, 2) %>% 
   pack_rows("Test block 2", 3, 4) %>% 
   pack_rows("Test block 3", 5, 6) %>% 
-  pack_rows("Test block 4", 7, 8)
+  pack_rows("Test block 4", 7, 8) %>%
+  kable_styling(latex_options = "HOLD_position")
 ```
 
 ### Discussion of shrinkage {#sec:discussion-shrinkage}
