@@ -1702,8 +1702,6 @@ p.RT_scatter/p.RT_line +
   plot_layout(guides = "collect", heights = c(1.9, 1)) &
   theme(legend.position = "top")
 ```
-
-
 # Comparing participants' responses against predictions of ideal learning model {#sec:ideal-adaptor}
 In the general discussion, we compared participants' responses against the predictions of an ideal learning model that optimally integrates information from unfamiliar talkers with prior expectations based on previously experienced speech (see Figure \@ref(fig:plot-IA-human-PSE) in the main text). The model we used for this purpose is an instance of an *ideal adaptor* [@kleinschmidt-jaeger2015]. More specifically, we used a multivariate extension of the incremental belief-updating model first presented in @kleinschmidt-jaeger2011. We embed this distributional learning model in the same general categorization framework described in section \@ref(sec:ASP), except that we also fit a lapse rate. The resulting model structure is summarized in Figure \@ref(fig:ideal-adaptor) (which modifies Figure \@ref(fig:idealized-models)), and described next.
 
