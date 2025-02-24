@@ -421,6 +421,13 @@ rm(fit_exposure, fit_exposure_nested_within_condition_and_block, p.fit_1to7)
 ## Prediction 1 (*prior expectations*)
 
 ```{r hypothesis-table-prediction1, results='asis'}
+# get the mean PSE of the 5-fold CV idealized pre-exposure listener PSEs
+prior.PSE_mean <-
+  d.IO_intercept.slope.PSE %>%
+  filter(Condition.Exposure %in% paste0("prior", c(1:5))) %>%
+  summarise(mean = mean(PSE)) %>%
+  pull(mean)
+
 hyp.simple_effects_condition <-
   get_hyp_data(
   fit_test.simple_effects_condition,
@@ -428,11 +435,11 @@ hyp.simple_effects_condition <-
       "mu2_Block1:Condition.Exposure_Shift10vs.Shift0 = 0",
       "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 = 0",
       "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 = 0",
-      # TO DO: MARYANN, these three tests should be replaced with tests against the idealized pre-exposure listeners
-      "mu2_Block1:Condition.Exposure_Shift10vs.Shift0 = 0",
-      "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 = 0",
-      "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 = 0")
-)
+      # note the predicted params are coded as difference between conditions. Diff estimates will display depending on how the expression is written
+      str_c("mu2_Block1:Condition.Exposure_Shift10vs.Shift0 +", prior.PSE_mean, "= 0"),
+      str_c("mu2_Block1:Condition.Exposure_Shift40vs.Shift10 +", prior.PSE_mean, "= 0"),
+      str_c("mu2_Block1:Condition.Exposure_Shift40vs.Shift10 +", prior.PSE_mean, "= 0")
+))
 
 make_hyp_table(
   fit_test.simple_effects_condition,
@@ -768,13 +775,6 @@ if (file.exists("../models/d.IA_predicted_PSE_informedprior.rds")) {
 (ref:plot-IA-human-PSE) Summary of ideal adaptor analysis, comparing shifts in listeners' PSEs against the shifts expected by an ideal adaptor [a distributional learning model that describes ideal information integration, @kleinschmidt-jaeger2015]. Point ranges and dashed horizontal lines are identical to those in Figure \@ref(fig:plot-fit-PSE)C. Colored ribbons indicate the 95%-CI for the PSEs predicted by the ideal adaptor fit to listeners' responses. The vertical bar to the right of the panel indicates the range of talker-specific PSEs an idealized listener might have experienced in previous exposure: the mean and 2.5%-to-97.5% quantile range of talker-specific PSEs derived from Bayesian ideal observers fit to all talkers in the phonetic database of isolated word productions presented in Figure \@ref(fig:prior-distributions-and-exposure-conditions)A. We return to this range when discussing possible explanations for mismatches between the ideal adaptor and participants' responses.
 
 ```{r get-talker-specific-PSEs}
-# Compute distribution of talker-specific PSEs from Chodroff & Wilson (2018) database against which to compare human behavior
-prior.PSE_mean <-
-  d.IO_intercept.slope.PSE %>%
-  filter(Condition.Exposure %in% paste0("prior", c(1:5))) %>%
-  summarise(mean = mean(PSE)) %>%
-  pull(mean)
-
 # As mentioned in the result section, there are two different ways to obtain PSEs from ideal observers.
 # Here we provide the code for both but continue to use the same method as in the result section. This
 # is the method that introduces the same potential biases into the estimates of the ideal observers that
