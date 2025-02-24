@@ -2,6 +2,191 @@
 
 <!-- ^[A related line of work has used distributional learning or explicit training paradigms to study the acquisition of *novel* sound contrasts [e.g., @maye2002; @mccandliss2002; @pajak-levy2012; @pisoni1982]. These studies, too, have observed outcomes predicted by distributional learning models [for review, see @pajak2016].] -->
 
+<!-- make sure to discuss satisficing; take into account that "speech is not as acoustic as you think" -->
+
+Of note, Figure \@ref(fig:IO-human-accuracy) suggests that the premature convergence is not the consequence of listeners' having arrived at more or less ideal recognition accuracy. While incremental adaptation substantially improved participants' recognition accuracy compared to their pre-exposure accuracy, only participants in the -10ms condition---the exposure condition that deviates the least from listeners' prior expectations---came close to achieving the theoretical upper bound expected of an idealized learner. Listeners in the -20ms and +20ms condition appear to have stopped adapting even though further adaptation would have improved their recognition accuracy. While a failure to improve from, say, 90% and 95% accuracy might not seem that noteworthy at first blush, it implies misunderstanding one in ten vs. one in twenty words. This would *double* the odds of a recognition error, at least prior to taking into account linguistic and other context. We return to this point in the general discussion. 
+
+(ref:IO-human-accuracy) Changes across blocks and conditions in participants' recognition accuracy for the unfamiliar talker's speech. For each block, we used participants' categorization functions---estimated by the psychometric mixed-effects model fit to participants' responses---to categorize all 144 exposure inputs of that exposure condition. Accuracy was calculated for the two decision rules that are most commonly assumed to underlie speech recognition as well as perceptual decision-making in other domains [for review, see @massaro-friedman1990]: Luce's choice rule (responding proportional to posterior probability of category) and the criterion choice rule (always responding with the category that has highest posterior probability). As in Figure \@ref(fig:plot-fit-PSE)C, point ranges represent the posterior medians and their 95%-CIs derived from the psychometric model. Horizontal dashed lines indicate accuracy expected from an idealized learner (an ideal observer model that has fully learned the exposure distributions) and horizontal shaded ribbons indicate the 95%-CI expected from an idealized pre-exposure listener.
+
+```{r compute-IO-human-accuracy}
+# The data on which to calculate accuracy: one full set of exposure trials from each condition
+d.x <-
+  d.for_analysis %>%
+  filter(Phase == "exposure") %>%
+  nest(data = -c(ParticipantID, Condition.Exposure)) %>%
+  group_by(Condition.Exposure) %>%
+  # get 1 set of exposure trials per condition
+  slice_sample(n = 1) %>%
+  unnest(data) %>%
+  reframe(Item.VOT, Item.f0_Mel, vowel_duration, category) %>%
+  rename(VOT = Item.VOT, f0_Mel = Item.f0_Mel, intended.category = category) %>%
+  # Nest the cues into one column. Store versions of only VOT and all three cues
+  # since the pre-exposure and idealized learner IOs need different inputs
+  mutate(
+    x.VOT = pmap(list(VOT), ~ c(...)),
+    x.all = pmap(list(VOT, f0_Mel, vowel_duration), ~ c(...)),
+    data_from = Condition.Exposure) %>%
+  select(c(data_from, intended.category, x.VOT, x.all))
+
+# Get accuracy for idealized learner IOs on shift conditions they were trained on, and
+# Get accuracy for pre-exposure IO for all three conditions.
+io.accuracy <-
+  # First, we get pre-exposure accuracies
+  bind_rows(
+    io %>%
+      select(-x) %>%
+      filter(str_starts(Condition.Exposure, "prior")) %>%
+      crossing(evaluate_on = c("Shift0", "Shift10", "Shift40")) %>%
+      left_join(
+        d.x %>%
+          rename(x = x.all) %>%
+          select(-x.VOT) %>%
+          nest(x = c(x, intended.category)),
+        by = join_by(evaluate_on == data_from)),
+    io %>%
+      select(-x) %>%
+      filter(!str_starts(Condition.Exposure, "prior")) %>%
+      mutate(evaluate_on = Condition.Exposure) %>%
+      left_join(
+        d.x %>%
+          rename(x = x.VOT) %>%
+          select(-x.all) %>%
+          nest(x = c(x, intended.category)),
+        by = join_by(evaluate_on == data_from))) %>%
+  # Get IO categorisation with both decision rules
+  mutate(
+    categorization.proportional =
+      map2(x, io, ~
+             get_categorization_from_MVG_ideal_observer(x = .x$x, model = .y, decision_rule = "proportional") %>%
+             filter(category == "/t/")),
+    categorization.criterion =
+      map2(x, io, ~
+             get_categorization_from_MVG_ideal_observer(x = .x$x, model = .y, decision_rule = "criterion") %>%
+             filter(category == "/t/"))) %>%
+  unnest(c(x, starts_with("categorization")), names_sep = "_") %>%
+  select(!ends_with(c("observationID", "_x", "_category"))) %>%
+  # For all items that are not intended to be /t/, take 1 minus the posterior of /t/
+  mutate(
+    categorization.proportional_response = ifelse(x_intended.category == "/t/", categorization.proportional_response, 1 - categorization.proportional_response),
+    # where criterion rule responds 1 that is a /t/
+    categorization.criterion_response = ifelse(categorization.criterion_response == 1, "/t/", "/d/"),
+    categorization.criterion_response = ifelse(categorization.criterion_response == x_intended.category, T, F)) %>%
+  group_by(Condition.Exposure, evaluate_on) %>%
+  summarise(across(c(categorization.proportional_response, categorization.criterion_response), mean)) %>%
+  pivot_longer(
+    cols = starts_with("categorization"),
+    names_to = "decision",
+    values_to = "accuracy") %>%
+  mutate(decision = factor(str_replace(decision, "categorization\\.(.*)_response", "\\1"), levels = c("proportional", "criterion")))  
+
+# get human accuracy on unlabelled exposure trials
+# join with predictions of the fitted psychometric model
+fit_exposure <- readRDS("../models/exposure-standard-priorSD15-0.999.rds")
+fit_test <- readRDS("../models/test-standard-priorSD15-0.995.rds")
+
+
+human_psychometric_accuracy <-
+  d.for_analysis %>%
+  filter(Phase == "exposure" & Item.Labeled == F) %>%
+  group_by(ParticipantID, Condition.Exposure, Block) %>%
+  summarise(
+    participant.accuracy = mean(Response.Correct),
+    mean.accuracy = mean(participant.accuracy)) %>%
+  group_by(Condition.Exposure, Block) %>%
+  summarise(
+    lower = quantile(mean.accuracy, probs = .025),
+    median = quantile(mean.accuracy, probs = .5),
+    upper = quantile(mean.accuracy, probs = .975)) %T>%
+  { . ->> temp } %>% mutate(decision = factor("proportional")) %>%
+  bind_rows(temp %>% mutate(decision = factor("criterion"))) %>%
+  ungroup() %>%
+  mutate(decision = fct_relevel(decision, "proportional")) %>%
+  mutate(model = factor("human")) %>%
+  full_join(
+    crossing(
+      Condition.Exposure = c("Shift0", "Shift10", "Shift40"),
+      Block = c(1, 3, 5, 7),
+      lower = NA,
+      median = NA,
+      upper = NA)) %>%
+  add_block_labels() %>%
+  full_join(
+    get_pyschometric_accuracy(fit_exposure, d.for_analysis, "exposure", VOT.sd_exposure) %>%
+  bind_rows(
+    get_pyschometric_accuracy(fit_test, d.for_analysis, "test", VOT.sd_test)) %>%
+  mutate(decision = factor(decision)) %>%
+  ungroup() %>%
+  mutate(decision = fct_relevel(decision, "proportional", "criterion")) %>%
+  add_block_labels() %>%
+    mutate(model = factor("psych"))) %>%
+  group_by(decision, Condition.Exposure) %>%
+  arrange(Block, .by_group = T)
+
+rm(fit_exposure)
+```
+
+```{r IO-human-accuracy, fig.width=7.5, fig.height=base.height*2 + .75, fig.cap="(ref:IO-human-accuracy)", fig.pos="!ht"}
+# store plot for plotting in SI
+p.human_psych_accuracy <-
+  human_psychometric_accuracy %>%
+  na.omit() %>%
+  mutate(model = fct_relevel(model, "psych")) %>%
+  rename(evaluate_on = Condition.Exposure) %>%
+  ggplot(
+    aes(
+      x = Block.plot_label, y = median,
+      ymin = lower, ymax = upper,
+      colour = evaluate_on,
+      shape = model,
+      group = decision)) +
+  geom_hline(
+    data = io.accuracy %>% filter(!str_starts(Condition.Exposure, "prior")),
+    mapping = aes(yintercept = accuracy, color = evaluate_on),
+    linetype = 2,
+    linewidth = .8,
+    alpha = 0.4,
+    show.legend = F) +
+  geom_rect(
+    data = io.accuracy %>%
+      filter(Condition.Exposure %in% paste0("prior", c(1:5))) %>%
+      group_by(evaluate_on, decision) %>%
+      summarise(
+        ymin = mean(accuracy) - sd(accuracy) / sqrt(length(accuracy)) * 1.96,
+        ymax = mean(accuracy) + sd(accuracy) / sqrt(length(accuracy)) * 1.96),
+    mapping = aes(xmin = -Inf, ymin = ymin, ymax = ymax, xmax = Inf),
+    fill = "#d2d4dc",
+    alpha = 0.3,
+    inherit.aes = F) +
+  geom_pointrange(position = position_dodge2(.5), size = .4) +
+  stat_summary(
+    data =
+      human_psychometric_accuracy %>%
+      filter(model == "psych") %>%
+      rename(evaluate_on = Condition.Exposure),
+    geom = "line", position = position_dodge2(.5)) +
+  labs(x = "Block") +
+  scale_y_continuous("Accuracy\n(of psychometric model)", breaks = c(.6, .8, 1)) +
+  scale_colour_manual("Condition", values = colours.condition, labels = c("-20ms", "-10ms", "+20ms"), guide = "none") +
+  scale_shape_manual("Accuracy", values = c(16, 17), labels = c("psychometric model", "human", "")) +
+  coord_cartesian(ylim = c(.6, 1)) +
+  facet_grid(
+    decision ~ evaluate_on,
+    labeller = labeller(
+      decision = c("proportional" = "Luce's\ndecision rule", "criterion" = "Criterion\ndecision rule"),
+      evaluate_on = c("Shift0" = "-20ms", "Shift10" = "-10ms", "Shift40" = "+20ms"))) +
+  guides(shape = "none") +
+  theme(axis.text.x = element_text(angle = 30, vjust = 1, hjust = 1))
+
+# plot psych model accuracy
+p.human_psych_accuracy %+%
+  subset(human_psychometric_accuracy %>%
+           filter(model == "psych") %>%
+           rename(evaluate_on = Condition.Exposure) %>%
+  group_by(decision, evaluate_on) %>%
+  arrange(Block, .by_group = T))
+```
+
+
 # General discussion
 Over the last 20+ years, landmark studies in adaptive speech perception have demonstrated that listeners' interpretation of speech is not static. It can change with recent exposure, accommodating differences in pronunciation across talkers [for reviews, see @bent-baeseberk2021; @schertz-clare2020]. Research on accent adaptation [AA, @eisner2013; @schertz2016; @xie2017], perceptual learning [visually-guided perceptual learning (VGPL)/LGPL, @eisner-mcqueen2005; @kraljic-samuel2006; @kurumada2018; @norris2003; @reinisch-holt2014; @vroomen2007], and distributional learning [DL, @bejjanki2011; @idemaru-holt2020; @kleinschmidt2020; @nixon2016; @theodore-monto2019] suggests that this flexibility is achieved through changes in listeners' *categorization functions*---the mapping from acoustic or phonetic cues to the phonological categories that form the input to spoken language understanding: after exposure to an unfamiliar talker, listeners interpret physically identical speech input differently. 
 
