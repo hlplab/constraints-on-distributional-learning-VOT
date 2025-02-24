@@ -92,7 +92,7 @@ d.exposure <-
 d.means <-
   crossing(
     Condition.Exposure = c("-20ms", "-10ms", "+20ms"),
-    category = c("/d/", "/t/")) %>%
+    category = c("/d/", "/t/")) %>% 
   mutate(
     Block = "Block A",
     Condition.Exposure = fct_relevel(Condition.Exposure, c("-20ms", "-10ms", "+20ms")),
