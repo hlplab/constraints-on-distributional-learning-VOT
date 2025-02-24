@@ -1381,7 +1381,7 @@ However, equation \@ref(eq:proportion-convergence) contains a researcher degree 
 hyp.shrinkage <-
   get_hyp_data(
     fit_test_nested_within_condition_and_block,
-    c(
+    hyp.list = c(
       # block 1
       str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs)  -", predictedPSE_scaled_prior, ")/(", predictedPSE_scaled_10, "-", predictedPSE_scaled_prior, ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)  -", predictedPSE_scaled_prior, ")/(", predictedPSE_scaled_0, "-", predictedPSE_scaled_prior, ")"),
       
@@ -1426,7 +1426,7 @@ make_hyp_table(
 hyp.shrinkage <-
   get_hyp_data(
     fit_test_nested_within_condition_and_block,
-    c(
+    hyp.list = c(
       # block 1
       str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs))/(", predictedPSE_scaled_10, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs)) >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) - (-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs))/(", predictedPSE_scaled_0, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs))"),
       
@@ -1474,7 +1474,7 @@ make_hyp_table(
 hyp.shrinkage <-
   get_hyp_data(
     fit_test_nested_within_condition_and_block,
-    c(
+    hyp.list = c(
       # block 1
       str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs)  -", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")/(", predictedPSE_scaled_10, "-", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)  -", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")/(", predictedPSE_scaled_0, "-", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")"),
       
@@ -1510,7 +1510,7 @@ make_hyp_table(
     "$\\frac{\\Delta(PSE_{actual_{-10ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-10ms}}, PSE_{actual_{pre_{all}}})} > \\frac{\\Delta(PSE_{actual_{-20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-20ms}}, PSE_{actual_{pre_{all}}})}$",
     "$\\frac{\\Delta(PSE_{actual_{+20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{+20ms}}, PSE_{actual_{pre_{all}}})} > \\frac{\\Delta(PSE_{actual_{-20ms}}, PSE_{actual_{pre}})}{\\Delta(PSE_{ideal_{-20ms}}, PSE_{actual_{pre_{all}}})}$"),
   caption = "Comparison of actual changes in participants' categorization function against those expected from idealized learners. Both participants' and the idealized learner's PSEs are compared against the PSE of participants during Test 1 (averaging across all three conditions).",
-  col1_width = "14em")%>% 
+  col1_width = "14em") %>% 
   pack_rows("Test block 1", 1, 2) %>% 
   pack_rows("Test block 2", 3, 4) %>% 
   pack_rows("Test block 3", 5, 6) %>% 
