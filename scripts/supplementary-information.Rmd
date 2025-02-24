@@ -1363,7 +1363,7 @@ make_hyp_table(
 ```
 
 ### Testing 'shrinkage': Do exposure conditions differ in the degree to which they converged against idealized learner models? {#sec:shrinkage-test-all}
-Recall that all three exposure conditions had the expected qualitative effects both relative to each other, and relative to participants' pre-exposure expectations: the absolute magnitude of the shift qualitatively followed the predictions of distributional learning models. This leaves open, however, whether the *degree* of adaptation was comparable across exposure conditions. That is, after the same amount of exposure, did participants in exposure conditions with more extreme shifts (e.g., the -20ms condition) exhibit *proportionally* smaller changes in their categorization functions, compared to participants in exposure conditions with less extreme shifts (e.g., the +0 condition)? To assess whether adaptive changes in participants' behavior exhibited such 'shrinkage', it is necessary to quantify the degree to which participants in different exposure conditions converged against the categorization functions expected from idealized learners. Here we do so by estimating the distance of participants' PSE from the PSE expected prior to exposure, and then comparing this distance to the distance of the idealized learner's PSE from that same prior PSE:
+Recall that all three exposure conditions had the expected qualitative effects both relative to each other, and relative to participants' pre-exposure expectations: the absolute magnitude of the shift qualitatively followed the predictions of distributional learning models. This leaves open, however, whether the *degree* of adaptation was comparable across exposure conditions. That is, after the same amount of exposure, did participants in exposure conditions with more extreme shifts (e.g., the -20ms condition) exhibit *proportionally* smaller changes in their categorization functions, compared to participants in exposure conditions with less extreme shifts (e.g., the -10ms condition)? To assess whether adaptive changes in participants' behavior exhibited such 'shrinkage', it is necessary to quantify the degree to which participants in different exposure conditions converged against the categorization functions expected from idealized learners. Here we do so by estimating the distance of participants' PSE from the PSE expected prior to exposure, and then comparing this distance to the distance of the idealized learner's PSE from that same prior PSE:
 
 \begin{equation}
 \label{eq:proportion-convergence}
@@ -2135,6 +2135,7 @@ fit_test.IA_predicted_logodds.prior.change.interaction <-
 fit_test.IA_predicted_logodds.prior.change.interaction <- 
   add_criterion(fit_test.IA_predicted_logodds.prior.change.interaction, criterion = c("loo"), moment_match = T)
 ```
+
 ```{r table-elpd-comparison, eval=TRUE}
 bind_cols(
   "Model" = c("IA predictions with interaction", "IA prior predictions + change in predictions", "IA predictions"),
@@ -2148,7 +2149,7 @@ bind_cols(
     format = "latex",
     booktabs = TRUE) %>% 
   kable_styling(latex_options = "HOLD_position", full_width = FALSE) %>%
-    column_spec(1, width = "25em")
+    column_spec(1, width = "15em")
 ```
 
 ```{r hypothesis-table-IA-logodds, results='asis'}
@@ -2184,6 +2185,7 @@ make_hyp_table(
     "Predicted $\\Delta$ log-odds = 0"),
   caption = "How well does the ideal adaptor predict human behaviour? This table summarizes the main effects of the ideal adaptor's predicted log-odds prior to exposure and the change in the predicted log-odds as the experiment progress. The prior captures initial cognitive biases and the change in log-odds the learning over time. This model assumes a constant effect of change in predicted log-odds.")
 ```
+
 ```{r hypothesis-table-IA-logodds-interaction, results='asis'}
 hyp.IA_predicted_logodds.prior.change.interaction <-
   get_hyp_data(fit_test.IA_predicted_logodds.prior.change.interaction,
@@ -2201,7 +2203,7 @@ make_hyp_table(
     "Predicted $\\Delta$ log-odds > 0",
     "Predicted $\\Delta$ log-odds * block < 0",
     "Predicted $\\Delta$ log-odds * block = 0"),
-  caption = "The ideal adaptor predicts human behaviour very well but how did predictions change in later blocks? ")
+  caption = "The ideal adaptor predicts human behaviour very well but how did predictions change in later blocks? This table summarizes the main effects of the ideal adaptor's predicted log-odds prior to exposure, the change in the predicted log-odds, and the latter's interaction with block.")
 ```
 
 
