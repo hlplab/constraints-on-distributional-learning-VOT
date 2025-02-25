@@ -438,7 +438,7 @@ hyp.simple_effects_condition <-
       # note the predicted params are coded as difference between conditions. Diff estimates will display depending on how the expression is written
       str_c("mu2_Block1:Condition.Exposure_Shift10vs.Shift0 +", prior.PSE_mean, "= 0"),
       str_c("mu2_Block1:Condition.Exposure_Shift40vs.Shift10 +", prior.PSE_mean, "= 0"),
-      str_c("mu2_Block1:Condition.Exposure_Shift40vs.Shift10 +", prior.PSE_mean, "= 0")
+      str_c("mu2_Block1:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 +", prior.PSE_mean, "= 0")
 ))
 
 make_hyp_table(
@@ -620,6 +620,7 @@ Finally, the incremental changes summarized in Table \@ref(tab:hypothesis-table-
 hyp.shrinkage <-
   get_hyp_data(
     fit_test_nested_within_condition_and_block,
+    hyp.list =
     c(
       str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs  - ", predictedPSE_scaled_0, ") > 0" ),
       str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs - ", predictedPSE_scaled_10, ") > 0" ),
@@ -633,7 +634,7 @@ make_hyp_table(
     "$|\\Delta(PSE_{idealized_{-10ms}}, PSE_{actual_{-10ms}})| > 0$",
     "$|\\Delta(PSE_{idealized_{+20ms}}, PSE_{actual_{+20ms}})| > 0$"),
   caption = "Did participants {\\em not} converge against the PSE expected from idealized learner? This table compares changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). For identical hypothesis tests for all test blocks, see SI (\\ref{sec:convergence-test-all}).",
-  col1_width = "18em")
+  col1_width = "19em")
 ```
 
 Taken together, the tests we have presented so far provide rather consistent support for the predictions of distributional learning. However, Figure \@ref(fig:plot-fit-PSE)C suggests an important caveat to this: the comparison of participants' responses against those of an idealized learner that has fully learned the exposure distributions (colored dashed lines) suggests that listeners in all three exposure conditions did *not* fully learn the exposure distributions. This is confirmed by the Bayesian hypothesis tests in Table \@ref(tab:hypothesis-table-convergence-test4-pre-exposure-PSE) ($|\Delta(PSE_{idealized}, PSE_{actual})| > 0$: all BFs $\ge 8000$). By itself, a failure to converge against the performance of an idealized learner would not necessarily constitute evidence against prediction 4 (*learn to convergence*). Listeners might simply not have received sufficient exposure to have learned the exposure distribution. However, as already described for the -20ms condition, participants' behavior changed little, if at all, after the first exposure block. Instead, participants seem to have prematurely converged against stable behavior long before they had fully learned the exposure distribution.
