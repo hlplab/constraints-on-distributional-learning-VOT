@@ -4,19 +4,19 @@ logit_to_prob <- function(model, term, index = 1) {
 }
 
 gs_scale <- function(.vec) {
-  
+
   # Calculate mean and standard deviation
   var_mean <- mean({{.vec}}, na.rm = TRUE)
   var_sd <- sd({{.vec}}, na.rm = TRUE)
-  
+
   # Scale the variable
   scaled_var <- ({{.vec}} - var_mean) / (2 * var_sd)
-  
+
   # Add mean and SD as attributes
   label <- substitute(.vec)
   attr(scaled_var, paste0(label, ".mean")) <- var_mean
   attr(scaled_var, paste0(label, ".SD")) <- var_sd
-  
+
   # Return the scaled variable
   return(scaled_var)
 }
@@ -240,11 +240,11 @@ prepVars <- function(
 ) {
   d %<>%
     drop_na(Condition.Exposure, Phase, Block, Item.MinimalPair, ParticipantID, Item.VOT, Response)
-  
+
   message("VOT mean:", signif(mean(d$Item.VOT, na.rm = T)))
   message("VOT sd:", signif(sd(d$Item.VOT, na.rm = T)))
   message(paste("VOT test mean:", test_mean))
-  
+
   d %<>%
     ungroup() %>%
     mutate(
@@ -254,11 +254,11 @@ prepVars <- function(
     drop_na(Block, Response, Item.VOT) %>%
     mutate(VOT_gs = (Item.VOT - test_mean) / (2 * sd(Item.VOT, na.rm = TRUE))) %>%
     droplevels()
-  
+
   contrasts(d$Condition.Exposure) <- cbind("_Shift10 vs. Shift0" = c(-2/3, 1/3, 1/3),
                                            "_Shift40 vs. Shift10" = c(-1/3,-1/3, 2/3))
   message(contrasts(d$Condition.Exposure))
-  
+
   if (all(d$Phase == "test") & n_distinct(d$Block) == 6) {
     contrasts(d$Block) <- MASS::fractions(MASS::contr.sdif(6))
     dimnames(contrasts(d$Block))[[2]] <- c("_Test2 vs. Test1", "_Test3 vs. Test2", "_Test4 vs. Test3", "_Test5 vs. Test4", "_Test6 vs. Test5")
@@ -555,18 +555,17 @@ align_tab <- function(hyp) {
 
 
 get_hyp_data <- function (model.fit, hyp.list) {
-  
-  hyp_data <- 
+
+  hyp_data <-
     hypothesis(
       model.fit,
       hyp.list,
-      robust = T) 
-  
-  hyp_data %>% 
-    .$hypothesis %>% 
-    dplyr::select(-Star) %>% 
-    bind_cols(p_direction(hyp_data$samples)["pd"]) %>% 
-    mutate(Post.Prob = ifelse(str_detect(Hypothesis, "="), 1-(pd-.5), Post.Prob))
+      robust = T)
+
+  hyp_data %>%
+    .$hypothesis %>%
+    dplyr::select(-Star) %>%
+    bind_cols(p_direction(hyp_data$samples)["pd"])
 }
 
 
@@ -585,11 +584,11 @@ make_hyp_table <- function(model = NULL, hypothesis, hypothesis_names, caption, 
       CI = paste0("[", CI.Lower, ", ", CI.Upper, "]")) %>%
     dplyr::select(-c(CI.Upper, CI.Lower)) %>%
     relocate(CI, .after = "Est.Error") %>%
-    relocate(pd, .before = "Evid.Ratio") %>% 
+    relocate(pd, .before = "Evid.Ratio") %>%
     kbl(
       caption = caption,
       digits = digits,
-      align = align_tab(hypothesis),
+      align = c("l", "r", "r", "l", "r", "r", "r"),
       format = "latex",
       booktabs = TRUE,
       escape = FALSE,
