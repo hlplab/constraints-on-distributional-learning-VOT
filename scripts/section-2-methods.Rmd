@@ -89,10 +89,12 @@ d.exposure <-
            Block == 6 ~ "Block C")),
          category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))
 
+
+
 d.means <-
   crossing(
     Condition.Exposure = c("-20ms", "-10ms", "+20ms"),
-    category = c("/d/", "/t/")) %>% 
+    category = c("/d/", "/t/")) %>%
   mutate(
     Block = "Block A",
     Condition.Exposure = fct_relevel(Condition.Exposure, c("-20ms", "-10ms", "+20ms")),
@@ -113,8 +115,8 @@ p.histogram_conditions <-
     color = NA,
     alpha = .8) +
   geom_text(
-    data = d.means,
-    aes(x = -10, y = 17, label = label),
+    data = d.means %>% mutate(Block = "Block D"),
+    aes(x = 60, y = 17, label = label),
     parse = T,
     size = 2, hjust = 0, position = position_dodge2v(height = -8),
     inherit.aes = F) +
