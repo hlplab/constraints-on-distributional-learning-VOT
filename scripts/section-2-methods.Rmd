@@ -115,7 +115,7 @@ p.histogram_conditions <-
     alpha = .8) +
   geom_text(
     data = d.means %>% mutate(Block = "Block D"),
-    aes(x = 60, y = 17, label = label),
+    aes(x = 25, y = 17, label = label),
     parse = T,
     size = 2, hjust = 0, position = position_dodge2v(height = -8),
     inherit.aes = F) +
