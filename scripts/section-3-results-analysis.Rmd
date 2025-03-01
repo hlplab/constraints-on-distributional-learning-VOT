@@ -20,7 +20,7 @@ levels_Condition.Exposure = c("Shift0", "Shift10", "Shift40")
 ```
 
 # Results {#sec:results}
-As outlined under Methods, we present two types of analyses. We first use a Bayesian mixed-effects psychometric model to estimate listeners' categorization functions prior to, during, and after the three exposure blocks. Psychometric models provide a theory-agnostic way to test predictions 1-4, while accounting for attentional lapses while estimating participants' categorization functions. Failing to account for attentional lapses---while still common in research on speech perception [for exceptions, see @clayards2008; @kleinschmidt-jaeger2016]---can lead to biased estimates of categorization boundaries [@prins2011; @wichmann-hill2001]. For the advantages of Bayesian mixed-effects psychometric models, we refer to @prins2023, though we note that we implemented a mixture model formulation of such models in the freely available statistics software \texttt{R} [@R-base], using the amazing general-purpose package \texttt{brms} for Bayesian regression modeling [@R-brms_a]. After we present the results of the psychometric analysis, we introduce the ideal adaptor model, and fit it to the same data. Unlike the psychometric model, the ideal adaptor is a model of distributional learning, and we compare it against the *much* less constrained psychometric model to assess how good a model of listeners' behavior distributional learning provides. This also helps us identify the limitation of the ideal adaptor model that we mentioned in the introduction.
+As outlined under Methods, we present two types of analyses. We first use a Bayesian mixed-effects psychometric model to estimate listeners' categorization functions prior to, during, and after the three exposure blocks. Psychometric models provide a theory-agnostic way to test predictions 1-4, while accounting for attentional lapses while estimating participants' categorization functions. Failing to account for attentional lapses---while still common in research on speech perception [for exceptions, see @clayards2008; @kleinschmidt-jaeger2016]---can lead to biased estimates of categorization boundaries [@prins2011; @wichmann-hill2001]. For the advantages of Bayesian mixed-effects psychometric models, we refer to @prins2024, though we note that we implemented a mixture model formulation of such models in the freely available statistics software \texttt{R} [@R-base], using the amazing general-purpose package \texttt{brms} for Bayesian regression modeling [@R-brms_a]. After we present the results of the psychometric analysis, we introduce the ideal adaptor model, and fit it to the same data. Unlike the psychometric model, the ideal adaptor is a model of distributional learning, and we compare it against the *much* less constrained psychometric model to assess how good a model of listeners' behavior distributional learning provides. This also helps us identify the limitation of the ideal adaptor model that we mentioned in the introduction.
 
 ```{r model-fit-test-blocks, include=FALSE}
 fit_test <-
@@ -421,18 +421,27 @@ rm(fit_exposure, fit_exposure_nested_within_condition_and_block, p.fit_1to7)
 ## Prediction 1 (*prior expectations*)
 
 ```{r hypothesis-table-prediction1, results='asis'}
+# get the mean PSE of the 5-fold CV idealized pre-exposure listener PSEs
+prior.PSE_mean <-
+  d.IO_intercept.slope.PSE %>%
+  filter(Condition.Exposure %in% paste0("prior", c(1:5))) %>%
+  summarise(mean = mean(PSE)) %>%
+  pull(mean)
+
 hyp.simple_effects_condition <-
   get_hyp_data(
   fit_test.simple_effects_condition,
   hyp.list = c(
       "mu2_Block1:Condition.Exposure_Shift10vs.Shift0 = 0",
       "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 = 0",
-      "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 = 0",
-      # TO DO: MARYANN, these three tests should be replaced with tests against the idealized pre-exposure listeners
-      "mu2_Block1:Condition.Exposure_Shift10vs.Shift0 = 0",
-      "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 = 0",
-      "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 = 0")
-)
+      "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 = 0")) %>% 
+  bind_rows(
+    get_hyp_data(
+      fit_test_nested_within_condition_and_block,
+      hyp.list = c(
+        str_c("(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) -", predictedPSE_scaled_prior, "= 0"),
+      str_c("(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) -", predictedPSE_scaled_prior, "= 0"),
+      str_c("(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs) -", predictedPSE_scaled_prior, "= 0"))))
 
 make_hyp_table(
   fit_test.simple_effects_condition,
@@ -449,7 +458,7 @@ make_hyp_table(
 
 Figure \@ref(fig:plot-fit-PSE)A suggests that the different participant groups had almost identical categorization functions prior to exposure. This is confirmed by the Bayesian hypothesis tests summarized in the top half of Table \@ref(tab:hypothesis-table-prediction1). During Test 1, before participants received informative exposure to the unfamiliar talker, there was moderate support for the hypothesis that participants' responses did not differ across exposure conditions. <!-- ^[The moderate BFs for these hypothesis tests are due to our use of regularizing priors, which have non-negligible density over the null [for an introduction to the Savage-Dickey method, see @wagenmakers2010]. Rather than to test the null against more plausible alternative priors, which would predictably increase the evidence for the null, we appeal to readers' intuition: the 90%-CIs of the comparisons for Test 1 are all approximately centered around zero; there is very little evidence in favor of an effect in either direction.] --> This is also reflected in the low probabilities of direction ($.5 \le p_{direction} \le .68$). This result is predicted by models of adaptive speech perception under the assumptions that (a) participants in the different groups have similar prior experiences, and that (b) our sample size is sufficiently large to yield stable estimates of listeners' categorization function. Equality of pre-exposure behavior across exposure groups is also implicitly assumed---but rarely tested---in the interpretation of most studies on adaptive speech perception [when it is tested, it often turns out that this assumption is *not* necessarily warranted, presumably due to insufficient sample sizes, cf. @kleinschmidt2020].
 
-Critically, participants' categorization functions during Test 1 closely matched the predictions of the idealized pre-exposure listener, shown as a gray band in Figure \@ref(fig:plot-fit-PSE)A. This is confirmed by Bayesian hypothesis tests summarized in the bottom half of Table \@ref(tab:hypothesis-table-prediction1), which compared participants' PSE against the mean PSE of the five cross-validated idealized pre-exposure listeners. This demonstrated that a simple ideal observer trained on the phonetic distributions that a 'typical' listener might have previously experienced provides a decent model of listeners' perception prior to additional exposure [see also, e.g., @kronrod2016; @nearey-assmanm2007; @tan2021; @xie2021cognition]. Notably, this is achieved with 0 degrees of freedom that are fit to listeners' responses: the ideal observers were trained solely on a phonetic database.
+Critically, participants' categorization functions during Test 1 closely matched the predictions of the idealized pre-exposure listener, shown as a gray band in Figure \@ref(fig:plot-fit-PSE)A. This is confirmed by Bayesian hypothesis tests summarized in the bottom half of Table \@ref(tab:hypothesis-table-prediction1), which compared participants' PSE against the mean PSE of the five cross-validated idealized pre-exposure listeners. This demonstrated that a simple ideal observer trained on the phonetic distributions that a 'typical' listener might have previously experienced provides a decent model of listeners' perception prior to additional exposure [see also, e.g., @kronrod2016; @nearey-assmann2007; @tan2021; @xie2021cognition]. Notably, this is achieved with 0 degrees of freedom that are fit to listeners' responses: the ideal observers were trained solely on a phonetic database.
 
 ## Prediction 2b (*exposure distributions*): comparing exposure conditions within each test block
 
@@ -535,6 +544,7 @@ fit_test.simple_effects_block <-
 hyp.simple_effects_block <-
   get_hyp_data(
     fit_test.simple_effects_block,
+    hyp.list =
     c(
       "mu2_Condition.ExposureShift0:Block_Test2vs.Test1 > 0",
       "mu2_Condition.ExposureShift0:Block_Test3vs.Test2 > 0",
@@ -613,20 +623,21 @@ Finally, the incremental changes summarized in Table \@ref(tab:hypothesis-table-
 hyp.shrinkage <-
   get_hyp_data(
     fit_test_nested_within_condition_and_block,
+    hyp.list =
     c(
-      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs  - ", predictedPSE_scaled_0, ") > 0" ),
-      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs - ", predictedPSE_scaled_10, ") > 0" ),
-      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs - ", predictedPSE_scaled_40, ") > 0" )))
+      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs  - ", predictedPSE_scaled_0, ") = 0" ),
+      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs - ", predictedPSE_scaled_10, ") = 0" ),
+      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs - ", predictedPSE_scaled_40, ") = 0" )))
 
 make_hyp_table(
   fit_test_nested_within_condition_and_block,
   hyp.shrinkage,
   c(
-    "$|\\Delta(PSE_{idealized_{-20ms}}, PSE_{actual_{-20ms}})| > 0$",
-    "$|\\Delta(PSE_{idealized_{-10ms}}, PSE_{actual_{-10ms}})| > 0$",
-    "$|\\Delta(PSE_{idealized_{+20ms}}, PSE_{actual_{+20ms}})| > 0$"),
+    "$|\\Delta(PSE_{idealized_{-20ms}}, PSE_{actual_{-20ms}})| = 0$",
+    "$|\\Delta(PSE_{idealized_{-10ms}}, PSE_{actual_{-10ms}})| = 0$",
+    "$|\\Delta(PSE_{idealized_{+20ms}}, PSE_{actual_{+20ms}})| = 0$"),
   caption = "Did participants {\\em not} converge against the PSE expected from idealized learner? This table compares changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). For identical hypothesis tests for all test blocks, see SI (\\ref{sec:convergence-test-all}).",
-  col1_width = "18em")
+  col1_width = "19em")
 ```
 
 Taken together, the tests we have presented so far provide rather consistent support for the predictions of distributional learning. However, Figure \@ref(fig:plot-fit-PSE)C suggests an important caveat to this: the comparison of participants' responses against those of an idealized learner that has fully learned the exposure distributions (colored dashed lines) suggests that listeners in all three exposure conditions did *not* fully learn the exposure distributions. This is confirmed by the Bayesian hypothesis tests in Table \@ref(tab:hypothesis-table-convergence-test4-pre-exposure-PSE) ($|\Delta(PSE_{idealized}, PSE_{actual})| > 0$: all BFs $\ge 8000$). By itself, a failure to converge against the performance of an idealized learner would not necessarily constitute evidence against prediction 4 (*learn to convergence*). Listeners might simply not have received sufficient exposure to have learned the exposure distribution. However, as already described for the -20ms condition, participants' behavior changed little, if at all, after the first exposure block. Instead, participants seem to have prematurely converged against stable behavior long before they had fully learned the exposure distribution.
@@ -768,13 +779,6 @@ if (file.exists("../models/d.IA_predicted_PSE_informedprior.rds")) {
 (ref:plot-IA-human-PSE) Summary of ideal adaptor analysis, comparing shifts in listeners' PSEs against the shifts expected by an ideal adaptor [a distributional learning model that describes ideal information integration, @kleinschmidt-jaeger2015]. Point ranges and dashed horizontal lines are identical to those in Figure \@ref(fig:plot-fit-PSE)C. Colored ribbons indicate the 95%-CI for the PSEs predicted by the ideal adaptor fit to listeners' responses. The vertical bar to the right of the panel indicates the range of talker-specific PSEs an idealized listener might have experienced in previous exposure: the mean and 2.5%-to-97.5% quantile range of talker-specific PSEs derived from Bayesian ideal observers fit to all talkers in the phonetic database of isolated word productions presented in Figure \@ref(fig:prior-distributions-and-exposure-conditions)A. We return to this range when discussing possible explanations for mismatches between the ideal adaptor and participants' responses.
 
 ```{r get-talker-specific-PSEs}
-# Compute distribution of talker-specific PSEs from Chodroff & Wilson (2018) database against which to compare human behavior
-prior.PSE_mean <-
-  d.IO_intercept.slope.PSE %>%
-  filter(Condition.Exposure %in% paste0("prior", c(1:5))) %>%
-  summarise(mean = mean(PSE)) %>%
-  pull(mean)
-
 # As mentioned in the result section, there are two different ways to obtain PSEs from ideal observers.
 # Here we provide the code for both but continue to use the same method as in the result section. This
 # is the method that introduces the same potential biases into the estimates of the ideal observers that
