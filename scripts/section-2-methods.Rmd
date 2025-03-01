@@ -66,7 +66,7 @@ We first created the *-20ms* condition. We set the VOT means to 5ms for /d/ and 
 
 (ref:design-distribution) How we achieved more naturalistic (sampled and semi-labeled) VOT distributions while avoiding confounds across exposure conditions. Three sets of exposure materials (A-C) were created by sampling from the exposure distribution for the -20 condition, and then shifting those VOTs for the other two exposure conditions. Each set contained 12 labeled /d/, 12 labeled /t/, 12 unlabeled /d/, and 12 unlabeled /t/ trials, as well as 6 catch trials (not shown). This allowed natural heterogeneity in the VOTs participants experienced within and across blocks, while ensuring that the between-participant exposure conditions were identical in all aspects--including the relative placement of labeled and unlabeled trials---except that they were shifted relative to each other by a constant amount of VOT. The order of exposure materials A-C was counter-balanced across participants within each exposure condition using a Latin-square design. Tick marks along the x-axis show the location of the twelve *test* tokens, which were (identical across conditions).
 
-```{r design-distribution, fig.height=base.height*3+2/3, fig.width=base.width*4, fig.cap="(ref:design-distribution)", warning=FALSE, message=FALSE}
+```{r design-distribution, fig.height=base.height*3+2/3, fig.width=base.width*4+1/4, fig.cap="(ref:design-distribution)", warning=FALSE, message=FALSE}
 var_d <- 80
 var_t <- 270
 
@@ -89,10 +89,11 @@ d.exposure <-
            Block == 6 ~ "Block C")),
          category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))
 
+
 d.means <-
   crossing(
     Condition.Exposure = c("-20ms", "-10ms", "+20ms"),
-    category = c("/d/", "/t/")) %>% 
+    category = c("/d/", "/t/")) %>%
   mutate(
     Block = "Block A",
     Condition.Exposure = fct_relevel(Condition.Exposure, c("-20ms", "-10ms", "+20ms")),
@@ -113,8 +114,8 @@ p.histogram_conditions <-
     color = NA,
     alpha = .8) +
   geom_text(
-    data = d.means,
-    aes(x = -10, y = 17, label = label),
+    data = d.means %>% mutate(Block = "Block D"),
+    aes(x = 25, y = 17, label = label),
     parse = T,
     size = 2, hjust = 0, position = position_dodge2v(height = -8),
     inherit.aes = F) +
