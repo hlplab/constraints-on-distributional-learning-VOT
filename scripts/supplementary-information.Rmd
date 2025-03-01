@@ -1295,15 +1295,6 @@ rm(fit_lapse_by_block, fit_exposure)
 
 \pagebreak
 
-## Changes in participants' recognition accuracy as a function of exposure
-Figure \@ref(fig:plot-IO-psychometric-model-human-accuracy) summarizes changes in participants' recognition accuracy with increasing exposure to the different exposure conditions. The figure reproduces Figure \@ref(fig:IO-human-accuracy) while additionally showing listeners' empirical recognition accuracy, as estimated from the unlabeled trials of exposure blocks. 
-
-(ref:plot-IO-psychometric-model-human-accuracy) Same as Figure \@ref(fig:IO-human-accuracy) but also showing listeners' empirical recognition accuracy (triangles). For the empirical accuracy, lineranges show 95% bootstrapped CIs.
-
-```{r plot-IO-psychometric-model-human-accuracy, fig.width=7.5, fig.height=base.height*2 + .75, fig.cap="(ref:plot-IO-psychometric-model-human-accuracy)"}
-p.human_psych_accuracy
-```
-
 ## Relaxing the linearity assumption for VOT {#sec:GAMM}
 The perceptual model of our psychometric mixed-effects analyses assumed linear effects of VOT on the log-odds of "t"-responses. As already mentioned in SI \@ref(sec:io-bias-correction), we made this assumptions for the sake of simplicity, and in order to avoid over-fitting. However, there are reasons to expect that the effects of VOT on listeners' categorizations are non-linear. Specifically, ideal observers with Gaussian categories along a single cue dimension (here: VOT) predict that the posterior log-odds of each category change linearly along that cue dimension if and only if the variance of both Gaussian categories is equal [for details, see @bicknell2024; @kleinschmidt-jaeger2015; @kronrod2016]. For US English /d/ and /t/, this is well-known *not* to be the case, with /t/ having larger variance than /d/ (see also Figure \@ref(fig:prior-distributions-and-exposure-conditions)A in the main text). Under the assumption of Gaussian categories, ideal observer thus predict a quadratic effect along VOT---specifically, the log-odds of "t"-responses are predicted to increase more than linearly with increasing VOT between the two category means (since the /t/ category has larger variance).
 
@@ -1412,7 +1403,18 @@ p[[1]] +
   theme(legend.position = "top") 
 ```
 
-# Visual analysis of reaction times
+# Additional analyses of participants' behavior
+
+## Changes in participants' recognition accuracy as a function of exposure
+Figure \@ref(fig:plot-IO-psychometric-model-human-accuracy) summarizes changes in participants' recognition accuracy with increasing exposure to the different exposure conditions. The figure reproduces Figure \@ref(fig:IO-human-accuracy) while additionally showing listeners' empirical recognition accuracy, as estimated from the unlabeled trials of exposure blocks. 
+
+(ref:plot-IO-psychometric-model-human-accuracy) Same as Figure \@ref(fig:IO-human-accuracy) but also showing listeners' empirical recognition accuracy (triangles). For the empirical accuracy, lineranges show 95% bootstrapped CIs.
+
+```{r plot-IO-psychometric-model-human-accuracy, fig.width=7.5, fig.height=base.height*2 + .75, fig.cap="(ref:plot-IO-psychometric-model-human-accuracy)"}
+p.human_psych_accuracy
+```
+
+## Visual analysis of reaction times
 
 (ref:plot-RT-all-data) Summary of participant reaction times by block. **Top:** Scatter plot of means and SDs of RTs (on $\log_{10}$ axes). **Bottom:** Progression of RTs by trial (including catch trials) and block. Lines indicate mean RTs, ribbons indicate region of two times SD from the mean (on $\log_{10}$ y-axis).
 
