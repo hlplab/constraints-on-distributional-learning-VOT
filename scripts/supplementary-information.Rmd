@@ -1706,7 +1706,7 @@ We note this anecdotal trend here primarily because of its theoretical relevance
 The model selection approach to distributional learning also predicts that listeners who have ample experience with accents that more systematically prevoice syllable-initial voiced stops (e.g., second language-accented English spoken by speakers of L1-Mexican Spanish) should show an increased flexibility to accommodate leftward shifts along the VOT continuum, and thus less asymmetric shrinkage. It is, however, important to keep in mind that the category boundaries for even these accents tend to still have positive VOTs, so that the predicted reduction in asymmetric shrinkage might be relative subtle and difficult to detect.
 
 # Comparing participants' responses against predictions of ideal learning model {#sec:ideal-adaptor}
-In the general discussion, we compared participants' responses against the predictions of an ideal learning model that optimally integrates information from unfamiliar talkers with prior expectations based on previously experienced speech (see Figure \@ref(fig:plot-IA-human-PSE) in the main text). The model we used for this purpose is an instance of an *ideal adaptor* [@kleinschmidt-jaeger2015]. More specifically, we used a multivariate extension of the incremental belief-updating model first presented in @kleinschmidt-jaeger2011. We embed this distributional learning model in the same general categorization framework described in section \@ref(sec:ASP), except that we also fit a lapse rate. The resulting model structure is summarized in Figure \@ref(fig:ideal-adaptor) (which modifies Figure \@ref(fig:idealized-models)), and described next.
+We compared participants' responses against the predictions of an ideal learning model that optimally integrates information from unfamiliar talkers with prior expectations based on previously experienced speech (see Figure \@ref(fig:plot-IA-human-PSE) in the main text). The model we used for this purpose is an instance of an *ideal adaptor* [@kleinschmidt-jaeger2015]. More specifically, we used a multivariate extension of the incremental belief-updating model first presented in @kleinschmidt-jaeger2011. We embed this distributional learning model in the same general categorization framework described in section \@ref(sec:ASP), except that we also fit a lapse rate. The resulting model structure is summarized in Figure \@ref(fig:ideal-adaptor) (which modifies Figure \@ref(fig:idealized-models)), and described next.
 
 \begin{figure}[H]
 \begin{center}
@@ -1792,7 +1792,7 @@ In the general discussion, we compared participants' responses against the predi
 \end{figure}
 
 ## The ideal adaptor model
-An ideal adaptor describes the process of incrementally inferring the unknown mean and variance of Gaussian categories. The model starts with prior beliefs about each category's mean and variance-covariance structure, and then updates those beliefs based on the distribution of those categories observed during exposure. The speed of the incremental updating---and thus the flexibility with which listeners adapt their beliefs about phonetic categories $c$, allowing them to shift and change their categorization functions---depends on the strength of the prior beliefs about the category means ($\kappa_{c,0}$) and variances ($\nu_{c,0}$). Weaker prior beliefs (smaller $\kappa_{c,0}$s and $\nu_{c,0}$s) result in faster updating, but also less stable representations [for in depth description and discussion of the model, see @kleinschmidt-jaeger2015].
+The ideal adaptor we use here describes the process of incrementally inferring the unknown mean and variance of Gaussian categories. The model starts with prior beliefs about each category's mean and variance-covariance structure, and then updates those beliefs based on the distribution of those categories observed during exposure. The speed of the incremental updating---and thus the flexibility with which listeners adapt their beliefs about phonetic categories $c$, allowing them to shift and change their categorization functions---depends on the strength of the prior beliefs about the category means ($\kappa_{c,0}$) and variances ($\nu_{c,0}$). Weaker prior beliefs (smaller $\kappa_{c,0}$s and $\nu_{c,0}$s) result in faster updating, but also less stable representations [for in depth description and discussion of the model, see @kleinschmidt-jaeger2015].
 
 The ideal adaptor model can be used to update prior beliefs that are based on some estimate of listeners' prior experience (e.g., from a phonetic database), either by updating beliefs under specific assumption about the $\kappa_{c,0}$s and $\nu_{c,0}$s [as done in @cummings-theodore2023; @hitczenko-feldman2016; @theodore-monto2019; @xie2023], or while inferring the $\kappa_{c,0}$s and $\nu_{c,0}$s from listeners' responses [as done in @kleinschmidt-jaeger2011; @kleinschmidt-jaeger2012]. With sufficiently constraining data from listeners, the model can even be used to infer the prior category means and variances themselves, rather than to fix those parameters based on phonetic data [e.g.,  @kleinschmidt2020; @kleinschmidt-jaeger2016]. 
 
@@ -2105,33 +2105,36 @@ d.pars %>%
     PSE = -intercept_unscaled/slope_unscaled)
 ```
 
-## How well do ideal adaptor predictions predict human responses?
-In the general discussion, we highlighted the ideal adaptor’s inability, in its current form, to capture the plateauing of learning gains in later test blocks (as shown in Figure \@ref(fig:plot-IA-human-PSE)). To quantify the relationship between the ideal adaptor’s predictions and human responses, we fit a logistic regression where human responses were predicted from the Ideal Adaptor’s log-odds predictions across the four test blocks.
+## How well do ideal adaptor predictions predict human responses? {#sec:ideal-adaptor-fit}
+The final finding reported in the main text is the ideal adaptor’s inability, in its current form, to capture premature convergence (as shown in Figure \@ref(fig:plot-IA-human-PSE)). To quantify the relationship between the ideal adaptor’s predictions and human responses, we fit a logistic regression where human responses were predicted from the ideal adaptor’s log-odds predictions across the four test blocks.
 
 We take a step-wise approach in the modeling to systematically examine different effects. In the first model the ideal adaptor's total log-odds predictions are the sole predictor. The second model separates the prior (predicted log-odds before exposure) from the changes in predicted log-odds which captures learning over time. The final model adds the interaction of log-odds changes and test block (treated as a continuous predictor) to test whether the ideal adaptor's predictions diverge from human behavior with increasing exposure. All predictors were centered and scaled to two times their standard deviation. 
 
 To compare model performance, we used LOOIC to estimate the expected log predictive density (ELPD) (Table \@ref(tab:table-elpd-comparison)). The results indicate that incorporating prior predicted log-odds, changes in predictions, and their interaction with test block provides the most accurate representation of human responses 
 
 Tables \@ref(tab:hypothesis-table-IA-logodds), \@ref(tab:hypothesis-table-IA-logodds-prior-change), and \@ref(tab:hypothesis-table-IA-logodds-interaction) show the hypotheses tests on the respective predictors. We include the point hypotheses as additional evidence against the null. All indicate the robustness of the correlation between ideal adaptor predictions and human responses. Crucially, the hypothesis test for the interaction term (Table \@ref(tab:hypothesis-table-IA-logodds-interaction)) confirms that while changes in ideal adaptor-predicted log-odds initially align with human responses, this relationship reverses with increasing exposure. The negative coefficient of the interaction term reflects this divergence, supporting the hypothesis that the ideal adaptor overpredicts learning effects in later test blocks.
+
 ```{r model-logistic-IA-logodds-interaction}
 # model with additive effect of IA-predicted logodds before exposure and 
 # change in IA-predicted logodds
 fit_test.IA_predicted_logodds.prior.change <-
-  update(fit_test.IA_predicted_logodds,
-         formula. = Response.Voiceless ~ 1 + IA.logodds_prior_gs + IA.logodds_change_gs + 
-        (1 | ParticipantID) + (1 | Item.MinimalPair),
-        newdata = d.IA_predicted_logodds,
-        file ="../models/test_IA_predicted_logodds.prior.change.rds")
+  update(
+    fit_test.IA_predicted_logodds,
+    formula. = Response.Voiceless ~ 1 + IA.logodds_prior_gs + IA.logodds_change_gs + 
+      (1 | ParticipantID) + (1 | Item.MinimalPair),
+    newdata = d.IA_predicted_logodds,
+    file ="../models/test_IA_predicted_logodds.prior.change.rds")
 
 fit_test.IA_predicted_logodds.prior.change <- add_criterion(fit_test.IA_predicted_logodds.prior.change, criterion = c("loo"), moment_match = T)
 
 # model with interaction of block and change in IA-predicted logodds 
 fit_test.IA_predicted_logodds.prior.change.interaction <-
-  update(fit_test.IA_predicted_logodds.prior.change,
-         formula. =  Response.Voiceless ~ 1 + IA.logodds_prior_gs + (Block_gs * IA.logodds_change_gs) + 
-        (1 | ParticipantID) + (1 | Item.MinimalPair),
-        newdata = d.IA_predicted_logodds,
-        file ="../models/test_IA_predicted_logodds.prior.change.interaction.rds")
+  update(
+    fit_test.IA_predicted_logodds.prior.change,
+    formula. =  Response.Voiceless ~ 1 + IA.logodds_prior_gs + (Block_gs * IA.logodds_change_gs) + 
+      (1 | ParticipantID) + (1 | Item.MinimalPair),
+    newdata = d.IA_predicted_logodds,
+    file ="../models/test_IA_predicted_logodds.prior.change.interaction.rds")
 
 fit_test.IA_predicted_logodds.prior.change.interaction <- 
   add_criterion(fit_test.IA_predicted_logodds.prior.change.interaction, criterion = c("loo"), moment_match = T)
