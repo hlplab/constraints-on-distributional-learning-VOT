@@ -1815,70 +1815,9 @@ In addition to setting $\mathrm{m}_{c,0}$ and $\mathrm{S}_{c,0}$ based on a phon
 We used the \texttt{MVBeliefUpdatr} package [@R-MVBeliefUpdatr] in R to fit the ideal adaptor model to participants' responses. \texttt{MVBeliefUpdatr} uses Stan [@carpenter2017] to fit the model and obtain samples from its posterior distribution. The fitted model represents a posterior distribution over $\mathcal{NW^{-1}}$ ideal adaptors, each of which in turn describes listeners' uncertain beliefs about the talker's category means and covariance structures for /d/ and /t/. We ran four MCMC chains with 3000 warm-up samples, and 1000 posterior samples each (for further details, see the R Markdown document this SI is generated from). \texttt{MVBeliefUpdatr} specifies a uniform prior over lapse rates and Normal priors over $\kappa_{0}$ and $\nu_{0}$ with a mean of 0 and a standard deviation of 4-times the maximum number of exposure observations per category (here: $4 * 3 * 24 = 288$). Given that only positive $\kappa_{0}$ and $\nu_{0}$ are supported, this prior attributes 95% of its probability mass over $[0, 564]$.
 
 ## Results
-Table \@ref(tab:ideal-adaptor-parameter-summary) summarizes the three parameters fit to participants' responses. The large inferred values for $\kappa_{0}$ and $\nu_{0}$ are the result of two factors: (1) a good fit between the prior $\mu_{c}$ and $\Sigma_c$ we obtained from the Chodroff and Wilson database against listeners' pre-exposure responses, and (2) the fact that, after exposure to 72 /d/s and 72 /t/s, listeners' categorization functions have shifted by only 20-50% towards the maximum possible shift (the shift expected from an idealized learner). The  Figure \@ref(fig:ideal-adaptor-parameter-correlations) shows the posterior marginal and pairwise joint distributions of the same parameters as well as the $\mathrm{m}_{c,0}$ and $\mathrm{S}_{c,0}$ parameters. Finally, Figures \@ref(fig:ideal-adaptor-test-categorization) and \@ref(fig:ideal-adaptor-test-categorization-r2) visualize the correlation between the fit of the ideal adaptor model and participants' responses.
+The  Figure \@ref(fig:ideal-adaptor-parameter-correlations) shows the posterior marginal and pairwise joint distributions of the same parameters as well as the $\mathrm{m}_{c,0}$ and $\mathrm{S}_{c,0}$ parameters. Finally, Figures \@ref(fig:ideal-adaptor-test-categorization) and \@ref(fig:ideal-adaptor-test-categorization-r2) visualize the correlation between the fit of the ideal adaptor model and participants' responses.
 
 ```{r functions-for-adaptive-changes}
-summarize.NIW_ideal_adaptor_stanfit <- function(
-    x,
-    pars = c("kappa", "nu", "lapse_rate"),
-    groups = c(
-      "prior",
-      "Cond Shift0AA_Up to test3", "Cond Shift0AA_Up to test5", "Cond Shift0AA_Up to test7",
-      "Cond Shift10AA_Up to test3", "Cond Shift10AA_Up to test5", "Cond Shift10AA_Up to test7",
-      "Cond Shift40AA_Up to test3", "Cond Shift40AA_Up to test5", "Cond Shift40AA_Up to test7")
-) {
-  add_ibbu_stanfit_draws(x, groups = groups, summarize = F) %>%
-    unnest_cue_information_in_model() %>%
-    gather_variables(exclude = c(".chain", ".iteration", ".draw", ".row", "cue", "cue2", "group", "category")) %>%
-    ungroup() %>%
-    # + Remove double mentions of variables that are constant across groups, categories, and cues
-    #   (currently: lapse_rate)
-    # + Remove double mentions of variables that are constant across cues
-    #   (currently: kappa and nu)
-    # + Remove double mentions of variables that are constant across cue2
-    #   (currently: m)
-    mutate(
-      across(
-        c(group, category),
-        ~ ifelse(.variable == "lapse_rate", NA_character_, as.character(.x))),
-      across(
-        c(cue, cue2),
-        ~ ifelse(.variable %in% c("kappa", "nu", "lapse_rate"), NA_character_, as.character(.x))),
-      across(
-        c(cue2),
-        ~ ifelse(.variable == "m", NA, .x))) %>%
-    distinct() %>%
-    group_by(group, category, cue, cue2, .variable) %>%
-    median_hdci() %>%
-    mutate(
-      group = factor(group, levels = groups),
-      .variable = factor(.variable, levels = pars)) %>%
-    # Format and sort output
-    relocate(group, category, .variable, cue, cue2, .value, everything()) %>%
-    arrange(match(.$.variable, levels(.$.variable)), match(.$group, levels(.$group)), category, cue, cue2) %>%
-    rename(
-      parameter = .variable,
-      !! sym(unique(.$.point)) := .value,
-      !! sym(unique(paste0("lower ", unique(.$.width * 100), "\\% ", toupper(unique(.$.interval))))) := .lower,
-      !! sym(unique(paste0("upper ", unique(.$.width * 100), "\\% ", toupper(unique(.$.interval))))) := .upper) %>%
-    select(-c(.width, .point, .interval)) %>% 
-    # Simplifying for present paper
-    ungroup() %>%
-    filter(parameter %in% pars & (group == "prior" | is.na(group))) %>%
-    select(-c(group, category, cue, cue2)) %>%
-    distinct() %>%
-    mutate(
-      parameter = 
-        case_when(
-          parameter == "kappa" ~ "strength of prior beliefs about $\\mu_c$ ($\\kappa_{0}$)",
-          parameter == "nu" ~ "strength of prior beliefs about $\\Sigma_c$ ($\\nu_{0}$)",
-          parameter == "lapse_rate" ~ "lapse rate ($\\lambda$)")) %>%
-    kable(
-      caption = "Summary of the ideal adaptor model's parameters fit to participants' behavior.",
-      format = "latex",
-      escape = FALSE)
-}
-
 # TO DO: consider making plots a bit pretty, e.g., by grouping participant responses together
 # into 5msec VOT bins and by making model prediction a line plot, rather than a point plot.
 plot_predicted_vs_actual_categorization_responses <- function(data, colors.group = NULL) {
@@ -1984,12 +1923,6 @@ prep_posterior_draws_for_plotting <- function(
         is.infinite(Predicted_posterior) & sign(Predicted_posterior) == -1 ~ 0,
         T ~ Predicted_posterior))
 }
-```
-
-```{r ideal-adaptor-parameter-summary, results='asis'}
-fit <- m_IA.VOT_f0_vowelduration_informedprior
-
-summarize.NIW_ideal_adaptor_stanfit(fit) 
 ```
 
 (ref:ideal-adaptor-parameter-correlations) Marginal distributions (**panels on diagonal**), pairwise scatter plots (**lower off-diagonal**), and pairwise densities (**upper off-diagonals**) of parameters inferred for the ideal adaptor. Both latent and observed parameters are shown.
@@ -2106,6 +2039,9 @@ d.pars %>%
 ```
 
 ## How well do ideal adaptor predictions predict human responses? {#sec:ideal-adaptor-fit}
+<!-- TO DO: please unscale the betas for reporting, because they absolute magnitude of these betas is actually meaningful. In particular, it is meaningful whether they are close to 1! -->
+
+
 The final finding reported in the main text is the ideal adaptor’s inability, in its current form, to capture premature convergence (as shown in Figure \@ref(fig:plot-IA-human-PSE)). To quantify the relationship between the ideal adaptor’s predictions and human responses, we fit a logistic regression where human responses were predicted from the ideal adaptor’s log-odds predictions across the four test blocks.
 
 We take a step-wise approach in the modeling to systematically examine different effects. In the first model the ideal adaptor's total log-odds predictions are the sole predictor. The second model separates the prior (predicted log-odds before exposure) from the changes in predicted log-odds which captures learning over time. The final model adds the interaction of log-odds changes and test block (treated as a continuous predictor) to test whether the ideal adaptor's predictions diverge from human behavior with increasing exposure. All predictors were centered and scaled to two times their standard deviation. 
@@ -2120,7 +2056,7 @@ Tables \@ref(tab:hypothesis-table-IA-logodds), \@ref(tab:hypothesis-table-IA-log
 fit_test.IA_predicted_logodds.prior.change <-
   update(
     fit_test.IA_predicted_logodds,
-    formula. = Response.Voiceless ~ 1 + IA.logodds_prior_gs + IA.logodds_change_gs + 
+    formula. = Response.Voiceless ~ 1 + IA_predicted_logodds.prior_gs + IA_predicted_logodds.change_gs + 
       (1 | ParticipantID) + (1 | Item.MinimalPair),
     newdata = d.IA_predicted_logodds,
     file ="../models/test_IA_predicted_logodds.prior.change.rds")
@@ -2131,7 +2067,7 @@ fit_test.IA_predicted_logodds.prior.change <- add_criterion(fit_test.IA_predicte
 fit_test.IA_predicted_logodds.prior.change.interaction <-
   update(
     fit_test.IA_predicted_logodds.prior.change,
-    formula. =  Response.Voiceless ~ 1 + IA.logodds_prior_gs + (Block_gs * IA.logodds_change_gs) + 
+    formula. =  Response.Voiceless ~ 1 + IA_predicted_logodds.prior_gs + (Block_gs * IA_predicted_logodds.change_gs) + 
       (1 | ParticipantID) + (1 | Item.MinimalPair),
     newdata = d.IA_predicted_logodds,
     file ="../models/test_IA_predicted_logodds.prior.change.interaction.rds")
@@ -2176,9 +2112,9 @@ make_hyp_table(
 hyp.IA_predicted_logodds.prior.change <-
   get_hyp_data(fit_test.IA_predicted_logodds.prior.change,
              c(
-               "IA.logodds_prior_gs > 0",
-               "IA.logodds_change_gs > 0",
-               "IA.logodds_change_gs = 0"))
+               "IA_predicted_logodds.prior_gs > 0",
+               "IA_predicted_logodds.change_gs > 0",
+               "IA_predicted_logodds.change_gs = 0"))
 
 make_hyp_table(
   fit_test.IA_predicted_logodds.prior.change,
@@ -2194,10 +2130,10 @@ make_hyp_table(
 hyp.IA_predicted_logodds.prior.change.interaction <-
   get_hyp_data(fit_test.IA_predicted_logodds.prior.change.interaction,
              c(
-               "IA.logodds_prior_gs > 0",
-               "IA.logodds_change_gs > 0",
-               "Block_gs:IA.logodds_change_gs < 0",
-               "Block_gs:IA.logodds_change_gs = 0"))
+               "IA_predicted_logodds.prior_gs > 0",
+               "IA_predicted_logodds.change_gs > 0",
+               "Block_gs:IA_predicted_logodds.change_gs < 0",
+               "Block_gs:IA_predicted_logodds.change_gs = 0"))
 
 make_hyp_table(
   fit_test.IA_predicted_logodds.prior.change.interaction,
