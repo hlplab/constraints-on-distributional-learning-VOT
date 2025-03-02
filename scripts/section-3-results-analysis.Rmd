@@ -660,7 +660,9 @@ The tests we have presented so far suggest that participants' behavior qualitati
 
 Next, we turn to the third and final contribution we aim to make here: to assess whether distributional learning can actually explain a non-trivial share of the changes in participants' perception, as would be expected if rapid adaptive changes in speech perception are in large parts due to distributional learning. To this end, we fit an actual distributional learning model to our data [the ideal adaptor, @kleinschmidt-jaeger2015]. Like the ideal observer models that we used for the idealized listener and learners, the ideal adaptor is a Bayesian model that describes a ideal information integration. Unlike the ideal observers, however, the ideal adaptor is a distributional *learning* model. That is, while the ideal observers have perfect knowledge of the relevant phonetic distributions (e.g., the exposure distribution for the idealized learners), the ideal adaptor *infers* those distributions from the input it receives, modeling the incremental learning process that listeners are hypothesized to undergo during exposure to an unfamiliar talker. This is achieved by incrementally updating prior beliefs about the phonetic distributions of the relevant categories (here /d/ and /t/) based on the phonetic input experienced during exposure.
 
-The model is described in detail in the SI (\@ref(sec:ideal-adaptor)), including graphical models [for an introduction, see @xie2023]. In order to model the effects of all three cues considered in the idealized models (VOT, f0, and vowel duration), we extended the model to operate over multivariate categories, and fit it to listeners' responses in our experiment. Unlike in previous work, we fixed the models prior beliefs based on the same phonetic database used for the idealized pre-exposure listener [cf. @kleinschmidt-jaeger2016]. Specifically, we used prior beliefs that had the same expected distributions of VOT, f0, and vowel duration for /d/ and /t/ as in the idealized listener model. This substantially reduces the number of free parameters in the model that are fit to participants' responses: in addition to a lapse rate, the ideal adaptor we fit only had two degrees of freedom. These two parameters describe the strength of participants' prior beliefs about the category means and (co)variances, respectively. These parameters describe both the uncertainty that listeners have about the unfamiliar talker's phonetic distributions prior to exposure *and* the the rate at which the model updates its beliefs about the exposure distributions with each new observation from that talker. This captures how prior expectations both guide and constrain distributional learning [for discussion, see @kleinschmidt-jaeger2015; @kleinschmidt2020]. We used the \texttt{MVBeliefUpdatr} package [@R-MVBeliefUpdatr]. For further detail, we refer to the SI (\@ref(sec:ideal-adaptor)).
+The model is described in detail in the SI (\@ref(sec:ideal-adaptor)), including graphical models [for an introduction, see @xie2023]. In order to model the effects of all three cues considered in the idealized models (VOT, f0, and vowel duration), we extended the model to operate over multivariate categories, and fit it to listeners' responses in our experiment. We used the \texttt{MVBeliefUpdatr} package [@R-MVBeliefUpdatr] to define and fit the model. For further detail, we refer to the SI (\@ref(sec:ideal-adaptor)).
+
+Unlike in previous work, we fixed the models prior beliefs based on the same phonetic database used for the idealized pre-exposure listener [cf. @kleinschmidt-jaeger2016]. Specifically, we used prior beliefs that had the same expected distributions of VOT, f0, and vowel duration for /d/ and /t/ as in the idealized listener model. This substantially reduces the number of parameters in the model that are fit to participants' responses: in addition to a lapse rate ($\lambda$), the ideal adaptor we fit only had two degrees of freedom. These two parameters ($\kappa_0$ and $\nu_0$) describe the strength of participants' prior beliefs about the category means and (co)variances, respectively. These two parameters describe both the uncertainty that listeners have about the unfamiliar talker's phonetic distributions prior to exposure (or, equivalently under this model, how relevant listeners believe their prior expectations to be for the unfamiliar talker). The same two parameters also determine the the rate at which the model updates its beliefs about the exposure distributions with each new observation from that talker. This captures how prior expectations both guide and constrain distributional learning [for discussion, see @kleinschmidt-jaeger2015; @kleinschmidt2020]. Specifically, $\kappa_0$ and $\nu_0$ can be understood as pseudocounts that describe the weighting of prior expectations relative to the observed data. For example, after $\kappa_0$ observed /d/s from the unfamiliar talker, listeners' beliefs about the VOT, f0, and vowel duration values of the category mean of /d/ will be a 50/50 mixture of their prior beliefs and the means observed in the $\kappa_0$ /d/s that have been observed from the unfamiliar talker.
 
 ```{r fit-IA-inferred-VOT-f0}
 d_for_ASP <-
@@ -864,7 +866,7 @@ d.talkerPSEs %<>%
 #   geom_pointrange(position = pos)
 ```
 
-(ref:plot-IA-human-PSE) Summary of ideal adaptor analysis, comparing shifts in listeners' PSEs against the shifts expected by an ideal adaptor [a distributional learning model that describes ideal information integration, @kleinschmidt-jaeger2015]. Point ranges and dashed horizontal lines are identical to those in Figure \@ref(fig:plot-fit-PSE)C. Colored ribbons indicate the 95%-CI for the PSEs predicted by the ideal adaptor fit to listeners' responses. The vertical bar to the right of the panel indicates the range of talker-specific PSEs an idealized listener might have experienced in previous exposure: the mean and 2.5%-to-97.5% quantile range of talker-specific PSEs derived from Bayesian ideal observers fit to all talkers in the phonetic database of isolated word productions presented in Figure \@ref(fig:prior-distributions-and-exposure-conditions)A. We return to this range when discussing possible explanations for mismatches between the ideal adaptor and participants' responses.
+(ref:plot-IA-human-PSE) Summary of ideal adaptor analysis, comparing shifts in listeners' PSEs against the shifts expected by an ideal adaptor [a distributional learning model that describes ideal information integration, @kleinschmidt-jaeger2015]. Point ranges and dashed horizontal lines are identical to those in Figure \@ref(fig:plot-fit-PSE)C. Colored ribbons indicate the 95%-CI for the PSEs predicted by the ideal adaptor fit to listeners' responses. The vertical bar to the right of the panel indicates the range of talker-specific PSEs an idealized listener might have experienced in previous exposure: the mean and 2.5%-to-97.5% quantile range of talker-specific PSEs derived from Bayesian ideal observers fit to all talkers in the phonetic database of isolated word productions presented in Figure \@ref(fig:prior-distributions-and-exposure-conditions)A. We return to this range in the general discussion where we discuss possible explanations for mismatches between the ideal adaptor and participants' responses.
 
 ```{r plot-IA-human-PSE, fig.width=6.5, fig.height=3.5, fig.cap="(ref:plot-IA-human-PSE)", fig.pos="ht"}
 pos <- position_dodge(.3)
@@ -878,7 +880,7 @@ d.psychometric_intercept.slope.PSE.median %>%
       colour = Condition.Exposure,
       group = Condition.Exposure)) +
   geom_point(position = pos, size = 1.8) +
-  geom_linerange(linewidth = .6, position = pos, alpha = .5) +
+  geom_linerange(linewidth = .6, position = pos, alpha = .75) +
   stat_summary(geom = "line", position = pos) +
   # TO DO (here and elsewhere): this should probably be an annotation
   geom_rect(
@@ -937,7 +939,7 @@ d.psychometric_intercept.slope.PSE.median %>%
     legend.position = "none")
 ```
 
-Critically, such a distributional learning model is *much* more constrained in the type of changes it can fit than the psychometric model we have used above to analyze our data. The psychometric model makes no assumptions whatsoever about the way in which listeners' perception changes during exposure, and is thus free to fit any pattern of changes in participants' responses. This is, of course, desired for the evaluation predictions 1-4: the findings so far are noteworthy precisely because the psychometric analysis could have just as well found that participants' behavior was completely unrelated to, or even directly contradicted, the predictions of distributional learning. However, psychometric analyses cannot address whether the totality of all changes in participants' perception across exposure conditions and test blocks is actually consistent with the predictions of distributional learning. For example, the psychometric analysis leaves open whether distributional learning can explain both the rapid changes at the start of exposure *and* the slower changes that occur later in exposure. In contrast, a distributional learning model specifies how information is integrated across exposure trials and blocks. As a consequence, listeners' responses during different test blocks and across different exposure conditions jointly constrain the parameters of model (e.g., for the ideal adaptor, due to assumption of ideal information integration within and across exposure blocks). To appreciate just how different the ideal adaptor is from the psychometric analyses we have presented so far consider that the latter used `r sum(str_detect(rownames(fixef(fit_test)), "mu2")) - sum(str_detect(rownames(fixef(fit_test)), "Test5vs.Test4|Test6vs.Test5"))` population-level ('fixed') and `r length(get_variables(fit_test)[grep("^sd_|^cor_", get_variables(fit_test))]) - sum(str_detect(get_variables(fit_test)[grep("^sd_|^cor_", (get_variables(fit_test)))], "Block_Test6vs.Test5|Block_Test5vs.Test4"))` group-level ('random') effect parameters, where the ideal adaptor uses 3 parameters! It is thus possible that a distributional learning model does *not* provide a good explanation for the quantitative changes in listeners' perception even when all qualitative predictions of distributional learning are met.
+Critically, such a distributional learning model is *much* more constrained in the type of changes it can fit than the psychometric model we have used above to analyze our data. The psychometric model makes no assumptions whatsoever about the way in which listeners' perception changes during exposure, and is thus free to fit any pattern of changes in participants' responses. This is, of course, desired for the evaluation predictions 1-4: the findings so far are noteworthy precisely because the psychometric analysis could have just as well found that participants' behavior was completely unrelated to, or even directly contradicted, the predictions of distributional learning. However, psychometric analyses cannot address whether the totality of all changes in participants' perception across exposure conditions and test blocks is actually consistent with the predictions of distributional learning. For example, the psychometric analysis leaves open whether distributional learning can explain both the rapid changes at the start of exposure *and* the slower changes that occur later in exposure. In contrast, a distributional learning model specifies how information is integrated across exposure trials and blocks. As a consequence, listeners' responses during different test blocks and across different exposure conditions jointly constrain the parameters of model (e.g., for the ideal adaptor, due to assumption of ideal information integration within and across exposure blocks). To appreciate just how different the ideal adaptor is from the psychometric analyses we have presented so far consider that the latter used `r sum(str_detect(rownames(fixef(fit_test)), "mu2")) - sum(str_detect(rownames(fixef(fit_test)), "Test5vs.Test4|Test6vs.Test5"))` population-level ('fixed') and `r length(get_variables(fit_test)[grep("^sd_|^cor_", get_variables(fit_test))]) - sum(str_detect(get_variables(fit_test)[grep("^sd_|^cor_", (get_variables(fit_test)))], "Block_Test6vs.Test5|Block_Test5vs.Test4"))` group-level ('random') effect parameters, whereas the ideal adaptor uses a total of 3 parameters! It is thus possible that a distributional learning model does *not* provide a good explanation for the quantitative changes in listeners' perception even when all qualitative predictions of distributional learning are met.
 
 ```{r compute-R2-between-ideal-adaptor-and-psychometric-model}
 psych.model_prediction <-
@@ -1013,21 +1015,22 @@ if (file.exists("../models/d.IA_predicted_logodds.csv")) {
     group_by(VOT, Condition.Exposure, Block) %>%
     # get the modal posterior draw
     mode_hdci(Predicted_posterior) %>%
-    rename(Item.VOT = VOT,
-           IA_predicted_logodds = Predicted_posterior) %>%
-    right_join(d.for_analysis %>%
-                 mutate(Block = factor(Block)),
-               by = c("Item.VOT", "Condition.Exposure", "Block")) %>%
+    rename(Item.VOT = VOT, IA_predicted_logodds = Predicted_posterior) %>%
+    right_join(
+      d.for_analysis %>%
+        mutate(Block = factor(Block)),
+      by = c("Item.VOT", "Condition.Exposure", "Block")) %>%
     filter(Block %in% c(1, 3, 5, 7)) %>%
-    group_by(Item.VOT) %>%
     arrange(Item.VOT) %>%
-    mutate(IA.logodds_prior = first(IA_predicted_logodds),
-           IA.logodds_change = IA_predicted_logodds - IA.logodds_prior) %>%
+    group_by(Item.VOT) %>%
+    mutate(
+      IA_predicted_logodds.prior = first(IA_predicted_logodds),
+      IA_predicted_logodds.change = IA_predicted_logodds - IA_predicted_logodds.prior) %>%
     group_by(Condition.Exposure, Block) %>%
     # This separates the change in logodds by block into intercept changes, and slopes
     mutate(
-      IA.logodds_changes_in_intercept_across_block_condition = mean(IA.logodds_change),
-      IA.logodds_changes_in_slope_across_block_condition = IA.logodds_change - IA.logodds_changes_in_intercept_across_block_condition) %>%
+      IA_predicted_logodds.changes_in_intercept_across_block_condition = mean(IA_predicted_logodds.change),
+      IA_predicted_logodds.changes_in_slope_across_block_condition = IA_predicted_logodds.change - IA_predicted_logodds.changes_in_intercept_across_block_condition) %>%
     droplevels()
   
   write_csv(d.IA_predicted_logodds, "../models/d.IA_predicted_logodds.csv")
@@ -1063,18 +1066,22 @@ d.IA_predicted_logodds %<>%
 # scale predictors
 d.IA_predicted_logodds %<>%
   mutate(
-    across(c(IA.logodds_change,
-             IA.logodds_prior,
-             IA.logodds_changes_in_intercept_across_block_condition,
-             IA.logodds_changes_in_slope_across_block_condition,
-             Block,
-             VOT), ~ gs_scale(.x), .names = "{.col}_gs"))
+    across(
+      c(
+        IA_predicted_logodds.prior,
+        IA_predicted_logodds.change,
+        IA_predicted_logodds.changes_in_intercept_across_block_condition,
+        IA_predicted_logodds.changes_in_slope_across_block_condition,
+        Block,
+        VOT), 
+      ~ gs_scale(.x), 
+      .names = "{.col}_gs"))
 
 # use new priors for the predicted logodds model since it is not a mixture but a plain logistic regression model
 priors_logodds_model <-
   c(
-  prior(student_t(3, 0, 2.5), class = "b"),
-  prior(cauchy(0, 2.5), class = "sd"))
+    prior(student_t(3, 0, 2.5), class = "b"),
+    prior(cauchy(0, 2.5), class = "sd"))
 
 fit_test.IA_predicted_logodds <-
   brm(
@@ -1098,27 +1105,8 @@ fit_test.IA_predicted_logodds <-
 fit_test.IA_predicted_logodds <- add_criterion(fit_test.IA_predicted_logodds, criterion = c("loo"), moment_match = T)
 loo_compare(fit_test.IA_predicted_logodds, fit_test.upto.test4)
 
-# fit_test.IA_predicted_logodds <-
-#   brm(
-#     bf(
-#       Response.Voiceless ~ 0 + IA_predicted_logodds +
-#         (1 + VOT_gs * Block | ParticipantID) + (1 + VOT_gs * Condition.Exposure * Block | Item.MinimalPair)),
-#     data = d.IA_predicted_logodds,
-#     prior = priors_logodds_model,
-#     cores = 4,
-#     chains = 4,
-#     init = 0,
-#     iter = 4000,
-#     warmup = 2000,
-#     sample_prior = "yes",
-#     save_pars = save_pars(all = TRUE),
-#     family = bernoulli("logit"),
-#     control = list(adapt_delta = .999),
-#     file ="../models/test_IA_predicted_logodds_with_standardREs.rds",
-#     file_refit = "on_change")
-
-
-fit_test.IA_predicted_logodds.r_slopes <-
+# with random slopes
+fit_test.IA_predicted_logodds_with_RLs <-
   brm(
     bf(
       Response.Voiceless ~ 0 + IA_predicted_logodds +
@@ -1134,22 +1122,104 @@ fit_test.IA_predicted_logodds.r_slopes <-
     save_pars = save_pars(all = TRUE),
     family = bernoulli("logit"),
     control = list(adapt_delta = .9995),
-    file ="../models/test_IA_predicted_logodds.r_slopes.rds",
+    file ="../models/test_IA_predicted_logodds_with_RLs.rds",
     file_refit = "on_change")
+
+fit_test.IA_predicted_logodds_with_RLs <- add_criterion(fit_test.IA_predicted_logodds_with_RLs, criterion = c("loo"), moment_match = T)
+loo_compare(fit_test.IA_predicted_logodds_with_RLs, fit_test.upto.test4)
 ```
 
-The results if the ideal adaptor fit are shown in Figure \@ref(fig:plot-IA-human-PSE). For the present data, the ideal adaptor model predicts the proportion of listeners' "t"-responses with a high $R^2 =$ `r round(cor(IA.prediction$Predicted_posterior, IA.prediction$Response) %>% . ^2, 3) * 100`$\%$, comparable to that of the psychometric model ($R^2 =$ `r round(cor(psych.model_prediction$predicted_proportion_voiceless, psych.model_prediction$proportion_voiceless) %>% . ^2, 3) * 100`$\%$). This suggests that the ideal adaptor provides a decent explanation for participants' behavior with substantially fewer degrees of freedom (for additional visualizations of the fit against participants' behavior, see SI, \@ref(sec:ideal-adaptor)). To more directly compare the fit of the ideal adaptor learning model to the psychometric data analysis model, we estimated the pairwise difference in the two models' expected log-predictive density.^[The (log) predictive density can be thought of as the Bayesian equivalent of the (log) data likelihood in frequentist statistics (but the Bayesian approach incorporates prior beliefs). The *expected* log predictive density (ELPD) is the mean log posterior density of the data, estimated here using leave-one-out (with moment matching) through the `add_criterion()` function of `brms` [@R-brms_a]. This ELPD estimate provides a measure of the predictive accuracy of the model, essentially estimating how predictable a held-out data point is if the model is fit on all other data. Differences in the ELPD of more than 4-5 standard errors are often taken to be credible, whereas differences of 2-3 standard errors should be interpreted with more caution.] This comparison suggests that the psychometric model captures participants' responses better than the ideal adaptor ($\Delta_{elpd}=$ `r loo_compare(fit_test.IA_predicted_logodds, fit_test.upto.test4)[2, 1]`; SE$_\Delta=$ `r loo_compare(fit_test.IA_predicted_logodds, fit_test.upto.test4)[2, 2]`).
+The predictions of the fitted ideal adaptor model are shown as shaded intervals in Figure \@ref(fig:plot-IA-human-PSE).  For the present data, the ideal adaptor model predicts the proportion of listeners' "t"-responses with a high $R^2 =$ `r round(cor(IA.prediction$Predicted_posterior, IA.prediction$Response) %>% . ^2, 3) * 100`$\%$, comparable to that of the psychometric model ($R^2 =$ `r round(cor(psych.model_prediction$predicted_proportion_voiceless, psych.model_prediction$proportion_voiceless) %>% . ^2, 3) * 100`$\%$). This demonstrates that the ideal adaptor can explain a non-trivial share of participants' changing behavior (for additional visualizations of the fit against participants' behavior, see SI, \@ref(sec:ideal-adaptor)). It does so substantially fewer degrees of freedom than the psychometric model. 
 
-Most relevant to the present purpose is a systematic deficiency of the model, evident in Figure \@ref(fig:plot-IA-human-PSE): the ideal adaptor substantially *under*-predicts changes in listeners' PSEs  during initial exposure, and *over*-predicts changes in listeners' PSE following exposure (see, in particular, the -20ms and -10ms conditions in Test 4). Why? Simply put, it is the best the model can do in order to accommodate all three of (i) listeners' pre-exposure behavior, (ii) the rapid changes in listeners' PSEs during initial exposure, and (iii) the premature flattening off of changes in listeners' PSEs. Put differently, an ideal adaptor can *either* explain the fact that listeners' PSEs changed rapidly at the start of exposure *or* that there seem to be little to no changes in listeners' PSE after the second exposure block. But it cannot explain both. (see SI \@ref(sec:ideal-adaptor) for analysis of the ideal adaptor's predictions and its relationship to human responses)
+To further compare the ideal adaptor learning model to the psychometric data analysis model, we conducted two Bayesian model comparisons. We first compared the Bayesian psychometric mixed-effects model against a Bayesian mixed-effects logistic regression model that only used the maximum a posteriori (MAP) predictions of the ideal adaptor as a predictor (MAP predicted log-odds of a "t"-response), along with by-participant and by-item random intercepts.^[We used mixed-effect logistics regression rather than a psychometric model with lapses since the ideal adaptor's predictions already include the effects of the ideal adaptor's lapse rate.] This model assumes that the ideal adaptor's predictions provide an equally good fit to all participants, but allows for participant- and item-specific response-biases. Comparison of the two models suggests that the psychometric model provides a better fit to participants' responses, capturing information beyond the predictions of the ideal adaptor ($\Delta_{elpd}=$ `r loo_compare(fit_test.IA_predicted_logodds, fit_test.upto.test4)[2, 1]`; SE$_\Delta=$ `r loo_compare(fit_test.IA_predicted_logodds, fit_test.upto.test4)[2, 2]`).^[The (log) predictive density can be thought of as the Bayesian equivalent of the (log) data likelihood in frequentist statistics (but the Bayesian approach incorporates prior beliefs). The *expected* log predictive density (ELPD) is the mean log posterior density of the data, estimated here using leave-one-out (with moment matching) through the `add_criterion()` function of `brms` [@R-brms_a]. This ELPD estimate provides a measure of the predictive accuracy of the model, essentially estimating how predictable a held-out data point is if the model is fit on all other data. Differences in the ELPD of more than 4-5 standard errors are often taken to be credible, whereas differences of 2-3 standard errors should be interpreted with more caution.] This result held, though less decisively, even when participants were allowed to vary in their sensitivity to the ideal adaptor's predictions (by including random by-participant slopes for the ideal adaptor's prediction, $\Delta_{elpd}=$ `r loo_compare(fit_test.IA_predicted_logodds_with_RLs, fit_test.upto.test4)[2, 1]`; SE$_\Delta=$ `r loo_compare(fit_test.IA_predicted_logodds_with_RLs, fit_test.upto.test4)[2, 2]`). 
 
-<!-- To understand this pattern, it is helpful to recognize that rational models of distributional learning describe listeners' expectations after exposure as the weighted mean of prior expectations and the observed exposure statistics [@kleinschmidt-jaeger2015]. This means that the speed with which a learner adapts at the start of exposure is expected to be predictive of how fast a learner adapts after additional exposure. Put differently, ideal adaptors constrain the rate at which PSEs can change across exposure trials. This means that an ideal adaptor can *either* explain the fact that listeners' PSEs changed rapidly at the start of exposure *or* that there seem to be little to no changes in listeners' PSE after the second exposure block. But it cannot explain both aspects of our data. It thus appears that participants indeed converged prematurely in their behavior, relative to what would be expected under the specific model of ideal information integration that we employed. -->
+In short, the ideal adaptor provides an impressively good quantitative model of participants' responses, with very few degrees of freedom. However, there is also some evidence that it does not capture all of the information captured by the psychometric analysis. *What* is this additional information that the psychometric model captures? As would be expected from a distributional learning model, the ideal adaptor displays predictions 1-4. Its PSE is initially fully determined by its prior beliefs (prediction 1), and then changes monotonically within increasing exposure (prediction 2a) in the direction expected from the exposure distribution (prediction 2b). These incremental changes are initially quick, and then slow down (prediction 3); however, since convergence against the phonetic distributions of the unfamiliar talker has not yet occurred, the ideal adaptor is still clearly learning even after the last exposure block. While predictions 1-3 were also met by participants, we saw above that prediction 4 does not seem to be met. Could this mismatch between the ideal adaptor and our participants be part of the information the ideal adaptor is lacking, compared to the psychometric model?
 
-What about model *selection*? To assess the possibility that premature convergence is a consequence of model selection, we again used the phonetic database of /d/ and /t/ productions shown in Figure \@ref(fig:prior-distributions-and-exposure-conditions)A [@chodroff-wilson2018]. This time, we fit separate ideal observers to all talkers in that database to obtain the predicted PSEs for each of those talkers. This allowed us to estimate the range of talker-specific PSEs that a typical L1 listener of US English might have experienced throughout their life prior to our experiment. This range---indicated on the righthand-side of Figure \@ref(fig:plot-IA-human-PSE)---serves as an estimate of the range of PSEs that a listener would be expected to accommodate based on model selection alone. It provides a decent qualitative fit to the range of adaptive changes in the PSEs that listeners in our experiment accommodated.
+A look at the posterior distribution of the ideal adaptor's three parameters, summarized in Table \@ref(tab:ideal-adaptor-parameter-summary), provides initial support for this idea. The inferred lapse rate estimates closely match those of the psychometric model (`r print_CI(fit_test, "theta1_Intercept")`, see above). The large inferred values for $\kappa_{0}$ and $\nu_{0}$ are the result of two factors: (1) a good fit between the prior $\mu_{c}$ and $\Sigma_c$ we obtained from the @chodroff-wilson2018 database against listeners' pre-exposure responses, and (2) the fact that, after exposure to 72 /d/s and 72 /t/s, listeners' categorization functions have shifted by only 20-50% towards the shift expected from an idealized learner (recall Figure \@ref(fig:plot-fit-PSE)). Recall that the ideal adaptor---like any standard distributional learning model---assumes that listeners keep integrating information until they have converged against the distributions in the input from the unfamiliar talker. *Because of this assumption*, the best fit the ideal adaptor can achieve *has* to assume that adaptation has not yet completed, since listeners have not yet converged against the idealized learner state. 
 
+```{r ideal-adaptor-parameter-summary, results='asis'}
+summarize.NIW_ideal_adaptor_stanfit <- function(
+    x,
+    pars = c("kappa", "nu", "lapse_rate"),
+    groups = c(
+      "prior",
+      "Cond Shift0AA_Up to test3", "Cond Shift0AA_Up to test5", "Cond Shift0AA_Up to test7",
+      "Cond Shift10AA_Up to test3", "Cond Shift10AA_Up to test5", "Cond Shift10AA_Up to test7",
+      "Cond Shift40AA_Up to test3", "Cond Shift40AA_Up to test5", "Cond Shift40AA_Up to test7")
+) {
+  add_ibbu_stanfit_draws(x, groups = groups, summarize = F) %>%
+    unnest_cue_information_in_model() %>%
+    gather_variables(exclude = c(".chain", ".iteration", ".draw", ".row", "cue", "cue2", "group", "category")) %>%
+    ungroup() %>%
+    # + Remove double mentions of variables that are constant across groups, categories, and cues
+    #   (currently: lapse_rate)
+    # + Remove double mentions of variables that are constant across cues
+    #   (currently: kappa and nu)
+    # + Remove double mentions of variables that are constant across cue2
+    #   (currently: m)
+    mutate(
+      across(
+        c(group, category),
+        ~ ifelse(.variable == "lapse_rate", NA_character_, as.character(.x))),
+      across(
+        c(cue, cue2),
+        ~ ifelse(.variable %in% c("kappa", "nu", "lapse_rate"), NA_character_, as.character(.x))),
+      across(
+        c(cue2),
+        ~ ifelse(.variable == "m", NA, .x))) %>%
+    distinct() %>%
+    group_by(group, category, cue, cue2, .variable) %>%
+    median_hdci() %>%
+    mutate(
+      group = factor(group, levels = groups),
+      .variable = factor(.variable, levels = pars)) %>%
+    # Format and sort output
+    relocate(group, category, .variable, cue, cue2, .value, everything()) %>%
+    arrange(match(.$.variable, levels(.$.variable)), match(.$group, levels(.$group)), category, cue, cue2) %>%
+    rename(
+      parameter = .variable,
+      !! sym(unique(.$.point)) := .value,
+      !! sym(unique(paste0("lower ", unique(.$.width * 100), "\\% ", toupper(unique(.$.interval))))) := .lower,
+      !! sym(unique(paste0("upper ", unique(.$.width * 100), "\\% ", toupper(unique(.$.interval))))) := .upper) %>%
+    select(-c(.width, .point, .interval)) %>% 
+    # Simplifying for present paper
+    ungroup() %>%
+    filter(parameter %in% pars & (group == "prior" | is.na(group))) %>%
+    select(-c(group, category, cue, cue2)) %>%
+    distinct() %>%
+    mutate(
+      parameter = 
+        case_when(
+          parameter == "kappa" ~ "strength of prior beliefs about $\\mu_c$ ($\\kappa_{0}$)",
+          parameter == "nu" ~ "strength of prior beliefs about $\\Sigma_c$ ($\\nu_{0}$)",
+          parameter == "lapse_rate" ~ "lapse rate ($\\lambda$)")) %>%
+    kable(
+      caption = "Summary of the ideal adaptor model's parameters fit to participants' behavior.",
+      format = "latex",
+      escape = FALSE)
+}
 
+summarize.NIW_ideal_adaptor_stanfit(m_IA.VOT_f0_vowelduration_informedprior) 
+```
 
+```{r}
+# model with interaction of block and change in IA-predicted logodds 
+fit_test.IA_predicted_logodds.prior.change.interaction_with_RLs <-
+  update(
+    fit_test.IA_predicted_logodds_with_RLs,
+    formula. =  Response.Voiceless ~ 1 + IA_predicted_logodds.prior_gs + (Block_gs * IA_predicted_logodds.change_gs) + 
+      (1 + IA_predicted_logodds.prior_gs + (Block_gs * IA_predicted_logodds.change_gs) | ParticipantID) + (1 | Item.MinimalPair),
+    newdata = d.IA_predicted_logodds,
+    file ="../models/test_IA_predicted_logodds.prior.change.interaction.rds")
 
-TALK ABOUT PREDICTION 3 AND 4
+fit_test.IA_predicted_logodds.prior.change.interaction_with_RLs <- add_criterion(fit_test.IA_predicted_logodds.prior.change.interaction_with_RLs, criterion = c("loo"), moment_match = T)
+
+loo_compare(fit_test.IA_predicted_logodds.prior.change.interaction_with_RLs, fit_test.upto.test4)
+```
+
+Critically, this assumption comes at a cost, as evident in Figure \@ref(fig:plot-IA-human-PSE): the ideal adaptor *under*-predicts the rapid changes in listeners' PSEs  during initial exposure, while *over*-predicting the slower changes in listeners' PSE following exposure (see, in particular, the -20ms and -10ms conditions in Test 4). This pattern was confirmed by an additional mixed-effects logistic regression that allowed the predicted log-odds of the ideal adaptor to interact with a linear effect of test block (1-4), while keeping the by-participant and by-item random intercepts (for details, see SI, @\ref(sec:ideal-adaptor-fit)). This analysis found a credible negative interaction between the ideal adaptor's predictions and test block (<!-- TO DO: report beta etc here -->): with increasing exposure, changes in the ideal adaptor's categorization function become increasingly less predictive of participants' actual behavior.
+
+Simply put, constrained by the assumptions of distributional learning, the ideal adaptor cannot fit all three of (i) listeners' pre-exposure behavior, (ii) the rapid changes in listeners' PSEs during initial exposure, and (iii) the premature flattening off of changes in listeners' PSEs. Rather, an ideal adaptor can *either* explain the fact that listeners' PSEs changed rapidly at the start of exposure *or* that there seem to be little to no changes in listeners' PSE after the second exposure block. But it cannot explain both. 
 
 ```{r}
 rm(d.psychometric_intercept.slope.PSE.draws, fit_test.simple_effects_block)
