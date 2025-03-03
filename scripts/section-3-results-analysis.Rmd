@@ -695,7 +695,7 @@ d_for_ASP <-
     ExposureGroup, Phase, ParticipantID, Block, Trial, x,
     VOT, f0_Mel, vowel_duration, Response.Category, Item.ExpectedResponse.Category)
 
-# fit ideal adaptor with uninformative priors
+# fit ideal adaptor with informative priors
 # use prior roughly in middle of 5-fold CV
 m_IO.VOT_f0_vowel <-
   io %>%
@@ -791,6 +791,13 @@ if (file.exists("../models/d.IA_predicted_PSE_informedprior.rds")) {
 # Here we provide the code for both but continue to use the same method as in the result section. This
 # is the method that introduces the same potential biases into the estimates of the ideal observers that
 # *might* affect our estimates of listeners' PSE, intercept, and slope.
+# get the mean PSE of the 5-fold CV idealized pre-exposure listener PSEs
+prior.PSE_mean <-
+  d.IO_intercept.slope.PSE %>%
+  filter(Condition.Exposure %in% paste0("prior", c(1:5))) %>%
+  summarise(mean = mean(PSE)) %>%
+  pull(mean)
+
 d.talkerPSEs <-
   # Make separate ideal observer for each talker in the database
   make_IOs_from_data(
@@ -989,7 +996,7 @@ if (file.exists("../models/d.IA_predicted_logodds.csv")) {
   d.IA_predicted_logodds <- read_csv("../models/d.IA_predicted_logodds.csv", show_col_types = F)
 } else {
   
-  data.test <-
+  data.test_for_IA_predicted_logodds <-
     prep_data_for_IBBU_prediction(m_IA.VOT_f0_vowelduration_informedprior) %>%
     mutate(
       # Make additional rows for test block 1 so that there is 1 for each condition
@@ -1004,7 +1011,7 @@ if (file.exists("../models/d.IA_predicted_logodds.csv")) {
   d.IA_predicted_logodds <-
     get_IBBU_predicted_response(
       m_IA.VOT_f0_vowelduration_informedprior,
-      data = data.test,
+      data = data.test_for_IA_predicted_logodds,
       groups = get_group_levels_from_stanfit(m_IA.VOT_f0_vowelduration_informedprior),
       logit = T) %>%
     group_by(VOT, Condition.Exposure, Block) %>%
@@ -1100,9 +1107,9 @@ fit_test.IA_predicted_logodds <-
     file_refit = "on_change")
 
 fit_test.IA_predicted_logodds <- add_criterion(fit_test.IA_predicted_logodds, criterion = c("loo"), moment_match = T)
-# loo_compare(fit_test.IA_predicted_logodds, fit_test.upto.test4)
+#loo_compare(fit_test.IA_predicted_logodds, fit_test.upto.test4)
 
-# with random slopes
+## with random slopes
 fit_test.IA_predicted_logodds_with_RLs <-
   brm(
     bf(
