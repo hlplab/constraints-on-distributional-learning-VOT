@@ -576,10 +576,10 @@ make_hyp_table <- function(model = NULL, hypothesis, hypothesis_names, caption, 
     mutate(
       across(
         c(Estimate, Est.Error, CI.Lower, CI.Upper),
-        ~ round(., digits = digits)),
+        ~ round(.x, digits = digits)),
       across(
         c(Post.Prob, pd),
-        ~ round(., digits = 3)),
+        ~ round(.x, digits = 3)),
       Evid.Ratio = ifelse((is.infinite(Evid.Ratio)), paste("$\\geq", get_nsamples(model), "$"), round(Evid.Ratio, digits = 1)),
       CI = paste0("[", CI.Lower, ", ", CI.Upper, "]")) %>%
     dplyr::select(-c(CI.Upper, CI.Lower)) %>%

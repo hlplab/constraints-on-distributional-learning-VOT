@@ -421,12 +421,6 @@ rm(fit_exposure, fit_exposure_nested_within_condition_and_block, p.fit_1to7)
 ## Prediction 1 (*prior expectations*)
 
 ```{r hypothesis-table-prediction1, results='asis'}
-# get the mean PSE of the 5-fold CV idealized pre-exposure listener PSEs
-prior.PSE_mean <-
-  d.IO_intercept.slope.PSE %>%
-  filter(Condition.Exposure %in% paste0("prior", c(1:5))) %>%
-  summarise(mean = mean(PSE)) %>%
-  pull(mean)
 
 hyp.simple_effects_condition <-
   get_hyp_data(
@@ -750,8 +744,7 @@ m_IA.VOT_f0_vowelduration_informedprior <-
     sample = T,
     file = "../models/IBBU_VOT+f0+vowelduration_informative_priors.RDS",
     warmup = 3000, iter = 4000,
-    control = list(adapt_delta = .995, max_treedepth = 15),
-    file_refit = "on_change")
+    control = list(adapt_delta = .995, max_treedepth = 15))
 ```
 
 ```{r summarise-PSE-predictions-of-IA}
@@ -1065,6 +1058,7 @@ d.IA_predicted_logodds %<>%
 
 # scale predictors
 d.IA_predicted_logodds %<>%
+  ungroup() %>% 
   mutate(
     across(
       c(
