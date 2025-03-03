@@ -472,7 +472,7 @@ get_bf <- function(model, hypothesis, est = F, bf = F, digits = 2, robust = T) {
   else if (bf) { round(hypothesis(model, hypothesis, robust = robust)[[1]][[6]], digits = digits) }
   else {
     paste0(
-    "\\(\\hat{\\beta} = ", round(h$Estimate, digits = digits),
+    "Estimate = ", round(h$Estimate, digits = digits),
     "\\), 90\\%-CI = \\([", round(h$CI.Lower, digits = digits + 1), ", ", round(h$CI.Upper, digits = digits + 1),
     "]\\), \\(BF ", BF,
     "\\), \\(p_{posterior} = \\) \\(", signif(h$Post.Prob, digits = 3), "\\)") }
@@ -592,7 +592,7 @@ make_hyp_table <- function(model = NULL, hypothesis, hypothesis_names, caption, 
       format = "latex",
       booktabs = TRUE,
       escape = FALSE,
-      col.names = c("Hypothesis", "$\\hat{\\beta}$", "SE", "90\\%-CI", "$p_{direction}$", "BF", "$p_{post}$")) %>%
+      col.names = c("Hypothesis", "Est.", "SE", "90\\%-CI", "$p_{direction}$", "BF", "$p_{post}$")) %>%
     # HOLD_position for latex table placement H and hold_position for latex h!, neither if placement is left to latex
     kable_styling(latex_options = "HOLD_position", full_width = FALSE) %>%
     column_spec(1, width = col1_width)
