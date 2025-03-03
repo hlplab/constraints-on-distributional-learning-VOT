@@ -170,7 +170,6 @@ Of the 122 participants that completed the experiment, 1 committed more than 3 e
 (ref:plot-catch-labeled-trial-performance) Total errors committed on catch trials and labelled trials. Percentage values indicate the proportion of participants in the respective groups.
 
 ```{r plot-catch-labeled-trial-performance, fig.height=4, fig.width=8, fig.cap="(ref:plot-catch-labeled-trial-performance)", message=F}
-
 prop.catch.errors <- 
   d %>%
   group_by(ParticipantID) %>%
@@ -185,7 +184,6 @@ prop.catch.errors <-
     mutate(rows = 3) %>% 
     uncount(rows)) %>% 
   mutate(proportion = percent(total/n))
-
 
 p.catch <- 
   d %>%
@@ -1405,7 +1403,7 @@ p[[1]] +
 
 # Additional analyses of participants' behavior
 
-## Changes in participants' recognition accuracy as a function of exposure
+## Changes in participants' recognition accuracy as a function of exposure {#sec:participant-accuracy}
 Figure \@ref(fig:plot-IO-psychometric-model-human-accuracy) summarizes changes in participants' recognition accuracy with increasing exposure to the different exposure conditions. The figure reproduces Figure \@ref(fig:IO-human-accuracy) while additionally showing listeners' empirical recognition accuracy, as estimated from the unlabeled trials of exposure blocks. 
 
 (ref:plot-IO-psychometric-model-human-accuracy) Same as Figure \@ref(fig:IO-human-accuracy) but also showing listeners' empirical recognition accuracy (triangles). For the empirical accuracy, lineranges show 95% bootstrapped CIs.
