@@ -167,79 +167,111 @@ Next, we provide additional information on participants' performance during catc
 ## Performance on catch and labelled trials
 Of the 122 participants that completed the experiment, 1 committed more than 3 errors (< 84% accuracy). Labelled trials provided another measure to check participant attention during the experiment. Performance on labelled trials was good across all exposure conditions with participants in the +20ms condition committing the most errors. This is not unexpected as the +20ms condition was the furthest shifted distribution with the most unexpected cue-category mappings. 
 
-(ref:plot-catch-labeled-trial-performance) Total errors committed on catch trials and labelled trials. Percentage values indicate the proportion of participants in the respective groups.
+(ref:plot-catch-labeled-trial-performance) Total errors committed on catch trials and labelled trials by all participants (122) and participants included for analysis (119). Percentage values indicate the proportion of participants in the respective groups .
 
-```{r plot-catch-labeled-trial-performance, fig.height=4, fig.width=8, fig.cap="(ref:plot-catch-labeled-trial-performance)", message=F}
+```{r plot-catch-labeled-trial-performance, fig.height=5.5, fig.width=8.5, fig.cap="(ref:plot-catch-labeled-trial-performance)", message=F}
+d.errors <- 
+  d %>% mutate(set = "all") %>% 
+  bind_rows(
+   d %>%
+  filter(
+    Exclude_participant.due_to_catch_trials == FALSE,
+    Exclude_participant.due_to_labeled_trials == FALSE,
+    Exclude_participant.due_to_VOT_slope == FALSE) %>% 
+    mutate(set = "included")) %>% 
+  mutate(set = factor(set))
+
 prop.catch.errors <- 
-  d %>%
-  group_by(ParticipantID) %>%
+  d.errors %>%
+  group_by(ParticipantID, set) %>%
   summarise(Catch.errors = 18 - sum(CatchTrial.Correct, na.rm = T)) %>%
-  group_by(Catch.errors) %>% 
+  group_by(Catch.errors, set) %>% 
   summarise(total = n()) %>% 
-  bind_cols(
-    d %>%
-  group_by(ParticipantID) %>% 
-  summarise() %>% 
-  count() %>% 
-    mutate(rows = 3) %>% 
-    uncount(rows)) %>% 
-  mutate(proportion = percent(total/n))
+  left_join(
+ d.errors %>% 
+      select(ParticipantID, set) %>% 
+      group_by(set) %>% 
+      summarise(n = n_distinct(ParticipantID))) %>% 
+  mutate(proportion = percent(total/n),
+         row = ifelse(Catch.errors == 6, 2, 1)) %>% 
+  uncount(row) %>% 
+  ungroup() %>% 
+  mutate(set = rep(c("all", "included"), 3),
+         total = ifelse(Catch.errors == 6 & set == "included", 0, total),
+         n = ifelse(Catch.errors == 6 & set == "included", 119, n),
+         proportion = ifelse(Catch.errors == 6 & set == "included", "0.0%", proportion)) 
 
 p.catch <- 
-  d %>%
-  group_by(ParticipantID) %>%
-  summarise(Catch.errors = 18 - sum(CatchTrial.Correct, na.rm = T)) %>%
-  ggplot(aes(x = Catch.errors)) +
-  geom_bar(width = .5) +
+  d.errors %>%
+  group_by(ParticipantID, set) %>%
+  summarise(Catch.errors = 18 - sum(CatchTrial.Correct, na.rm = T)) %>% 
+  ggplot(aes(x = Catch.errors, fill = set)) +
+  geom_bar(width = .5, position = position_dodge2()) +
   geom_text(
     prop.catch.errors,
     mapping = aes(x = Catch.errors, y = total, label = proportion), 
-    position = position_dodge(.5), 
+    position = position_dodge2(.88), 
     size = 5.5,
-    label.size = .01,
     size.unit = "pt",
     vjust = -.5,
     inherit.aes = F) +
-  scale_x_continuous("Total catch trial errors", breaks = seq(0, 6, 1)) +
-  scale_y_continuous("Number of participants", breaks = seq(0, 120, 10))
+  scale_colour_manual("Participants", values = c("#666666", "#bfbfbf"), aesthetics = "fill", labels = c("All", "Included")) +
+  scale_x_continuous("Total catch trial errors", limits = c(-0.3, 6), breaks = seq(0, 6.5, 1)) +
+  scale_y_continuous("Number of participants", breaks = seq(0, 120, 10)) +
+    theme(legend.position = "top")
 
 prop.labelled.errors <- 
-  d %>%
+  d.errors %>%
   filter(Phase == "exposure", 
          Item.Labeled == T) %>%
-  group_by(ParticipantID, Condition.Exposure, Block) %>%
+  group_by(ParticipantID, Condition.Exposure, Block, set) %>%
   summarise(LabeledTrial.Errors = 24 - sum(LabeledTrial.Correct, na.rm = TRUE)) %>% 
-  group_by(Condition.Exposure, LabeledTrial.Errors, Block) %>% 
+  group_by(Condition.Exposure, LabeledTrial.Errors, Block, set) %>% 
   count() %>% 
   left_join(
-    d %>% 
-      group_by(Condition.Exposure, ParticipantID) %>% 
-      summarise() %>% 
-      count() %>% 
-      rename(n_subjects = n)) %>% 
+    d.errors %>% 
+      select(ParticipantID, Condition.Exposure, Block, set) %>% 
+      group_by(Condition.Exposure, Block, set) %>% 
+      summarise(n_subjects = n_distinct(ParticipantID))) %>% 
   mutate(proportion = percent(n/n_subjects),
          Block = factor(Block))
 
+# First, create a combined factor for coloring
+d.errors <- d.errors %>%
+  mutate(condition_set = paste(Condition.Exposure, set))
+
+# Modify your plot code
 p.labelled.group <- 
-  d %>%
+  d.errors %>%
   filter(Phase == "exposure" & Item.Labeled == T) %>%
-  group_by(ParticipantID, Condition.Exposure, Block) %>%
+  group_by(ParticipantID, Condition.Exposure, Block, set, condition_set) %>%  # Add condition_set
   summarise(LabeledTrial.Errors = 24 - sum(LabeledTrial.Correct, na.rm = TRUE)) %>% 
-  ggplot(aes(x = LabeledTrial.Errors, fill = Condition.Exposure)) +
-  geom_bar(position = position_dodge(width = .5, preserve = "single"), width = .5) +
+  ggplot(aes(x = LabeledTrial.Errors, 
+             fill = condition_set,  # Change fill aesthetic to condition_set
+             group = condition_set)) +  # Change group aesthetic to condition_set
+  geom_bar(width = .5, position = position_dodge2(preserve = "total")) +
   geom_text(
     data = prop.labelled.errors,
-    mapping = aes(x = LabeledTrial.Errors, y = n, label = proportion, group = Condition.Exposure), 
-    position = position_dodge(.5), 
+    mapping = aes(x = LabeledTrial.Errors, y = n, 
+                 label = proportion, 
+                 group = Condition.Exposure), 
+    position = position_dodge2(.9), 
     size = 5.5,
-    label.size = .01,
     size.unit = "pt",
     vjust = -.5,
     inherit.aes = F) +
-  scale_colour_manual("Condition",
-                      aesthetics = c("colour", "fill"),
-                      labels = c("-20ms", "-10ms", "+20ms"),
-                      values = colours.condition) +
+  scale_fill_manual(
+    values = c(
+      "Shift0 all" = "#cc0000",
+      "Shift0 included" = "#ff9999",
+      "Shift10 all" = "#12D432",
+      "Shift10 included" = "#b9f9c3",
+      "Shift40 all" = "#0481F3",
+      "Shift40 included" = "#b4dafe"),
+    name = "Set",
+    labels = c("-20ms all", "-20ms included",
+               "-10ms all", "-10ms included",
+               "+20ms all", "+20ms included")) +
   scale_x_continuous("Total labelled trial errors") +
   coord_cartesian(ylim = c(0, 45)) +
   theme(legend.position = "top") +
@@ -247,8 +279,8 @@ p.labelled.group <-
   remove_y_title +
   facet_grid(Condition.Exposure ~ Block, 
              labeller = labeller(
-    .cols = c("2" = "Exposure 1", "4" = "Exposure 2", "6" = "Exposure 3"), 
-    .rows = c(Shift0 = "-20ms", Shift10 = "-10ms", Shift40 = "+20ms")))   
+               .cols = c("2" = "Exposure 1", "4" = "Exposure 2", "6" = "Exposure 3"), 
+               .rows = c(Shift0 = "-20ms", Shift10 = "-10ms", Shift40 = "+20ms")))
 
 p.catch | p.labelled.group
 ```

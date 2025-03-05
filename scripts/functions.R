@@ -463,19 +463,46 @@ get_nsamples <- function(model) {
   return(n.posterior_samples)
 }
 
+get_bf_point_hyp <- function(h, nsamples = 2^20) {
+  # Validate inputs
+  if (!all(c("samples", "prior_samples") %in% names(h))) {
+    stop("Input 'h' must be a brms hypothesis object with samples and prior_samples")
+  }
+  # Extract samples once
+  samples <- list(
+    post = h$samples[["H1"]],
+    prior = h$prior_samples[["H1"]]
+  )
+  
+  # Calculate densities 
+  densities <- map(samples, ~ density(.x, n = nsamples))
+  
+  # Find minimum absolute x values for both densities 
+  min_indices <- map(densities, ~ which.min(abs(.x$x)))
+  
+  # Calculate BF 
+  bf <- densities$post$y[min_indices$post] / 
+    densities$prior$y[min_indices$prior]
+  
+  return(bf)
+}
 
 get_bf <- function(model, hypothesis, est = F, bf = F, digits = 2, robust = T) {
-  h <- hypothesis(model, hypothesis, robust = robust)[[1]]
-  BF <- if (is.infinite(h$Evid.Ratio)) paste("\\geq", get_nsamples(model)) else paste("=", round(h$Evid.Ratio, digits = digits))
-  if (est == T & bf == T) {  str_c("Est. = ", round(h[[2]], digits = digits), "; BF ", BF) }
-  else if (est) { h[[2]] }
+  h <- hypothesis(model, hypothesis, robust = robust)
+  BF <- if (is.infinite(h[[1]]$Evid.Ratio)) paste("\\geq", get_nsamples(model)) else paste("=", round(h[[1]]$Evid.Ratio, digits = digits))
+  if (est == T & bf == T) {  str_c("Est. = ", round(h[[1]][[2]], digits = digits), "; BF ", BF) }
+  else if (est) { h[[1]][[2]] }
+  else if (str_detect(hypothesis, "=") & bf == T) {
+    get_bf_point_hyp(h)
+  }
   else if (bf) { round(hypothesis(model, hypothesis, robust = robust)[[1]][[6]], digits = digits) }
+  
   else {
     paste0(
-    "Estimate = ", round(h$Estimate, digits = digits),
-    "\\), 90\\%-CI = \\([", round(h$CI.Lower, digits = digits + 1), ", ", round(h$CI.Upper, digits = digits + 1),
-    "]\\), \\(BF ", BF,
-    "\\), \\(p_{posterior} = \\) \\(", signif(h$Post.Prob, digits = 3), "\\)") }
+      "Estimate = ", round(h[[1]]$Estimate, digits = digits),
+      "\\), 90\\%-CI = \\([", round(h[[1]]$CI.Lower, digits = digits + 1), ", ", round(h[[1]]$CI.Upper, digits = digits + 1),
+      "]\\), \\(BF ", BF,
+      "\\), \\(p_{posterior} = \\) \\(", signif(h$Post.Prob, digits = 3), "\\)") }
 }
 
 # Function to get identity CI of a model summary
@@ -553,21 +580,40 @@ align_tab <- function(hyp) {
   map_chr(hyp, ~ ifelse(class(.x) == "numeric", "r","l"))
 }
 
-
-get_hyp_data <- function (model.fit, hyp.list) {
-
-  hyp_data <-
-    hypothesis(
-      model.fit,
-      hyp.list,
-      robust = T)
-
-  hyp_data %>%
+# Function to process hypothesis tables and calculate BFs for point hypotheses
+get_hyp_data <- function(model.fit, hyp.list) {
+  # Get hypothesis results
+  hyp_data <- hypothesis(
+    model.fit,
+    hyp.list,
+    robust = T
+  )
+  # Create base results table; add the pd
+  results <- hyp_data %>%
     .$hypothesis %>%
     dplyr::select(-Star) %>%
     bind_cols(p_direction(hyp_data$samples)["pd"])
+  
+  # Identify point hypotheses 
+  point_hyp_indices <- which(str_detect(results$Hypothesis, "="))
+  
+  # Only modify Evid.Ratio for point hypotheses
+  if (length(point_hyp_indices) > 0) {
+    # Get individual hypothesis results for each point hypothesis
+    individual_hyps <- map(point_hyp_indices, function(idx) {
+      hypothesis(model.fit, hyp.list[idx], robust = T)
+    })
+    
+    # Calculate BF for each point hypothesis
+    new_bf_values <- individual_hyps %>%
+      map_dbl(get_bf_point_hyp)
+    
+    # Replace Evid.Ratio only for point hypotheses
+    results$Evid.Ratio[point_hyp_indices] <- new_bf_values
+  }
+  
+  return(results)
 }
-
 
 make_hyp_table <- function(model = NULL, hypothesis, hypothesis_names, caption, col1_width = "15em", digits = 2) {
   bind_cols(
