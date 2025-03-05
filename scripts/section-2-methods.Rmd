@@ -89,7 +89,6 @@ d.exposure <-
            Block == 6 ~ "Block C")),
          category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"))
 
-
 d.means <-
   crossing(
     Condition.Exposure = c("-20ms", "-10ms", "+20ms"),
