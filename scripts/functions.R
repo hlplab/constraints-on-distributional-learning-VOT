@@ -502,7 +502,7 @@ get_bf <- function(model, hypothesis, est = F, bf = F, digits = 2, robust = T) {
       "Estimate = ", round(h[[1]]$Estimate, digits = digits),
       "\\), 90\\%-CI = \\([", round(h[[1]]$CI.Lower, digits = digits + 1), ", ", round(h[[1]]$CI.Upper, digits = digits + 1),
       "]\\), \\(BF ", BF,
-      "\\), \\(p_{posterior} = \\) \\(", signif(h$Post.Prob, digits = 3), "\\)") }
+      "\\), \\(p_{posterior} = \\) \\(", signif(h[[1]]$Post.Prob, digits = 3), "\\)") }
 }
 
 # Function to get identity CI of a model summary
