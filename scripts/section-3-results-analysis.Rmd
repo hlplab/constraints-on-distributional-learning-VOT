@@ -423,7 +423,6 @@ rm(fit_exposure, fit_exposure_nested_within_condition_and_block, p.fit_1to7)
 ## Prediction 1 (*prior expectations*)
 
 ```{r hypothesis-table-prediction1, results='asis'}
-
 hyp.simple_effects_condition <-
   get_hyp_data(
     fit_test.simple_effects_condition,
