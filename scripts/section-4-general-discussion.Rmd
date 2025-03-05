@@ -10,10 +10,16 @@ We found that listeners' categorization functions changed incrementally with exp
 After briefly discussing the role of strong quantitative tests through predictive models, we discuss how the present study relates to existing evidence. We begin with the perhaps most surprising result: evidence of premature convergence, which seems to reject prediction 4. Following that, we discuss the remaining predictions in order. We close by considering limitations of the present study and how future work can overcome them.
 
 ## Putting theories to strong quantitative tests
-<!-- consider moving prediction 4 first an integrating it right after this section? -->
-<!-- ^[A related line of work has used distributional learning or explicit training paradigms to study the acquisition of *novel* sound contrasts [e.g., @maye2002; @mccandliss2002; @pajak-levy2012; @pisoni1982]. These studies, too, have observed outcomes predicted by distributional learning models [for review, see @pajak2016].] -->
+In the introduction, we appealed to the need to submit theories of adaptive speech perception to stronger, quantitative tests. Recent reviews of the field highlight the need to develop quantitative models that make more fine-grained predictions, and paradigms that deliver more fine-grained data to test those predictions [@bent-baeseberk2021; @schertz-clare2020; @xie2023]. Xie and colleagues use computational simulations to demonstrate that the current analytical standards in the field are not sufficient to distinguish between qualitatively very different theories. They highlight in particular the need for paradigms that measure adaptation over many combinations of exposure and test stimuli, and analyses or models that link the phonetic properties of the stimuli to the observed changes in listeners' categorization functions.
 
-<!-- make sure to discuss satisficing; take into account that "speech is not as acoustic as you think" -->
+OUR STUFF
+
+The benefits of predictive, quantitative models have, of course, been recognized beyond the field of adaptive speech perception [e.g., @newell1972; @martin-guest2021; @yarkoni-westfall2017]. 
+
+
+
+
+<!-- ^[A related line of work has used distributional learning or explicit training paradigms to study the acquisition of *novel* sound contrasts [e.g., @maye2002; @mccandliss2002; @pajak-levy2012; @pisoni1982]. These studies, too, have observed outcomes predicted by distributional learning models [for review, see @pajak2016].] -->
 
 <!-- integrate points about quantitative fit: Simpler instances of the ideal adaptor model have previously been applied to qualitatively simulate changes across a single phonetic continuum during, for instance, lexically-guided perceptual learning [@cummings-theodore2023; @theodore-monto2019; @xie2023] or fully unsupervised distributional learning [@hitczenko-feldman2016; @theodore-monto2019]. Some previous work has gone further, and has demonstrated that such univariate ideal adaptors provide an excellent *quantitative fit* against the incremental changes observed in visually-guided perceptual learning over repeated instances of the exact same stimulus [for /b/-/d/, @kleinschmidt-jaeger2011; @kleinschmidt-jaeger2012] and the outcome of fully unsupervised or semi-supervised distributional exposure [for /b/-/p/, @kleinschmidt2020; @kleinschmidt-jaeger2016]. -->
 
