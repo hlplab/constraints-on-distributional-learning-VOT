@@ -450,7 +450,7 @@ make_hyp_table(
     "$PSE_{-20ms} = PSE_{idealized_{prior}}$",
     "$PSE_{-10ms} = PSE_{idealized_{prior}}$",
     "$PSE_{+20ms} = PSE_{idealized_{prior}}$",
-    "$PSE_{all} = PSE_{idealized_{prior}}$"),
+    "$PSE_{actual_{pre_{all}}} = PSE_{idealized_{prior}}$"),
     caption = "Comparing participants' responses prior to exposure (Test 1) both between exposure conditions and to the idealized pre-exposure listener model. Predicted identities were tested using the Savage-Dickey density ratio (where BF > 1 indicates evidence in favor of the hypothesis that the two PSEs are identical).") %>%
   pack_rows("Comparing conditions against each other (Test block 1)", 1, 3) %>%
   pack_rows("Comparing conditions against idealized pre-exposure listener (Test block 1)", 4, 6) %>% 
@@ -1111,7 +1111,7 @@ fit_test.IA_predicted_logodds <-
     file_refit = "on_change")
 
 fit_test.IA_predicted_logodds <- add_criterion(fit_test.IA_predicted_logodds, criterion = c("loo"), moment_match = T)
-#loo_compare(fit_test.IA_predicted_logodds, fit_test.upto.test4)
+loo_compare(fit_test.IA_predicted_logodds, fit_test.upto.test4)
 
 ## with random slopes
 fit_test.IA_predicted_logodds_with_RLs <-

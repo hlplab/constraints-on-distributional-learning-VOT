@@ -210,7 +210,7 @@ p.catch <-
   geom_text(
     prop.catch.errors,
     mapping = aes(x = Catch.errors, y = total, label = proportion), 
-    position = position_dodge2(.88), 
+    position = position_dodge2(.8), 
     size = 5.5,
     size.unit = "pt",
     vjust = -.5,
