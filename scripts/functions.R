@@ -468,7 +468,7 @@ get_bf_point_hyp <- function(h, nsamples = 2^20) {
   if (!all(c("samples", "prior_samples") %in% names(h))) {
     stop("Input 'h' must be a brms hypothesis object with samples and prior_samples")
   }
-  # Extract samples once
+  # Extract samples 
   samples <- list(
     post = h$samples[["H1"]],
     prior = h$prior_samples[["H1"]]
@@ -490,9 +490,9 @@ get_bf_point_hyp <- function(h, nsamples = 2^20) {
 get_bf <- function(model, hypothesis, est = F, bf = F, digits = 2, robust = T) {
   h <- hypothesis(model, hypothesis, robust = robust)
   BF <- if (is.infinite(h[[1]]$Evid.Ratio)) paste("\\geq", get_nsamples(model)) else paste("=", round(h[[1]]$Evid.Ratio, digits = digits))
-  if (est == T & bf == T) {  str_c("Est. = ", round(h[[1]][[2]], digits = digits), "; BF ", BF) }
+  if (est && bf) {  str_c("Est. = ", round(h[[1]][[2]], digits = digits), "; BF ", BF) }
   else if (est) { h[[1]][[2]] }
-  else if (str_detect(hypothesis, "=") & bf == T) {
+  else if (str_detect(hypothesis, "=") && bf) {
     get_bf_point_hyp(h)
   }
   else if (bf) { round(hypothesis(model, hypothesis, robust = robust)[[1]][[6]], digits = digits) }
