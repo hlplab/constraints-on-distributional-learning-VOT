@@ -14,7 +14,7 @@ In the introduction, we appealed to the need to submit theories of adaptive spee
 
 OUR STUFF
 
-The benefits of predictive, quantitative models have, of course, been recognized beyond the field of adaptive speech perception [e.g., @newell1973; @martin-guest2021; @yarkoni-westfall2017]. 
+The benefits of predictive, quantitative models have, of course, been recognized beyond the field of adaptive speech perception [e.g., @newell1973; @guest-martin2021; @yarkoni-westfall2017]. 
 
 
 
