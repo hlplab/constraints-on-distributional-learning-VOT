@@ -754,7 +754,7 @@ m_IA.VOT_f0_vowelduration_informedprior <-
 ```{r summarise-PSE-predictions-of-IA}
 # Get logistic model predictions of the IA's categorization
 # then prepare the data for plotting
-if (file.exists("../models/d.IA_predicted_test_informedprior.rds") & !RESET_MODELS) {
+if (file.exists("../models/d.IA_predicted_test_informedprior.rds") & !RESET_FIGURES) {
   d.IA_predicted_test_informedprior <- readRDS("../models/d.IA_predicted_test_informedprior.rds")
 } else {
   data.test <- prep_data_for_IBBU_prediction(m_IA.VOT_f0_vowelduration_informedprior)
@@ -768,7 +768,7 @@ if (file.exists("../models/d.IA_predicted_test_informedprior.rds") & !RESET_MODE
   saveRDS(d.IA_predicted_test_informedprior, "../models/d.IA_predicted_test_informedprior.rds")
 }
 
-if (file.exists("../models/d.IA_predicted_PSE_informedprior.rds") & !RESET_MODELS)) {
+if (file.exists("../models/d.IA_predicted_PSE_informedprior.rds") & !RESET_FIGURES) {
   d.IA_predicted_PSE_informedprior <- readRDS("../models/d.IA_predicted_PSE_informedprior.rds")
 } else {
   d.IA_predicted_PSE_informedprior <-
