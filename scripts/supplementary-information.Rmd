@@ -169,7 +169,7 @@ Of the 122 participants that completed the experiment, 1 committed more than 3 e
 
 (ref:plot-catch-labeled-trial-performance) Total errors committed on catch trials and labelled trials by all participants (122) and participants included for analysis (119). Percentage values indicate the proportion of participants in the respective groups .
 
-```{r plot-catch-labeled-trial-performance, fig.height=5.5, fig.width=8.5, fig.cap="(ref:plot-catch-labeled-trial-performance)", message=F}
+```{r plot-catch-labeled-trial-performance, fig.height=7.5, fig.width=6.3, fig.cap="(ref:plot-catch-labeled-trial-performance)", message=F}
 d.errors <- 
   d %>% mutate(set = "all") %>% 
   bind_rows(
@@ -258,7 +258,7 @@ p.labelled.group <-
     position = position_dodge2(.9), 
     size = 5.5,
     size.unit = "pt",
-    vjust = -.5,
+    vjust = -.8,
     inherit.aes = F) +
   scale_fill_manual(
     values = c(
@@ -282,7 +282,10 @@ p.labelled.group <-
                .cols = c("2" = "Exposure 1", "4" = "Exposure 2", "6" = "Exposure 3"), 
                .rows = c(Shift0 = "-20ms", Shift10 = "-10ms", Shift40 = "+20ms")))
 
-p.catch | p.labelled.group
+p.catch / p.labelled.group +  
+  plot_layout(
+    heights = c(1.5, 2))
+
 ```
 
 # Obtaining predictions of idealized listeners {#sec:model-guided}
