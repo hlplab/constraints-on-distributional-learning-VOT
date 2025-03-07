@@ -1592,7 +1592,7 @@ However, equation \@ref(eq:proportion-convergence) contains a researcher degree 
 hyp.shrinkage <-
   get_hyp_data(
     fit_test_nested_within_condition_and_block,
-    hyp.list = c(
+    hyp.vec = c(
       # block 1
       str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs)  -", predictedPSE_scaled_prior, ")/(", predictedPSE_scaled_10, "-", predictedPSE_scaled_prior, ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)  -", predictedPSE_scaled_prior, ")/(", predictedPSE_scaled_0, "-", predictedPSE_scaled_prior, ")"),
       
@@ -1637,7 +1637,7 @@ make_hyp_table(
 hyp.shrinkage <-
   get_hyp_data(
     fit_test_nested_within_condition_and_block,
-    hyp.list = c(
+    hyp.vec = c(
       # block 1
       str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) -", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs))/(", predictedPSE_scaled_10, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs)) >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) - (-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs))/(", predictedPSE_scaled_0, "-", "(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs))"),
       
@@ -1685,7 +1685,7 @@ make_hyp_table(
 hyp.shrinkage <-
   get_hyp_data(
     fit_test_nested_within_condition_and_block,
-    hyp.list = c(
+    hyp.vec = c(
       # block 1
       str_c("((-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs)  -", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")/(", predictedPSE_scaled_10, "-", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ") >", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs)  -", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")/(", predictedPSE_scaled_0, "-", "((-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs) + (-mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs))/3", ")"),
       
