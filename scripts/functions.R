@@ -463,46 +463,75 @@ get_nsamples <- function(model) {
   return(n.posterior_samples)
 }
 
-get_bf_point_hyp <- function(h, nsamples = 2^20) {
-  # Validate inputs
-  if (!all(c("samples", "prior_samples") %in% names(h))) {
-    stop("Input 'h' must be a brms hypothesis object with samples and prior_samples")
+# This function manually calculates the BF for certain point hypotheses.
+# We avoid using built-in brms::hypothesis() to test point hypotheses that involve > 1 model param and
+# use that contain the operators / or * or both because of the variable result. Directional hypotheses of the same kind are not affec
+# On 6 Mar, 2025 after looking at the code for hypothesis function (https://github.com/paul-buerkner/brms/blob/master/R/hypothesis.R) 
+# we determined that the randomness is solely driven by the fact that we're testing a point hypothesis which requires prior draws (https://github.com/paul-buerkner/brms/blob/master/R/prior_draws.R).
+# Critically, the prior draws returned are randomly resampled. 
+# This is done separately for each parameter of the model contained in the hypothesis because brms assumes independent priors on all parameters. 
+# from the prior_draws function: "order draws randomly to avoid artificial dependencies between parameters using the same prior draws"
+# as long as only 1 parameter is contained in the hypothesis, this random reordering doesn't affect the density under the prior the point estimate (null)
+# This function by default makes 100 iterations of the point hypothesis test and takes the posterior density/mean of the 100 prior densities.
+get_mean_BF <- function(model, hypothesis, robust = TRUE, n.iterations = 100, n.density_steps = 2^12, use_seed = TRUE) {
+  # Set seed only if requested
+  if (use_seed) set.seed(GLOBAL_SEED)  # Assumes GLOBAL_SEED is defined in the environment
+  
+  # Get posterior density at zero
+  density.post <- density(hypothesis(model, hypothesis, robust = robust)$samples[["H1"]], n = n.density_steps)
+  density.post <- density.post$y[which.min(abs(density.post$x))]
+  
+  # Pre-allocate vector for efficiency
+  density.priors <- numeric(n.iterations)
+  
+  # Sample different prior densities at zero
+  for (i in 1:n.iterations) {
+    density.prior <- density(hypothesis(model, hypothesis, robust = robust)$prior_samples[["H1"]], n = n.density_steps)
+    density.priors[i] <- density.prior$y[which.min(abs(density.prior$x))]
+    
+    #print(paste("Cumulative mean BF:", density.post / mean(density.priors[1:i])))
   }
-  # Extract samples 
-  samples <- list(
-    post = h$samples[["H1"]],
-    prior = h$prior_samples[["H1"]]
-  )
   
-  # Calculate densities 
-  densities <- map(samples, ~ density(.x, n = nsamples))
-  
-  # Find minimum absolute x values for both densities 
-  min_indices <- map(densities, ~ which.min(abs(.x$x)))
-  
-  # Calculate BF 
-  bf <- densities$post$y[min_indices$post] / 
-    densities$prior$y[min_indices$prior]
-  
-  return(bf)
+  return(density.post / mean(density.priors))     
 }
 
-get_bf <- function(model, hypothesis, est = F, bf = F, digits = 2, robust = T) {
+get_bf <- function(model, hypothesis, est = FALSE, bf = FALSE, digits = 2, robust = TRUE, use_seed = TRUE) {
+  # Create hypothesis object ONCE to use consistently
   h <- hypothesis(model, hypothesis, robust = robust)
-  BF <- if (is.infinite(h[[1]]$Evid.Ratio)) paste("\\geq", get_nsamples(model)) else paste("=", round(h[[1]]$Evid.Ratio, digits = digits))
-  if (est && bf) {  str_c("Est. = ", round(h[[1]][[2]], digits = digits), "; BF ", BF) }
-  else if (est) { h[[1]][[2]] }
-  else if (str_detect(hypothesis, "=") && bf) {
-    get_bf_point_hyp(h)
-  }
-  else if (bf) { round(hypothesis(model, hypothesis, robust = robust)[[1]][[6]], digits = digits) }
   
-  else {
-    paste0(
+  # Format BF string
+  BF <- if (is.infinite(h[[1]]$Evid.Ratio)) {
+    paste("\\geq", get_nsamples(model))
+  } else {
+    paste("=", round(h[[1]]$Evid.Ratio, digits = digits))
+  }
+  # Return appropriate result based on parameters
+  if (est && bf) { 
+    # Return both estimate and BF
+    str_c("Est. = ", round(h[[1]]$Estimate, digits = digits), "; BF ", BF) 
+  }
+  else if (est) {
+    # Return only the estimate
+    h[[1]]$Estimate 
+  }
+  else if (bf) {
+    # Special case for multi-param point hypotheses with multiplication or division
+    if (str_detect(hypothesis, "([\\*/].*=)") && !str_detect(hypothesis, "[<>]")) {
+      return(get_mean_BF(model, hypothesis, use_seed = use_seed))
+    } else {
+      # Standard BF for other hypotheses
+      return(round(h[[1]]$Evid.Ratio, digits = digits))
+    }
+  } else {
+    # Default: full formatted string
+    return(paste0(
       "Estimate = ", round(h[[1]]$Estimate, digits = digits),
-      "\\), 90\\%-CI = \\([", round(h[[1]]$CI.Lower, digits = digits + 1), ", ", round(h[[1]]$CI.Upper, digits = digits + 1),
+      "\\), 90\\%-CI = \\([", round(h[[1]]$CI.Lower, digits = digits + 1), 
+      ", ", round(h[[1]]$CI.Upper, digits = digits + 1),
       "]\\), \\(BF ", BF,
-      "\\), \\(p_{posterior} = \\) \\(", signif(h[[1]]$Post.Prob, digits = 3), "\\)") }
+      "\\), \\(p_{posterior} = \\) \\(", signif(h[[1]]$Post.Prob, digits = 3), 
+      "\\)"))
+  }
 }
 
 # Function to get identity CI of a model summary
@@ -581,32 +610,31 @@ align_tab <- function(hyp) {
 }
 
 # Function to process hypothesis tables and calculate BFs for point hypotheses
-get_hyp_data <- function(model.fit, hyp.list) {
+get_hyp_data <- function(model.fit, hyp.vec, use_seed = TRUE) {
   # Get hypothesis results
   hyp_data <- hypothesis(
     model.fit,
-    hyp.list,
-    robust = T
+    hyp.vec,
+    robust = TRUE
   )
-  # Create base results table; add the pd
+  
   results <- hyp_data %>%
     .$hypothesis %>%
     dplyr::select(-Star) %>%
     bind_cols(p_direction(hyp_data$samples)["pd"])
   
-  # Identify point hypotheses 
-  point_hyp_indices <- which(str_detect(results$Hypothesis, "="))
+  # Identify multi-param point hypotheses with / and * operators
+  point_hyp_indices <- which(map_lgl(hyp.vec, function(h) {
+    str_detect(h, "([\\*/].*=)") & !str_detect(h, "[<>]")
+  }))
   
-  # Only modify Evid.Ratio for point hypotheses
+  # Calculate BFs for identified point hypotheses
   if (length(point_hyp_indices) > 0) {
-    # Get individual hypothesis results for each point hypothesis
-    individual_hyps <- map(point_hyp_indices, function(idx) {
-      hypothesis(model.fit, hyp.list[idx], robust = T)
+    # Get BF values for each point hypothesis
+    new_bf_values <- map_dbl(point_hyp_indices, function(idx) {
+      # Pass the use_seed parameter to get_mean_BF
+      get_mean_BF(model.fit, hyp.vec[idx], use_seed = use_seed)
     })
-    
-    # Calculate BF for each point hypothesis
-    new_bf_values <- individual_hyps %>%
-      map_dbl(get_bf_point_hyp)
     
     # Replace Evid.Ratio only for point hypotheses
     results$Evid.Ratio[point_hyp_indices] <- new_bf_values
@@ -614,6 +642,7 @@ get_hyp_data <- function(model.fit, hyp.list) {
   
   return(results)
 }
+
 
 make_hyp_table <- function(model = NULL, hypothesis, hypothesis_names, caption, col1_width = "15em", digits = 2) {
   bind_cols(
