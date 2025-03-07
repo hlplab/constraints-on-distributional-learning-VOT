@@ -464,8 +464,7 @@ get_nsamples <- function(model) {
 }
 
 # This function manually calculates the BF for certain point hypotheses.
-# We avoid using built-in brms::hypothesis() to test point hypotheses that involve > 1 model param and
-# use that contain the operators / or * or both because of the variable result. Directional hypotheses of the same kind are not affec
+# We avoid using built-in brms::hypothesis() to test point hypotheses that involve > 1 model parameter.
 # On 6 Mar, 2025 after looking at the code for hypothesis function (https://github.com/paul-buerkner/brms/blob/master/R/hypothesis.R) 
 # we determined that the randomness is solely driven by the fact that we're testing a point hypothesis which requires prior draws (https://github.com/paul-buerkner/brms/blob/master/R/prior_draws.R).
 # Critically, the prior draws returned are randomly resampled. 
@@ -499,28 +498,40 @@ get_bf <- function(model, hypothesis, est = FALSE, bf = FALSE, digits = 2, robus
   # Create hypothesis object ONCE to use consistently
   h <- hypothesis(model, hypothesis, robust = robust)
   
-  # Format BF string
-  BF <- if (is.infinite(h[[1]]$Evid.Ratio)) {
+  # Extract evidence ratio and check if it's infinite
+  evid_ratio <- h[[1]]$Evid.Ratio
+  BF_formatted <- if (is.infinite(evid_ratio)) {
     paste("\\geq", get_nsamples(model))
   } else {
-    paste("=", round(h[[1]]$Evid.Ratio, digits = digits))
+    paste("=", round(evid_ratio, digits = digits))
   }
+  
   # Return appropriate result based on parameters
-  if (est && bf) { 
+  if (est & bf) { 
     # Return both estimate and BF
-    str_c("Est. = ", round(h[[1]]$Estimate, digits = digits), "; BF ", BF) 
+    return(str_c("Est. = ", round(h[[1]]$Estimate, digits = digits), "; BF ", BF_formatted))
   }
   else if (est) {
     # Return only the estimate
-    h[[1]]$Estimate 
+    return(h[[1]]$Estimate)
   }
   else if (bf) {
-    # Special case for multi-param point hypotheses with multiplication or division
-    if (str_detect(hypothesis, "([\\*/].*=)") && !str_detect(hypothesis, "[<>]")) {
-      return(get_mean_BF(model, hypothesis, use_seed = use_seed))
+    # Special case for point hypotheses with = sign
+    if (str_detect(hypothesis, "=") & !str_detect(hypothesis, "[<>]")) {
+      new_bf <- get_mean_BF(model, hypothesis, use_seed = use_seed)
+      new_post_prob <- new_bf / (1 + new_bf)
+      
+      # Store post_prob as an attribute of the return value
+      bf_value <- new_bf
+      attr(bf_value, "post_prob") <- new_post_prob
+      return(bf_value)
     } else {
       # Standard BF for other hypotheses
-      return(round(h[[1]]$Evid.Ratio, digits = digits))
+      if (is.infinite(evid_ratio)) {
+        return(get_nsamples(model))
+      } else {
+        return(round(evid_ratio, digits = digits))
+      }
     }
   } else {
     # Default: full formatted string
@@ -528,7 +539,7 @@ get_bf <- function(model, hypothesis, est = FALSE, bf = FALSE, digits = 2, robus
       "Estimate = ", round(h[[1]]$Estimate, digits = digits),
       "\\), 90\\%-CI = \\([", round(h[[1]]$CI.Lower, digits = digits + 1), 
       ", ", round(h[[1]]$CI.Upper, digits = digits + 1),
-      "]\\), \\(BF ", BF,
+      "]\\), \\(BF ", BF_formatted,
       "\\), \\(p_{posterior} = \\) \\(", signif(h[[1]]$Post.Prob, digits = 3), 
       "\\)"))
   }
@@ -623,21 +634,23 @@ get_hyp_data <- function(model.fit, hyp.vec, use_seed = TRUE) {
     dplyr::select(-Star) %>%
     bind_cols(p_direction(hyp_data$samples)["pd"])
   
-  # Identify multi-param point hypotheses with / and * operators
+  # Identify point hypotheses 
   point_hyp_indices <- which(map_lgl(hyp.vec, function(h) {
-    str_detect(h, "([\\*/].*=)") & !str_detect(h, "[<>]")
+    str_detect(h, "=") & !str_detect(h, "[<>]")
   }))
   
   # Calculate BFs for identified point hypotheses
   if (length(point_hyp_indices) > 0) {
     # Get BF values for each point hypothesis
     new_bf_values <- map_dbl(point_hyp_indices, function(idx) {
-      # Pass the use_seed parameter to get_mean_BF
+    
       get_mean_BF(model.fit, hyp.vec[idx], use_seed = use_seed)
     })
+    new_p.post_values <- map_dbl(new_bf_values, ~ .x / (1 + .x))
     
     # Replace Evid.Ratio only for point hypotheses
     results$Evid.Ratio[point_hyp_indices] <- new_bf_values
+    results$Post.Prob[point_hyp_indices] <- new_p.post_values
   }
   
   return(results)
