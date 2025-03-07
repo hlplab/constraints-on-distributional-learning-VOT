@@ -1109,7 +1109,7 @@ fit_test.IA_predicted_logodds <-
     file_refit = "on_change")
 
 fit_test.IA_predicted_logodds <- add_criterion(fit_test.IA_predicted_logodds, criterion = c("loo"), moment_match = T)
-loo_compare(fit_test.IA_predicted_logodds, fit_test.upto.test4)
+# loo_compare(fit_test.IA_predicted_logodds, fit_test.upto.test4)
 
 ## with random slopes
 fit_test.IA_predicted_logodds_with_RLs <-
