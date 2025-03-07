@@ -50,6 +50,8 @@ library(MVBeliefUpdatr)     # ideal observers and adaptors (multivariate)
 
 library(furrr)              # future_map for parallelization
 
+GLOBAL_SEED <- 920
+
 # Functions ---------------------------------------------------------------------
 source("functions.R")
 
