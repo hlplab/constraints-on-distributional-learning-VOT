@@ -1971,7 +1971,7 @@ ncol <- 3
 
 f <- "../figures/ideal-adaptor-parameter-correlations.png"
 if (!file.exists(f) | RESET_FIGURES){
-  p <- plot_ibbu_stanfit_parameter_correlations(fit, category.colors = colours.category_greyscale)
+  p <- plot_ibbu_stanfit_parameter_correlations(m_IA.VOT_f0_vowelduration_informedprior, category.colors = colours.category_greyscale)
   ggsave(p, filename = f, width = 12, height = 12)
   plot(p)
 } else {
@@ -1988,7 +1988,7 @@ f <- "../figures/ideal-adaptor-fit"
 if (!file.exists(paste0(f, ".png")) | RESET_FIGURES){
   d.pars <- 
     prep_posterior_draws_for_plotting(
-      model = fit, 
+      model = m_IA.VOT_f0_vowelduration_informedprior, 
       groups = c(
         "Cond Shift0AA_Up to test3", "Cond Shift0AA_Up to test5", "Cond Shift0AA_Up to test7",
         "Cond Shift10AA_Up to test3", "Cond Shift10AA_Up to test5", "Cond Shift10AA_Up to test7",
@@ -2009,7 +2009,7 @@ if (!file.exists(paste0(f, ".png")) | RESET_FIGURES){
     summarise(across(Predicted_posterior, mean)) %>%
     mutate(VOT = VOT, ExposureGroup = ifelse(group == "prior", "no exposure", group)) %>%
     # Join in participants' responses
-    left_join(get_test_data_from_stanfit(fit)) %>%
+    left_join(get_test_data_from_stanfit(m_IA.VOT_f0_vowelduration_informedprior)) %>%
     mutate(
       # Get proportion of "t"-responses (since we used target_category = 2 above, when 
       # eliciting predictions from the ideal adaptor)
