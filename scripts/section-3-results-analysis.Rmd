@@ -1,7 +1,6 @@
 ```{r, include=FALSE, message=FALSE}
 if (!exists("PREAMBLE_LOADED")) source("preamble.R")
 
-
 # Store parameters for model fitting
 d.mean_sd_scaling <-
   d.for_analysis %>%
@@ -16,7 +15,6 @@ VOT.sd_test <- (d.mean_sd_scaling %>% pull(Item.VOT_sd))[2]
 rm(d.mean_sd_scaling)
 
 levels_Condition.Exposure = c("Shift0", "Shift10", "Shift40")
-
 ```
 
 # Results {#sec:results}
@@ -754,9 +752,9 @@ m_IA.VOT_f0_vowelduration_informedprior <-
 ```
 
 ```{r summarise-PSE-predictions-of-IA}
-# Get logistic model predictions of the IA's categorisation
+# Get logistic model predictions of the IA's categorization
 # then prepare the data for plotting
-if (file.exists("../models/d.IA_predicted_test_informedprior.rds")) {
+if (file.exists("../models/d.IA_predicted_test_informedprior.rds") & !RESET_FIGURES) {
   d.IA_predicted_test_informedprior <- readRDS("../models/d.IA_predicted_test_informedprior.rds")
 } else {
   data.test <- prep_data_for_IBBU_prediction(m_IA.VOT_f0_vowelduration_informedprior)
@@ -770,7 +768,7 @@ if (file.exists("../models/d.IA_predicted_test_informedprior.rds")) {
   saveRDS(d.IA_predicted_test_informedprior, "../models/d.IA_predicted_test_informedprior.rds")
 }
 
-if (file.exists("../models/d.IA_predicted_PSE_informedprior.rds")) {
+if (file.exists("../models/d.IA_predicted_PSE_informedprior.rds") & !RESET_FIGURES) {
   d.IA_predicted_PSE_informedprior <- readRDS("../models/d.IA_predicted_PSE_informedprior.rds")
 } else {
   d.IA_predicted_PSE_informedprior <-
@@ -996,7 +994,7 @@ IA.prediction <-
 
 ```{r data-prep-IA-logodds-prediction-human-responses}
 # Prep data to obtain IA predicted logodds by condition and VOT up to test block 4
-if (file.exists("../models/d.IA_predicted_logodds.csv")) {
+if (file.exists("../models/d.IA_predicted_logodds.csv") & !RESET_MODELS) {
   d.IA_predicted_logodds <- read_csv("../models/d.IA_predicted_logodds.csv", show_col_types = F)
 } else {
   
