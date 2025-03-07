@@ -1127,7 +1127,7 @@ fit_test.IA_predicted_logodds_with_RLs <-
     sample_prior = "yes",
     save_pars = save_pars(all = TRUE),
     family = bernoulli("logit"),
-    control = list(adapt_delta = .9995),
+    control = list(adapt_delta = .9995, max_treedepth = 15),
     file ="../models/test_IA_predicted_logodds_with_RLs.rds",
     file_refit = "on_change")
 
