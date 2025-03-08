@@ -1938,7 +1938,7 @@ prep_posterior_draws_for_plotting <- function(
   # Categorize test data
   d.pars %>%
     group_by(group, .draw) %>%
-    do(f = get_categorization_function_from_grouped_ibbu_stanfit_draws(., logit = F)) %>%
+    do(f = get_categorization_function_from_grouped_ibbu_stanfit_draws(.)) %>%
     right_join(data.test, by = "group") %>%
     group_by(group, .draw) %>%
     mutate(
@@ -1946,7 +1946,7 @@ prep_posterior_draws_for_plotting <- function(
         suppressWarnings(
           pmap(
             .l = list(f, cues_joint, target_category),
-            .f = ~ exec(..1, x = ..2$x, target_category = target_category)))) %>%
+            .f = ~ exec(..1, x = ..2$x, target_category = target_category, logit = F)))) %>%
     select(-f) %>%
     unnest(c(cues_joint, cues_separate, Predicted_posterior)) %>%
     # Repair estimates that yield infinite posteriors
