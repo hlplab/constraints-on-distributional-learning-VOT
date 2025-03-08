@@ -465,39 +465,39 @@ get_nsamples <- function(model) {
 
 # This function manually calculates the BF for certain point hypotheses.
 # We avoid using built-in brms::hypothesis() to test point hypotheses that involve > 1 model parameter.
-# On 6 Mar, 2025 after looking at the code for hypothesis function (https://github.com/paul-buerkner/brms/blob/master/R/hypothesis.R) 
+# On 6 Mar, 2025 after looking at the code for hypothesis function (https://github.com/paul-buerkner/brms/blob/master/R/hypothesis.R)
 # we determined that the randomness is solely driven by the fact that we're testing a point hypothesis which requires prior draws (https://github.com/paul-buerkner/brms/blob/master/R/prior_draws.R).
-# Critically, the prior draws returned are randomly resampled. 
-# This is done separately for each parameter of the model contained in the hypothesis because brms assumes independent priors on all parameters. 
+# Critically, the prior draws returned are randomly resampled.
+# This is done separately for each parameter of the model contained in the hypothesis because brms assumes independent priors on all parameters.
 # from the prior_draws function: "order draws randomly to avoid artificial dependencies between parameters using the same prior draws"
 # as long as only 1 parameter is contained in the hypothesis, this random reordering doesn't affect the density under the prior the point estimate (null)
 # This function by default makes 100 iterations of the point hypothesis test and takes the posterior density/mean of the 100 prior densities.
 get_mean_BF <- function(model, hypothesis, robust = TRUE, n.iterations = 100, n.density_steps = 2^12, use_seed = TRUE) {
   # Set seed only if requested
   if (use_seed) set.seed(GLOBAL_SEED)  # Assumes GLOBAL_SEED is defined in the environment
-  
+
   # Get posterior density at zero
   density.post <- density(hypothesis(model, hypothesis, robust = robust)$samples[["H1"]], n = n.density_steps)
   density.post <- density.post$y[which.min(abs(density.post$x))]
-  
+
   # Pre-allocate vector for efficiency
   density.priors <- numeric(n.iterations)
-  
+
   # Sample different prior densities at zero
   for (i in 1:n.iterations) {
     density.prior <- density(hypothesis(model, hypothesis, robust = robust)$prior_samples[["H1"]], n = n.density_steps)
     density.priors[i] <- density.prior$y[which.min(abs(density.prior$x))]
-    
+
     #print(paste("Cumulative mean BF:", density.post / mean(density.priors[1:i])))
   }
-  
-  return(density.post / mean(density.priors))     
+
+  return(density.post / mean(density.priors))
 }
 
 get_bf <- function(model, hypothesis, est = FALSE, bf = FALSE, digits = 2, robust = TRUE, use_seed = TRUE) {
   # Create hypothesis object ONCE to use consistently
   h <- hypothesis(model, hypothesis, robust = robust)
-  
+
   # Extract evidence ratio and check if it's infinite
   evid_ratio <- h[[1]]$Evid.Ratio
   BF_formatted <- if (is.infinite(evid_ratio)) {
@@ -505,9 +505,9 @@ get_bf <- function(model, hypothesis, est = FALSE, bf = FALSE, digits = 2, robus
   } else {
     paste("=", round(evid_ratio, digits = digits))
   }
-  
+
   # Return appropriate result based on parameters
-  if (est & bf) { 
+  if (est & bf) {
     # Return both estimate and BF
     return(str_c("Est. = ", round(h[[1]]$Estimate, digits = digits), "; BF ", BF_formatted))
   }
@@ -520,7 +520,7 @@ get_bf <- function(model, hypothesis, est = FALSE, bf = FALSE, digits = 2, robus
     if (str_detect(hypothesis, "=") & !str_detect(hypothesis, "[<>]")) {
       new_bf <- get_mean_BF(model, hypothesis, use_seed = use_seed)
       new_post_prob <- new_bf / (1 + new_bf)
-      
+
       # Store post_prob as an attribute of the return value
       bf_value <- new_bf
       attr(bf_value, "post_prob") <- new_post_prob
@@ -537,10 +537,10 @@ get_bf <- function(model, hypothesis, est = FALSE, bf = FALSE, digits = 2, robus
     # Default: full formatted string
     return(paste0(
       "Estimate = ", round(h[[1]]$Estimate, digits = digits),
-      "\\), 90\\%-CI = \\([", round(h[[1]]$CI.Lower, digits = digits + 1), 
+      "\\), 90\\%-CI = \\([", round(h[[1]]$CI.Lower, digits = digits + 1),
       ", ", round(h[[1]]$CI.Upper, digits = digits + 1),
       "]\\), \\(BF ", BF_formatted,
-      "\\), \\(p_{posterior} = \\) \\(", signif(h[[1]]$Post.Prob, digits = 3), 
+      "\\), \\(p_{posterior} = \\) \\(", signif(h[[1]]$Post.Prob, digits = 3),
       "\\)"))
   }
 }
@@ -628,31 +628,31 @@ get_hyp_data <- function(model.fit, hyp.vec, use_seed = TRUE) {
     hyp.vec,
     robust = TRUE
   )
-  
+
   results <- hyp_data %>%
     .$hypothesis %>%
     dplyr::select(-Star) %>%
     bind_cols(p_direction(hyp_data$samples)["pd"])
-  
-  # Identify point hypotheses 
+
+  # Identify point hypotheses
   point_hyp_indices <- which(map_lgl(hyp.vec, function(h) {
     str_detect(h, "=") & !str_detect(h, "[<>]")
   }))
-  
+
   # Calculate BFs for identified point hypotheses
   if (length(point_hyp_indices) > 0) {
     # Get BF values for each point hypothesis
     new_bf_values <- map_dbl(point_hyp_indices, function(idx) {
-    
+
       get_mean_BF(model.fit, hyp.vec[idx], use_seed = use_seed)
     })
     new_p.post_values <- map_dbl(new_bf_values, ~ .x / (1 + .x))
-    
+
     # Replace Evid.Ratio only for point hypotheses
     results$Evid.Ratio[point_hyp_indices] <- new_bf_values
     results$Post.Prob[point_hyp_indices] <- new_p.post_values
   }
-  
+
   return(results)
 }
 
@@ -967,8 +967,7 @@ get_IBBU_predicted_response <- function(
     groups = NULL,
     untransform_cues = T,
     target_category = 2, # target category "/d/" = 1, "/t/" = 2
-    predict_test = T,
-    seed = 583,
+    seed = NULL,
     ndraws = NULL,
     logit = F
 ) {
@@ -984,35 +983,31 @@ get_IBBU_predicted_response <- function(
       untransform_cues = untransform_cues) %>%
     filter(group %in% .env$groups)
 
-
   # Categorize data
   d.pars %<>%
     group_by(group, .chain, .iteration, .draw) %>%
-    do(f = get_categorization_function_from_grouped_ibbu_stanfit_draws(., logit = logit)) %>%
+    do(f = get_categorization_function_from_grouped_ibbu_stanfit_draws(.)) %>%
     right_join(data, by = "group") %>%
     group_by(group, .chain, .iteration, .draw) %>%
     mutate(
       Predicted_posterior =
         pmap(
           .l = list(f, cues_joint, target_category),
-          .f = ~ exec(..1, x = ..2$x, target_category = target_category))) %>%
+          .f = ~ exec(..1, x = ..2$x, target_category = target_category, logit = logit))) %>%
     select(-f) %>%
-    unnest(c(cues_joint, cues_separate, Predicted_posterior)) %>%
+    unnest(c(cues_joint, cues_separate, Predicted_posterior))
+
+  d.pars %<>%
     # Repair estimates that yield infinite posteriors
-    { if (predict_test & logit == F) . else mutate(
+    { if (logit == F) . else mutate(
       .,
       Predicted_posterior =
         case_when(
           is.infinite(Predicted_posterior) & sign(Predicted_posterior) == 1 ~ 1,
           is.infinite(Predicted_posterior) & sign(Predicted_posterior) == -1 ~ 0,
-          T ~ Predicted_posterior)) } %>%
-    # for posterior predictions of exposure stimuli, get categorisations based on proportion and criterion decision rules
-    { if (predict_test) . else mutate(
-      .,
-      Response.Proportion = ifelse(category == "/t/", Predicted_posterior, 1 - Predicted_posterior),
-      Response.Criterion = ifelse(Predicted_posterior >= .5, "/t/","/d/")
-      ) }
+          T ~ Predicted_posterior)) }
 }
+
 
 get_IO_predicted_PSE <- function(
     condition,
