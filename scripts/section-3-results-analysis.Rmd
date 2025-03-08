@@ -450,7 +450,7 @@ make_hyp_table(
 
 Figure \@ref(fig:plot-fit-PSE)A suggests that the different participant groups had almost identical categorization functions prior to exposure. This is confirmed by the Bayesian hypothesis tests summarized in the top half of Table \@ref(tab:hypothesis-table-prediction1). During Test 1, before participants received informative exposure to the unfamiliar talker, there was moderate support for the hypothesis that participants' responses did not differ across exposure conditions. <!-- ^[The moderate BFs for these hypothesis tests are due to our use of regularizing priors, which have non-negligible density over the null [for an introduction to the Savage-Dickey method, see @wagenmakers2010]. Rather than to test the null against more plausible alternative priors, which would predictably increase the evidence for the null, we appeal to readers' intuition: the 90%-CIs of the comparisons for Test 1 are all approximately centered around zero; there is very little evidence in favor of an effect in either direction.] --> This is also reflected in the low probabilities of direction ($.5 \le p_{direction} \le .68$). This result is predicted by models of adaptive speech perception under the assumptions that (a) participants in the different groups have similar prior experiences, and that (b) our sample size is sufficiently large to yield stable estimates of listeners' categorization function. <!-- Equality of pre-exposure behavior across exposure groups is also implicitly assumed---but rarely tested---in the interpretation of most studies on adaptive speech perception [when it is tested, it often turns out that this assumption is *not* necessarily warranted, presumably due to insufficient sample sizes, cf. @kleinschmidt2020]. -->
 
-Critically, participants' categorization functions during Test 1 closely matched the predictions of the idealized pre-exposure listener, shown as a gray band in Figure \@ref(fig:plot-fit-PSE)A. This is confirmed by Bayesian hypothesis tests summarized in the final section of Table \@ref(tab:hypothesis-table-prediction1), which compared participants' PSE of each condition, as well as the average PSE of all conditions, against the mean PSE of the five cross-validated idealized pre-exposure listeners (BFs $\ge$ `r get_bf(fit_test_nested_within_condition_and_block, str_c("(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs + 
+Critically, participants' categorization functions during Test 1 closely matched the predictions of the idealized pre-exposure listener, shown as a gray band in Figure \@ref(fig:plot-fit-PSE)A. This is confirmed by Bayesian hypothesis tests summarized in the final section of Table \@ref(tab:hypothesis-table-prediction1), which compared the average PSE of all conditions, against the mean PSE of the five cross-validated idealized pre-exposure listeners (BFs $\ge$ `r get_bf(fit_test_nested_within_condition_and_block, str_c("(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs + 
           -mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs +
           -mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs)/3 -", predictedPSE_scaled_prior, "= 0"), bf = T)`). This demonstrated that a simple ideal observer trained on the phonetic distributions that a 'typical' listener might have previously experienced provides a decent model of listeners' perception prior to additional exposure [see also, e.g., @kronrod2016; @nearey-assmann2007; @tan2021; @xie2021cognition]. Notably, this is achieved with 0 degrees of freedom that are fit to listeners' responses: the ideal observers were trained solely on a phonetic database.
 
@@ -1047,6 +1047,7 @@ fit_test.upto.test4 <-
     adapt_delta = .995
   )
 fit_test.upto.test4 <- add_criterion(fit_test.upto.test4, criterion = "loo", moment_match = TRUE)
+loo(fit_test.upto.test4)
 ```
 
 ```{r fit-IA-predicted-logodds-human-responses}
@@ -1104,7 +1105,7 @@ fit_test.IA_predicted_logodds <-
     file_refit = "on_change")
 
 fit_test.IA_predicted_logodds <- add_criterion(fit_test.IA_predicted_logodds, criterion = c("loo"), moment_match = T)
-# loo_compare(fit_test.IA_predicted_logodds, fit_test.upto.test4)
+#loo_compare(fit_test.IA_predicted_logodds_tfj, fit_test.upto.test4)
 
 ## with random slopes
 fit_test.IA_predicted_logodds_with_RLs <-
