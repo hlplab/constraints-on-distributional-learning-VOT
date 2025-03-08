@@ -657,133 +657,9 @@ The model is described in detail in the SI (\@ref(sec:ideal-adaptor)), including
 
 These two parameters ($\kappa_0$ and $\nu_0$) describe the strength of participants' prior beliefs about the category means and (co)variances, respectively. Together, $\kappa_0$ and $\nu_0$ describe the uncertainty that listeners have about the unfamiliar talker's phonetic distributions prior to exposure (or, equivalently, how relevant listeners believe their prior expectations to be for the unfamiliar talker). The same two parameters also determine the rate at which the model updates its beliefs about the exposure distributions with each new observation from that talker. This captures how prior expectations both guide and constrain distributional learning [for discussion, see @kleinschmidt-jaeger2015; @kleinschmidt2020]. Specifically, $\kappa_0$ and $\nu_0$ can be understood as pseudocounts that describe the weighting of prior expectations relative to the observed data. For example, if $\kappa_0 = 100$ then it takes 100 observations of /d/s from the unfamiliar talker until listeners' beliefs about the VOT, f0, and vowel duration values of the category means for /d/ will be a 50/50 mixture of their prior beliefs and the means observed from the unfamiliar talker.
 
-```{r fit-IA-inferred-VOT-f0}
-d_for_ASP <-
-  d.for_analysis %>%
-  ungroup() %>%
-  # Exclude catch trials and the final two test blocks since we expect unlearning during those blocks
-  # (which is not modeled)
-  filter(
-    !(Phase == "exposure" & is.na(Item.ExpectedResponse.Voicing)),
-    as.numeric(Block) <= 7) %>%
-  # Use F0 as intended by generation script. This makes fitting more computationally feasible
-  # (336 instead of 1001 unique combinations of group & test locations), and also removes the
-  # potential that annotation / measurement error perturb the f0 values. It does, however,
-  # make the assumption that f0 is the same across the three minimal pairs. While likely wrong,
-  # this assumption better aligns with the fact that the model doesn't have a way to keep track
-  # of any lexical, phonological, or phonetic context effects on VOT (and thus no way to predict
-  # any potential differences between minimal pairs).
-  # Create new condition variable that uniquely identifies what participants have seen at any of the
-  # tests and a new block variable that identifies the type and order of blocks. Also create two
-  # convenience variables, x (stimulus) and Response.Category (to make matching with the category
-  # column of ideal observers/adaptors more straightforward).
-  mutate(
-    Condition.for_ASP = paste0(Condition.Exposure, List.ExposureBlockOrder, List.ExposureMaterials),
-    Block.for_ASP = paste0(Phase, Block),
-    x = pmap(.l = list(VOT, f0_Mel, vowel_duration), ~ c(...)),
-    Response.Category = factor(ifelse(Response.Voicing == "voiced", "/d/", "/t/"), levels = c("/d/", "/t/")),
-    Item.ExpectedResponse.Category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"), levels = c("/d/", "/t/"))) %>%
-  slice_into_unique_exposure_test(
-    condition_var = "Condition.for_ASP",
-    block_var = "Block.for_ASP",
-    block_order = c("test1", "exposure2", "test3", "exposure4", "test5", "exposure6", "test7")) %>%
-  mutate(ExposureGroup = factor(ExposureGroup)) %>%
-  select(
-    ExposureGroup, Phase, ParticipantID, Block, Trial, x,
-    VOT, f0_Mel, vowel_duration, Response.Category, Item.ExpectedResponse.Category)
+(ref:plot-IA-human-PSE) Summary of ideal adaptor analysis, comparing shifts in listeners' PSEs against the shifts expected by an ideal adaptor [a distributional learning model that describes ideal information integration, @kleinschmidt-jaeger2015]. Point ranges and dashed horizontal lines are identical to those in Figure \@ref(fig:plot-fit-PSE)C. Colored ribbons indicate the 95%-CI for the PSEs predicted by the ideal adaptor fit to listeners' responses. The vertical bar to the right of the panel indicates the range of talker-specific PSEs an idealized listener might have experienced in previous exposure: the mean and 2.5%-to-97.5% quantile range of talker-specific PSEs derived from Bayesian ideal observers fit to all talkers in the phonetic database of isolated word productions presented in Figure \@ref(fig:prior-distributions-and-exposure-conditions)A. We return to this range in the general discussion where we discuss possible explanations for mismatches between the ideal adaptor and participants' responses.
 
-# fit ideal adaptor with informative priors
-# use prior roughly in middle of 5-fold CV
-m_IO.VOT_f0_vowel <-
-  io %>%
-  filter(str_starts(Condition.Exposure, "prior")) %>%
-  select(-x) %>%
-  unnest(io) %>%
-  select(-c(mu, Sigma)) %>%
-  filter(Condition.Exposure == "prior1") %>%
-  mutate(Condition.Exposure = "CV_prior.mean") %>%
-  right_join(
-    io %>%
-  filter(str_starts(Condition.Exposure, "prior")) %>%
-  select(-x) %>%
-  unnest(io) %>%  
-  unnest_wider(mu) %>%
-    group_by(category) %>%
-  summarise(across(c(VOT, f0_Mel, vowel_duration), mean)) %>%
-  mutate(mu = pmap(.l = list(VOT, f0_Mel, vowel_duration),
-    # Ensure names else it won't be recognized as an MVG IO
-    ~ set_names(c(...), c("VOT", "f0_Mel", "vowel_duration")))) %>%
-  select(category, mu)) %>%
-  right_join(
-    io %>%
-  filter(str_starts(Condition.Exposure, "prior")) %>%
-  select(-x) %>%
-  unnest(io) %>%
-  select(Condition.Exposure, category, Sigma) %>%
-  group_by(category) %>%
-  summarise(Sigma = list(reduce(Sigma, `+`)/length(Sigma))) %>%
-  group_by(category))
-
-# fit ideal adaptor with 3 cue priors
-m_IA.VOT_f0_vowelduration_informedprior <-
-  infer_prior_beliefs(
-    exposure = d_for_ASP %>% filter(Phase == "exposure"),
-    test = d_for_ASP %>% filter(Phase == "test"),
-    cues = c("VOT", "f0_Mel", "vowel_duration"),  
-    category = "Item.ExpectedResponse.Category",
-    response = "Response.Category",
-    group = "ParticipantID",
-    group.unique = "ExposureGroup",
-    center.observations = T,   
-    scale.observations = T,
-    pca.observations = F,
-    lapse_rate = NULL,
-    mu_0 = m_IO.VOT_f0_vowel$mu,
-    Sigma_0 = map2(m_IO.VOT_f0_vowel$Sigma, m_IO.VOT_f0_vowel$Sigma_noise, `+`),
-    sample = T,
-    file = "../models/IBBU_VOT+f0+vowelduration_informative_priors.RDS",
-    warmup = 3000, iter = 4000,
-    control = list(adapt_delta = .995, max_treedepth = 15))
-```
-
-```{r summarise-PSE-predictions-of-IA}
-# Get logistic model predictions of the IA's categorization
-# then prepare the data for plotting
-if (file.exists("../models/d.IA_predicted_test_informedprior.rds") & !RESET_FIGURES) {
-  d.IA_predicted_test_informedprior <- readRDS("../models/d.IA_predicted_test_informedprior.rds")
-} else {
-  data.test <- prep_data_for_IBBU_prediction(m_IA.VOT_f0_vowelduration_informedprior)
-
-  d.IA_predicted_test_informedprior <-
-    get_IBBU_predicted_response(
-      m_IA.VOT_f0_vowelduration_informedprior,
-      data = data.test,
-      groups = get_group_levels_from_stanfit(m_IA.VOT_f0_vowelduration_informedprior))
-
-  saveRDS(d.IA_predicted_test_informedprior, "../models/d.IA_predicted_test_informedprior.rds")
-}
-
-if (file.exists("../models/d.IA_predicted_PSE_informedprior.rds") & !RESET_FIGURES) {
-  d.IA_predicted_PSE_informedprior <- readRDS("../models/d.IA_predicted_PSE_informedprior.rds")
-} else {
-  d.IA_predicted_PSE_informedprior <-
-    fit_logistic_regression_to_model_categorization(d.IA_predicted_test_informedprior) %>%
-    group_by(group) %>%
-    median_hdci(PSE) %>%
-    # duplicate the no-exposure row; 1 for each condition
-    mutate(rows = ifelse(group == "no exposure", 3, 1)) %>%
-    uncount(rows) %>%
-    mutate(
-      Condition.Exposure = factor(c(rep("Shift0", 3), rep("Shift10", 3), rep("Shift40", 3), c("Shift0", "Shift10", "Shift40"))),
-      Block = ifelse(group != "no exposure", str_replace(group, ".*(\\d)", "\\1"), group),
-      Block = factor(ifelse(group == "no exposure", 1, Block))) %>%
-    add_block_labels()
-
-  saveRDS(d.IA_predicted_PSE_informedprior, "../models/d.IA_predicted_PSE_informedprior.rds")
-}
-```
-
-```{r get-talker-specific-PSEs}
+```{r get-talker-specific-PSEs-for-plot}
 # As mentioned in the result section, there are two different ways to obtain PSEs from ideal observers.
 # Here we provide the code for both but continue to use the same method as in the result section. This
 # is the method that introduces the same potential biases into the estimates of the ideal observers that
@@ -865,7 +741,138 @@ d.talkerPSEs %<>%
 #   geom_pointrange(position = pos)
 ```
 
-(ref:plot-IA-human-PSE) Summary of ideal adaptor analysis, comparing shifts in listeners' PSEs against the shifts expected by an ideal adaptor [a distributional learning model that describes ideal information integration, @kleinschmidt-jaeger2015]. Point ranges and dashed horizontal lines are identical to those in Figure \@ref(fig:plot-fit-PSE)C. Colored ribbons indicate the 95%-CI for the PSEs predicted by the ideal adaptor fit to listeners' responses. The vertical bar to the right of the panel indicates the range of talker-specific PSEs an idealized listener might have experienced in previous exposure: the mean and 2.5%-to-97.5% quantile range of talker-specific PSEs derived from Bayesian ideal observers fit to all talkers in the phonetic database of isolated word productions presented in Figure \@ref(fig:prior-distributions-and-exposure-conditions)A. We return to this range in the general discussion where we discuss possible explanations for mismatches between the ideal adaptor and participants' responses.
+```{r fit-IA-inferred-VOT-f0}
+d_for_ASP <-
+  d.for_analysis %>%
+  ungroup() %>%
+  # Exclude catch trials and the final two test blocks since we expect unlearning during those blocks
+  # (which is not modeled)
+  filter(
+    !(Phase == "exposure" & is.na(Item.ExpectedResponse.Voicing)),
+    as.numeric(Block) <= 7) %>%
+  # Use F0 as intended by generation script. This makes fitting more computationally feasible
+  # (336 instead of 1001 unique combinations of group & test locations), and also removes the
+  # potential that annotation / measurement error perturb the f0 values. It does, however,
+  # make the assumption that f0 is the same across the three minimal pairs. While likely wrong,
+  # this assumption better aligns with the fact that the model doesn't have a way to keep track
+  # of any lexical, phonological, or phonetic context effects on VOT (and thus no way to predict
+  # any potential differences between minimal pairs).
+  # Create new condition variable that uniquely identifies what participants have seen at any of the
+  # tests and a new block variable that identifies the type and order of blocks. Also create two
+  # convenience variables, x (stimulus) and Response.Category (to make matching with the category
+  # column of ideal observers/adaptors more straightforward).
+  mutate(
+    Condition.for_ASP = paste0(Condition.Exposure, List.ExposureBlockOrder, List.ExposureMaterials),
+    Block.for_ASP = paste0(Phase, Block),
+    x = pmap(.l = list(VOT, f0_Mel, vowel_duration), ~ c(...)),
+    Response.Category = factor(ifelse(Response.Voicing == "voiced", "/d/", "/t/"), levels = c("/d/", "/t/")),
+    Item.ExpectedResponse.Category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"), levels = c("/d/", "/t/"))) %>%
+  slice_into_unique_exposure_test(
+    condition_var = "Condition.for_ASP",
+    block_var = "Block.for_ASP",
+    block_order = c("test1", "exposure2", "test3", "exposure4", "test5", "exposure6", "test7")) %>%
+  mutate(ExposureGroup = factor(ExposureGroup)) %>%
+  select(
+    ExposureGroup, Phase, ParticipantID, Block, Trial, x,
+    VOT, f0_Mel, vowel_duration, Response.Category, Item.ExpectedResponse.Category)
+
+# fit ideal adaptor with informative priors
+# use prior roughly in middle of 5-fold CV
+m_IO.VOT_f0_vowel <-
+  io %>%
+  filter(str_starts(Condition.Exposure, "prior")) %>%
+  select(-x) %>%
+  unnest(io) %>%
+  select(-c(mu, Sigma)) %>%
+  filter(Condition.Exposure == "prior1") %>%
+  mutate(Condition.Exposure = "CV_prior.mean") %>%
+  right_join(
+    io %>%
+  filter(str_starts(Condition.Exposure, "prior")) %>%
+  select(-x) %>%
+  unnest(io) %>%  
+  unnest_wider(mu) %>%
+    group_by(category) %>%
+  summarise(across(c(VOT, f0_Mel, vowel_duration), mean)) %>%
+  mutate(mu = pmap(.l = list(VOT, f0_Mel, vowel_duration),
+    # Ensure names else it won't be recognized as an MVG IO
+    ~ set_names(c(...), c("VOT", "f0_Mel", "vowel_duration")))) %>%
+  select(category, mu)) %>%
+  right_join(
+    io %>%
+  filter(str_starts(Condition.Exposure, "prior")) %>%
+  select(-x) %>%
+  unnest(io) %>%
+  select(Condition.Exposure, category, Sigma) %>%
+  group_by(category) %>%
+  summarise(Sigma = list(reduce(Sigma, `+`)/length(Sigma))) %>%
+  group_by(category))
+
+# fit ideal adaptor with 3 cue priors
+m_IA.VOT_f0_vowelduration_informedprior <-
+  infer_prior_beliefs(
+    exposure = d_for_ASP %>% filter(Phase == "exposure"),
+    test = d_for_ASP %>% filter(Phase == "test"),
+    cues = c("VOT", "f0_Mel", "vowel_duration"),  
+    category = "Item.ExpectedResponse.Category",
+    response = "Response.Category",
+    group = "ParticipantID",
+    group.unique = "ExposureGroup",
+    center.observations = T,   
+    scale.observations = F,
+    pca.observations = F,
+    lapse_rate = NULL,
+    mu_0 = m_IO.VOT_f0_vowel$mu,
+    Sigma_0 = map2(m_IO.VOT_f0_vowel$Sigma, m_IO.VOT_f0_vowel$Sigma_noise, `+`),
+    sample = T,
+    file = "../models/IBBU_VOT+f0+vowelduration_informative_priors.RDS",
+    warmup = 3000, iter = 4000,
+    control = list(adapt_delta = .995, max_treedepth = 15))
+```
+
+```{r get-and-summarise-PSE-predictions-of-IA}
+# Get logistic model predictions of the IA's categorization then prepare the data for plotting
+# We take this somewhat indirect way to calculate the predicted PSE of the IA in order to make
+# sure that the PSE of the IA is estimated with the same procedure that we apply to listeners 
+# (assuming linearity over VOT).
+
+# First get the IA predictions in log-odds
+if (file.exists("../models/d.IA_predicted_test_informedprior.rds") & !RESET_MODELS) {
+  d.IA_predicted_logodds <- readRDS("../models/d.IA_predicted_test_informedprior.rds")
+} else {
+  d.IA_predicted_logodds <-
+    get_IBBU_predicted_response(
+      m_IA.VOT_f0_vowelduration_informedprior,
+      data = 
+        prep_data_for_IBBU_prediction(m_IA.VOT_f0_vowelduration_informedprior, prep_test = T, untransform_cues = T) %>%
+        # Make additional rows for test block 1 so that there is 1 for each condition
+        mutate(rows = ifelse(group == "no exposure", 3, 1)) %>%
+        uncount(rows) %>%
+        mutate(
+          Condition.Exposure = factor(c(rep("Shift0", 9), rep("Shift10", 9), rep("Shift40", 9), c("Shift0", "Shift10", "Shift40"))),
+          Block = ifelse(group != "no exposure", str_replace(group, ".*(\\d)", "\\1"), group),
+          Block = factor(ifelse(group == "no exposure", 1, Block))),
+      groups = get_group_levels_from_stanfit(m_IA.VOT_f0_vowelduration_informedprior),
+      untransform_cues = T,
+      logit = T,
+      seed = GLOBAL_SEED) 
+ 
+  write_csv(d.IA_predicted_logodds, "../models/d.IA_predicted_logodds.csv")
+}
+
+if (file.exists("../models/d.IA_predicted_PSE_informedprior.rds") & !RESET_MODELS) {
+  d.IA_predicted_PSE <- readRDS("../models/d.IA_predicted_PSE_informedprior.rds")
+} else {
+  d.IA_predicted_PSE <-
+    fit_logistic_regression_to_model_categorization(
+      d.IA_predicted_logodds %>% mutate(Predicted_posterior = plogis(Predicted_posterior))) %>%
+    group_by(group) %>%
+    median_hdci(PSE) %>%
+    add_block_labels()
+
+  saveRDS(d.IA_predicted_PSE, "../models/d.IA_predicted_PSE_informedprior.rds")
+}
+```
 
 ```{r plot-IA-human-PSE, fig.width=6.5, fig.height=3.5, fig.cap="(ref:plot-IA-human-PSE)", fig.pos="ht"}
 pos <- position_dodge(.3)
@@ -891,7 +898,7 @@ d.psychometric_intercept.slope.PSE.median %>%
     inherit.aes = F) +
   # TO DO (here and elsewhere): this should probably be an annotation
   geom_ribbon(
-    data = d.IA_predicted_PSE_informedprior,
+    data = d.IA_predicted_PSE,
     mapping = aes(x = Block.plot_label, ymin = .lower, ymax = .upper, fill = Condition.Exposure, group = Condition.Exposure),
     alpha = .1,
     position = pos,
@@ -976,7 +983,8 @@ psych.model_prediction <-
   summarise(across(c(predicted_proportion_voiceless, predicted_proportion_voiced, proportion_voiceless, proportion_voiced), mean))
 
 IA.prediction <-
-  d.IA_predicted_test_informedprior %>%
+  d.IA_predicted_logodds %>% 
+  mutate(Predicted_posterior = plogis(Predicted_posterior)) %>%
   group_by(group, VOT) %>%
   summarise(across(Predicted_posterior, mean)) %>%
   mutate(ExposureGroup = ifelse(group == "prior", "no exposure", group)) %>%
@@ -992,9 +1000,8 @@ IA.prediction <-
 if (file.exists("../models/d.IA_predicted_logodds.csv") & !RESET_MODELS) {
   d.IA_predicted_logodds <- read_csv("../models/d.IA_predicted_logodds.csv", show_col_types = F)
 } else {
-  
   data.test_for_IA_predicted_logodds <-
-    prep_data_for_IBBU_prediction(m_IA.VOT_f0_vowelduration_informedprior) %>%
+    prep_data_for_IBBU_prediction(m_IA.VOT_f0_vowelduration_informedprior, prep_test = T, untransform_cues = T) %>%
     mutate(
       # Make additional rows for test block 1 so that there is 1 for each condition
       rows = ifelse(group == "no exposure", 3, 1)) %>%
@@ -1010,6 +1017,7 @@ if (file.exists("../models/d.IA_predicted_logodds.csv") & !RESET_MODELS) {
       m_IA.VOT_f0_vowelduration_informedprior,
       data = data.test_for_IA_predicted_logodds,
       groups = get_group_levels_from_stanfit(m_IA.VOT_f0_vowelduration_informedprior),
+      untransform_cues = T,
       logit = T) %>%
     group_by(VOT, Condition.Exposure, Block) %>%
     # get the modal posterior draw
