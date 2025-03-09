@@ -861,12 +861,13 @@ if (file.exists("../models/d.IA_predicted_PSE_informedprior.rds") & !RESET_MODEL
       d.IA_predicted_logodds %>% mutate(Predicted_posterior = plogis(Predicted_posterior))) %>%
     group_by(group) %>%  
     median_hdci(PSE) %>%
-    mutate(rows = ifelse(group == "no exposure", 3, 1)) %>%
+    # Make additional rows for test block 1 so that there is 1 for each condition
+        mutate(rows = ifelse(group == "no exposure", 3, 1)) %>%
         uncount(rows) %>%
     mutate(
-      Condition.Exposure = ifelse(group != "no exposure", gsub("^.*(Shift[0-9]+)_.*$", "\\1",), c("Shift0", "Shift10", "Shift40")),
-      Block = ifelse(group != "no exposure", str_replace(group, ".*(\\d)", "\\1"), group),
-      Block = factor(ifelse(group == "no exposure", 1, Block))) %>%
+          Condition.Exposure = factor(c(rep("Shift0", 3), rep("Shift10", 3), rep("Shift40", 3), c("Shift0", "Shift10", "Shift40"))),
+          Block = ifelse(group != "no exposure", str_replace(group, ".*(\\d)", "\\1"), group),
+          Block = factor(ifelse(group == "no exposure", 1, Block))) %>%
     add_block_labels()
 
   saveRDS(d.IA_predicted_PSE, "../models/d.IA_predicted_PSE_informedprior.rds")
