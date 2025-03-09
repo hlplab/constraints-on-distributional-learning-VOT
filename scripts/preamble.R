@@ -42,7 +42,7 @@ library(posterior)          # working with Bayesian output
 library(bayestestR)
 library(broom.mixed)        # extracting effects from lmer models
 library(modeest)            # estimate mode
-#library(rsample)           # bootstrapping
+
 
 library(phonR)              # normalization of f0
 library(supunsup)           # Kleinschmidt & Jaeger 2016 data
