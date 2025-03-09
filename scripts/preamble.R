@@ -24,9 +24,9 @@ library(assertthat)         # asserts (in functions)
 library(here)               # convenient console debugging
 
 library(patchwork)          # plot layouts
-library(ragg)               # graphics rendering
-library(magick)
-library(webshot)
+# library(ragg)               # graphics rendering
+# library(magick)
+# library(webshot)
 library(ggstance)
 library(ggforce)            # facet_matrix for pairwise correlation plots
 library(ggtext)             # make geom textboxes
@@ -34,7 +34,6 @@ library(ggnewscale)         # extra colour scale in ggplots
 library(kableExtra)         # for formatting tables
 
 library(linguisticsdown)    # IPA symbols
-library(latexdiffr)         # track changes
 
 library(brms)               # fit Bayesian regression models
 library(tidybayes)          # posterior samples and plots in tidy format
@@ -42,7 +41,6 @@ library(posterior)          # working with Bayesian output
 library(bayestestR)
 library(broom.mixed)        # extracting effects from lmer models
 library(modeest)            # estimate mode
-#library(rsample)           # bootstrapping
 
 library(phonR)              # normalization of f0
 library(supunsup)           # Kleinschmidt & Jaeger 2016 data

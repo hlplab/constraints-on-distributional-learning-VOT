@@ -881,7 +881,8 @@ fit_logistic_regression_to_model_categorization <- function(.data, resolution = 
       group_by(group, .chain, .iteration, .draw) %>%
       nest()
   }
-  .data %>%
+
+  .data %<>%
     mutate(
     model_unscaled = map(data, ~ glm(
       cbind(n_t, n_d) ~ 1 + VOT,
@@ -900,6 +901,8 @@ fit_logistic_regression_to_model_categorization <- function(.data, resolution = 
     # (this still keeps all individual predictions but only has one unique combination
     # of exposure condition and test
     { if ("group" %in% names(.)) mutate(., group = gsub("[ABC]A", "", group)) else (.) }
+
+  return(.data)
 }
 
 
