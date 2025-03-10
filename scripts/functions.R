@@ -30,32 +30,32 @@ descale <- function(x, mean, sd) {
 unscale_coef <- function(model, coef_name, data) {
   # Extract coefficient
   coef_value <- fixef(model)[coef_name, "Estimate"]
-  
+
   # Check if this is an interaction term
   if(str_detect(coef_name, ":")) {
     # Split the interaction term into variable names
     var_names <- strsplit(coef_name, ":")[[1]]
     var_names <- str_remove(var_names, "_gs$") # Remove _gs suffix
-    
+
     # Get scaling factors for each component
     sds <- map_dbl(var_names, function(var) {
       var_gs <- paste0(var, "_gs")
       sd_attr <- attr(data[[var_gs]], paste0(var, ".SD"))
-      
+
       if (is.null(sd_attr)) {
         warning(paste("Could not find SD attribute for", var, "- using default of 1"))
         return(1)
       }
       return(sd_attr)
     })
-    
+
     # Unscale by dividing by product of SDs (with Gelman scaling factor)
     return(coef_value / prod(sds * 2))
   } else {
     # Handle main effects
     var_name <- str_remove(coef_name, "_gs$")
     var_gs <- paste0(var_name, "_gs")
-    
+
     # Special handling for intercept
     if (!str_detect(coef_name, "Intercept")) {
       # For main effects, divide by 2 * SD
@@ -69,7 +69,7 @@ unscale_coef <- function(model, coef_name, data) {
       # For intercepts, use descale function to add mean
       var_mean <- attr(data[[var_gs]], paste0(var_name, ".mean"))
       var_sd <- attr(data[[var_gs]], paste0(var_name, ".SD"))
-      
+
       if (is.null(var_sd) || is.null(var_mean)) {
         warning("Could not find mean or SD attributes for intercept - returning raw coefficient")
         return(coef_value)
