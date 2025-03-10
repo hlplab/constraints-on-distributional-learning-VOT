@@ -590,7 +590,7 @@ get_bf <- function(model, hypothesis, est = FALSE, bf = FALSE, digits = 2, robus
       ", 90\\%-CI = \\([", round(h[[1]]$CI.Lower, digits = digits + 1),
       ", ", round(h[[1]]$CI.Upper, digits = digits + 1),
       "]\\), \\(BF ", BF_formatted,
-      "\\), \\(p_{posterior} = \\) \\(", signif(h[[1]]$Post.Prob, digits = digits),
+      "\\), \\(p_{posterior} = \\) \\(", round(h[[1]]$Post.Prob, digits = digits),
       "\\)"))
   }
 }
