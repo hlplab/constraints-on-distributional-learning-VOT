@@ -2147,7 +2147,15 @@ make_hyp_table(
   col1_width = "18em")
 ```
 
+<!--{=latex}-->
+\vspace{7em}
+\noindent\rule{\textwidth}{0.4pt}
+\vspace{0.5em}
 
+\noindent\textit{During the preparation of this work the authors used Github Copilot with Claude 3.7 Sonnet (Preview) in order to enhance code efficiency and forward-compatibility. After using this tool/service, the authors reviewed and edited the content as needed and take full responsibility for the content of the publication.}
+\vspace{0.5em}
+<!--\noindent\rule{\textwidth}{0.4pt}-->
+\vspace{1em}
 \printbibliography
 \erefsection
 

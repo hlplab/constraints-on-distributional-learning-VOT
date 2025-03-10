@@ -541,7 +541,7 @@ get_mean_BF <- function(model, hypothesis, robust = TRUE, n.iterations = 100, n.
     #print(paste("Cumulative mean BF:", density.post / mean(density.priors[1:i])))
   }
 
-  return(density.post / mean(density.priors))
+  return(round(density.post / mean(density.priors), 1))
 }
 
 get_bf <- function(model, hypothesis, est = FALSE, bf = FALSE, digits = 2, robust = TRUE, use_seed = TRUE) {
@@ -549,11 +549,11 @@ get_bf <- function(model, hypothesis, est = FALSE, bf = FALSE, digits = 2, robus
   h <- hypothesis(model, hypothesis, robust = robust)
 
   # Extract evidence ratio and check if it's infinite
-  evid_ratio <- h[[1]]$Evid.Ratio
+  evid_ratio <- round(h[[1]]$Evid.Ratio, digits = digits - 1)
   BF_formatted <- if (is.infinite(evid_ratio)) {
     paste("\\geq", get_nsamples(model))
   } else {
-    paste("=", round(evid_ratio, digits = digits))
+    paste("=", round(evid_ratio, digits = digits - 1))
   }
 
   # Return appropriate result based on parameters
@@ -580,7 +580,7 @@ get_bf <- function(model, hypothesis, est = FALSE, bf = FALSE, digits = 2, robus
       if (is.infinite(evid_ratio)) {
         return(get_nsamples(model))
       } else {
-        return(round(evid_ratio, digits = digits))
+        return(round(evid_ratio, digits = digits - 1))
       }
     }
   } else {
@@ -590,18 +590,9 @@ get_bf <- function(model, hypothesis, est = FALSE, bf = FALSE, digits = 2, robus
       ", 90\\%-CI = \\([", round(h[[1]]$CI.Lower, digits = digits + 1),
       ", ", round(h[[1]]$CI.Upper, digits = digits + 1),
       "]\\), \\(BF ", BF_formatted,
-      "\\), \\(p_{posterior} = \\) \\(", signif(h[[1]]$Post.Prob, digits = 3),
+      "\\), \\(p_{posterior} = \\) \\(", signif(h[[1]]$Post.Prob, digits = digits),
       "\\)"))
   }
-}
-
-# Function to get identity CI of a model summary
-get_CI <- function(model, term, hypothesis) {
-
-  paste0(round(as.numeric(summary(model)$fixed[term, 1]), 1), " 95%-CI: ",
-         paste(round(as.numeric(summary(model)$fixed[term, 3:4]), 1), collapse = " to "),
-         "; ",
-         get_bf(model = model, hypothesis = hypothesis))
 }
 
 print_CI <- function(model, term) {

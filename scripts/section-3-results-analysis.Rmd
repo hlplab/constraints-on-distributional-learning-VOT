@@ -137,12 +137,7 @@ d.psychometric_intercept.slope.PSE.draws <-
 ```{r}
 # Create data frame for pre-exposure IO. To avoid over-fitting, we use 5-fold cross-validation.
 # We use the isolated speech data from Chodroff and Wilson, and randomly cut it into 5 folds.
-set.seed(920)
-# d.prior <-
-#   d.chodroff_wilson.isolated %>%
-#   group_by(Talker, category) %>%
-#   mutate(fold = sample(1:5, n(), replace = T))
-
+set.seed(GLOBAL_SEED)
 # Make pre-exposure ideal observers based on Chodroff and Wilson *and* ideal observers
 # that are fit on the exposure VOTs of the three exposure conditions (idealized learners).
 # These ideal observers can be thought of as reflecting a learner that has fully learned
