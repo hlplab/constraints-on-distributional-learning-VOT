@@ -2091,7 +2091,7 @@ fit_test.IA_predicted_logodds.prior.change_with_RLs <-
     formula. = Response.Voiceless ~ 1 + IA_predicted_logodds.prior_gs + IA_predicted_logodds.change_gs +
       (1 + IA_predicted_logodds_gs | ParticipantID) + (1 | Item.MinimalPair),
     newdata = d.IA_predicted_logodds.mode,
-    file ="../models/ ")
+    file ="../models/test.IA_predicted_logodds.prior.change_with_RLs.rds ")
 
 fit_test.IA_predicted_logodds.prior.change_with_RLs <- add_criterion(fit_test.IA_predicted_logodds.prior.change_with_RLs, criterion = c("loo"), moment_match = T)
 ```
