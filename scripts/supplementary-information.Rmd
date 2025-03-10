@@ -2143,7 +2143,8 @@ make_hyp_table(
     "Predicted log-odds pre-exposure > 0",
     "Predicted $\\Delta$ log-odds > 0",
     "Predicted $\\Delta$ log-odds * block < 0"),
-  caption = "The ideal adaptor predicts human behaviour very well but how did predictions change in later blocks? This table summarizes the main effects of the ideal adaptor's predicted log-odds prior to exposure, the change in the predicted log-odds, and the latter's interaction with block.")
+  caption = "The ideal adaptor predicts human behaviour very well but how did predictions change in later blocks? This table summarizes the main effects of the ideal adaptor's predicted log-odds prior to exposure, the change in the predicted log-odds, and the latter's interaction with block.",
+  col1_width = "18em")
 ```
 
 
