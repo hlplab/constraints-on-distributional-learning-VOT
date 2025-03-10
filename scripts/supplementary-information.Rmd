@@ -1447,7 +1447,7 @@ Figure \@ref(fig:plot-IO-psychometric-model-human-accuracy) summarizes changes i
 p.human_psych_accuracy
 ```
 
-## Visual analysis of reaction times
+## Visual analysis of reaction times {#sec:results-RT}
 
 (ref:plot-RT-all-data) Summary of participant reaction times by block. **Top:** Scatter plot of means and SDs of RTs (on $\log_{10}$ axes). **Bottom:** Progression of RTs by trial (including catch trials) and block. Lines indicate mean RTs, ribbons indicate region of two times SD from the mean (on $\log_{10}$ y-axis).
 
