@@ -586,7 +586,7 @@ get_bf <- function(model, hypothesis, est = FALSE, bf = FALSE, digits = 2, robus
   } else {
     # Default: full formatted string
     return(paste0(
-      "estimate = ", round(h[[1]]$Estimate, digits = digits),
+      "Estimate = ", round(h[[1]]$Estimate, digits = digits),
       ", 90\\%-CI = \\([", round(h[[1]]$CI.Lower, digits = digits + 1),
       ", ", round(h[[1]]$CI.Upper, digits = digits + 1),
       "]\\), \\(BF ", BF_formatted,
