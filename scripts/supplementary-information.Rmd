@@ -2081,100 +2081,70 @@ We take a step-wise approach in the modeling to systematically examine different
 
 To compare model performance, we used LOOIC to estimate the expected log predictive density (ELPD) (Table \@ref(tab:table-elpd-comparison)). The results indicate that incorporating prior predicted log-odds, changes in predictions, and their interaction with test block provides the most accurate representation of human responses 
 
-Tables \@ref(tab:hypothesis-table-IA-logodds), \@ref(tab:hypothesis-table-IA-logodds-prior-change), and \@ref(tab:hypothesis-table-IA-logodds-interaction) show the hypotheses tests on the respective predictors. We include the point hypotheses as additional evidence against the null. All indicate the robustness of the correlation between ideal adaptor predictions and human responses. Crucially, the hypothesis test for the interaction term (Table \@ref(tab:hypothesis-table-IA-logodds-interaction)) confirms that while changes in ideal adaptor-predicted log-odds initially align with human responses, this relationship reverses with increasing exposure. The negative coefficient of the interaction term reflects this divergence, supporting the hypothesis that the ideal adaptor overpredicts learning effects in later test blocks.
+Table \@ref(tab:hypothesis-table-IA-logodds-interaction) show the hypotheses tests of the respective predictors. All indicate the robustness of the correlation between ideal adaptor predictions and human responses. Crucially, the hypothesis test for the interaction term confirms that while changes in ideal adaptor-predicted log-odds initially align with human responses, this relationship reverses with increasing exposure. The negative coefficient of the interaction term reflects this divergence, supporting the hypothesis that the ideal adaptor over predicts learning effects in later test blocks.
 
-<!-- # change in IA-predicted logodds -->
-<!-- fit_test.IA_predicted_logodds.prior.change <- -->
-<!--   update( -->
-<!--     fit_test.IA_predicted_logodds, -->
-<!--     formula. = Response.Voiceless ~ 1 + IA_predicted_logodds.prior_gs + IA_predicted_logodds.change_gs + -->
-<!--       (1 | ParticipantID) + (1 | Item.MinimalPair), -->
-<!--     newdata = d.IA_predicted_logodds.mode, -->
-<!--     file ="../models/test_IA_predicted_logodds.prior.change.rds") -->
+```{r}
+# change in IA-predicted logodds
+fit_test.IA_predicted_logodds.prior.change_with_RLs <-
+  update(
+    fit_test.IA_predicted_logodds,
+    formula. = Response.Voiceless ~ 1 + IA_predicted_logodds.prior_gs + IA_predicted_logodds.change_gs +
+      (1 + IA_predicted_logodds_gs | ParticipantID) + (1 | Item.MinimalPair),
+    newdata = d.IA_predicted_logodds.mode,
+    file ="../models/test_IA_predicted_logodds.prior.change_with_RLs.rds")
 
-<!-- fit_test.IA_predicted_logodds.prior.change <- add_criterion(fit_test.IA_predicted_logodds.prior.change, criterion = c("loo"), moment_match = T) -->
-
-<!-- # model with interaction of block and change in IA-predicted logodds -->
-<!-- fit_test.IA_predicted_logodds.prior.change.interaction <- -->
-<!--   update( -->
-<!--     fit_test.IA_predicted_logodds.prior.change, -->
-<!--     formula. =  Response.Voiceless ~ 1 + IA_predicted_logodds.prior_gs + (Block_gs * IA_predicted_logodds.change_gs) + -->
-<!--       (1 | ParticipantID) + (1 | Item.MinimalPair), -->
-<!--     newdata = d.IA_predicted_logodds.mode, -->
-<!--     file ="../models/test_IA_predicted_logodds.prior.change.interaction.rds") -->
-
-<!-- fit_test.IA_predicted_logodds.prior.change.interaction <- -->
-<!--   add_criterion(fit_test.IA_predicted_logodds.prior.change.interaction, criterion = c("loo"), moment_match = T) -->
+fit_test.IA_predicted_logodds.prior.change_with_RLs <- add_criterion(fit_test.IA_predicted_logodds.prior.change_with_RLs, criterion = c("loo"), moment_match = T)
+```
   
-<!-- ```{r table-elpd-comparison, eval=TRUE} -->
-<!-- bind_cols( -->
-<!--   "Model" = c("IA predictions with interaction", "IA prior predictions + change in predictions", "IA predictions"), -->
-<!--   loo_compare(fit_test.IA_predicted_logodds, fit_test.IA_predicted_logodds.prior.change, fit_test.IA_predicted_logodds.prior.change.interaction)) %>%  -->
-<!--   select(1:3, 8, 9) %>%  -->
-<!--   rename_at(c("looic", "se_looic"), .funs = str_to_upper) %>%  -->
-<!--   rename("ELPD Diff." = elpd_diff, -->
-<!--          "SE Diff." = se_diff) %>%  -->
-<!--   kbl( -->
-<!--     caption = "Assessing model fit by comparing the expected log predicted densities.", -->
-<!--     format = "latex", -->
-<!--     booktabs = TRUE) %>%  -->
-<!--   kable_styling(latex_options = "HOLD_position", full_width = FALSE) %>% -->
-<!--     column_spec(1, width = "15em") -->
-<!-- ``` -->
+```{r table-elpd-comparison, eval=TRUE}
+bind_cols(
+  "Model" = c("IA predictions with interaction", "IA prior predictions + change in predictions", "IA predictions"),
+  loo_compare(fit_test.IA_predicted_logodds_with_RLs, fit_test.IA_predicted_logodds.prior.change_with_RLs, fit_test.IA_predicted_logodds.prior.change.interaction_with_RLs)) %>%
+  select(1:3) %>%
+  rename("ELPD Diff." = elpd_diff,
+         "SE Diff." = se_diff) %>%
+  kbl(
+    caption = "Assessing model fit by comparing the expected log predicted densities.",
+    format = "latex",
+    booktabs = TRUE) %>%
+  kable_styling(latex_options = "HOLD_position", full_width = FALSE) %>%
+    column_spec(1, width = "15em")
+```
 
-<!-- ```{r hypothesis-table-IA-logodds, results='asis'} -->
-<!-- hyp.IA_predicted_logodds <- -->
-<!--   get_hyp_data(fit_test.IA_predicted_logodds, -->
-<!--              c( -->
-<!--                "IA_predicted_logodds > 0", -->
-<!--                "IA_predicted_logodds = 0")) -->
 
-<!-- make_hyp_table( -->
-<!--   fit_test.IA_predicted_logodds, -->
-<!--   hyp.IA_predicted_logodds, -->
-<!--   c( -->
-<!--     "Predicted log-odds > 0", -->
-<!--     "Predicted log-odds = 0"), -->
-<!--   caption = "How well does the ideal adaptor predict human behaviour? This table tests the main effect of the ideal adaptor's predicted log-odds. However this model does not separate the prior biases before exposure from the change in log-odds as a result of learning.") -->
-<!-- ``` -->
+```{r hypothesis-table-IA-logodds-prior-change, results='asis', eval=FALSE}
+hyp.IA_predicted_logodds.prior.change <-
+  get_hyp_data(fit_test.IA_predicted_logodds.prior.change,
+             c(
+               "IA_predicted_logodds.prior_gs > 0",
+               "IA_predicted_logodds.change_gs > 0"))
 
-<!-- ```{r hypothesis-table-IA-logodds-prior-change, results='asis'} -->
-<!-- hyp.IA_predicted_logodds.prior.change <- -->
-<!--   get_hyp_data(fit_test.IA_predicted_logodds.prior.change, -->
-<!--              c( -->
-<!--                "IA_predicted_logodds.prior_gs > 0", -->
-<!--                "IA_predicted_logodds.change_gs > 0", -->
-<!--                "IA_predicted_logodds.change_gs = 0")) -->
+make_hyp_table(
+  fit_test.IA_predicted_logodds.prior.change,
+  hyp.IA_predicted_logodds.prior.change,
+  c(
+    "Predicted log-odds pre-exposure > 0",
+    "Predicted $\\Delta$ log-odds > 0"),
+  caption = "How well does the ideal adaptor predict human behaviour? This table summarizes the main effects of the ideal adaptor's predicted log-odds prior to exposure and the change in the predicted log-odds as the experiment progress. The prior captures initial cognitive biases and the change in log-odds the learning over time. This model assumes a constant effect of change in predicted log-odds.")
+```
 
-<!-- make_hyp_table( -->
-<!--   fit_test.IA_predicted_logodds.prior.change, -->
-<!--   hyp.IA_predicted_logodds.prior.change, -->
-<!--   c( -->
-<!--     "Predicted log-odds pre-exposure > 0", -->
-<!--     "Predicted $\\Delta$ log-odds > 0", -->
-<!--     "Predicted $\\Delta$ log-odds = 0"), -->
-<!--   caption = "How well does the ideal adaptor predict human behaviour? This table summarizes the main effects of the ideal adaptor's predicted log-odds prior to exposure and the change in the predicted log-odds as the experiment progress. The prior captures initial cognitive biases and the change in log-odds the learning over time. This model assumes a constant effect of change in predicted log-odds.") -->
-<!-- ``` -->
+```{r hypothesis-table-IA-logodds-interaction, results='asis'}
+hyp.IA_predicted_logodds.prior.change.interaction <-
+  get_hyp_data(fit_test.IA_predicted_logodds.prior.change.interaction_with_RLs,
+             c(
+               "IA_predicted_logodds.prior_gs > 0",
+               "IA_predicted_logodds.change_gs > 0",
+               "Block_gs:IA_predicted_logodds.change_gs < 0"))
 
-<!-- ```{r hypothesis-table-IA-logodds-interaction, results='asis'} -->
-<!-- hyp.IA_predicted_logodds.prior.change.interaction <- -->
-<!--   get_hyp_data(fit_test.IA_predicted_logodds.prior.change.interaction, -->
-<!--              c( -->
-<!--                "IA_predicted_logodds.prior_gs > 0", -->
-<!--                "IA_predicted_logodds.change_gs > 0", -->
-<!--                "Block_gs:IA_predicted_logodds.change_gs < 0", -->
-<!--                "Block_gs:IA_predicted_logodds.change_gs = 0")) -->
-
-<!-- make_hyp_table( -->
-<!--   fit_test.IA_predicted_logodds.prior.change.interaction, -->
-<!--   hyp.IA_predicted_logodds.prior.change.interaction, -->
-<!--   c( -->
-<!--     "Predicted log-odds pre-exposure > 0", -->
-<!--     "Predicted $\\Delta$ log-odds > 0", -->
-<!--     "Predicted $\\Delta$ log-odds * block < 0", -->
-<!--     "Predicted $\\Delta$ log-odds * block = 0"), -->
-<!--   caption = "The ideal adaptor predicts human behaviour very well but how did predictions change in later blocks? This table summarizes the main effects of the ideal adaptor's predicted log-odds prior to exposure, the change in the predicted log-odds, and the latter's interaction with block.") -->
-<!-- ``` -->
+make_hyp_table(
+  fit_test.IA_predicted_logodds.prior.change.interaction_with_RLs,
+  hyp.IA_predicted_logodds.prior.change.interaction,
+  c(
+    "Predicted log-odds pre-exposure > 0",
+    "Predicted $\\Delta$ log-odds > 0",
+    "Predicted $\\Delta$ log-odds * block < 0"),
+  caption = "The ideal adaptor predicts human behaviour very well but how did predictions change in later blocks? This table summarizes the main effects of the ideal adaptor's predicted log-odds prior to exposure, the change in the predicted log-odds, and the latter's interaction with block.")
+```
 
 
 \printbibliography

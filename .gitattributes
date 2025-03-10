@@ -20,3 +20,4 @@ models/test_IA_predictedlogodds.prior.change.rds filter=lfs diff=lfs merge=lfs -
 models/test_IA_predictedlogodds.prior.change.interaction.rds filter=lfs diff=lfs merge=lfs -text
 models/test-standard-upto-test4-priorSD15-0.995.rds filter=lfs diff=lfs merge=lfs -text
 models/test_IA_predicted_logodds.r_slopes.rds filter=lfs diff=lfs merge=lfs -text
+models/fit_test.IA_predicted_logodds.prior.change_with_RLs.rds filter=lfs diff=lfs merge=lfs -text
