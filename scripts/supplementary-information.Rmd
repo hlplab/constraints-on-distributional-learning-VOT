@@ -2083,32 +2083,29 @@ To compare model performance, we used LOOIC to estimate the expected log predict
 
 Tables \@ref(tab:hypothesis-table-IA-logodds), \@ref(tab:hypothesis-table-IA-logodds-prior-change), and \@ref(tab:hypothesis-table-IA-logodds-interaction) show the hypotheses tests on the respective predictors. We include the point hypotheses as additional evidence against the null. All indicate the robustness of the correlation between ideal adaptor predictions and human responses. Crucially, the hypothesis test for the interaction term (Table \@ref(tab:hypothesis-table-IA-logodds-interaction)) confirms that while changes in ideal adaptor-predicted log-odds initially align with human responses, this relationship reverses with increasing exposure. The negative coefficient of the interaction term reflects this divergence, supporting the hypothesis that the ideal adaptor overpredicts learning effects in later test blocks.
 
-<!-- ```{r model-logistic-IA-logodds-interaction} -->
-<!-- # model with additive effect of IA-predicted logodds before exposure and  -->
 <!-- # change in IA-predicted logodds -->
 <!-- fit_test.IA_predicted_logodds.prior.change <- -->
 <!--   update( -->
 <!--     fit_test.IA_predicted_logodds, -->
-<!--     formula. = Response.Voiceless ~ 1 + IA_predicted_logodds.prior_gs + IA_predicted_logodds.change_gs +  -->
+<!--     formula. = Response.Voiceless ~ 1 + IA_predicted_logodds.prior_gs + IA_predicted_logodds.change_gs + -->
 <!--       (1 | ParticipantID) + (1 | Item.MinimalPair), -->
-<!--     newdata = d.IA_predicted_logodds, -->
+<!--     newdata = d.IA_predicted_logodds.mode, -->
 <!--     file ="../models/test_IA_predicted_logodds.prior.change.rds") -->
 
 <!-- fit_test.IA_predicted_logodds.prior.change <- add_criterion(fit_test.IA_predicted_logodds.prior.change, criterion = c("loo"), moment_match = T) -->
 
-<!-- # model with interaction of block and change in IA-predicted logodds  -->
+<!-- # model with interaction of block and change in IA-predicted logodds -->
 <!-- fit_test.IA_predicted_logodds.prior.change.interaction <- -->
 <!--   update( -->
 <!--     fit_test.IA_predicted_logodds.prior.change, -->
-<!--     formula. =  Response.Voiceless ~ 1 + IA_predicted_logodds.prior_gs + (Block_gs * IA_predicted_logodds.change_gs) +  -->
+<!--     formula. =  Response.Voiceless ~ 1 + IA_predicted_logodds.prior_gs + (Block_gs * IA_predicted_logodds.change_gs) + -->
 <!--       (1 | ParticipantID) + (1 | Item.MinimalPair), -->
-<!--     newdata = d.IA_predicted_logodds, -->
+<!--     newdata = d.IA_predicted_logodds.mode, -->
 <!--     file ="../models/test_IA_predicted_logodds.prior.change.interaction.rds") -->
 
-<!-- fit_test.IA_predicted_logodds.prior.change.interaction <-  -->
+<!-- fit_test.IA_predicted_logodds.prior.change.interaction <- -->
 <!--   add_criterion(fit_test.IA_predicted_logodds.prior.change.interaction, criterion = c("loo"), moment_match = T) -->
-<!-- ``` -->
-
+  
 <!-- ```{r table-elpd-comparison, eval=TRUE} -->
 <!-- bind_cols( -->
 <!--   "Model" = c("IA predictions with interaction", "IA prior predictions + change in predictions", "IA predictions"), -->
