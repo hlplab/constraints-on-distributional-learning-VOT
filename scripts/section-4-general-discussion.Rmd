@@ -150,7 +150,7 @@ human_psychometric_accuracy <-
 rm(fit_exposure)
 ```
 
-```{r IO-human-accuracy, fig.width=7.5, fig.height=base.height*2 + .75, fig.cap="(ref:IO-human-accuracy)", fig.pos="!ht"}
+```{r IO-human-accuracy, fig.width=7.5, fig.height=base.height*2 + .75, fig.cap="(ref:IO-human-accuracy)"}
 # store plot for plotting in SI
 p.human_psych_accuracy <-
   human_psychometric_accuracy %>%

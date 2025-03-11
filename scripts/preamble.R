@@ -3,14 +3,13 @@
 # Make sure the following are installed. This includes packages that are not on CRAN
 # and packages that are not loaded below but instead directly references in the code
 # (to avoid having to load packages into memory of which we only use a few functions).
-list.of.packages <- c("remotes", "papaja", "MVBeliefUpdatr", "supunsup", "MASS", "terra", "lme4")
+list.of.packages <- c("remotes", "papaja", "MVBeliefUpdatr")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if (length(new.packages)) {
   if ("remotes" %in% new.packages) install.packages("remotes")
   if ("papaja" %in% new.packages) remotes::install_github("crsh/papaja")
   if ("MVBeliefUpdatr" %in% new.packages) remotes::install_github("hlplab/MVBeliefUpdatr")
-  if ("supunsup" %in% new.packages) remotes::install_github("kleinschmidt/phonetic-sup-unsup")
-  new.packages <- setdiff(new.packages, c("remotes", "papaja", "MVBeliefUpdatr", "supunsup"))
+  new.packages <- setdiff(new.packages, c("remotes", "papaja", "MVBeliefUpdatr"))
 
   install.packages(new.packages)
 }
@@ -18,18 +17,13 @@ if (length(new.packages)) {
 library(papaja)             # APA formatted ms
 
 library(tidyverse)          # keeping things tidy
-library(magrittr)           # pipes
+library(magrittr)           # special pipes
 library(rlang)              # quosures (in functions)
 library(assertthat)         # asserts (in functions)
-library(here)               # convenient console debugging
 
 library(patchwork)          # plot layouts
-# library(ragg)               # graphics rendering
-# library(magick)
-# library(webshot)
-library(ggstance)
+library(ggstance)           # vertical dodge of position
 library(ggforce)            # facet_matrix for pairwise correlation plots
-library(ggtext)             # make geom textboxes
 library(ggnewscale)         # extra colour scale in ggplots
 library(kableExtra)         # for formatting tables
 
@@ -38,15 +32,12 @@ library(linguisticsdown)    # IPA symbols
 library(brms)               # fit Bayesian regression models
 library(tidybayes)          # posterior samples and plots in tidy format
 library(posterior)          # working with Bayesian output
-library(bayestestR)
-library(broom.mixed)        # extracting effects from lmer models
+library(bayestestR)         # obtain PD (probability of direction)
 library(modeest)            # estimate mode
+library(broom)              # tidy output from GLMs
 
-library(phonR)              # normalization of f0
-library(supunsup)           # Kleinschmidt & Jaeger 2016 data
+library(phonR)              # normalization of f0 (Mel conversion)
 library(MVBeliefUpdatr)     # ideal observers and adaptors (multivariate)
-
-library(furrr)              # future_map for parallelization
 
 GLOBAL_SEED <- 920
 

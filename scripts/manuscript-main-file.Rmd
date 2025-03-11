@@ -104,7 +104,7 @@ knitr::opts_chunk$set(
   echo = FALSE, message = FALSE, warning = FALSE, 
   results = "markup", cache = F, cache.lazy = F,
   interval = .2,
-  fig.align = "center", fig.height = base.height, fig.width = base.width,
+  fig.align = "center", fig.height = base.height, fig.width = base.width, fig.pos = "H",
   tidy.opts = list(width.cutoff=80), tidy=TRUE,
   dev = "ragg_png", dpi = 300)
 

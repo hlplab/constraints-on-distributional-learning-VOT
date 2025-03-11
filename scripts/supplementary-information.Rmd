@@ -148,7 +148,7 @@ Figure \@ref(fig:exposure-means-database-matrix-plot-detailed) shows the placeme
 
 (ref:exposure-means-database-matrix-plot-detailed) Same as Figure \@ref(fig:prior-distributions-and-exposure-conditions)A in the main text. But also showing the distributions for `r nrow(d.chodroff_wilson.isolated)` words produced in connected speech by `r length(unique(d.chodroff_wilson.isolated$Talker))` female talkers from the same database (confirming the conclusions reached here). 
 
-```{r exposure-means-database-matrix-plot-detailed, fig.width=base.width*4, fig.height=base.height*2.5+2, fig.cap="(ref:exposure-means-database-matrix-plot-detailed)", fig.pos="!ht"}
+```{r exposure-means-database-matrix-plot-detailed, fig.width=base.width*4, fig.height=base.height*2.5+2, fig.cap="(ref:exposure-means-database-matrix-plot-detailed)"}
 p.placement_of_exposure_means_relative_to_prior %+%
   (d.chodroff_wilson %>%
      group_by(speechstyle, category) %>%
@@ -794,7 +794,7 @@ The main text contains summary tables for the simple effects of exposure conditi
 
 ### Differences in the rate of change between exposure conditions and block
 
-```{r hypothesis-table-interaction-condition-block, fig.pos="H", results='asis'}
+```{r hypothesis-table-interaction-condition-block, results='asis'}
 hyp_interaction.condition_block <-
   get_hyp_data(
     fit_test,
@@ -927,7 +927,7 @@ The effects of VOT (slope) did not change significantly between conditions withi
 
 ### Simple effects of condition within each exposure block
 
-```{r hypothesis-table-exposure-simple-effects-condition, fig.pos="H"}
+```{r hypothesis-table-exposure-simple-effects-condition}
 hyp.exposure_simple_effects_condition <- 
   get_hyp_data(
     fit_exposure.simple_effects_condition, 
@@ -954,7 +954,7 @@ make_hyp_table(
 
 ### Simple effects of block within each exposure condition
 
-```{r hypothesis-table-exposure-simple-effects-block, fig.pos="H"}
+```{r hypothesis-table-exposure-simple-effects-block}
 hyp.exposure_simple_effects_block <- 
   get_hyp_data(
     fit_exposure.simple_effects_block, 
@@ -992,7 +992,7 @@ hyp.exposure_simple_effects_block <-
 
 ### Differences in the rate of change between exposure conditions and block  {#sec:PSE-interaction-analysis}
 
-```{r hypothesis-table-exposure-interaction-condition-block, fig.pos="H"}
+```{r hypothesis-table-exposure-interaction-condition-block}
 hyp.interaction.exposure.condition_block <- 
   get_hyp_data(
     fit_exposure, 
@@ -1035,7 +1035,7 @@ This prediction was confirmed both prior to exposure and following exposure. Par
 
 In contrast to PSEs, there was also little evidence that slopes differed between exposure conditions at any point after exposure (remainder of Table \@ref(tab:hypothesis-table-simple-slopes-condition)). Compared to the changes in PSEs (Figure \@ref(fig:plot-fit-PSE)C), the *slopes* of listeners' categorization functions were similar across exposure conditions: the 95% CIs of the differences across conditions included 0 for all comparisons and all test blocks. BFs favored the null in all but two comparisons, though support for the null was again never more than anecdotal.
 
-```{r hypothesis-table-simple-slopes-condition, fig.pos="H"}
+```{r hypothesis-table-simple-slopes-condition}
 hyp.simple_slopes_condition <- 
   get_hyp_data(
     fit_test.simple_effects_condition, 
@@ -1079,7 +1079,7 @@ With regard to how categorization slopes (in all conditions) would change relati
 
 As also visible in Figure \@ref(fig:plot-fit-pars), we found little evidence that slopes changed throughout exposure. Three exceptions included the final three test blocks of the -20ms condition and the first to second block in the -10ms condition, which exhibited moderate support for the hypothesis that slopes increased. There never was more than anecdotal support for the hypothesis that slopes decreased. 
 
-```{r hypothesis-table-simple-slopes-block, fig.pos="H"}
+```{r hypothesis-table-simple-slopes-block}
 hyp.simple_slopes_block <- 
   get_hyp_data(
     fit_test.simple_effects_block, 
@@ -1139,7 +1139,7 @@ Figure \@ref(fig:plot-fit-pars) also reveals that participants' slopes were cons
 
 ### Difference in the rate of change between exposure conditions and test block
 
-```{r hypothesis-table-interaction-condition-block-VOT, results='asis', fig.pos="H"}
+```{r hypothesis-table-interaction-condition-block-VOT, results='asis'}
 hyp_interaction.condition_block_VOT <-
   get_hyp_data(
     fit_test,
@@ -1197,7 +1197,7 @@ hyp_interaction.condition_block_VOT <-
 
 ### Simple effects of condition within each exposure block
 
-```{r hypothesis-table-exposure-simple-slopes-condition, fig.pos="H"}
+```{r hypothesis-table-exposure-simple-slopes-condition}
 hyp.exposure_simple_slopes_condition <- 
   get_hyp_data(
     fit_exposure.simple_effects_condition, 
@@ -1226,7 +1226,7 @@ rm(fit_exposure.simple_effects_condition)
 
 ### Simple effects of block within each exposure condition
 
-```{r hypothesis-table-exposure-simple-slopes-block, fig.pos="H"}
+```{r hypothesis-table-exposure-simple-slopes-block}
 hyp.exposure_simple_slopes_block <- 
   get_hyp_data(
     fit_exposure.simple_effects_block, 
@@ -1259,7 +1259,7 @@ rm(fit_exposure.simple_effects_block)
 
 ### Differences in the rate of change between exposure conditions and block
 
-```{r hypothesis-table-exposure-interaction-condition-block-VOT, fig.pos="H"}
+```{r hypothesis-table-exposure-interaction-condition-block-VOT}
 hyp.interaction.exposure.condition_block_VOT <- 
   get_hyp_data(
     fit_exposure, 
@@ -1308,7 +1308,7 @@ All analyses presented in the main text and in the preceding SI sections assume 
 
 The estimated lapse rate for each block is shown in Table \@ref(tab:hypothesis-table-lapse-by-block). Lapse rates were at their highest in the first block ($2.1\%$) but fell sharply up to the fifth block ($\leq 0.2\%$). While there was some evidence that lapse rates were higher in the seventh ($0.7\%$) and ninth block ($0.8\%$), they stayed consistently below 1%. Overall, these results show some evidence of familiarization with the task. However, unlike previous work, lapse rates were very low even during the first 12 trials (the first test block). For comparison, a post-hoc analysis reported in @kleinschmidt2020 estimated lapse rates as high as 12% during the first 37 trials of his experiment. Lapse rates reduced to about 5% over the remaining 185 trials. 
 
-```{r hypothesis-table-lapse-by-block, fig.pos="H"}
+```{r hypothesis-table-lapse-by-block}
 hyp.lapse <- 
   get_hyp_data(fit_lapse_by_block, map_chr(.x = 1:9, ~ c(get_lapse_hypothesis(fit_lapse_by_block, .x))))
 
@@ -1451,7 +1451,7 @@ p.human_psych_accuracy
 
 (ref:plot-RT-all-data) Summary of participant reaction times by block. **Top:** Scatter plot of means and SDs of RTs (on $\log_{10}$ axes). **Bottom:** Progression of RTs by trial (including catch trials) and block. Lines indicate mean RTs, ribbons indicate region of two times SD from the mean (on $\log_{10}$ y-axis).
 
-```{r fig,width=8, fig.height=5, fig.width=6, fig.pos="H"}
+```{r fig,width=8, fig.height=5, fig.width=6}
 p.RT_scatter <- 
   d %>% 
   group_by(ParticipantID, Condition.Exposure, Block) %>%
@@ -1523,7 +1523,7 @@ Then we report hypothesis tests that assess whether the *degree* of convergence-
 ## Testing convergence against idealized learner models {#sec:convergence-test-all}
 Table \@ref(tab:hypothesis-table-no-convergence) reproduces Table \@ref(tab:hypothesis-table-convergence-test4-pre-exposure-PSE) for all test blocks. 
 
-```{r hypothesis-table-no-convergence, fig.pos="H"}
+```{r hypothesis-table-no-convergence}
 hyp.convergence <-
   get_hyp_data(
     fit_test_nested_within_condition_and_block,
@@ -1588,7 +1588,7 @@ This proportion can then be compared across different exposure conditions, allow
  
 However, equation \@ref(eq:proportion-convergence) contains a researcher degree of freedom: the approach to estimating $PSE_{pre-exposure}$. Here, we entertained three different ways of estimating $PSE_{pre-exposure}$, all of which yield similar results: anecdotal, and by no means convincing, evidence of asymmetric shrinkage. The hypothesis tests for the three different approaches are summarized in Tables \@ref(tab:hypothesis-table-shrinkage-against-prior-IO) to \@ref(tab:hypothesis-table-shrinkage-against-Test1-across-conditions). Table \@ref(tab:hypothesis-table-shrinkage-against-prior-IO) compares participants' actual PSE (and the idealized learner's PSE) against the pre-exposure PSE expected from an idealized pre-exposure listener. **This is the approach we used to calculate the percentage labels in Figure \@ref(fig:plot-fit-PSE)C in the main text**. Table \@ref(tab:hypothesis-table-shrinkage-against-Test1-same-condition) compares against the PSE that participants in the same condition had prior to any exposure---i.e., participants' PSE in Test 1. Finally, Table \@ref(tab:hypothesis-table-shrinkage-against-Test1-across-conditions) compares against the participants' pre-exposure PSE in Test 1 while averaging over all three conditions.
 
-```{r hypothesis-table-shrinkage-against-prior-IO, echo=FALSE, message=FALSE, fig.pos="H"}
+```{r hypothesis-table-shrinkage-against-prior-IO, echo=FALSE, message=FALSE}
 hyp.shrinkage <-
   get_hyp_data(
     fit_test_nested_within_condition_and_block,
@@ -1960,7 +1960,7 @@ prep_posterior_draws_for_plotting <- function(
 
 (ref:ideal-adaptor-parameter-correlations) Marginal distributions (**panels on diagonal**), pairwise scatter plots (**lower off-diagonal**), and pairwise densities (**upper off-diagonals**) of parameters inferred for the ideal adaptor. Both latent and observed parameters are shown.
 
-```{r ideal-adaptor-parameter-correlations, fig.width=12, fig.height=12, fig.cap="(ref:ideal-adaptor-parameter-correlations)", fig.pos="H", out.width = "100%", warning=FALSE}
+```{r ideal-adaptor-parameter-correlations, fig.width=12, fig.height=12, fig.cap="(ref:ideal-adaptor-parameter-correlations)", out.width = "100%", warning=FALSE}
 groups <- c(
   "Cond Shift0AA_Up to test3", "Cond Shift0AA_Up to test5", "Cond Shift0AA_Up to test7",
   "Cond Shift10AA_Up to test3", "Cond Shift10AA_Up to test5", "Cond Shift10AA_Up to test7",
@@ -1981,7 +1981,7 @@ if (!file.exists(f) | RESET_FIGURES){
 
 (ref:ideal-adaptor-test-categorization) Comparing predictions of the ideal adaptor against participants' responses. Predicted and observed probability of "t"-responses at each tested VOT for each combination of exposure condition and block.
 
-```{r ideal-adaptor-test-categorization, fig.width=12, fig.height=12, fig.cap="(ref:ideal-adaptor-test-categorization)", fig.pos="H", out.width="100%"}
+```{r ideal-adaptor-test-categorization, fig.width=12, fig.height=12, fig.cap="(ref:ideal-adaptor-test-categorization)", out.width="100%"}
 target_category <- 2
 f <- "../figures/ideal-adaptor-fit"
 
@@ -2032,7 +2032,7 @@ if (!file.exists(paste0(f, ".png")) | RESET_FIGURES){
 
 (ref:ideal-adaptor-test-categorization-r2) Same as Figure \@ref(fig:ideal-adaptor-test-categorization) but combining data across all conditions and blocks, in order to summarize the correlation between model predictions and participants' responses.
 
-```{r ideal-adaptor-test-categorization-r2, fig.width=12, fig.height=12, fig.cap="(ref:ideal-adaptor-test-categorization-r2)", fig.pos="H", out.width="100%"}
+```{r ideal-adaptor-test-categorization-r2, fig.width=12, fig.height=12, fig.cap="(ref:ideal-adaptor-test-categorization-r2)", out.width="100%"}
 knitr::include_graphics(paste0(f, ".png"))
 ```
 
