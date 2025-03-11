@@ -10,6 +10,7 @@
 *.bbl
 *.toc
 *.blg
+*.fls
 .Rproj.user
 .Rhistory
 .RData
