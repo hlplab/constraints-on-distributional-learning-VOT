@@ -135,9 +135,7 @@ d.psychometric_intercept.slope.PSE.draws <-
   \thispagestyle{empty}
   
 ```{r}
-# Create data frame for pre-exposure IO. To avoid over-fitting, we use 5-fold cross-validation.
-# We use the isolated speech data from Chodroff and Wilson, and randomly cut it into 5 folds.
-set.seed(GLOBAL_SEED)
+# Create data frame for pre-exposure IO. 
 # Make pre-exposure ideal observers based on Chodroff and Wilson *and* ideal observers
 # that are fit on the exposure VOTs of the three exposure conditions (idealized learners).
 # These ideal observers can be thought of as reflecting a learner that has fully learned
@@ -367,7 +365,7 @@ p.across_blocks <-
    theme(plot.margin = unit(c(1, 3.2, 1, 1), "lines"), legend.position = "none")
 ```
 
-```{r plot-fit-PSE, fig.width=12.5, fig.height=7, fig.cap="(ref:plot-fit-PSE)", fig.pos="htbp"}
+```{r plot-fit-PSE, fig.width=13, fig.height=7, fig.cap="(ref:plot-fit-PSE)", fig.pos="htbp"}
 p.fit_1to7 +
   p.fit_7to9 +
   (p.PSE_1to9 +
@@ -389,8 +387,8 @@ p.fit_1to7 +
      annotate(
        geom = "text",
        x = c(rep(10, 3)),
-       y = c(22, 32, 62),
-       label = c(rep("idealized \nlearner", 3)),
+       y = c(23, 33, 63),
+       label = c(rep("idealized learner", 3)),
        hjust = 0.5,
        colour = colours.condition,
        fontface = "bold",

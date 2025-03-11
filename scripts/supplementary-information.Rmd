@@ -1443,7 +1443,7 @@ Figure \@ref(fig:plot-IO-psychometric-model-human-accuracy) summarizes changes i
 
 (ref:plot-IO-psychometric-model-human-accuracy) Same as Figure \@ref(fig:IO-human-accuracy) but also showing listeners' empirical recognition accuracy (triangles). For the empirical accuracy, lineranges show 95% bootstrapped CIs.
 
-```{r plot-IO-psychometric-model-human-accuracy, fig.width=7.5, fig.height=base.height*2 + .75, fig.cap="(ref:plot-IO-psychometric-model-human-accuracy)"}
+```{r plot-IO-psychometric-model-human-accuracy, fig.width=7.5, fig.height=base.height*2 + .75, fig.cap="(ref:plot-IO-psychometric-model-human-accuracy)", force_rebuild=TRUE}
 p.human_psych_accuracy
 ```
 
@@ -2098,7 +2098,7 @@ fit_test.IA_predicted_logodds.prior.change_with_RLs <- add_criterion(fit_test.IA
   
 ```{r table-elpd-comparison, eval=TRUE}
 bind_cols(
-  "Model" = c("IA predictions with interaction", "IA prior predictions + change in predictions", "IA predictions"),
+  "Model" = c("IA predicted log-odds with interaction", "IA prior predicted log-odds + change in predicted log-odds", "IA predicted log-odds"),
   loo_compare(fit_test.IA_predicted_logodds_with_RLs, fit_test.IA_predicted_logodds.prior.change_with_RLs, fit_test.IA_predicted_logodds.prior.change.interaction_with_RLs)) %>%
   select(1:3) %>%
   rename("ELPD Diff." = elpd_diff,
@@ -2108,7 +2108,7 @@ bind_cols(
     format = "latex",
     booktabs = TRUE) %>%
   kable_styling(latex_options = "HOLD_position", full_width = FALSE) %>%
-    column_spec(1, width = "15em")
+    column_spec(1, width = "20em")
 ```
 
 
@@ -2147,14 +2147,6 @@ make_hyp_table(
   col1_width = "18em")
 ```
 
-
-\vspace{8em}
-\noindent\rule{\textwidth}{0.4pt}
-\vspace{0.5em}
-
-\noindent\textit{During the preparation of this work the authors used Github Copilot with Claude 3.7 Sonnet (Preview) in order to enhance code efficiency and forward-compatibility. After using this tool/service, the authors reviewed and edited the content as needed and take full responsibility for the content of the publication.}
-\vspace{0.5em}
-\vspace{1em}
 \printbibliography
 \erefsection
 

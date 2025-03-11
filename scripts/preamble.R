@@ -55,7 +55,7 @@ source("functions.R")
 
 
 # Constants ---------------------------------------------------------------------
-RESET_FIGURES = F   # switch on/off whether figures that have been stored in files are regenerated
+RESET_FIGURES = T   # switch on/off whether figures that have been stored in files are regenerated
 RESET_MODELS = F    # switch on/off whether models that have been stored in files are rerun
 
 # For Stan/rstan
