@@ -381,11 +381,3 @@ Our findings were facilitated by both Bayesian psychometric mixed-effects analys
 ```{r}
 rm(fit_test.upto.test4)
 ```
-\singlespacing
-\vspace{42em}
-\noindent\rule{\textwidth}{0.4pt}
-\vspace{0.5em}
-
-\noindent\textit{During the preparation of this work the authors used Github Copilot with Claude 3.7 Sonnet (Preview) in order to enhance code efficiency and forward-compatibility. After using this tool/service, the authors reviewed and edited the content as needed and take full responsibility for the content of the publication.}
-\vspace{0.5em}
-\vspace{1em}

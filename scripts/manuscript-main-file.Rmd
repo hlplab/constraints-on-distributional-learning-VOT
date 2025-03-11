@@ -146,6 +146,9 @@ INCLUDE_TODO <- F           # switch on/off to get to do list.
 ```{r sec-discussion, child="section-4-general-discussion.Rmd", eval=TRUE}
 ```
 
+# Declaration of Generative AI and AI-assisted technologies in the writing process
+During the preparation of this work, some of the authors used Github Copilot with Claude 3.7 Sonnet (Preview) in order to enhance code efficiency and forward-compatibility. After using this AI service, the authors reviewed and edited the content as needed and take full responsibility for the content of the publication.
+
 ```{r sec-references, child="section-5-references.Rmd", eval=TRUE}
 ```
 
