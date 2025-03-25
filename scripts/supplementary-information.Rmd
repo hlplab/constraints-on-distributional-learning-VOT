@@ -2130,11 +2130,12 @@ make_hyp_table(
 
 ```{r hypothesis-table-IA-logodds-interaction, results='asis'}
 hyp.IA_predicted_logodds.prior.change.interaction <-
-  get_hyp_data(fit_test.IA_predicted_logodds.prior.change.interaction_with_RLs,
+  get_unscaled_hyp_data(fit_test.IA_predicted_logodds.prior.change.interaction_with_RLs,
              c(
                "IA_predicted_logodds.prior_gs > 0",
                "IA_predicted_logodds.change_gs > 0",
-               "Block_gs:IA_predicted_logodds.change_gs < 0"))
+               "Block_gs:IA_predicted_logodds.change_gs < 0"),
+             d.IA_predicted_logodds.mode)
 
 make_hyp_table(
   fit_test.IA_predicted_logodds.prior.change.interaction_with_RLs,

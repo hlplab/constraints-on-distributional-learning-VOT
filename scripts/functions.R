@@ -27,55 +27,60 @@ descale <- function(x, mean, sd) {
   (x * 2 * sd) + mean
 }
 
-unscale_coef <- function(model, coef_name, data) {
-  # Extract coefficient
+# this unscaling function works for slope estimates and interactions only
+unscale_all_estimates <- function(model, coef_name, data) {
+  # get all the estimates
   coef_value <- fixef(model)[coef_name, "Estimate"]
-
-  # Check if this is an interaction term
-  if(str_detect(coef_name, ":")) {
-    # Split the interaction term into variable names
-    var_names <- strsplit(coef_name, ":")[[1]]
-    var_names <- str_remove(var_names, "_gs$") # Remove _gs suffix
-
-    # Get scaling factors for each component
+  coef_std_error <- fixef(model)[coef_name, "Est.Error"]
+  coef_lower_ci <- fixef(model)[coef_name, "Q2.5"]
+  coef_upper_ci <- fixef(model)[coef_name, "Q97.5"]
+  
+  # check if this is an interaction term
+  if(str_detect(coef_name, ":")){
+    var_names <- str_split(coef_name, ":")[[1]]
+    var_names <- str_remove(var_names, "_gs$")
+    
     sds <- map_dbl(var_names, function(var) {
-      var_gs <- paste0(var, "_gs")
-      sd_attr <- attr(data[[var_gs]], paste0(var, ".SD"))
-
+      var_gs <- str_c(var, "_gs")
+      sd_attr <- attr(data[[var_gs]], str_c(var, ".SD")) 
+      
       if (is.null(sd_attr)) {
-        warning(paste("Could not find SD attribute for", var, "- using default of 1"))
+        warning("Could not find SD attribute for ", var, "- using default of 1 instead")
         return(1)
       }
       return(sd_attr)
-    })
-
-    # Unscale by dividing by product of SDs (with Gelman scaling factor)
-    return(coef_value / prod(sds * 2))
-  } else {
-    # Handle main effects
+    })  
+    # unscale the coef and accompanying estimates
+    scaling_factor <- 1 / prod(sds * 2)
+    unscaled_estimates <- list(
+      Estimate = coef_value * scaling_factor,
+      Est.Error = coef_std_error * scaling_factor,
+      Q2.5 = coef_lower_ci * scaling_factor,
+      Q97.5 = coef_upper_ci * scaling_factor,
+      scaling_factor = scaling_factor)
+    
+    return(unscaled_estimates)
+  } 
+  else {
     var_name <- str_remove(coef_name, "_gs$")
-    var_gs <- paste0(var_name, "_gs")
-
-    # Special handling for intercept
-    if (!str_detect(coef_name, "Intercept")) {
-      # For main effects, divide by 2 * SD
-      var_sd <- attr(data[[var_gs]], paste0(var_name, ".SD"))
-      if (is.null(var_sd)) {
-        warning(paste("Could not find SD attribute for", var_name, "- using default of 1"))
-        var_sd <- 1
-      }
-      return(coef_value / (2 * var_sd))
-    } else {
-      # For intercepts, use descale function to add mean
-      var_mean <- attr(data[[var_gs]], paste0(var_name, ".mean"))
-      var_sd <- attr(data[[var_gs]], paste0(var_name, ".SD"))
-
-      if (is.null(var_sd) || is.null(var_mean)) {
-        warning("Could not find mean or SD attributes for intercept - returning raw coefficient")
-        return(coef_value)
-      }
-      return(descale(coef_value, var_mean, var_sd))
+    var_gs <- str_c(var_name, "_gs")
+    sd_attr <- attr(data[[var_gs]], str_c(var_name, ".SD"))
+    
+    if (is.null(sd_attr)) {
+      warning("Could not find SD attribute for ", var_name, "- using default of 1 instead")
+      sd_attr <- 1
     }
+    
+    # unscale coef
+    scaling_factor <- 1 / (2 * sd_attr)
+    unscaled_estimates <- list(
+      Estimate = coef_value * scaling_factor,
+      Est.Error = coef_std_error * scaling_factor,
+      Q2.5 = coef_lower_ci * scaling_factor,
+      Q97.5 = coef_upper_ci * scaling_factor,
+      scaling_factor = scaling_factor)
+    
+    return(unscaled_estimates)
   }
 }
 # Knitr output formatting --------------------------------------------
@@ -544,10 +549,40 @@ get_mean_BF <- function(model, hypothesis, robust = TRUE, n.iterations = 100, n.
   return(round(density.post / mean(density.priors), 1))
 }
 
-get_bf <- function(model, hypothesis, est = FALSE, bf = FALSE, digits = 2, robust = TRUE, use_seed = TRUE) {
+get_bf <- function(model, hypothesis, est = FALSE, bf = FALSE, unscale = FALSE, 
+                   data = NULL, digits = 2, robust = TRUE, use_seed = TRUE) {
   # Create hypothesis object ONCE to use consistently
   h <- hypothesis(model, hypothesis, robust = robust)
-
+  
+  # If unscaling is requested, modify h results
+  if (unscale && !is.null(data)) {
+    # Extract coefficient name from hypothesis
+    hypothesis_text <- hypothesis
+    
+    # Clean up the hypothesis string to extract coefficient names
+    coef_name <- stringr::str_remove_all(hypothesis_text, "\\s*[<>=/+-]\\s*0.*$")
+    coef_name <- stringr::str_remove_all(coef_name, "[\\(\\)]")
+    
+    # Only process predictors with _gs suffix
+    if (stringr::str_detect(coef_name, "_gs")) {
+      tryCatch({
+        # Get unscaled estimates and scaling factor
+        unscaled_est <- unscale_all_estimates(model, coef_name, data)
+        
+        # Replace the estimate and error with unscaled versions
+        h$hypothesis$Estimate <- unscaled_est$Estimate
+        h$hypothesis$Est.Error <- unscaled_est$Est.Error
+        
+        # Scale CI bounds with the same scaling factor
+        scaling_factor <- unscaled_est$scaling_factor
+        h$hypothesis$CI.Lower <- h$hypothesis$CI.Lower * scaling_factor
+        h$hypothesis$CI.Upper <- h$hypothesis$CI.Upper * scaling_factor
+      }, error = function(e) {
+        warning(paste("Could not unscale:", coef_name, "-", e$message))
+      })
+    }
+  }
+  
   # Extract evidence ratio and check if it's infinite
   evid_ratio <- round(h[[1]]$Evid.Ratio, digits = digits - 1)
   BF_formatted <- if (is.infinite(evid_ratio)) {
@@ -555,7 +590,7 @@ get_bf <- function(model, hypothesis, est = FALSE, bf = FALSE, digits = 2, robus
   } else {
     paste("=", round(evid_ratio, digits = digits - 1))
   }
-
+  
   # Return appropriate result based on parameters
   if (est & bf) {
     # Return both estimate and BF
@@ -570,7 +605,7 @@ get_bf <- function(model, hypothesis, est = FALSE, bf = FALSE, digits = 2, robus
     if (str_detect(hypothesis, "=") & !str_detect(hypothesis, "[<>]")) {
       new_bf <- get_mean_BF(model, hypothesis, use_seed = use_seed)
       new_post_prob <- new_bf / (1 + new_bf)
-
+      
       # Store post_prob as an attribute of the return value
       bf_value <- new_bf
       attr(bf_value, "post_prob") <- new_post_prob
@@ -596,10 +631,20 @@ get_bf <- function(model, hypothesis, est = FALSE, bf = FALSE, digits = 2, robus
 }
 
 print_CI <- function(model, term) {
-
-  paste0(round(plogis(as.numeric(summary(model)$fixed[term, 1])) * 100, 1),
+  # Get the estimate from fixef()
+  estimate <- fixef(model)[term, "Estimate"]
+  
+  # Get the CI bounds - also from fixef to be consistent
+  lower_ci <- fixef(model)[term, "Q2.5"]
+  upper_ci <- fixef(model)[term, "Q97.5"]
+  
+  # Format the output
+  paste0(round(plogis(estimate) * 100, 1),
          "%, 95%-CI: ",
-         paste0(round(plogis(as.numeric(summary(model)$fixed[term, 3:4])) * 100, 1), collapse = " to "), "%")
+         round(plogis(lower_ci) * 100, 1), 
+         " to ", 
+         round(plogis(upper_ci) * 100, 1), 
+         "%")
 }
 
 # Pipes and functions for plot and table aesthetics -----------------------------------------------------------
@@ -694,6 +739,49 @@ get_hyp_data <- function(model.fit, hyp.vec, use_seed = TRUE) {
     results$Post.Prob[point_hyp_indices] <- new_p.post_values
   }
 
+  return(results)
+}
+
+get_unscaled_hyp_data <- function(model, hyp_vec, data = NULL, use_seed = TRUE) {
+  # First get regular hypothesis results 
+  results <- get_hyp_data(model, hyp_vec, use_seed)
+  
+  # If no data is provided, return the original results
+  if (is.null(data)) {
+    warning("No data provided for unscaling - returning scaled coefficients")
+    return(results)
+  }
+  
+  # Process each hypothesis
+  for (i in seq_along(results$Hypothesis)) {
+    # Extract coefficient name from hypothesis
+    hypothesis_text <- results$Hypothesis[i]
+    
+    # Clean up the hypothesis string to extract coefficient names
+    coef_name <- stringr::str_remove_all(hypothesis_text, "\\s*[<>=/+-]\\s*0.*$")
+    coef_name <- stringr::str_remove_all(coef_name, "[\\(\\)]")
+    
+    # Only process predictors with _gs suffix
+    if (stringr::str_detect(coef_name, "_gs")) {
+      # Get unscaled values
+      tryCatch({
+        # Get unscaled estimates and scaling factor
+        unscaled_est <- unscale_all_estimates(model, coef_name, data)
+        
+        # Replace the estimate and standard error with unscaled versions
+        results$Estimate[i] <- unscaled_est$Estimate
+        results$Est.Error[i] <- unscaled_est$Est.Error
+        
+        # Use the scaling factor directly to scale CI bounds 
+        # This handles the 90% CI from hypothesis() correctly
+        scaling_factor <- unscaled_est$scaling_factor
+        results$CI.Lower[i] <- results$CI.Lower[i] * scaling_factor
+        results$CI.Upper[i] <- results$CI.Upper[i] * scaling_factor}, 
+        error = function(e) {
+        warning(paste("Could not unscale:", coef_name, "-", e$message))
+      })
+    }
+  }
   return(results)
 }
 
