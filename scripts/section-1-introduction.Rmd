@@ -216,6 +216,7 @@ Prediction & Supported by evidence from \\
 \hline
 \end{tabular}
 \caption{Predictions of distributional learning theories about incremental adaptation. Existing evidence is compatible with predictions 1, 2a,b, though it does not necessarily provide strong support for those predictions (see text). Predictions 3 and 4 remain untested for adaptive speech perception.}
+
 \label{tab:predictions}
 \end{small}
 \end{table}
