@@ -44,7 +44,7 @@ numbersections    : no  # APA style is "no" but check journal guidelines
 linenumbers       : yes # If journal generates line numbers, change to "no" before submission
 draft             : no # Change to "no" before initial submission
 # Check before final submission:
-mask              : yes # Unmask for final submission
+mask              : no # Unmask for final submission
 
 header-includes: 
  - \usepackage{sectsty}
@@ -154,5 +154,5 @@ During the preparation of this work, some of the authors used Github Copilot wit
 
 \erefsection
 
-```{r, child="supplementary-information.Rmd", eval =FALSE}
+```{r, child="supplementary-information.Rmd", eval =TRUE}
 ```
