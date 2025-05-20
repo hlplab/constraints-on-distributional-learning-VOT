@@ -19,7 +19,7 @@ affiliation:
   - id            : "1"
     institution   : "Centre for Research on Bilingualism, Stockholm University"
   - id            : "2"
-    institution   : "Brain and Cognitive Sciences, University of Rochester"
+    institution   : "Goergen Institute for Data Science and Artificial Intelligence, University of Rochester"
   - id            : "3"
     institution   : "Computer Science, University of Rochester"
 
