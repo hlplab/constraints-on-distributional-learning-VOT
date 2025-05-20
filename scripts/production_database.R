@@ -8,7 +8,7 @@ library(magrittr)           # pipes
 
 
 chodroff_wilson_speech_db <- read_tsv(
-  "../data/production_raw/cueAnalysis_engCVC.txt",
+  "../data/production_db/cueAnalysis_engCVC.txt",
   col_names = c("file", "stop","start","end","interval_number_TextGrid","vot","following_sonorant", "vdur","syllable","syldur","f0_1","f0_2","f0_3","f0_4","f0_5","f0_6","f0_7","f0_8","f0_9","f0_10")) %>%
   filter(
     # exclude syllables that contain "l" between stop and vowel;
@@ -31,7 +31,7 @@ chodroff_wilson_speech_db <- read_tsv(
   full_join(
     # Read in the talker by gender data and mutate the values to match Mixer6
     read_delim(
-      file = "../data/production_raw/engCVC_gender.csv")) %>%
+      file = "../data/production_db/engCVC_gender.csv")) %>%
   mutate(gender = ifelse(gender == "female", "F", "M")) %>% 
   # rename columns to columns to match Mixer6 columns. 
   # Now that non-vowel sonorants have been excluded, rename following_sonorant column
@@ -41,7 +41,7 @@ chodroff_wilson_speech_db <- read_tsv(
          stop_start = start,
          stop_end = end) %>% 
   bind_rows(
-    read_csv("../data/production_raw/chodroff_wilson_mixer6_non-missing_vot_cog_f0.csv") %>% 
+    read_csv("../data/production_db/chodroff_wilson_mixer6_non-missing_vot_cog_f0.csv") %>% 
       mutate(subj = as.character(subj),
              speechstyle = "connected"))
 

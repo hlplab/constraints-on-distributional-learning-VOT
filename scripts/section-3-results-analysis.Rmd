@@ -1,7 +1,6 @@
 ```{r, include=FALSE, message=FALSE}
 if (!exists("PREAMBLE_LOADED")) source("preamble.R")
 
-
 # Store parameters for model fitting
 d.mean_sd_scaling <-
   d.for_analysis %>%
@@ -16,11 +15,12 @@ VOT.sd_test <- (d.mean_sd_scaling %>% pull(Item.VOT_sd))[2]
 rm(d.mean_sd_scaling)
 
 levels_Condition.Exposure = c("Shift0", "Shift10", "Shift40")
-
 ```
 
 # Results {#sec:results}
-Below, we begin by describing our analysis approach, which deviates from previous work. We therefore first demonstrate that our approach replicates previous findings when applied to our data at the level of analysis employed in previous work: the detection of overall changes in listeners' categorization behavior after exposure. Following this, we turn to our primary questions: *incremental* changes in participants' categorization responses from pre-exposure onward, depending on the type (exposure condition) and amount of exposure (test block). This allow us to assess predictions 1 and 2a,b about the role of prior and recent experience in explaining incremental adaptive speech perception, as well as prediction 4 about the diminishing rate of behavioral changes with increasing exposure. To facilitate the interpretation of our results, we introduce normative models (ideal observers) that determine the expected categorization functions of idealized listeners prior to, and following, exposure (following the same approach used in Figure \@ref(fig:predictions)). This allows us to identify previously unrecognized constraints on adaptive speech perception (prediction 3 - learning to convergence).
+As outlined under Methods, we present two types of analyses. We first use a Bayesian mixed-effects psychometric model to estimate listeners' categorization functions prior to, during, and after the three exposure blocks. This provides a theory-agnostic way to pursue the first two goals for the present work outlined in the introduction: to provide the first tests of predictions 3 and 4, and to assess the joint effect of predictions 1-4 in a single study, using distributional exposure. Specifically, we use the psychometric models to test predictions 1-4, while accounting for attentional lapses while estimating participants' categorization functions. Failing to account for attentional lapses---while still common in research on speech perception [for exceptions, see @clayards2008; @kleinschmidt-jaeger2016]---can lead to biased estimates of categorization boundaries [@prins2011; @wichmann-hill2001]. For the advantages of Bayesian mixed-effects psychometric models, we refer to @prins2024, though we note that we implemented a mixture model formulation of such models in the freely available statistics software \texttt{R} [@R-base], using the amazing general-purpose package \texttt{brms} for Bayesian regression modeling [@R-brms_a]. 
+
+After we present the results of the psychometric analysis, we introduce the ideal adaptor model, and fit it to the same data. This addresses our third and final goal outlined in the introduction. Unlike the psychometric model, the ideal adaptor is a model of distributional learning. This allows us to test how large a share of the changes in listeners' perception distributional learning can explain, and whether there are any qualitative aspects of listeners' behavior that can*not* be explained well by distributional learning. 
 
 ```{r model-fit-test-blocks, include=FALSE}
 fit_test <-
@@ -40,10 +40,14 @@ fit_exposure <-
     adapt_delta = .999)
 ```
 
-## Analysis approach
-We analyzed participants' categorization responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric models, using \texttt{brms} [@R-brms_a] in \texttt{R} [@R; @RStudio].^[For the analyses of test blocks, fitting the models separately removes any potential collinearity between effects of exposure and effects of VOT. The SI reports additional analyses over the combined data, including extensions of the psychometric models to include lapse rates that can vary by block (\@ref(sec:analysis-lapse)) and non-parametric smooths to model non-linear effects of VOT and exposure (\@ref(sec:GAMM)). All analyses replicate the findings reported here.] Psychometric models account for attentional lapses while estimating participants' categorization functions. Failing to account for attentional lapses---while still common in research on speech perception [for exceptions, see @clayards2008; @kleinschmidt-jaeger2016]---can lead to biased estimates of categorization boundaries [@prins2011; @wichmann-hill2001]. For the advantages of Bayesian psychometric models, we refer to @kuss2005 and @prins2019. For the present experiment, lapse rates were negligible (`r print_CI(fit_test, "theta1_Intercept")`), and all results replicate in simple mixed-effects logistic regressions [@jaeger2008]. This lapse rate compares favorably against those assumed or reported in prior work [e.g., @clayards2008; @kleinschmidt-jaeger2016; @kleinschmidt2020].
+## Bayesian mixed-effect psychometric analysis
+We analyzed participants' categorization responses during exposure and test blocks in two separate Bayesian mixed-effects psychometric models. The full model specification with additional pointers to tutorials is available in the SI (\@ref(sec:analysis-approach)). Compared to previous work [@clayards2008; @kleinschmidt-jaeger2016; @kleinschmidt2020], lapse rates were negligible (`r print_CI(fit_test, "theta1_Intercept")`), and all results replicate in simple mixed-effects logistic regressions [@jaeger2008]. The SI reports additional analyses over the combined exposure and test data, including extensions of the psychometric models to include lapse rates that can vary by block (\@ref(sec:analysis-lapse)) and non-parametric smooths to model non-linear effects of VOT and exposure (\@ref(sec:GAMM)). All analyses replicate the findings reported here.
 
-The psychometric models for exposure and test blocks each regressed participants' categorization responses against the full factorial interaction of VOT, block, and exposure condition, along with the maximal random effect structure (by-participant intercepts and slopes for VOT, block, and their interaction, and by-item intercept and slopes for the full factorial design; see SI, \@ref(sec:analysis-approach)). All hypothesis tests reported below are based on these models. Figure \@ref(fig:plot-fit-PSE) summarizes the results that we describe in more detail next. Panels A and B show participants’ categorization responses during exposure and test blocks, along with the categorization function estimated from those responses via the mixed-effects psychometric models. These panels facilitate comparison between exposure conditions within each block. Panel C summarizes changes in listeners' point of subject equality (PSE)---i.e., the point along the VOT continuum at which participants are equally likely to respond "d" or "t"---across blocks and conditions. This highlights how the type and amount of phonetic input affect listeners' categorization functions. Here we focus on the test blocks, which were identical within and across exposure conditions. Analyses of the exposure blocks, reported in the SI (\@ref(sec:SI-exposure-block-analysis)), replicate all effects found in the test blocks.
+The psychometric models for exposure and test blocks each regressed participants' categorization responses against the full factorial interaction of VOT, block, and exposure condition, along with the maximal random effect structure (by-participant intercepts and slopes for VOT, block, and their interaction, and by-item intercept and slopes for the full factorial design; see SI, \@ref(sec:analysis-approach)). All hypothesis tests reported below are based on these models. The Bayes factors (BF) we report quantify the strength of evidence from the data for one hypothesis over an alternative hypothesis. BFs < 3 are sometimes described as indicating "anecdotal" evidence for the hypothesis; BFs between 3 and 10, "moderate" evidence; between 10 and 30, "strong" evidence; and > 30, "very strong" evidence [@jeffreys1961; @kruschke-liddell2018]. We do, however, also report the posterior probability of each hypothesis. This provides a measure of how probable the hypothesis is given the data (assuming uniform prior probabilities for both the proposed hypothesis and its alternative), which might be more intuitive to readers unfamiliar with Bayesian data analysis.
+
+We used the psychometric model to assess incremental changes in participants’ categorization responses from four mutually complementing perspectives (all based on the same psychometric mixed-effects model). First, we test prediction 1 (*prior expectations*), comparing participants' responses for the pre-exposure test (Test 1) against the idealized pre-exposure listener model. Second, we test prediction 2a (*exposure distribution*) by comparing the effects of different exposure conditions within each block. As noted above, previous distributional learning experiments have assessed changes in listeners' categorization function after much longer exposure than our earliest tests. By comparing conditions within each block, we also test how early effects of distributional exposure can be detected, and whether these early effects already exhibit the direction expected under distributional learning. Third, we compare within each condition how exposure incrementally changes listeners' categorization responses from block to block within each condition, relative to listeners' responses prior to any exposure. By comparing these changes against the idealized pre-exposure listener model, we test predictions 1 (*prior expectations*) and 2a,b (*exposure amount & distribution*) *together*. The same tests also assess prediction 3 about the *diminishing returns* of additional exposure. Finally, we compare changes in listeners' responses to those expected from idealized learner models. This analysis has the potential to identify constraints on cumulative adaptation. The latter two perspectives---made possible by the incremental exposure-test paradigm---allow us to test predictions 3 (*diminishing returns*) and 4 (*learning to convergence*). 
+
+Figure \@ref(fig:plot-fit-PSE) summarizes the results that we describe in more detail next. Here, we focus on the test blocks. The SI (\@ref(sec:SI-exposure-block-analysis)) reports analyses of the exposure blocks, which replicate all effects found in the test blocks. Where relevant we refer to these analyses below. Panels A & B of Figure \@ref(fig:plot-fit-PSE) show participants’ categorization responses during exposure and test blocks, along with the categorization function estimated from those responses via the mixed-effects psychometric models. These panels facilitate comparison between exposure conditions within each block. Panel C summarizes changes in listeners' PSE across blocks and conditions. This highlights how the type and amount of phonetic input affect listeners' categorization functions. 
 
 ```{r fit-nested-models-for-intercepts-slopes-plot, message=FALSE}
 # Refit the same model, formulated as nesting intercepts and slopes within each unique combination of
@@ -65,28 +69,6 @@ fit_exposure_nested_within_condition_and_block <-
     priorSD = 15,
     adapt_delta = .999)
 ```
-
-```{r extract-intercepts-slopes-from-test-and-exposure-models}
-d.psychometric_intercept.slope.PSE.draws <-
-  full_join(
-    fit_test_nested_within_condition_and_block %>% get_intercepts_and_slopes(),
-    fit_exposure_nested_within_condition_and_block %>% get_intercepts_and_slopes()) %>%
-  mutate(
-    Block = factor(Block),
-    # Adding unscaled slope here to have a more intuitive scale on which to compare VOT slopes
-    # It is also one way to put the slopes for both exposure and test on the same scale (since
-    # the SDs for exposure and test differ).
-    # intercepts have been centered to VOT means at test therefore are comparable, intercepts for both test and exposure indicate log-odds of response at the same VOT value
-    slope_unscaled = slope / (2 * ifelse(Block %in% c(2, 4, 6), VOT.sd_exposure, VOT.sd_test)),
-    PSE_scaled =  -Intercept/slope,
-    PSE_unscaled =
-      descale(
-        -Intercept/slope,
-        VOT.mean_test,
-        ifelse(Block %in% c(2, 4, 6), VOT.sd_exposure, VOT.sd_test))) 
-```
-
-## Conceptual replication (averaging over test blocks)
 
 ```{r fit-simple-effects-condition, results='hide'}
 # Get simple effects of Condition nested under block
@@ -125,32 +107,36 @@ fit_test.simple_effects_condition <-
     file ="../models/test-nested-condition.rds")
 ```
 
-<!-- TO DO: consider a much simpler result plot here that just shows the marginal effects across blocks (a) in terms of the categorization function and (b) in terms of the PSE. Then we could move the main figure and its description into the overview of incremental analyses, closer to where they are actually being discussed. UPDATE: Chigusa independently also seemed to think that there is merit in having a simpler figure here.-->
-We first use the psychometric mixed-effects model to analyze participants' behavior averaged over all test blocks. This analysis recasts, within a psychometric model, the type of analysis most common in the field: it assesses overall changes in listeners' behavior after exposure, without telling us how these changes accumulate, how they relate to listeners' prior expectations, or how they compare to behavior that would be expected from a learner that has fully adapted to the unfamiliar talker. Prediction (2b) states that changes in listeners' categorization function should depend on the distribution of phonetic cues in the exposure input. Specifically, the +10 condition should elicit a rightward shift in the categorization function relative to the baseline condition, and the +40 condition should elicit an even larger rightward shift. This is also what previous work found [@kleinschmidt-jaeger2016].
+```{r extract-intercepts-slopes-from-test-and-exposure-models}
+d.psychometric_intercept.slope.PSE.draws <-
+  full_join(
+    fit_test_nested_within_condition_and_block %>% get_intercepts_and_slopes(),
+    fit_exposure_nested_within_condition_and_block %>% get_intercepts_and_slopes()) %>%
+  mutate(
+    Block = factor(Block),
+    # Adding unscaled slope here to have a more intuitive scale on which to compare VOT slopes
+    # It is also one way to put the slopes for both exposure and test on the same scale (since
+    # the SDs for exposure and test differ).
+    # intercepts have been centered to VOT means at test therefore are comparable, intercepts for both test and exposure indicate log-odds of response at the same VOT value
+    slope_unscaled = slope / (2 * ifelse(Block %in% c(2, 4, 6), VOT.sd_exposure, VOT.sd_test)),
+    PSE_scaled =  -Intercept/slope,
+    PSE_unscaled =
+      descale(
+        -Intercept/slope,
+        VOT.mean_test,
+        ifelse(Block %in% c(2, 4, 6), VOT.sd_exposure, VOT.sd_test)))
+```
 
-Across all test blocks, participants were more likely to respond "t" the longer the VOT (`r get_bf(fit_test, "mu2_VOT_gs > 0")`). Exposure affected participants' categorization responses in the predicted direction. Marginalizing over Tests 1-6, participants in the +40 condition were less likely to respond "t" than participants in the +10 condition (`r get_bf(fit_test, "mu2_Condition.Exposure_Shift40vs.Shift10 < 0")`) or the baseline condition (`r get_bf(fit_test, "mu2_Condition.Exposure_Shift40vs.Shift10 + mu2_Condition.Exposure_Shift10vs.Shift0 < 0")`). There was also evidence---albeit less decisive---that participants in the +10 condition were less likely to respond "t" than participants in the baseline condition (`r get_bf(fit_test, "mu2_Condition.Exposure_Shift10vs.Shift0 < 0")`). That is, the +10 and +40 conditions resulted in categorization functions that were shifted rightwards compared to the baseline condition, as also evident in Figure \@ref(fig:plot-fit-PSE)A.^[The perceptual model contained in the our psychometric mixed-effects model describes the effect of VOT on the log-odds of "t"-responses as a line. The main effect of VOT is the average slope of that line across exposure conditions. The $\hat{\beta}$s for the comparisons across conditions indicate differences in the intercept of that line. Negative $\hat{\beta}$s thus indicate a *down*ward shift of that line in one condition, relative to the other. These downward shifts result in *right*ward shifts of the point of subjective equality (PSE), the VOT at which "t" and "d" responses are equally likely. This also shows in Figure \@ref(fig:plot-fit-PSE)A. In this figure, predictions are transformed into proportion "t"-responses and the downward shifts appear visually as a rightward shifts of the S-shaped categorization function (of one condition relative to another).]
+(ref:plot-fit-PSE) Summary of Bayesian mixed-effect psychometric analysis. **A)** Changes in listeners' categorization functions depending on exposure, from Test 1-4 and intervening exposure blocks (only unlabeled trials were included in the analysis of exposure blocks). Point ranges indicate the mean proportion of participants' "t"-responses and their 95% bootstrapped CIs. Lines and shaded intervals show the *maximum a posteriori* (MAP) estimates and 95%-CIs of the psychometric model fit to participants' responses. **B)** Same as A) but for the final three test blocks without intervening exposure (Test 4 is repeated for ease of comparison). **Panel C:** Changes across blocks and conditions in listeners' point of subjective equality (PSE) of the lapse-corrected categorization functions from A) \& B) (for changes in the slope of that function, see SI, \@ref(sec:io-bias-correction)). The PSE is the VOT value at which "t" and "d" responses are equally likely. Point ranges represent the posterior medians and 95%-CIs derived from the psychometric model. Horizontal gray ribbon indicates the 95%-CIs of the PSEs expected from an idealized pre-exposure listener. Horizontal dashed lines indicate PSEs expected from an idealized learner. Percentage labels indicate the degree of shift in PSE by participants as a proportion of the expected shift under the idealized learners (for details, see SI, \@ref(sec:shrinkage-test-all)). 
 
-Unlike the differences in the relative shift of the categorization function, there was little evidence that the *slopes* of listeners' categorization functions differed between exposure conditions (`r get_bf(fit_test.simple_effects_condition, "mu2_Block3:Condition.Exposure_Shift40vs.Shift10:VOT_gs = 0", bf = T)` < BFs < `r get_bf(fit_test.simple_effects_condition, "mu2_Block5:Condition.Exposure_Shift40vs.Shift10:VOT_gs + mu2_Block5:Condition.Exposure_Shift10vs.Shift0:VOT_gs = 0", bf = T)`; see also Figure \@ref(fig:plot-fit-PSE)A). This lack of notable differences in the slope is precisely what is expected under distributional learning models, since our exposure conditions manipulated neither the category variances of /d/ and /t/ nor the distance between their category means. In the remainder of the main text, we thus focus on right vs. left shifts in listeners' categorization function---i.e., changes in listeners' PSE. Parallel analyses of changes (or lack thereof) in the slopes of listeners' categorization functions are reported in the SI (\@ref(sec:slopes-analyses-test)-\@ref(sec:slopes-analyses-exposure)), and do not affect any of our conclusions.
-
-In summary, our initial analysis conceptually replicates previous findings that exposure to different VOT distributions changes listeners' categorization responses [for /b/-/p/: @clayards2008; @kleinschmidt2015; @kleinschmidt2020; for /g/-/k/, @theodore-monto2019]. This replication makes two noteworthy contributions. It extends previous findings to stimuli and stimulus distributions that somewhat more closely resemble those found in everyday speech. And it adds to a small body of work that goes beyond dichotomous comparisons, testing stronger hypotheses about the relative ordering of multiple exposure conditions [e.g., @babel2019; @bejjanki2011; @bradlow-bent2008; @cummings-theodore2023; @kleinschmidt2020; @liu-jaeger2018].
-
-## Overview of incremental analyses
-Next, we turn to our primary questions. We assess incremental changes in participants’ categorization responses from three mutually complementing perspectives (all based on the same psychometric mixed-effects model). First, we compare the effects of different exposure conditions within each block. This is the perspective taken in previous studies and in the conceptual replication presented above, but extended to test *how early* in the experiment differences between exposure conditions begin to emerge. Second, we compare *within* each condition how exposure *incrementally changes* listeners' categorization responses from block to block within each condition, relative to listeners' responses prior to any exposure. Together with the first perspective, this allows us to test predictions (1 - *prior expectations*)-(2a,b - *exposure amount & distribution*). Third, we compare changes in listeners' responses to those expected from an ideal observer that has fully learned the exposure distributions. This analysis has the potential to identify constraints on cumulative adaptation. As we show, the latter two perspectives---made possible by the incremental exposure-test paradigm---afford stronger tests of predictions (3 - *learn to convergence*) and (4 - *diminishing returns*), and suggest previously unrecognized constraints on the early moments of adaptive speech perception. For all three analyses, we initially focus on Tests 1-4 with intermittent exposure. Finally, we analyze the effects of repeated testing without intermittent exposure blocks during Tests 4-6. This reveals that such testing has under-appreciated methodological and theoretical consequences. <!-- Although research, including some of our own, tends to interpret tests as passive windows into the effects of exposure, test stimuli are part of the exposure input listeners' receive [@xie-kurumada2024]. This has both methodological and theoretical implications: for example, we show below that analyses like those used in previous work (and in our conceptual replication) tend to underestimate the true effect of exposure. -->
-
-(ref:plot-fit-PSE) Summary of results. **Panel A:** Changes in listeners psychometric categorization functions as a function of exposure, from Test 1 to Test 4 with all intervening exposure blocks (only unlabeled trials were included in the analysis of exposure blocks since labeled trials provide little information about listeners' categorization function). Point ranges indicate the mean proportion of participants' "t"-responses and their 95% bootstrapped CIs. Lines and shaded intervals show the *maximum a posteriori* (MAP) estimates and 95%-CIs of a Bayesian mixed-effects psychometric model fit to participants' responses. **Panel B:** Same as Panel A but for the final three test blocks without intervening exposure. Test 4 is shown as part of both Panels A and B. **Panel C:** Changes across blocks and conditions in listeners' point-of-subjective-equality (PSE) of the lapse-corrected categorization functions from Panels A \& B (i.e., the PSE of the perceptual model inferred from listeners' responses; for changes in the slope of that function, see SI, \@ref(sec:io-bias-correction)). Point ranges represent the posterior medians and their 95%-CIs derived from the psychometric model. Horizontal dashed lines indicate 95%-CIs of the PSEs expected from an idealized learner (an ideal observer model that has fully learned the exposure distributions). Percentage labels indicate the degree of shift in PSE exhibited by participants as a proportion of the expected shift under the idealized learners (for details, see SI, \@ref(sec:shrinkage-test-all)). Horizontal gray ribbon indicates the 95%-CIs of the PSEs expected from an idealized listener *prior to any exposure*.
-
-\begin{landscape}
-
+<!-- avoiding extra blank landscape page -->
+\afterpage{
+  \begin{landscape}
+  \thispagestyle{empty}
+  
 ```{r}
-# Create data frame for pre-exposure IO. To avoid over-fitting, we use 5-fold cross-validation.
-# We use the isolated speech data from Chodroff and Wilson, and randomly cut it into 5 folds.
-set.seed(920)
-d.prior <-
-  d.chodroff_wilson.isolated %>%
-  group_by(Talker, category) %>%
-  mutate(fold = sample(1:5, n(), replace = T))
-
-# Make pre-exposure ideal observers based on Chodroff and Wilson *and* ideal observers 
+# Create data frame for pre-exposure IO. 
+# Make pre-exposure ideal observers based on Chodroff and Wilson *and* ideal observers
 # that are fit on the exposure VOTs of the three exposure conditions (idealized learners).
 # These ideal observers can be thought of as reflecting a learner that has fully learned
 # the exposure distributions. Note that we include perceptual noise in the ideal observers
@@ -170,7 +156,7 @@ io <-
       ungroup() %>%
       # Join in the data that the pre-exposure IOs will be applied to:
       cross_join(
-        d.for_analysis %>%  
+        d.for_analysis %>%
           filter(Phase == "test") %>%
           distinct(Condition.Exposure, Item.VOT, Item.f0_Mel, Item.VowelDuration) %>%
           mutate(x = pmap(.l = list(Item.VOT, Item.f0_Mel, Item.VowelDuration), ~ c(...))) %>%
@@ -196,13 +182,13 @@ io <-
         unnest(data) %>%
         mutate(category = ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/")),
       cues = "VOT",
-      groups = "Condition.Exposure") %>% 
+      groups = "Condition.Exposure") %>%
   nest(io = -c(Condition.Exposure)) %>%
-      # Join in the data that the IOs will be applied to. For exposure IOs, only VOT is used for 
+      # Join in the data that the IOs will be applied to. For exposure IOs, only VOT is used for
       # categorizing stimuli (since these IOs are trained on only VOT). Here, we use the test tokens
-      # to estimate PSEs for all IOs, and assume that these are constant across all exposure and 
-      # test blocks. In the SI, we present additional visualizations that obtain PSEs separately 
-      # for each block. This allows us to detect potential biases in the estimation of PSEs that 
+      # to estimate PSEs for all IOs, and assume that these are constant across all exposure and
+      # test blocks. In the SI, we present additional visualizations that obtain PSEs separately
+      # for each block. This allows us to detect potential biases in the estimation of PSEs that
       # would result from the distribution of phonetic cues (we don't find any notable biases of
       # that form, which is why we present a simpler approach in the main text).
       left_join(
@@ -212,23 +198,23 @@ io <-
           rename(x = Item.VOT) %>%
           nest(x = x)))
 
-# There are two different ways to obtain PSEs from ideal observers along a specified phonetic continuum. 
-# One approach is to estimate the *actual* PSE (either analytically or through optimization, as implemented 
-# in the function get_PSE_from_IO). While this approach avoids the introduction of linearity assumptions, 
-# this is also its downside: we do not know *listeners' actual PSEs*, but rather estimate them in the 
+# There are two different ways to obtain PSEs from ideal observers along a specified phonetic continuum.
+# One approach is to estimate the *actual* PSE (either analytically or through optimization, as implemented
+# in the function get_PSE_from_IO). While this approach avoids the introduction of linearity assumptions,
+# this is also its downside: we do not know *listeners' actual PSEs*, but rather estimate them in the
 # psychometric mixed-effects model under the assumption of linear effects of the phonetic continuum on
-# the log-odds of listeners' "t"-responses. The second approach to estimating PSEs for ideal observers 
+# the log-odds of listeners' "t"-responses. The second approach to estimating PSEs for ideal observers
 # avoids this issue by subjecting the ideal observed to the exact same estimation approach used to estimate
-# listeners' PSEs. This approach also has the advantage that it allows the estimation of an intercept and 
-# slope (paralleling what we do for listeners' categorization function). This is the approach we take here. 
+# listeners' PSEs. This approach also has the advantage that it allows the estimation of an intercept and
+# slope (paralleling what we do for listeners' categorization function). This is the approach we take here.
 #
-# get_logistic_parameters_from_model() gets PSE, intercept, and slope by repeatedly sampling responses from 
+# get_logistic_parameters_from_model() gets PSE, intercept, and slope by repeatedly sampling responses from
 # the ideal observer. The function then fits an ordinary logistic regression to these responses (estimation
-# of lapsing rates via a psychometric model is unnecessary since the ideal observers are *known* to have 0 
-# lapses). This replicates for the ideal observers any potential biases that might be introduced by the 
+# of lapsing rates via a psychometric model is unnecessary since the ideal observers are *known* to have 0
+# lapses). This replicates for the ideal observers any potential biases that might be introduced by the
 # linearity assumption of our psychometric model.
 #
-# We note here that, in retrospect, our caution might be overkill since analyses in the SI suggest that the linearity 
+# We note here that, in retrospect, our caution might be overkill since analyses in the SI suggest that the linearity
 # assumption introduced only minor (non-directional) variation into the intercept, slope, and PSE estimates.
 d.IO_intercept.slope.PSE <-
     # Assess the ideal observers at the exact same locations used during test blocks
@@ -261,7 +247,7 @@ p.fit_1to7 <-
   filter(Block %in% c(1:7))  %>%
   ggplot() +
   geom_rect(
-    data = 
+    data =
       tibble(
         Block.plot_label = c("Test 1", "Exposure 1", "Test 2", "Exposure 2", "Test 3", "Exposure 3", "Test 4"),
         Block.colour = c("grey", "white", "grey", "white", "grey", "white", "grey")) %>%
@@ -306,25 +292,25 @@ predictedPSE_scaled_0 <- get_IO_predicted_PSE(condition = "Shift0")
 predictedPSE_scaled_prior <- get_IO_predicted_PSE(condition = "prior")
 
 # Compute proportional shifts by draw
-d.psychometric_intercept.slope.PSE.median <- 
-  d.psychometric_intercept.slope.PSE.draws %>% 
-  group_by(Condition.Exposure, Block, .draw) %>% 
-  arrange(.draw, by_group = T) %>% 
+d.psychometric_intercept.slope.PSE.median <-
+  d.psychometric_intercept.slope.PSE.draws %>%
+  group_by(Condition.Exposure, Block, .draw) %>%
+  arrange(.draw, by_group = T) %>%
   # add the idealized learner PSEs
   mutate(
-    predictedPSE_scaled = 
+    predictedPSE_scaled =
       case_when(
         Condition.Exposure == "Shift0" ~ predictedPSE_scaled_0,
         Condition.Exposure == "Shift10" ~ predictedPSE_scaled_10,
         Condition.Exposure == "Shift40" ~ predictedPSE_scaled_40),
-    predictedPSE_unscaled = descale(predictedPSE_scaled,  VOT.mean_test, VOT.sd_test)) %>% 
-  nest(data = -c(Condition.Exposure, .draw)) %>% 
-  mutate(data = map(data, ~ get_prop_shift_by_draw(.x))) %>% 
-  unnest(data) %>% 
-  group_by(Condition.Exposure, Block) %>% 
-  median_hdci() %>% 
+    predictedPSE_unscaled = descale(predictedPSE_scaled,  VOT.mean_test, VOT.sd_test)) %>%
+  nest(data = -c(Condition.Exposure, .draw)) %>%
+  mutate(data = map(data, ~ get_prop_shift_by_draw(.x))) %>%
+  unnest(data) %>%
+  group_by(Condition.Exposure, Block) %>%
+  median_hdci() %>%
   add_block_labels()
- 
+
 pos <- position_dodge(.3)
 
 p.across_blocks <-
@@ -345,7 +331,7 @@ p.across_blocks <-
   stat_summary(geom = "line", position = pos) +
   scale_x_discrete("Block") +
   scale_colour_manual("Condition",
-    labels = c("baseline", "+10ms", "+40ms", "prior"),
+    labels = c("-20ms", "-10ms", "+20ms", "prior"),
     values = c(colours.condition, "darkgray"),
     aesthetics = "color") +
   theme(
@@ -357,11 +343,11 @@ p.across_blocks <-
   scale_y_continuous("PSE (ms VOT)") +
   aes(y = PSE_unscaled, ymin = PSE_unscaled.lower, ymax = PSE_unscaled.upper) +
   geom_rect(
-    data = 
+    data =
       d.IO_intercept.slope.PSE %>%
       filter(str_starts(Condition.Exposure, "prior")) %>%
       summarise(
-        PSE.lower = mean(PSE) - sd(PSE) / sqrt(length(PSE)) * 1.96, 
+        PSE.lower = mean(PSE) - sd(PSE) / sqrt(length(PSE)) * 1.96,
         PSE.upper = mean(PSE) + sd(PSE) / sqrt(length(PSE)) * 1.96),
     mapping = aes(xmin = -Inf, ymin = PSE.lower, ymax = PSE.upper, xmax = Inf),
     fill = "#d2d4dc",
@@ -369,7 +355,7 @@ p.across_blocks <-
     inherit.aes = F) +
   geom_linerange(linewidth = .6, position = pos, alpha = .5) +
   geom_hline(
-       data = d.IO_intercept.slope.PSE %>% 
+       data = d.IO_intercept.slope.PSE %>%
          filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")),
        mapping = aes(yintercept = PSE, color = Condition.Exposure, group = Condition.Exposure),
        linetype = 2,
@@ -379,10 +365,10 @@ p.across_blocks <-
    theme(plot.margin = unit(c(1, 3.2, 1, 1), "lines"), legend.position = "none")
 ```
 
-```{r plot-fit-PSE, fig.width=12.5, fig.height=7, fig.cap="(ref:plot-fit-PSE)"}
-p.fit_1to7 + 
-  p.fit_7to9 + 
-  (p.PSE_1to9 + 
+```{r plot-fit-PSE, fig.width=13, fig.height=7, out.width="100%", fig.cap="(ref:plot-fit-PSE)"}
+p.fit_1to7 +
+  p.fit_7to9 +
+  (p.PSE_1to9 +
      geom_label(
        data = d.psychometric_intercept.slope.PSE.median %>% filter(Block != 1),
        mapping = aes(label = percent(prop.shift_unscaled), colour = Condition.Exposure),
@@ -390,14 +376,24 @@ p.fit_1to7 +
        position = position_dodge(.5)) +
      annotate(
        geom = "text",
-       data = d.psychometric_intercept.slope.PSE.median %>%
-         mutate(true_shift = predictedPSE_unscaled - PSE_unscaled) %>% 
-         filter(Block == 1) %>% pull(true_shift),
-       x = c(rep(10, 3)), 
+       x = c(rep(9.7, 3)),
        y = c(25, 35, 65),
        label = d.psychometric_intercept.slope.PSE.median %>%
-         mutate(true_shift = paste(round(predictedPSE_unscaled - PSE_unscaled), "(100%)")) %>% 
+         mutate(
+           true_shift = round(predictedPSE_unscaled - PSE_unscaled),
+           true_shift = paste0(ifelse(true_shift > 0, "+", ""), true_shift, " (100%)")) %>%
          filter(Block == 1) %>% pull(true_shift),
+       hjust = 0,
+       colour = colours.condition,
+       fontface = "bold",
+       size = 2.7) +
+     annotate(
+       geom = "text",
+       x = c(rep(9.7, 3)),
+       y = c(23, 33, 63),
+       label = c(rep("idealized\nlearner", 3)),
+       hjust = 0,
+       vjust = 1,
        colour = colours.condition,
        fontface = "bold",
        size = 2.7)) +
@@ -412,23 +408,57 @@ heights = c(1.1, 1.1, 1.8)) +
   theme(plot.tag = element_text(face = "bold"))
 ```
 
-\end{landscape}
+  \end{landscape}
+}
 
 ```{r}
 # Not removing the PSE panel since we replot and augment it further down
 rm(fit_exposure, fit_exposure_nested_within_condition_and_block, p.fit_1to7)
 ```
 
-## How early does exposure begin to affect listeners' categorization responses? (comparing exposure conditions within each test block)
+## Prediction 1 (*prior expectations*)
+
+```{r hypothesis-table-prediction1, results='asis'}
+hyp.simple_effects_condition <-
+  get_hyp_data(
+    fit_test.simple_effects_condition,
+    hyp.vec = c(
+      "mu2_Block1:Condition.Exposure_Shift10vs.Shift0 = 0",
+      "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 = 0",
+      "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 = 0")) %>% 
+  bind_rows(
+    get_hyp_data(
+      fit_test_nested_within_condition_and_block,
+      hyp.vec = c(
+        str_c("(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs + 
+          -mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs +
+          -mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs)/3 -", predictedPSE_scaled_prior, "= 0")))) 
+
+make_hyp_table(
+  fit_test.simple_effects_condition,
+  hyp.simple_effects_condition,
+  c("$PSE_{-10ms} = PSE_{-20ms}$",
+    "$PSE_{+20ms} = PSE_{-10ms}$",
+    "$PSE_{+20ms} = PSE_{-20ms}$",
+    "$PSE_{actual_{all}} = PSE_{idealized_{prior}}$"),
+    caption = "Comparing participants' responses prior to exposure (Test 1) both between exposure conditions and to the idealized pre-exposure listener model. Predicted identities were tested using the Savage-Dickey density ratio (where BF > 1 indicates evidence in favor of the hypothesis that the two PSEs are identical).") %>%
+  pack_rows("Comparing conditions against each other (Test block 1)", 1, 3)  %>% 
+  pack_rows("Comparing average PSE against idealized pre-exposure listener (Test block 1)", 4, 4)
+```
+
+Figure \@ref(fig:plot-fit-PSE)A suggests that the different participant groups had almost identical categorization functions prior to exposure. This is confirmed by the Bayesian hypothesis tests summarized in the top half of Table \@ref(tab:hypothesis-table-prediction1). During Test 1, before participants received informative exposure to the unfamiliar talker, there was moderate support for the hypothesis that participants' responses did not differ across exposure conditions. <!-- ^[The moderate BFs for these hypothesis tests are due to our use of regularizing priors, which have non-negligible density over the null [for an introduction to the Savage-Dickey method, see @wagenmakers2010]. Rather than to test the null against more plausible alternative priors, which would predictably increase the evidence for the null, we appeal to readers' intuition: the 90%-CIs of the comparisons for Test 1 are all approximately centered around zero; there is very little evidence in favor of an effect in either direction.] --> This is also reflected in the low probabilities of direction ($.5 \le p_{direction} \le .68$). This result is predicted by models of adaptive speech perception under the assumptions that (a) participants in the different groups have similar prior experiences, and that (b) our sample size is sufficiently large to yield stable estimates of listeners' categorization function. <!-- Equality of pre-exposure behavior across exposure groups is also implicitly assumed---but rarely tested---in the interpretation of most studies on adaptive speech perception [when it is tested, it often turns out that this assumption is *not* necessarily warranted, presumably due to insufficient sample sizes, cf. @kleinschmidt2020]. -->
+
+Critically, participants' categorization functions during Test 1 closely matched the predictions of the idealized pre-exposure listener, shown as a gray band in Figure \@ref(fig:plot-fit-PSE)A. This is confirmed by a Bayesian hypothesis test summarized in the final section of Table \@ref(tab:hypothesis-table-prediction1), which compared the average PSE of all conditions, against the mean PSE of the five cross-validated idealized pre-exposure listeners (BFs $\ge$ `r get_bf(fit_test_nested_within_condition_and_block, str_c("(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x1/mu2_IpasteCondition.ExposureBlocksepEQxShift0x1:VOT_gs + 
+          -mu2_IpasteCondition.ExposureBlocksepEQxShift10x1/mu2_IpasteCondition.ExposureBlocksepEQxShift10x1:VOT_gs +
+          -mu2_IpasteCondition.ExposureBlocksepEQxShift40x1/mu2_IpasteCondition.ExposureBlocksepEQxShift40x1:VOT_gs)/3 -", predictedPSE_scaled_prior, "= 0"), bf = T)`). This demonstrated that a simple ideal observer trained on the phonetic distributions that a 'typical' listener might have previously experienced provides a decent model of listeners' perception prior to additional exposure [see also, e.g., @kronrod2016; @nearey-assmann2007; @tan2021; @xie2021cognition]. Notably, this is achieved with 0 degrees of freedom that are fit to listeners' responses: the idealized pre-exposure listeners were trained solely on a phonetic database [@chodroff-wilson2018], and not fit to listeners' responses.
+
+## Prediction 2b (*exposure distributions*): comparing exposure conditions within each test block
 
 ```{r hypothesis-table-simple-effects-condition, results='asis'}
 hyp.simple_effects_condition <-
-  hypothesis(
-    fit_test.simple_effects_condition,
-    c(
-      "mu2_Block1:Condition.Exposure_Shift10vs.Shift0 = 0",
-      "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 = 0",
-      "mu2_Block1:Condition.Exposure_Shift40vs.Shift10 + mu2_Block1:Condition.Exposure_Shift10vs.Shift0 = 0",
+  get_hyp_data(
+  fit_test.simple_effects_condition,
+  hyp.vec = c(
       "mu2_Block3:Condition.Exposure_Shift10vs.Shift0 < 0",
       "mu2_Block3:Condition.Exposure_Shift40vs.Shift10 < 0",
       "mu2_Block3:Condition.Exposure_Shift40vs.Shift10 + mu2_Block3:Condition.Exposure_Shift10vs.Shift0 < 0",
@@ -443,37 +473,31 @@ hyp.simple_effects_condition <-
       "mu2_Block8:Condition.Exposure_Shift40vs.Shift10 + mu2_Block8:Condition.Exposure_Shift10vs.Shift0 < 0",
       "mu2_Block9:Condition.Exposure_Shift10vs.Shift0 < 0",
       "mu2_Block9:Condition.Exposure_Shift40vs.Shift10 < 0",
-      "mu2_Block9:Condition.Exposure_Shift40vs.Shift10 + mu2_Block9:Condition.Exposure_Shift10vs.Shift0 < 0"),
-    robust = T) %>%
-  .$hypothesis %>%
-  dplyr::select(-Star)
+      "mu2_Block9:Condition.Exposure_Shift40vs.Shift10 + mu2_Block9:Condition.Exposure_Shift10vs.Shift0 < 0")
+)
 
 make_hyp_table(
   fit_test.simple_effects_condition,
   hyp.simple_effects_condition,
-  c("$PSE_{+10} = PSE_{baseline}$", 
-    "$PSE_{+40} = PSE_{+10}$", 
-    "$PSE_{+40} = PSE_{baseline}$", 
-    rep(c("$PSE_{+10} > PSE_{baseline}$", 
-          "$PSE_{+40}  > PSE_{+10}$", 
-          "$PSE_{+40} > PSE_{baseline}$"), 5)),
-    caption = "The simple effects of the exposure conditions for each test block. This analysis asks how early exposure starts to affect participants’ categorization responses, and when (if ever) these changes were undone with repeated testing. Note that rightward shifts of the categorization function (and its PSE) correspond to negative estimates (lower intercepts in predicting the log-odds of \`\`t\'\'-responses). Predicted nulls for Test 1 were tested using the Savage-Dickey density ratio.") %>%
-  pack_rows("Test block 1 (pre-exposure)", 1, 3) %>%
-  pack_rows("Test block 2", 4, 6) %>%
-  pack_rows("Test block 3", 7, 9) %>%
-  pack_rows("Test block 4", 10, 12) %>%
-  pack_rows("Test block 5 (repeated testing without additional exposure)", 13, 15) %>%
-  pack_rows("Test block 6 (repeated testing without additional exposure)", 16, 18)
+  rep(c("$PSE_{-10ms} > PSE_{-20ms}$",
+        "$PSE_{+20ms}  > PSE_{-10ms}$",
+        "$PSE_{+20ms} > PSE_{-20ms}$"), 5),
+    caption = "The simple effects of the exposure conditions for each test block. This analysis asks how early exposure starts to affect participants’ categorization responses, and when (if ever) these changes were undone with repeated testing. Note that rightward shifts of the categorization function (and its PSE) correspond to negative estimates (lower intercepts in predicting the log-odds of \`\`t\'\'-responses).") %>%
+  pack_rows("Test block 2", 1, 3) %>%
+  pack_rows("Test block 3", 4, 6) %>%
+  pack_rows("Test block 4", 7, 9) %>%
+  pack_rows("Test block 5 (repeated testing without additional exposure)", 10, 12) %>%
+  pack_rows("Test block 6 (repeated testing without additional exposure)", 13, 15)
 ```
 
-Figure \@ref(fig:plot-fit-PSE)A suggests that differences between exposure conditions emerged very early in the experiment. This is confirmed by Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-effects-condition), which we discuss next. Prior to any exposure, during Test 1, participants' responses did not differ across exposure conditions. This result is predicted by models of adaptive speech perception under the assumptions that (a) participants in the different groups have similar prior experiences, and that (b) our sample size is sufficiently large to yield stable estimates of listeners' categorization function.^[<!-- This comparatively simple procedure estimates the BF as the ratio of the posterior and prior density over the null. --> The moderate BFs for these hypothesis tests are due to our use of regularizing priors, which have non-negligible density over the null [for an introduction to the Savage-Dickey method, see @wagenmakers2010; for demonstration, see also @schad2022, Figure 9]. Rather than to test the null against more plausible alternative priors, which would predictably increase the evidence for the null, we appeal to readers' intuition: the 90%-CIs of the comparisons for Test 1 are all approximately centered around zero; there is very little evidence in favor of an effect in either direction.] Equality of pre-exposure behavior across exposure groups is also implicitly assumed---but rarely tested---in the interpretation of most studies on adaptive speech perception [when it is tested, it often turns out that this assumption is *not* necessarily warranted, presumably due to insufficient sample sizes, cf. @kleinschmidt2020]. 
+Figure \@ref(fig:plot-fit-PSE)A suggests that differences between exposure conditions emerged very rapidly after listeners received informative exposure from the unfamiliar talker. This is confirmed by Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-effects-condition).^[The perceptual model contained in the our psychometric mixed-effects model describes the effect of VOT on the log-odds of "t"-responses as a line. The main effect of VOT is the average slope of that line across exposure conditions. The estimates for the comparisons across conditions indicate differences in the intercept of that line. Negative estimates thus indicate a *down*ward shift of that line in one condition, relative to the other. These downward shifts result in *right*ward shifts of the PSE. In Figure \@ref(fig:plot-fit-PSE)A, which shows predictions transformed into proportion "t"-responses, these downward shifts appear visually as a rightward shifts of the S-shaped categorization function (of one condition relative to another).] During Test 2, after exposure to only 24 /d/ and 24 /t/ stimuli (thereof half labeled), participants' categorization responses already differed between exposure conditions (BFs $\ge$ `r get_bf(fit_test.simple_effects_condition, "mu2_Block3:Condition.Exposure_Shift10vs.Shift0 < 0", bf = T)`). All differences between exposure conditions that emerged at Test 2 followed prediction 2b (*exposure distributions*).^[This is also evident in the fact that the probability of direction in Table \@ref(tab:hypothesis-table-simple-effects-condition) was identical to the posterior probability of the tested hypothesis for Tests 2-6: when a directional hypothesis is supported, its posterior probability (under a uniform prior over the competing hypotheses) is the same as the probability of direction.] Additional analyses reported in the SI (\@ref(sec:SI-exposure-block-analysis)) found that listeners' categorization functions had already changed in the predicted direction during the first *exposure* block, in line with Figure \@ref(fig:plot-fit-PSE)A. This suggests that changes in listeners' categorization responses emerged quickly at the earliest point tested---after only a fraction of exposure trials previously tested in similar paradigms. 
 
-During Test 2, after exposure to only 24 /d/ and 24 /t/ stimuli (thereof half labeled), participants' categorization responses already differed between exposure conditions (BFs > `r get_bf(fit_test.simple_effects_condition, "mu2_Block3:Condition.Exposure_Shift10vs.Shift0 < 0", bf = T)`). All differences between exposure conditions that emerged at Test 2 followed prediction 2b (*exposure distributions*). Additional analyses reported in the SI (\@ref(sec:SI-exposure-block-analysis)) found that listeners' categorization functions had already changed in the predicted direction during the first *exposure* block, in line with Figure \@ref(fig:plot-fit-PSE)A. This suggests that changes in listeners' categorization responses emerged quickly at the earliest point tested---after only a fraction of exposure trials previously tested in similar paradigms.
+The effects of the three exposure conditions persisted until Test 4, always in line with prediction 2b. Indeed, the effects of exposure numerically persisted even after no further informative exposure was provided (Tests 5-6), though the difference between the -20ms and -10ms conditions had mostly vanished by the final test block, leaving only anecdotal support (BF $\ge$ `r get_bf(fit_test.simple_effects_condition, "mu2_Block9:Condition.Exposure_Shift10vs.Shift0 < 0", bf = T)`). Further comparisons of the differences between exposure conditions during Test 4-6 suggests that the differences between conditions decreased with repeated testing in the absence of further exposure. Indeed, additional hypothesis tests presented in Table \@ref(tab:hypothesis-table-simple-effects-block) in the next section confirm that repeated testing without intermittent exposure in Tests 4-6 substantially reduced the effects of exposure. This replicates similar previous findings from other types of paradigms [e.g., lexically-guided perceptual learning, @scharenborg-janse2013; @giovannone-theodore2021; @cummings-theodore2023; @liu-jaeger2018; @liu-jaeger2019; @zheng-samuel2023]. We leave further discussion of the effects of repeated testing to the SI (\@ref(sec:repeated-testing)) but note one important consequence for future research: analyses that average over test blocks with uninformative exposure (unlabeled inputs with uniform distributions of phonetic cues)---as is still the norm---are bound to systematically underestimate the true adaptivity of human speech perception.
 
-The effects of the three exposure conditions persisted until Test 4, always in line with prediction 2b. Table \@ref(tab:hypothesis-table-simple-effects-condition) does, however, indicate an interesting non-monotonic development. While the difference between the +40 condition and both the baseline and +10 condition continued to increase numerically with increasing exposure (increasingly larger magnitude of negative estimates in Tests 2-4), the same was not the case for the difference between the +10 and the baseline condition. Instead, the difference between the +10 and baseline condition *reduced* with increasing exposure (while maintaining its direction; from $\hat{\beta} =$ `r get_bf(fit_test.simple_effects_condition, "mu2_Block3:Condition.Exposure_Shift10vs.Shift0 < 0", est = T)` to $\hat{\beta} =$ `r get_bf(fit_test.simple_effects_condition, "mu2_Block7:Condition.Exposure_Shift10vs.Shift0 < 0", est = T)`, see Table \@ref(tab:hypothesis-table-simple-effects-condition)). At first blush, this non-monotonicity appears to contradict prediction 2a that the magnitude of exposure effects should increase with increasing exposure. In the next section, we show that the results do, in fact, *support* prediction 2a when listeners' prior expectations are considered. Indeed, the seemingly unexpected non-monotonicity---which would be impossible to detect without repeated testing---turns out to be important for understanding incremental adaptation.
+Finally, similar comparisons across Tests 1-4 reveals an interesting non-monotonic development. While the difference between the +20ms condition and both the -20ms and -10ms condition continued to increase numerically with increasing exposure (increasingly larger magnitude of negative estimates in Tests 2-4), the same was not the case for the difference between the -10ms and the -20ms condition. Instead, the difference between the -10ms and -20ms condition *reduced* with increasing exposure (while maintaining its direction; from $\hat{\beta} =$ `r get_bf(fit_test.simple_effects_condition, "mu2_Block3:Condition.Exposure_Shift10vs.Shift0 < 0", est = T)` to $\hat{\beta} =$ `r get_bf(fit_test.simple_effects_condition, "mu2_Block7:Condition.Exposure_Shift10vs.Shift0 < 0", est = T)`, see Table \@ref(tab:hypothesis-table-simple-effects-condition)). At first blush, this non-monotonicity appears to contradict prediction 2a that the magnitude of exposure effects should increase with increasing exposure. In the next section, we show that the results do, in fact, *support* prediction (2a) when listeners' prior expectations are considered. Indeed, the seemingly unexpected non-monotonicity---which would be impossible to detect without repeated testing---turns out to be important for understanding incremental adaptation.
 
-## Incremental adaptation from prior expectations (comparing block-to-block changes within exposure conditions)
-Next, we compare how listeners' categorization responses changed from block to block *within* each exposure condition. This allows us to understand changes in listeners' categorization function relative to listeners' pre-exposure behavior, thereby assessing the joint effects of predictions (1 - *prior expectations*) and (2a,b - *exposure amount & distributions*). To facilitate visual comparison across blocks and conditions, Figure \@ref(fig:plot-fit-PSE)C summarizes the block-to-block changes in listeners' PSE. Focusing for now on Tests 1-4, this highlights three aspects of participants' behavior that were not readily apparent in the statistical comparisons presented so far.
+## Predictions 1-3 together: comparing incremental changes within exposure conditions
+Next, we compare how listeners' categorization responses changed from block to block *within* each exposure condition. This allows us to understand changes in listeners' categorization function relative to listeners' pre-exposure behavior, thereby assessing the joint effects of predictions 1  (*prior expectations*) and 2a,b  (*exposure amount & distributions*). To facilitate visual comparison across blocks and conditions, Figure \@ref(fig:plot-fit-PSE)C summarizes the block-to-block changes in listeners' PSE. Focusing on Tests 1-4 with intermittent exposure, this highlights several aspects of participants' behavior that were not readily apparent in the statistical comparisons presented so far.
 
 ```{r fit-simple-effects-block, results='hide'}
 my_priors <- c(
@@ -510,8 +534,9 @@ fit_test.simple_effects_block <-
 
 ```{r hypothesis-table-simple-effects-block, results='asis'}
 hyp.simple_effects_block <-
-  hypothesis(
+  get_hyp_data(
     fit_test.simple_effects_block,
+    hyp.vec =
     c(
       "mu2_Condition.ExposureShift0:Block_Test2vs.Test1 > 0",
       "mu2_Condition.ExposureShift0:Block_Test3vs.Test2 > 0",
@@ -537,10 +562,7 @@ hyp.simple_effects_block <-
 
       "mu2_Condition.ExposureShift40:Block_Test5vs.Test4 > 0",
       "mu2_Condition.ExposureShift40:Block_Test6vs.Test5 > 0",
-      "mu2_Condition.ExposureShift40:Block_Test5vs.Test4 + mu2_Condition.ExposureShift40:Block_Test6vs.Test5 > 0"),
-    robust = T) %>%
-  .$hypothesis %>%
-  dplyr::select(-Star)
+      "mu2_Condition.ExposureShift40:Block_Test5vs.Test4 + mu2_Condition.ExposureShift40:Block_Test6vs.Test5 > 0"))
 
 make_hyp_table(
   fit_test.simple_effects_block,
@@ -561,81 +583,19 @@ make_hyp_table(
   "Block 4 to 5: decreased PSE",
   "Block 5 to 6: decreased PSE",
   "{\\em Block 4 to 6: decreased PSE}"),
-    caption = "Was there incremental change from test block 1 to 4? Did these changes dissipate with repeated testing from block 4 to 6? This table summarizes the simple effects of block for each exposure condition. Note that rightward shifts of the categorization function (and its PSE) correspond to negative estimates (lower intercepts in predicting the log-odds of \`\`t\'\'-responses).") %>%
-  pack_rows("Difference between blocks: baseline", 1, 7) %>%
-  pack_rows("Difference between blocks: +10", 8, 14) %>%
-  pack_rows("Difference between blocks: +40", 15, 21)
+    caption = "Was there incremental change from test block 1 to 4? Did these changes dissipate with repeated testing from block 4 to 6? This table summarizes the simple effects of block for each exposure condition. Note that rightward shifts of the categorization function (and its PSE) correspond to negative estimates (lower intercepts in predicting the log-odds of \`\`t\'\'-responses). Italicized rows assess incremental changes across multiple block, increasing the sensitivity to detect effects.") %>%
+  pack_rows("Difference between blocks: -20ms", 1, 7) %>%
+  pack_rows("Difference between blocks: -10ms", 8, 14) %>%
+  pack_rows("Difference between blocks: +20ms", 15, 21)
 ```
 
-First, while the PSEs for the +40 and +10 conditions were shifted rightwards compared to the baseline condition, both the +10 and the baseline condition seem to shift *left*wards relative to their pre-exposure starting point in Test 1. Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-effects-block) find moderate support for a leftward shift from Test 1 to 4 in both the +10 condition (BF = `r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift10:Block_Test2vs.Test1 + mu2_Condition.ExposureShift10:Block_Test3vs.Test2 + mu2_Condition.ExposureShift10:Block_Test4vs.Test3 > 0", bf = T)`) and the baseline condition (BF = `r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift0:Block_Test2vs.Test1 + mu2_Condition.ExposureShift0:Block_Test3vs.Test2 + mu2_Condition.ExposureShift0:Block_Test4vs.Test3 > 0", bf = T)`). In contrast, there was strong support that the +40 condition shifted rightwards relative to pre-exposure (BF = `r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift40:Block_Test2vs.Test1 + mu2_Condition.ExposureShift40:Block_Test3vs.Test2 + mu2_Condition.ExposureShift40:Block_Test4vs.Test3 < 0", bf = T)`). 
+First, the relative changes in participants' PSE from pre-exposure to post-exposure---i.e., from Test 1 to Test 4---all are in the direction predicted by the idealized learner models, and thus in line with the condition names (which were based on the PSEs expected from an idealized learner). Both the -10ms and the -20ms condition seem to shift *left*wards relative to their pre-exposure starting point in Test 1. Bayesian hypothesis tests summarized in Table \@ref(tab:hypothesis-table-simple-effects-block) find moderate support for a leftward shift from Test 1 to 4 in both the -10ms condition (BF = `r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift10:Block_Test2vs.Test1 + mu2_Condition.ExposureShift10:Block_Test3vs.Test2 + mu2_Condition.ExposureShift10:Block_Test4vs.Test3 > 0", bf = T)`) and the -20ms condition (BF = `r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift0:Block_Test2vs.Test1 + mu2_Condition.ExposureShift0:Block_Test3vs.Test2 + mu2_Condition.ExposureShift0:Block_Test4vs.Test3 > 0", bf = T)`). In contrast, there was strong support that the +20ms condition shifted rightwards relative to pre-exposure again in line with the condition name (BF = `r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift40:Block_Test2vs.Test1 + mu2_Condition.ExposureShift40:Block_Test3vs.Test2 + mu2_Condition.ExposureShift40:Block_Test4vs.Test3 < 0", bf = T)`).
 
-To understand this pattern, it is helpful to relate the three exposure conditions to the phonetic distribution in listeners' prior experience. Figure \@ref(fig:exposure-means-database-matrix-plot) shows the exposure means for /d/ and /t/ relative to the distributions of three important cues to the word-initial /d/-/t/ contrast in L1-US English. For this purpose, we chose a database of word-initial /d/s and /t/s from isolated word productions [@chodroff-wilson2018]. Compared to databases of connected speech, these isolated recordings more closely approximate the speech rate of our stimuli [which is known to affect the perception of VOT, @allen-miller1999; @@utman1998]. The SI \@ref(sec:placement-of-exposure-stimuli) provides the same visualization, while also showing the distributions for `r nrow(d.chodroff_wilson.isolated)` words produced in connected speech by `r length(unique(d.chodroff_wilson.isolated$Talker))` female talkers from the same database (confirming the conclusions reached here).
+Importantly, these predictions of the idealized learner models were based on the placement of our exposure conditions *relative to the phonetic distributions that a 'typical' listener would have experienced prior to our experiment* (recall Figure \@ref(fig:prior-distributions-and-exposure-conditions)A). That is, once we take into account how our exposure distributions (prediction 2b) relate to listeners' prior experience (prediction 1), both the direction of changes from Test 1 to 4 *within* each exposure condition (Table \@ref(tab:hypothesis-table-simple-effects-block)), and the direction of differences *between* exposure conditions receive an explanation (Table \@ref(tab:hypothesis-table-simple-effects-condition)). To the best of our knowledge, this is not something tested in previous distributional learning studies: to confirm or reject the joint effect of predictions 1 and 2b, one needs (1) both pre- and post-exposure tests and (2) informative baseline expectations like those provided by our idealized pre-exposure listener and idealized learners. Both have largely been lacking from previous work. 
 
-Figure \@ref(fig:exposure-means-database-matrix-plot) offers an explanation as to why the baseline condition (and to some extent the +10 condition) shift leftwards with increasing exposure, whereas the +40 condition shifts rightwards: relative to the distribution of VOT for /d/ and /t/ in listeners' prior experience, only the +40 condition presents category means that are clearly larger than expected along VOT, whereas the baseline condition and, to some extent, the +10 condition presented lower-than-expected category means. That is, once we take into account how our exposure conditions relate to listeners' prior experience (prediction 1), both the direction of changes from Test 1 to 4 *within* each exposure condition (Table \@ref(tab:hypothesis-table-simple-effects-block)), and the direction of differences *between* exposure conditions receive an explanation (Table \@ref(tab:hypothesis-table-simple-effects-condition)). To further illustrate this point, the horizontal gray ribbon in  \@ref(fig:plot-fit-PSE)C shows the range of PSEs predicted by Bayesian ideal observers trained on the distribution of VOT, f0, and vowel duration for isolated word productions in Figure \@ref(fig:exposure-means-database-matrix-plot) (for details, see SI, \@ref(sec:idealized-prior-listeners)).
+Similarly, our next two observations are made possible only through the use of incremental testing. This includes support for both predictions 2a (*exposure amount*) and 3 (*diminishing returns*). Regarding prediction 2a, the incremental changes in participants' PSEs from Test 1 to 4 were consistently in the same direction (same sign of estimate), depending only on the exposure condition's placement relative to participants' prior expectations. Put differently, the shift in participants' categorization functions away from their pre-exposure PSE kept increasing with additional exposure. 
 
-(ref:exposure-means-database-matrix-plot) Placement of exposure conditions (category means of /d/ and /t/, shown in color) relative to an estimate of L1 US English listeners' prior expectations. After VOT, f0 and vowel duration are two of the most informative cues to word-initial /d/-/t/ in L1 US English. As an estimate of listeners' prior expectations about these distributions, we show `r nrow(d.chodroff_wilson.isolated)` word-initial /d/ and /t/ productions for words produced in isolation by `r length(unique(d.chodroff_wilson.isolated$Talker))` female L1 talkers in @chodroff-wilson2018. The upper off-diagonal shows each of these productions as a point. The diagonal shows their marginal density, with a data rug at the bottom indicating the placement of exposure means. The lower off-diagonal shows bivariate Gaussians fit to the distribution of the /d/ and /t/ productions, with the exposure means for each condition indicated by the /d/ and /t/ labels. 
-
-```{r exposure-means-database-matrix-plot, fig.width=base.width*4, fig.height=base.height*2.5+1, fig.cap="(ref:exposure-means-database-matrix-plot)", fig.pos="!ht"}
-p.placement_of_exposure_means_relative_to_prior <-
-  d.chodroff_wilson.isolated %>%
-  group_by(speechstyle, category) %>%
-  filter(if_all(c(VOT, f0_Mel, vowel_duration), ~ abs(scale(.x)[,1]) < 3.5)) %>%
-  ggplot(aes(color = category, fill = category)) +
-  geom_autopoint(aes(shape = speechstyle), alpha = .4) +
-  geom_autodensity(aes(linetype = speechstyle), position = "identity", alpha = .5) +
-  stat_ellipse(aes(x = .panel_x, y = .panel_y, linetype = speechstyle)) +
-  scale_color_manual(
-    "Category",
-    labels = c("/d/", "/t/"),
-    values = colours.category_greyscale,
-    aesthetics = c("color", "fill"),
-    guide = guide_legend(title = "Category", order = 2)) +
-  scale_shape_manual(
-    breaks = c("isolated", "connected"),
-    values = c(18,4)) +
-  scale_linetype_manual(
-    breaks = c("isolated", "connected"),
-    values = c(1,2)) +
-  new_scale_color() +
-  geom_text(
-    data =
-      d.for_analysis %>%
-      filter(Phase == "exposure") %>%
-      group_by(Condition.Exposure, category) %>%
-      summarise(across(c(VOT, f0_Mel, vowel_duration), mean)),
-    mapping = aes(x = .panel_x, y = .panel_y, label = category, colour = Condition.Exposure),
-    alpha = .8, size = 3,
-    show.legend = F,
-    inherit.aes = F) +
-  geom_rug(
-    d.for_analysis %>%
-      filter(Phase == "exposure") %>%
-      group_by(Condition.Exposure, category) %>%
-      summarise(across(c(VOT, f0_Mel, vowel_duration), mean)),
-    mapping = aes(x = .panel_x, colour = Condition.Exposure),
-    sides = "b") +
-  guides(
-    colour = guide_legend(title = "Condition", order = 1),
-    linetype = "none",
-    shape = "none") +
-  # Currently ignored by ggforce::facet_matrix (https://github.com/thomasp85/ggforce/issues/163)
-  scale_x_continuous(breaks = scales::pretty_breaks(n = 3)) +
-  scale_y_continuous(breaks = scales::pretty_breaks(n = 3)) +
-  scale_colour_manual(
-    labels = c("baseline", "+10ms", "+40ms"),
-    values = colours.condition) +
-  facet_matrix(
-    vars(c(VOT, f0_Mel, vowel_duration)),
-    layer.lower = c(3:4), layer.diag = c(2, 5:6), layer.upper = c(1),
-    labeller = labeller(
-      .rows = c(VOT = "VOT\n(ms)", f0_Mel = "f0\n(Mel)", vowel_duration = "Vowel duration\n(ms)"),
-      .cols = c(VOT = "VOT\n(ms)", f0_Mel = "f0\n(Mel)", vowel_duration = "Vowel duration\n(ms)"))) +
-  theme(legend.position = "top", axis.text.x = element_text(angle = 45, hjust = 1))
-
-p.placement_of_exposure_means_relative_to_prior
-```
-
-Second, we find support for prediction 4 about the *diminishing returns* of additional exposure predicted by some theories of adaptive speech perception. The estimates in Table \@ref(tab:hypothesis-table-simple-effects-block) suggest that listeners' PSEs changed most substantially from Test 1 to Test 2, and then changed less and less with additional exposure up to Test 4 (smaller magnitude of estimates compared to earlier test blocks). This seems to be particularly pronounced for the baseline condition and the +40 condition---the two conditions that exhibited the largest shifts relative to pre-exposure. As mentioned in our Open Science statement, our experiment was not designed to have high power to assess such *changes in the magnitude of the shifts* across the block within each condition. We did, however, conduct post-hoc hypothesis tests to assess the support for this pattern. These tests found anecdotal to moderately strong evidence in support of prediction 4 (*diminishing returns*). For the +40 condition, the shift from Test 1 to 2 was larger than the shift from Test 2 to 3 (`r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift40:Block_Test2vs.Test1 < mu2_Condition.ExposureShift40:Block_Test3vs.Test2")`), which was larger than the shift from Test 3 to 4 (`r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift40:Block_Test3vs.Test2 < mu2_Condition.ExposureShift40:Block_Test4vs.Test3")`). Comparing the change from Test 1 to 2 against the change from Test 3 to 4, there was stronger support that the speed of changes in the PSE decreased (`r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift40:Block_Test2vs.Test1 < mu2_Condition.ExposureShift40:Block_Test4vs.Test3")`). For the baseline condition, the shift from Test 1 to 2 was larger than the shift from Test 2 to 3 (`r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift0:Block_Test2vs.Test1 > mu2_Condition.ExposureShift0:Block_Test3vs.Test2")`), which was almost identical, but slightly smaller, than the shift from Test 3 to 4 (`r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift0:Block_Test4vs.Test3 > mu2_Condition.ExposureShift0:Block_Test3vs.Test2")`). Again, a comparison of the change from Test 1 to 2 against the change from Test 3 to 4, yielded the strongest support that the speed of changes in the PSE decreased (`r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift0:Block_Test2vs.Test1 > mu2_Condition.ExposureShift0:Block_Test4vs.Test3")`). For both the +40 and the baseline condition, there was only anecdotal evidence that the final exposure block resulted in *any additional* shift in listeners' PSE (BFs $\leq$ `r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift0:Block_Test4vs.Test3 > 0", bf = T)`, cf. Table \@ref(tab:hypothesis-table-simple-effects-block)). 
+Regarding prediction 3, at least the two conditions that exhibited the largest shifts relative to pre-exposure, the -20ms and +20ms conditions, seem to show diminishing returns of additional exposure. For these two conditions, PSEs changed most from Test 1 to Test 2, followed by much smaller block-to-block changes up to Test 4 (smaller magnitude of estimates in Table \@ref(tab:hypothesis-table-simple-effects-block)). As mentioned in our Open Science statement, our experiment was not designed to test such *changes in the magnitude of the shifts* across the block within each condition. We did, however, conduct post-hoc hypothesis tests to assess the support for this pattern. These tests, reported in more detail in the SI (\@ref(sec:PSE-interaction-analysis)), found anecdotal to moderately strong evidence in support of prediction 3. For the +20ms condition, the shift from Test 1 to 2 was larger than the shift from Test 2 to 3 (`r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift40:Block_Test2vs.Test1 < mu2_Condition.ExposureShift40:Block_Test3vs.Test2")`), which was larger than the shift from Test 3 to 4 (`r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift40:Block_Test3vs.Test2 < mu2_Condition.ExposureShift40:Block_Test4vs.Test3")`). Comparing the change from Test 1 to 2 against the change from Test 3 to 4, there was stronger support that the speed of changes in the PSE decreased (`r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift40:Block_Test2vs.Test1 < mu2_Condition.ExposureShift40:Block_Test4vs.Test3")`). For the -20ms condition, the shift from Test 1 to 2 was larger than the shift from Test 2 to 3 (`r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift0:Block_Test2vs.Test1 > mu2_Condition.ExposureShift0:Block_Test3vs.Test2")`), which was almost identical, but slightly smaller, than the shift from Test 3 to 4 (`r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift0:Block_Test4vs.Test3 > mu2_Condition.ExposureShift0:Block_Test3vs.Test2")`). Again, a comparison of the change from Test 1 to 2 against the change from Test 3 to 4, yielded the strongest support that the speed of changes in the PSE decreased (`r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift0:Block_Test2vs.Test1 > mu2_Condition.ExposureShift0:Block_Test4vs.Test3")`). In line with this pattern of decreasing magnitudes of changes in the PSE, there was only anecdotal evidence for all three exposure conditions that the final exposure block resulted in any additional shift in listeners' PSE (BFs $\leq$ `r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift0:Block_Test4vs.Test3 > 0", bf = T)`, cf. Table \@ref(tab:hypothesis-table-simple-effects-block)).
 
 ```{r, include=F}
 # Assessing evidence for changes in the PSEs within each condition
@@ -647,232 +607,614 @@ hypothesis(
   robust = T)
 ```
 
-Third and finally, Panel C also begins to illuminate the reasons for the non-monotonic development of the +10 and baseline conditions relative to each other, discussed in the previous section. In particular, this non-monotonicity does *not* appear due to a reversal of the effects in either of the two exposure conditions. Rather, both exposure conditions continue to change listeners' categorization function in the same direction from Test 1 to Test 4, in line with predictions (2a) and (2b). However, after the rapid change from the pre-exposure Test 1 to the first post-exposure Test 2, listeners' categorization responses in the baseline condition did not change as much as in the +10 condition. In fact, listeners' categorization function in the baseline condition seems to have plateaued after the first exposure block. 
+Finally, the incremental changes summarized in Table \@ref(tab:hypothesis-table-simple-effects-block) also begin to illuminate the reasons for the non-monotonic development of the -10ms and -20ms conditions relative to each other, discussed in the previous section. In particular, this non-monotonicity does *not* appear due to a reversal of the effects in either of the two exposure conditions. Rather, both exposure conditions continue to change listeners' categorization function in the same direction from Test 1 to Test 4. However, after the rapid change from the pre-exposure Test 1 to the first post-exposure Test 2, listeners' categorization responses in the -20ms condition did not change as much as in the -10ms condition. In fact, listeners' categorization function in the -20ms condition seems to have plateaued after the first exposure block. This explains the reduced difference between the -10ms and -20ms conditions discussed in the previous section. It does, however, raise the question *why* listeners' responses in the -20ms condition did not change further with increasing exposure. One explanation could be that participants in the -20ms condition did for some reason---including chance---fully learn the relevant phonetic distributions within a single block of exposure, whereas participants in the -10ms condition did not. However, the hypothesis tests we present next suggest that this was *not* the case. 
 
-This explains the reduction in the difference between the +10 and baseline conditions discussed in the previous section. It does, however, raise the question *why* listeners' responses in the baseline condition did not change further with increasing exposure. One explanation would be that participants in the baseline condition did for some reason---including chance---fully learn the relevant phonetic distributions within a single block of exposure, whereas participants in the +10 condition did not. The third and final perspective we provide on incremental changes in participants' behavior suggests that this was *not* the case.
-
-## Constraints on cumulative adaptation (comparing exposure effects against idealized learner models)
+## Prediction 4 (*full convergence*): an unexpected constraint on rapid adaptation?
 
 ```{r hypothesis-table-convergence-test4-pre-exposure-PSE, results='asis'}
 hyp.shrinkage <-
-  hypothesis(
+  get_hyp_data(
     fit_test_nested_within_condition_and_block,
+    hyp.vec =
     c(
+      str_c("-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs  - ", predictedPSE_scaled_0, "= 0" ),
+      str_c("-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs - ", predictedPSE_scaled_10, "= 0" ),
+      str_c("-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs - ", predictedPSE_scaled_40, "= 0" ),      
       str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift0x7/mu2_IpasteCondition.ExposureBlocksepEQxShift0x7:VOT_gs  - ", predictedPSE_scaled_0, ") > 0" ),
       str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift10x7/mu2_IpasteCondition.ExposureBlocksepEQxShift10x7:VOT_gs - ", predictedPSE_scaled_10, ") > 0" ),
-      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs - ", predictedPSE_scaled_40, ") > 0" )),
-    robust = T) %>%
-  .$hypothesis %>%
-  dplyr::select(-Star)
+      str_c("abs(-mu2_IpasteCondition.ExposureBlocksepEQxShift40x7/mu2_IpasteCondition.ExposureBlocksepEQxShift40x7:VOT_gs - ", predictedPSE_scaled_40, ") > 0" )))
 
 make_hyp_table(
   fit_test_nested_within_condition_and_block,
   hyp.shrinkage,
   c(
-    "$|\\Delta(PSE_{ideal_{baseline}}, PSE_{actual_{baseline}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{+10}}, PSE_{actual_{+10}})| > 0$",
-    "$|\\Delta(PSE_{ideal_{+40}}, PSE_{actual_{+40}})| > 0$"),
-  caption = "Did participants {\\em not} converge against the PSE expected from idealized learner? This table compares changes in participants' categorization function against those expected from idealized learners. This table summarizes results for the test block following the final exposure block (Test 4). For identical tests for all test blocks, see SI (\\ref{sec:convergence-test-all}).",
-  col1_width = "22em")
+    "$PSE_{idealized_{-20ms}} = PSE_{actual_{-20ms}}$",
+    "$PSE_{idealized_{-10ms}} = PSE_{actual_{-10ms}}$",
+    "$PSE_{idealized_{+20ms}} = PSE_{actual_{+20ms}}$",
+    "$|\\Delta(PSE_{idealized_{-20ms}}, PSE_{actual_{-20ms}})| > 0$",
+    "$|\\Delta(PSE_{idealized_{-10ms}}, PSE_{actual_{-10ms}})| > 0$",
+    "$|\\Delta(PSE_{idealized_{+20ms}}, PSE_{actual_{+20ms}})| > 0$"),
+  caption = "Did participants converge against the PSE expected from an idealized learner? This table compares changes in participants' categorization function against those expected from idealized learners. The first set of tests assess whether participants converged against the predicted PSEs of the idealized learners. The second set asseses the absolute distance between the actual and idealized PSEs. For identical hypothesis tests for all test blocks, see SI (\\ref{sec:convergence-test-all}).",
+  col1_width = "20em") %>%
+  pack_rows("Did participants converge against the idealized learner? (Test block 4)", 1, 3) %>%
+  pack_rows("Did participants' PSEs shift less than expected from idealized learner? (Test block 4)", 4, 6) 
 ```
 
-Beyond the perspectives on incremental adaptation discussed so far, Figure \@ref(fig:plot-fit-PSE)C compares participants' responses against those of an idealized learner that has fully learned the exposure distributions (colored dashed lines). Specifically, we fit Bayesian ideal observers against the labeled VOT distributions of each exposure condition, using the same approach used for the idealized pre-exposure listeners (horizontal gray ribbons). The dashed lines show the PSEs expected from such idealized learners (for details, see SI \@ref(sec:io-bias-correction)). This approach follows previous work [@kleinschmidt-jaeger2016; @kleinschmidt2020], and makes it possible to assess how far listeners have converged against the exposure distributions. The relevant hypothesis tests are summarized in Table \@ref(tab:hypothesis-table-convergence-test4-pre-exposure-PSE).
+Taken together, the tests we have presented so far provide rather consistent support for the predictions of distributional learning. However, Figure \@ref(fig:plot-fit-PSE)C suggests an important caveat to this: the comparison of participants' responses against those of an idealized learner that has fully learned the exposure distributions (colored dashed lines) suggests that listeners in all three exposure conditions did *not* fully learn the exposure distributions. This is confirmed by the Bayesian hypothesis tests in Table \@ref(tab:hypothesis-table-convergence-test4-pre-exposure-PSE), which provide little support for convergence and very strong support for the hypothesis that participants reliably shifted their PSE *less* than expected from an idealized learner. By itself, a failure to converge against the performance of an idealized learner would not necessarily constitute evidence against prediction 4 (*learning to convergence*). Listeners might simply not have received sufficient exposure to have learned the exposure distribution. However, as already described for the -20ms condition, participants' behavior changed little, if at all, after the first exposure block. Instead, participants seem to have prematurely converged against stable behavior long before they had fully learned the exposure distribution.
 
-Figure \@ref(fig:plot-fit-PSE)C suggests that listeners in all three exposure conditions did *not* fully learn the exposure distributions ($|\Delta(PSE_{ideal}, PSE_{actual})| > 0$: all BFs $\ge 8000$; see Table \@ref(tab:hypothesis-table-convergence-test4-pre-exposure-PSE)). By itself, a failure to converge against the performance of an idealized learner would not necessarily constitute evidence against prediction 3 (*learn to convergence*). Listeners might simply not have received sufficient exposure to have learned the exposure distribution. However, as already described for the baseline condition, participants' behavior changed little, if at all, after the first exposure block. Instead, participants seem to have prematurely converged against stable behavior long before they had fully learned the exposure distribution. 
+The percentage labels in Figure \@ref(fig:plot-fit-PSE)C quantify the degree to which participants adapted their PSE towards the statistics of the exposure condition: 0% would correspond to no change relative to the listeners' PSE in Test 1, and 100% would correspond to the PSE predicted for an idealized learner who has fully converged against the exposure distributions. In the -20ms condition, changes in participants' PSE seem to converge against approximately `r d.psychometric_intercept.slope.PSE.median %>% filter(Condition.Exposure == "Shift0", Block == 7) %>% pull(prop.shift_scaled) %>% percent()` of what is expected from an idealized learner. A similar pattern of premature convergence is evident for the +20ms condition: changes in participants' PSEs seem to have leveled off by Test 4, despite the fact that participants' PSEs had shifted only about half way to the idealized learner's PSE. (For the -10ms condition, it is less clear whether participants had already converged against a PSE.) That is, in terms of the possible adaptation scenarios discussed in the introduction, it seems that our results most closely resemble the scenario of *premature convergence*, shown in the rightmost panel of Figure \@ref(fig:predictions)D.^[Figure \@ref(fig:plot-fit-PSE)C would also seem to suggest that the degree of convergence differed between exposure conditions. Two previous studies have observed---but not analyzed---similar patterns, with more extreme exposure shifts eliciting *proportionally* smaller changes in PSEs than less extreme exposure shifts [@kleinschmidt-jaeger2016; @kleinschmidt2020]. The SI presents additional Bayesian hypothesis tests that assess how strongly our data support this pattern. These tests find only anecdotal support (see SI, \@ref(sec:shrinkage-test-all)). Still, this is an intriguing pattern that deserves further attention in future research.]
 
-The percentage labels in Figure \@ref(fig:plot-fit-PSE)C quantify the degree to which participants adapted their PSE towards the statistics of the exposure condition: 0% would correspond to no change relative to the listeners' PSE in Test 1, and 100% would correspond to the PSE predicted for an idealized learner who has fully converged against the exposure distributions. In the baseline condition, changes in participants' PSE seem to converge against approximately `r d.psychometric_intercept.slope.PSE.median %>% filter(Condition.Exposure == "Shift0", Block == 7) %>% pull(prop.shift_scaled) %>% percent()` of what is expected from an idealized learner. A similar pattern of premature convergence is evident for the +40 condition: changes in participants' PSEs seem to have leveled off by Test 4, despite the fact that participants' PSEs had shifted only about half way to the idealized learner's PSE. (For the +10 condition, it is less clear whether participants had already converged against a PSE.) That is, in terms of the possible adaptation scenarios depicted in Figure \@ref(fig:predictions) in the introduction, it seems that our results most closely resemble the scenario shown in the right-most column of panel B.^[Figure \@ref(fig:plot-fit-PSE)C would also seem to suggest that the degree of convergence differed between exposure conditions. Two previous studies have observed similar differences, with more extreme exposure shifts eliciting *proportionally* smaller changes in PSEs than less extreme exposure shifts [@kleinschmidt-jaeger2016; @kleinschmidt2020]. For the present data, we found only anecdotal support for this pattern (see SI, \@ref(sec:shrinkage-test-all)).] 
+If confirmed, premature convergence against stable behavior despite only partial adaptation would challenge prediction 4 of existing distributional learning models. Premature convergence is also unexpected under any other influential theories of adaptive speech perception (e.g., standard normalization models or changes in decision-making). It might, however, be compatible with proposals that view rapid adaption during speech perception as a form of reweighting of existing representations, rather than as a process of learning new representations [@xie2018]. We return to this idea in the general discussion, where we also discuss potential methodological artifacts that might explain the appearance of premature convergence. First, however, we present one final analysis, comparing listeners' responses to an actual distributional learning model. Beyond its primary goal, this additional comparison also provides further evidence of premature convergence.
 
-Of note, *premature convergence* negatively affected participants' recognition accuracy. As shown in Figure \@ref(fig:IO-human-accuracy) incremental adaptation substantially improved participants' recognition accuracy compared to their pre-exposure accuracy, only participants in the +10 condition---the exposure condition that deviates the least from listeners' prior expectations---came close to achieving the theoretical upper bound expected of an idealized learner. Listeners in the baseline and +40 condition appear to have stopped adapting even though further adaptation would have improved their recognition accuracy.^[While a failure to improve from, say, 90% and 95% accuracy might not seem noteworthy, it implies misunderstanding one in ten vs. one in twenty words, thus *doubling* the odds of successful recognition.]
+## How much of the changes in participants' perception can distributional learning explain?
+The tests we have presented so far suggest that participants' behavior qualitatively match predictions 1-3 of distributional learning models, but not prediction 4. Going beyond previous work, we found that the relative magnitude of changes in participants' behavior ordered in the expected way both across three exposure conditions and across the test blocks within each condition. These findings address the first two goals for the present study outlined in the introduction: to provide the first tests of predictions 3 and 4 during the early moments of adaptation to an unfamiliar talker, and to jointly test predictions 1-4 in a single study with *known distributional exposure*, while comparing against the predictions of idealized listeners/learners based on the relevant phonetic distributions prior to, and during, exposure.
 
-(ref:IO-human-accuracy) Changes across blocks and conditions in participants' recognition accuracy for the unfamiliar talker's speech. For each block, we used participants' categorization functions---estimated by the psychometric mixed-effects model fit to participants' responses---to categorize all 144 exposure inputs of that exposure condition. Accuracy was calculated for the two decision rules that are most commonly assumed to underlie speech recognition as well as perceptual decision-making in other domains [for review, see @massaro-friedman1990]: Luce's choice rule (responding proportional to posterior probability of category) and the criterion choice rule (always responding with the category that has highest posterior probability). As in Figure \@ref(fig:plot-fit-PSE)C, point ranges represent the posterior medians and their 95%-CIs derived from the psychometric model. Horizontal dashed lines indicate accuracy expected from an idealized learner (an ideal observer model that has fully learned the exposure distributions) and horizontal shaded ribbons indicate the 95%-CI expected from an idealized pre-exposure listener. 
+Next, we turn to the third and final contribution we aim to make here: to assess whether distributional learning can actually explain a non-trivial share of the changes in participants' perception, as would be expected if rapid adaptive changes in speech perception are in large parts due to distributional learning. To this end, we fit an actual distributional learning model to our data [the ideal adaptor, @kleinschmidt-jaeger2015]. Like the ideal observer models that we used for the idealized listener and learners, the ideal adaptor is a Bayesian model that describes a ideal information integration. Unlike the ideal observers, however, the ideal adaptor is a distributional *learning* model. That is, while the ideal observers have perfect knowledge of the relevant phonetic distributions (e.g., the exposure distribution for the idealized learners), the ideal adaptor *infers* those distributions from the input it receives, modeling the incremental learning process that listeners are hypothesized to undergo during exposure to an unfamiliar talker. This is achieved by incrementally updating prior beliefs about the phonetic distributions of the relevant categories (here /d/ and /t/) based on the phonetic input experienced during exposure.
 
-```{r compute-IO-human-accuracy}
-# The data on which to calculate accuracy: one full set of exposure trials from each condition
-d.x <- 
-  d.for_analysis %>% 
-  filter(Phase == "exposure") %>% 
-  nest(data = -c(ParticipantID, Condition.Exposure)) %>% 
-  group_by(Condition.Exposure) %>% 
-  # get 1 set of exposure trials per condition
-  slice_sample(n = 1) %>% 
-  unnest(data) %>% 
-  reframe(Item.VOT, Item.f0_Mel, vowel_duration, category) %>% 
-  rename(VOT = Item.VOT, f0_Mel = Item.f0_Mel, intended.category = category) %>% 
-  # Nest the cues into one column. Store versions of only VOT and all three cues
-  # since the pre-exposure and idealized learner IOs need different inputs
-  mutate(
-    x.VOT = pmap(list(VOT), ~ c(...)),
-    x.all = pmap(list(VOT, f0_Mel, vowel_duration), ~ c(...)),
-    data_from = Condition.Exposure) %>% 
-  select(c(data_from, intended.category, x.VOT, x.all))
+The model is described in detail in the SI (\@ref(sec:ideal-adaptor)), including graphical models [for an introduction, see @xie2023]. In order to model the effects of all three cues considered in the idealized models (VOT, f0, and vowel duration), we extended the model to operate over multivariate categories, and fit it to listeners' responses in our experiment. We used the \texttt{MVBeliefUpdatr} package [@R-MVBeliefUpdatr] to define and fit the model. For further detail, we refer to the SI (\@ref(sec:ideal-adaptor)). Unlike in previous work, we fixed the models prior beliefs based on the same phonetic database used for the idealized pre-exposure listener [cf. @kleinschmidt-jaeger2016]. Specifically, we used prior beliefs that had the same expected distributions of VOT, f0, and vowel duration for /d/ and /t/ as in the idealized listener model. This substantially reduces the number of parameters in the model that are fit to participants' responses: in addition to a lapse rate ($\lambda$), the ideal adaptor we fit only had two degrees of freedom. 
 
-# Get accuracy for idealized learner IOs on shift conditions they were trained on, and 
-# Get accuracy for pre-exposure IO for all three conditions.
-io.accuracy <- 
-  # First, we get pre-exposure accuracies
-  bind_rows(
-    io %>% 
-      select(-x) %>% 
-      filter(str_starts(Condition.Exposure, "prior")) %>% 
-      crossing(evaluate_on = c("Shift0", "Shift10", "Shift40")) %>% 
-      left_join(
-        d.x %>%
-          rename(x = x.all) %>%
-          select(-x.VOT) %>%
-          nest(x = c(x, intended.category)), 
-        by = join_by(evaluate_on == data_from)),
-    io %>% 
-      select(-x) %>% 
-      filter(!str_starts(Condition.Exposure, "prior")) %>% 
-      mutate(evaluate_on = Condition.Exposure) %>%
-      left_join(
-        d.x %>%
-          rename(x = x.VOT) %>%
-          select(-x.all) %>%
-          nest(x = c(x, intended.category)), 
-        by = join_by(evaluate_on == data_from))) %>%
-  # Get IO categorisation with both decision rules
-  mutate(
-    categorization.proportional = 
-      map2(x, io, ~ 
-             get_categorization_from_MVG_ideal_observer(x = .x$x, model = .y, decision_rule = "proportional") %>% 
-             filter(category == "/t/")),
-    categorization.criterion = 
-      map2(x, io, ~ 
-             get_categorization_from_MVG_ideal_observer(x = .x$x, model = .y, decision_rule = "criterion") %>% 
-             filter(category == "/t/"))) %>% 
-  unnest(c(x, starts_with("categorization")), names_sep = "_") %>% 
-  select(!ends_with(c("observationID", "_x", "_category"))) %>% 
-  # For all items that are not intended to be /t/, take 1 minus the posterior of /t/
-  mutate(
-    categorization.proportional_response = ifelse(x_intended.category == "/t/", categorization.proportional_response, 1 - categorization.proportional_response),
-    # where criterion rule responds 1 that is a /t/
-    categorization.criterion_response = ifelse(categorization.criterion_response == 1, "/t/", "/d/"),
-    categorization.criterion_response = ifelse(categorization.criterion_response == x_intended.category, T, F)) %>% 
-  group_by(Condition.Exposure, evaluate_on) %>% 
-  summarise(across(c(categorization.proportional_response, categorization.criterion_response), mean)) %>% 
-  pivot_longer(
-    cols = starts_with("categorization"),
-    names_to = "decision",
-    values_to = "accuracy") %>% 
-  mutate(decision = factor(str_replace(decision, "categorization\\.(.*)_response", "\\1"), levels = c("proportional", "criterion")))  
+These two parameters ($\kappa_0$ and $\nu_0$) describe the strength of participants' prior beliefs about the category means and (co)variances, respectively. Together, $\kappa_0$ and $\nu_0$ describe the uncertainty that listeners have about the unfamiliar talker's phonetic distributions prior to exposure (or, equivalently, how relevant listeners believe their prior expectations to be for the unfamiliar talker). The same two parameters also determine the rate at which the model updates its beliefs about the exposure distributions with each new observation from that talker. This captures how prior expectations both guide and constrain distributional learning [for discussion, see @kleinschmidt-jaeger2015; @kleinschmidt2020]. Specifically, $\kappa_0$ and $\nu_0$ can be understood as pseudocounts that describe the weighting of prior expectations relative to the observed data. For example, if $\kappa_0 = 100$ then it takes 100 observations of /d/s from the unfamiliar talker until listeners' beliefs about the VOT, f0, and vowel duration values of the category means for /d/ will be a 50/50 mixture of their prior beliefs and the means observed from the unfamiliar talker.
 
-# get human accuracy on unlabelled exposure trials
-# join with predictions of the fitted psychometric model
-fit_exposure <- readRDS("../models/exposure-standard-priorSD15-0.999.rds")
-fit_test <- readRDS("../models/test-standard-priorSD15-0.995.rds")
+(ref:plot-IA-human-PSE) Summary of ideal adaptor analysis, comparing shifts in listeners' PSEs against the shifts expected by an ideal adaptor [a distributional learning model that describes ideal information integration, @kleinschmidt-jaeger2015]. Point ranges and dashed horizontal lines are identical to those in Figure \@ref(fig:plot-fit-PSE)C. Colored ribbons indicate the 95%-CI for the PSEs predicted by the ideal adaptor fit to listeners' responses. The vertical bar to the right of the panel indicates the range of talker-specific PSEs an idealized listener might have experienced in previous exposure: the mean and 2.5%-to-97.5% quantile range of talker-specific PSEs derived from Bayesian ideal observers fit to all talkers in the phonetic database of isolated word productions presented in Figure \@ref(fig:prior-distributions-and-exposure-conditions)A. We return to this range in the general discussion where we discuss possible explanations for mismatches between the ideal adaptor and participants' responses.
 
+```{r get-talker-specific-PSEs-for-plot}
+# As mentioned in the result section, there are two different ways to obtain PSEs from ideal observers.
+# Here we provide the code for both but continue to use the same method as in the result section. This
+# is the method that introduces the same potential biases into the estimates of the ideal observers that
+# *might* affect our estimates of listeners' PSE, intercept, and slope.
+# get the mean PSE of the 5-fold CV idealized pre-exposure listener PSEs
+prior.PSE_mean <-
+  d.IO_intercept.slope.PSE %>%
+  filter(Condition.Exposure %in% paste0("prior", c(1:5))) %>%
+  summarise(mean = mean(PSE)) %>%
+  pull(mean)
 
-human_psychometric_accuracy <- 
+d.talkerPSEs <-
+  # Make separate ideal observer for each talker in the database
+  make_IOs_from_data(
+    data = d.chodroff_wilson,
+    cues = c("VOT", "f0_Mel", "vowel_duration"),
+    groups = c("speechstyle", "Talker", "gender")) %>%
+  nest(io = -c(speechstyle, Talker, gender)) %>%
+  # Get actual PSE of IO
+  add_x_to_IO() %>%
+  add_PSE_and_categorization_to_IO() %>%
+  rename(PSE_actual = PSE) %>%
+  select(-c(x, categorization)) %>%
+  # Get PSE estimated through logistic regression
+  cross_join(
+    d.for_analysis %>%  
+      filter(Phase == "test") %>%
+      distinct(Item.VOT, Item.f0_Mel, Item.VowelDuration) %>%
+      mutate(x = pmap(.l = list(Item.VOT, Item.f0_Mel, Item.VowelDuration), ~ c(...))) %>%
+      select(x) %>%
+      nest(x = x)) %>%
+  left_join(
+    # Assess the ideal observers at the exact same locations used during test blocks
+    get_logistic_parameters_from_model(
+      model = .,
+      model_col = "io",
+      groups = "Talker") %>%
+      select(Talker, PSE) %>%
+      rename(PSE_logistic = PSE)) %>%
+  # For each of the two types of PSE, also create a version that is centered around
+  # listeners mean PSE during Test 1 (to make it easier to compare the range of variability)
+  group_by(speechstyle) %>%
+  mutate(across(starts_with("PSE"), list(centered = ~ .x - (mean(.x) - prior.PSE_mean))))
+
+# Visually investigate the distribution of PSE before aggregating them down further
+# d.talkerPSEs %>%
+#   select(c(speechstyle, starts_with("PSE"))) %>%
+#   pivot_longer(
+#     cols = starts_with("PSE"),
+#     names_to = "PSE_type",
+#     values_to = "PSE") %>%
+#   # Filter implausible PSEs (there's one talker with a < - 100 PSE)
+#   filter(PSE > 0) %>%
+#   ggplot(aes(x = PSE_type, y = PSE, color = speechstyle)) +
+#   geom_violin(position = pos) +
+#   stat_summary(fun.data = mean_cl_boot, geom = "pointrange", position = pos) +
+#   geom_point(position = "jitter", alpha = .5)
+
+d.talkerPSEs %<>%
+  summarise(
+    across(
+      starts_with("PSE"),
+      list(
+        mode = ~ modeest::mlv(.x, method = "meanshift"),
+        mean = mean,
+        median = median,
+        lower = ~ quantile(., probs = .025),
+        upper = ~ quantile(., probs = .975)),
+      .names = "{.col}.{.fn}"))
+
+# d.talkerPSEs %>%
+#   pivot_longer(
+#     cols = starts_with("PSE"),
+#     names_to = "PSE_type",
+#     values_to = "PSE") %>%
+#   separate(PSE_type, into = c("PSE_type", "stat"), sep = "\\.") %>%
+#   pivot_wider(names_from = stat, values_from = PSE) %>%
+#   ggplot(aes(x = PSE_type, y = mean, ymin = lower, ymax = upper, color = speechstyle)) +
+#   geom_pointrange(position = pos)
+```
+
+```{r fit-IA-inferred-VOT-f0}
+d_for_ASP <-
   d.for_analysis %>%
-  filter(Phase == "exposure" & Item.Labeled == F) %>%
-  group_by(ParticipantID, Condition.Exposure, Block) %>%
-  summarise(
-    participant.accuracy = mean(Response.Correct),
-    mean.accuracy = mean(participant.accuracy)) %>% 
-  group_by(Condition.Exposure, Block) %>% 
-  summarise(
-    lower = quantile(mean.accuracy, probs = .025),
-    median = quantile(mean.accuracy, probs = .5),
-    upper = quantile(mean.accuracy, probs = .975)) %T>% 
-  { . ->> temp } %>% mutate(decision = factor("proportional")) %>% 
-  bind_rows(temp %>% mutate(decision = factor("criterion"))) %>% 
-  ungroup() %>% 
-  mutate(decision = fct_relevel(decision, "proportional")) %>% 
-  mutate(model = factor("human")) %>% 
-  full_join(
-    crossing(
-      Condition.Exposure = c("Shift0", "Shift10", "Shift40"), 
-      Block = c(1, 3, 5, 7),
-      lower = NA,
-      median = NA,
-      upper = NA)) %>% 
-  add_block_labels() %>% 
-  full_join(
-    get_pyschometric_accuracy(fit_exposure, d.for_analysis, "exposure", VOT.sd_exposure) %>% 
-  bind_rows(
-    get_pyschometric_accuracy(fit_test, d.for_analysis, "test", VOT.sd_test)) %>% 
-  mutate(decision = factor(decision)) %>%
   ungroup() %>%
-  mutate(decision = fct_relevel(decision, "proportional", "criterion")) %>% 
-  add_block_labels() %>% 
-    mutate(model = factor("psych"))) %>% 
-  group_by(decision, Condition.Exposure) %>% 
-  arrange(Block, .by_group = T) 
+  # Exclude catch trials and the final two test blocks since we expect unlearning during those blocks
+  # (which is not modeled)
+  filter(
+    !(Phase == "exposure" & is.na(Item.ExpectedResponse.Voicing)),
+    as.numeric(Block) <= 7) %>%
+  # Use F0 as intended by generation script. This makes fitting more computationally feasible
+  # (336 instead of 1001 unique combinations of group & test locations), and also removes the
+  # potential that annotation / measurement error perturb the f0 values. It does, however,
+  # make the assumption that f0 is the same across the three minimal pairs. While likely wrong,
+  # this assumption better aligns with the fact that the model doesn't have a way to keep track
+  # of any lexical, phonological, or phonetic context effects on VOT (and thus no way to predict
+  # any potential differences between minimal pairs).
+  # Create new condition variable that uniquely identifies what participants have seen at any of the
+  # tests and a new block variable that identifies the type and order of blocks. Also create two
+  # convenience variables, x (stimulus) and Response.Category (to make matching with the category
+  # column of ideal observers/adaptors more straightforward).
+  mutate(
+    Condition.for_ASP = paste0(Condition.Exposure, List.ExposureBlockOrder, List.ExposureMaterials),
+    Block.for_ASP = paste0(Phase, Block),
+    x = pmap(.l = list(VOT, f0_Mel, vowel_duration), ~ c(...)),
+    Response.Category = factor(ifelse(Response.Voicing == "voiced", "/d/", "/t/"), levels = c("/d/", "/t/")),
+    Item.ExpectedResponse.Category = factor(ifelse(Item.ExpectedResponse.Voicing == "voiced", "/d/", "/t/"), levels = c("/d/", "/t/"))) %>%
+  slice_into_unique_exposure_test(
+    condition_var = "Condition.for_ASP",
+    block_var = "Block.for_ASP",
+    block_order = c("test1", "exposure2", "test3", "exposure4", "test5", "exposure6", "test7")) %>%
+  mutate(ExposureGroup = factor(ExposureGroup)) %>%
+  select(
+    ExposureGroup, Phase, ParticipantID, Block, Trial, x,
+    VOT, f0_Mel, vowel_duration, Response.Category, Item.ExpectedResponse.Category)
 
-rm(fit_exposure)
+# fit ideal adaptor with informative priors
+# use prior roughly in middle of 5-fold CV
+m_IO.VOT_f0_vowel <-
+  io %>%
+  filter(str_starts(Condition.Exposure, "prior")) %>%
+  select(-x) %>%
+  unnest(io) %>%
+  select(-c(mu, Sigma)) %>%
+  filter(Condition.Exposure == "prior1") %>%
+  mutate(Condition.Exposure = "CV_prior.mean") %>%
+  right_join(
+    io %>%
+  filter(str_starts(Condition.Exposure, "prior")) %>%
+  select(-x) %>%
+  unnest(io) %>%  
+  unnest_wider(mu) %>%
+    group_by(category) %>%
+  summarise(across(c(VOT, f0_Mel, vowel_duration), mean)) %>%
+  mutate(mu = pmap(.l = list(VOT, f0_Mel, vowel_duration),
+    # Ensure names else it won't be recognized as an MVG IO
+    ~ set_names(c(...), c("VOT", "f0_Mel", "vowel_duration")))) %>%
+  select(category, mu)) %>%
+  right_join(
+    io %>%
+  filter(str_starts(Condition.Exposure, "prior")) %>%
+  select(-x) %>%
+  unnest(io) %>%
+  select(Condition.Exposure, category, Sigma) %>%
+  group_by(category) %>%
+  summarise(Sigma = list(reduce(Sigma, `+`)/length(Sigma))) %>%
+  group_by(category))
+
+# fit ideal adaptor with 3 cue priors
+m_IA.VOT_f0_vowelduration_informedprior <-
+  infer_prior_beliefs(
+    exposure = d_for_ASP %>% filter(Phase == "exposure"),
+    test = d_for_ASP %>% filter(Phase == "test"),
+    cues = c("VOT", "f0_Mel", "vowel_duration"),  
+    category = "Item.ExpectedResponse.Category",
+    response = "Response.Category",
+    group = "ParticipantID",
+    group.unique = "ExposureGroup",
+    center.observations = T,   
+    scale.observations = F,
+    pca.observations = F,
+    lapse_rate = NULL,
+    mu_0 = m_IO.VOT_f0_vowel$mu,
+    Sigma_0 = map2(m_IO.VOT_f0_vowel$Sigma, m_IO.VOT_f0_vowel$Sigma_noise, `+`),
+    sample = T,
+    file = "../models/IBBU_VOT+f0+vowelduration_informative_priors.RDS",
+    warmup = 3000, iter = 4000,
+    control = list(adapt_delta = .995, max_treedepth = 15))
 ```
 
-```{r IO-human-accuracy, fig.width=7.5, fig.height=base.height*2 + .75, fig.cap="(ref:IO-human-accuracy)", fig.pos="!ht"}
-# store plot for plotting in SI
-p.human_psych_accuracy <- 
-  human_psychometric_accuracy %>% 
-  na.omit() %>% 
-  mutate(model = fct_relevel(model, "psych")) %>% 
-  rename(evaluate_on = Condition.Exposure) %>%
+```{r get-and-summarise-PSE-predictions-of-IA}
+# Get logistic model predictions of the IA's categorization then prepare the data for plotting
+# We take this somewhat indirect way to calculate the predicted PSE of the IA in order to make
+# sure that the PSE of the IA is estimated with the same procedure that we apply to listeners 
+# (assuming linearity over VOT).
+
+# First get the IA predictions in log-odds
+if (file.exists("../models/d.IA_predicted_test_informedprior.rds") & !RESET_MODELS) {
+  d.IA_predicted_logodds <- readRDS("../models/d.IA_predicted_logodds.rds")
+} else {
+  d.IA_predicted_logodds <-
+    get_IBBU_predicted_response(
+      m_IA.VOT_f0_vowelduration_informedprior,
+      data = 
+        prep_data_for_IBBU_prediction(m_IA.VOT_f0_vowelduration_informedprior, prep_test = T, untransform_cues = T) %>%
+        # Make additional rows for test block 1 so that there is 1 for each condition
+        mutate(rows = ifelse(group == "no exposure", 3, 1)) %>%
+        uncount(rows) %>%
+        mutate(
+          Condition.Exposure = factor(c(rep("Shift0", 9), rep("Shift10", 9), rep("Shift40", 9), c("Shift0", "Shift10", "Shift40"))),
+          Block = ifelse(group != "no exposure", str_replace(group, ".*(\\d)", "\\1"), group),
+          Block = factor(ifelse(group == "no exposure", 1, Block))),
+      groups = get_group_levels_from_stanfit(m_IA.VOT_f0_vowelduration_informedprior),
+      untransform_cues = T,
+      logit = T,
+      seed = GLOBAL_SEED) 
+ 
+  saveRDS(d.IA_predicted_logodds, "../models/d.IA_predicted_logodds.rds")
+}
+
+if (file.exists("../models/d.IA_predicted_PSE_informedprior.rds") & !RESET_MODELS) {
+  d.IA_predicted_PSE <- readRDS("../models/d.IA_predicted_PSE_informedprior.rds")
+} else {
+  d.IA_predicted_PSE <-
+    fit_logistic_regression_to_model_categorization(
+      d.IA_predicted_logodds %>% mutate(Predicted_posterior = plogis(Predicted_posterior))) %>%
+    group_by(group) %>%
+    median_hdci(PSE) %>%
+    mutate(rows = ifelse(group == "no exposure", 3, 1)) %>%
+    uncount(rows) %>%
+    mutate(
+      Condition.Exposure = ifelse(group != "no exposure", gsub("^.*(Shift[0-9]+)_.*$", "\\1", group), c("Shift0", "Shift10", "Shift40")),
+      Block = ifelse(group != "no exposure", str_replace(group, ".*(\\d)", "\\1"), group),
+      Block = factor(ifelse(group == "no exposure", 1, Block))) %>%
+    add_block_labels()
+
+  saveRDS(d.IA_predicted_PSE, "../models/d.IA_predicted_PSE_informedprior.rds")
+}
+```
+
+```{r plot-IA-human-PSE, fig.width=6.5, fig.height=3.5, fig.cap="(ref:plot-IA-human-PSE)"}
+pos <- position_dodge(.3)
+d.psychometric_intercept.slope.PSE.median %>%
+  filter(Block %in% c(1:7)) %>%
   ggplot(
     aes(
-      x = Block.plot_label, y = median, 
-      ymin = lower, ymax = upper, 
-      colour = evaluate_on, 
-      shape = model,
-      group = decision)) +
+      x = Block.plot_label,
+      y = PSE_unscaled,
+      ymin = PSE_unscaled.lower, ymax = PSE_unscaled.upper,
+      colour = Condition.Exposure,
+      group = Condition.Exposure)) +
+  geom_point(position = pos, size = 1.8) +
+  geom_linerange(linewidth = .6, position = pos, alpha = .75) +
+  stat_summary(geom = "line", position = pos) +
+  # TO DO (here and elsewhere): this should probably be an annotation
+  geom_rect(
+    data = tibble(
+      xmin = c(seq(0.5, 6.5, 2)),
+      xmax = c(seq(1.5, 7.5, 2))),
+    mapping = aes(xmin = xmin, xmax = xmax),
+    ymin = -Inf, ymax = Inf, fill = "grey", alpha = .1,
+    inherit.aes = F) +
+  # TO DO (here and elsewhere): this should probably be an annotation
+  geom_ribbon(
+    data = d.IA_predicted_PSE,
+    mapping = aes(x = Block.plot_label, ymin = .lower, ymax = .upper, fill = Condition.Exposure, group = Condition.Exposure),
+    alpha = .1,
+    position = pos,
+    inherit.aes = F) +
+  # TO DO (here and elsewhere): this should probably be an annotation
   geom_hline(
-    data = io.accuracy %>% filter(!str_starts(Condition.Exposure, "prior")),
-    mapping = aes(yintercept = accuracy, color = evaluate_on),
+    data = d.IO_intercept.slope.PSE %>% filter(Condition.Exposure %in% c("Shift0", "Shift10", "Shift40")),
+    mapping = aes(yintercept = PSE, color = Condition.Exposure, group = Condition.Exposure),
     linetype = 2,
     linewidth = .8,
-    alpha = 0.4,
-    show.legend = F) +
-  geom_rect(
-    data = io.accuracy %>% 
-      filter(Condition.Exposure %in% paste0("prior", c(1:5))) %>% 
-      group_by(evaluate_on, decision) %>% 
-      summarise(
-        ymin = mean(accuracy) - sd(accuracy) / sqrt(length(accuracy)) * 1.96, 
-        ymax = mean(accuracy) + sd(accuracy) / sqrt(length(accuracy)) * 1.96),
-    mapping = aes(xmin = -Inf, ymin = ymin, ymax = ymax, xmax = Inf),
-    fill = "#d2d4dc",
-    alpha = 0.3,
-    inherit.aes = F) +
-  geom_pointrange(position = position_dodge2(.5), size = .4) +
-  stat_summary(
-    data = 
-      human_psychometric_accuracy %>% 
-      filter(model == "psych") %>% 
-      rename(evaluate_on = Condition.Exposure),
-    geom = "line", position = position_dodge2(.5)) +
-  labs(x = "Block") +
-  scale_y_continuous("Accuracy\n(of psychometric model)", breaks = c(.6, .8, 1)) +
-  scale_colour_manual("Condition", values = colours.condition, labels = c("baseline", "+10", "+40"), guide = "none") +
-  scale_shape_manual("Accuracy", values = c(16, 17), labels = c("psychometric model", "human", "")) +
-  coord_cartesian(ylim = c(.6, 1)) +
-  facet_grid(
-    decision ~ evaluate_on,
-    labeller = labeller(
-      decision = c("proportional" = "Luce's\ndecision rule", "criterion" = "Criterion\ndecision rule"),
-      evaluate_on = c("Shift0" = "baseline", "Shift10" = "+10", "Shift40" = "+40"))) +
-  guides(shape = "none") +
-  theme(axis.text.x = element_text(angle = 30, vjust = 1, hjust = 1)) 
-
-# plot psych model accuracy
-p.human_psych_accuracy %+%
-  subset(human_psychometric_accuracy %>% 
-           filter(model == "psych") %>% 
-           rename(evaluate_on = Condition.Exposure) %>%
-  group_by(decision, evaluate_on) %>% 
-  arrange(Block, .by_group = T))
+    alpha = 0.4) +
+  annotate(
+    geom = "text",
+    data = d.psychometric_intercept.slope.PSE.median %>%
+      mutate(true_shift = predictedPSE_unscaled - PSE_unscaled) %>%
+      filter(Block == 1) %>% pull(true_shift),
+      x = c(8, 8, 8),
+    y = c(25, 35, 65),
+      label = d.psychometric_intercept.slope.PSE.median %>%
+      mutate(true_shift = paste(round(predictedPSE_unscaled - PSE_unscaled), "(100%)")) %>%
+      filter(Block == 1) %>% pull(true_shift),
+    colour = colours.condition,
+    fontface = "bold",
+    size = 2.7) +
+  annotate(
+    "crossbar",
+    x = 7.7,
+    y = d.talkerPSEs[d.talkerPSEs$speechstyle == "isolated", ]$PSE_logistic.mean,
+    ymin = d.talkerPSEs[d.talkerPSEs$speechstyle == "isolated", ]$PSE_logistic.lower,
+    ymax = d.talkerPSEs[d.talkerPSEs$speechstyle == "isolated", ]$PSE_logistic.upper,
+    colour = "black",
+    width = 0.1,
+    alpha = .6) +
+  labs(y = "PSE (ms VOT)", x = "Block") +
+  scale_colour_manual(
+    "Condition",
+    labels = c("-20ms", "-10msms", "+20ms", "prior"),
+    values = c(colours.condition, "darkgray"),
+    aesthetics = "color") +
+  coord_cartesian(xlim = c(0.75, 7), clip = "off") +
+  theme(
+    axis.text.x = element_text(angle = 22.5, hjust = 1),
+    plot.margin = unit(c(1, 3.2, 1, 1), "lines"),
+    legend.position = "none")
 ```
 
-If confirmed, premature convergence against stable behavior despite only partial adaptation would challenge prediction 3 of existing distributional learning models. Premature convergence is also unexpected under any other model of adaptive speech perception. In the general discussion, we present an extension to distributional learning models that explains premature convergence, and highlights a striking link between adaptive changes in speech perception and second language learning. As part of that discussion, we present additional models, and entertain methodological artifacts, and analysis confounds that would offer alternative explanation of premature convergence. 
+Critically, such a distributional learning model is *much* more constrained in the type of changes it can fit than the psychometric model we have used above to analyze our data. The psychometric model makes no assumptions whatsoever about the way in which listeners' perception changes during exposure, and is thus free to fit any pattern of changes in participants' responses. This flexibility of the psychometric model was desirable for the evaluation of predictions 1-4 presented above: the findings so far are noteworthy precisely because the psychometric analysis could have just as well found that participants' behavior was completely unrelated to, or even directly contradicting, the predictions of distributional learning. However, psychometric analyses cannot address whether the totality of all changes in participants' perception across exposure conditions and test blocks is actually consistent with the predictions of distributional learning. For example, the psychometric analysis leaves open whether distributional learning can explain both the rapid changes at the start of exposure *and* the slower changes that occur later in exposure. In contrast, a distributional learning model specifies how information is integrated across exposure trials and blocks. As a consequence, listeners' responses during different test blocks and across different exposure conditions jointly constrain the parameters of model (e.g., for the ideal adaptor, due to assumption of ideal information integration within and across exposure blocks). To appreciate just how different the ideal adaptor is from the psychometric model, consider that the latter used `r sum(str_detect(rownames(fixef(fit_test)), "mu2")) - sum(str_detect(rownames(fixef(fit_test)), "Test5vs.Test4|Test6vs.Test5"))` population-level ('fixed') and `r length(get_variables(fit_test)[grep("^sd_|^cor_", get_variables(fit_test))]) - sum(str_detect(get_variables(fit_test)[grep("^sd_|^cor_", (get_variables(fit_test)))], "Block_Test6vs.Test5|Block_Test5vs.Test4"))` group-level ('random') effect parameters, whereas the ideal adaptor uses a total of 3 parameters! It is thus possible that a distributional learning model does *not* provide a good explanation for the quantitative changes in listeners' perception even if all qualitative predictions of distributional learning are met.
+```{r compute-R2-between-ideal-adaptor-and-psychometric-model}
+psych.model_prediction <-
+  epred_draws(
+    fit_test,
+    newdata = d.for_analysis %>%
+      filter(Phase == "test") %>%
+      group_by(Item.VOT, Block, Condition.Exposure) %>%
+      prepVars(test_mean = VOT.mean_test, levels.Condition = levels_Condition.Exposure) %>%
+      filter(Block %in% c(1, 3, 5, 7)),
+    seed = 928,
+    re_formula = NULL,
+    ndraws = 1000) %>%
+  ungroup() %>%
+  # Collapse all observations in Test 1 into 1 condition
+  # (to parallel how the ideal adaptor treats the data)
+  mutate(
+    Condition.Exposure = as.character(Condition.Exposure),
+    Condition = ifelse(Block == 1, "pre-exposure", Condition.Exposure),
+    Condition.Exposure = factor(Condition.Exposure)) %>%
+  group_by(Item.VOT, Condition.Exposure, Condition, Block) %>%
+  summarise(predicted_proportion_voiceless = mean(.epred)) %>%
+  mutate(predicted_proportion_voiced = 1 - predicted_proportion_voiceless) %>%
+  crossing(List.ExposureBlockOrder = c("A", "B", "C")) %>%
+  left_join(d.for_analysis %>%
+  filter(Phase == "test", Block %in% c(1, 3, 5, 7)) %>%
+  group_by(Item.VOT, List.ExposureBlockOrder, Block, Condition.Exposure) %>%
+  mutate(Block = factor(Block)) %>%  
+  summarise(
+    proportion_voiceless = mean(Response.Voiceless),
+    proportion_voiced = 1 - proportion_voiceless)) %>%
+  group_by(Condition) %>%
+  mutate(List = ifelse(Condition == "pre-exposure", "A", List.ExposureBlockOrder)) %>%
+  group_by(Item.VOT, List, Block, Condition) %>%
+  summarise(across(c(predicted_proportion_voiceless, predicted_proportion_voiced, proportion_voiceless, proportion_voiced), mean))
 
-## Effects of repeated testing
-The final hypothesis tests investigate the effects of repeated testing. Distributional learning models predict that test stimuli, too, can form part of the input that listeners adapt to. To the extent that the information provided by test stimuli differs from that provided by exposure stimuli, these theories thus predict that repeated testing affects listeners' behavior. And, in a design like ours, with identical test stimuli across conditions, the effects of repeated testing are predicted to differ across conditions. Specifically, with sufficient repetition all conditions would be expected to converge against the distribution of the test stimuli, and thus towards identical behavior across conditions. Theories of error-based learning and ideal information integration further predict that the speed with which repeated testing changes listeners' behavior depends on the degree to which the distribution of test stimuli differs from the distribution of exposure stimuli [@davis-sohoglu2020; @kleinschmidt-jaeger2015; for relevant discussion, see also @lancia-winter2013; @xie-kurumada2024]. 
+IA.prediction <-
+  d.IA_predicted_logodds %>% 
+  mutate(Predicted_posterior = plogis(Predicted_posterior)) %>%
+  group_by(group, VOT) %>%
+  summarise(across(Predicted_posterior, mean)) %>%
+  mutate(ExposureGroup = ifelse(group == "prior", "no exposure", group)) %>%
+  left_join(get_test_data_from_stanfit(m_IA.VOT_f0_vowelduration_informedprior) %>%
+              get_untransform_function_from_stanfit(m_IA.VOT_f0_vowelduration_informedprior)(.)) %>%
+  mutate(
+    Response = `/t/` / (`/d/` + `/t/`),
+    group = gsub("[ABC]A", "", group))
+```
 
-In line with these theories, Figure \@ref(fig:plot-fit-PSE)C shows that the effects of exposure reduced from Test 4 to Test 6, and did so primarily for the exposure conditions that differed most from the distribution of test stimuli. In Table \@ref(tab:hypothesis-table-simple-effects-block), this is evident in a reversal of the direction of the block-to-block changes for Tests 5-6, compared to Tests 1-4. For the +40 exposure condition, these block-to-block changes went from rightward shifts in Tests 1-4 to leftward shifts in Tests 5-6 (BF = `r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift40:Block_Test5vs.Test4 + mu2_Condition.ExposureShift40:Block_Test6vs.Test5 > 0", bf = T)`). For the baseline condition, block-to-block changes went from leftward to rightward shifts (BF = `r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift0:Block_Test5vs.Test4 + mu2_Condition.ExposureShift0:Block_Test6vs.Test5 < 0", bf = T)`). The only exposure condition for which no clear reversal was observed is the +10 condition (BF = `r get_bf(fit_test.simple_effects_block, "mu2_Condition.ExposureShift10:Block_Test5vs.Test4 + mu2_Condition.ExposureShift0:Block_Test6vs.Test5 < 0", bf = T)`). As would be expected under theories of error-based learning and ideal information integration, the marginal distribution of VOT during test blocks (mean = 35.8 ms, SD = 22.2 ms) most closely resembled the exposure distribution of the +10 condition (mean = 36.5, SD = 25.9), compared to the baseline (mean = 26.5 ms, SD = 25.9) or +40 condition (mean = 66.5 ms, SD = 25.9). 
+```{r data-prep-IA-logodds-prediction-human-responses}
+# Prep data to obtain IA mode of predicted logodds by condition and VOT up to test block 4
+d.IA_predicted_logodds.mode <-
+  d.IA_predicted_logodds %>%
+  group_by(VOT, Condition.Exposure, Block) %>%
+  # get the modal posterior draw
+  mode_hdci(Predicted_posterior) %>%
+  rename(
+    Item.VOT = VOT, 
+    IA_predicted_logodds = Predicted_posterior) %>%
+  right_join(
+    d.for_analysis %>% filter(Block %in% c(1, 3, 5, 7)) %>% mutate(Block = factor(Block)),
+    by = c("Item.VOT", "Condition.Exposure", "Block")) %>%
+  group_by(Item.VOT) %>%
+  mutate(
+    IA_predicted_logodds.prior = mean(ifelse(Block == 1, IA_predicted_logodds, NA), na.rm = T),
+    IA_predicted_logodds.change = IA_predicted_logodds - IA_predicted_logodds.prior) %>%
+  # Separate the change in logodds by block into intercept changes, and slopes
+  group_by(Condition.Exposure, Block) %>%
+  mutate(
+    IA_predicted_logodds.changes_in_intercept_across_block_condition = mean(IA_predicted_logodds.change),
+    IA_predicted_logodds.changes_in_slope_across_block_condition = IA_predicted_logodds.change - IA_predicted_logodds.changes_in_intercept_across_block_condition) %>%
+  droplevels() %>%
+  ungroup()
+```
 
-The effects of repeated testing replicate previous findings from LGPL paradigms [@scharenborg-janse2013; @giovannone-theodore2021; @cummings-theodore2023; @liu-jaeger2018; @liu-jaeger2019; @reinisch-holt2014; @zheng-samuel2023], and extends them to distributional learning paradigms [see also @colby2018; @kleinschmidt2020]. Indeed, the effects of repeated testing can be substantial: while the effects of the +40 condition relative to the other two exposure conditions were reduced but still credible even in Test 6 (BFs > `r get_bf(fit_test.simple_effects_condition, "mu2_Block9:Condition.Exposure_Shift40vs.Shift10 + mu2_Block9:Condition.Exposure_Shift10vs.Shift0 < 0", bf = T)`), this was no longer the case for the effect of the +10 condition relative to the baseline condition (BF = `r get_bf(fit_test.simple_effects_condition, "mu2_Block9:Condition.Exposure_Shift10vs.Shift0 < 0", bf = T)`; see Table \@ref(tab:hypothesis-table-simple-effects-condition)). One important methodological implication for future work is that longer test phases do not necessarily increase the statistical power to detect effects of adaptation [unless analyses account for the effects of repeated testing, as done in, e.g., @liu-jaeger2018]. <!-- TO DO: add @cummings2024 once made available online (pen in mouth paper) --> Analyses that average over all test tokens---as is still the norm---are bound to systematically underestimate the true adaptivity of human speech perception.<!-- ^[@kraljic-samuel2006 is sometimes cited as finding LGPL exposure effects even after 480 test trials over a uniform test continuum. This is, however, misleading. Kraljic and Samuel used four *different* uniform test continua over two different phonetic contrasts (/b/-/p/ and /d/-/t/). Each test session consisted of 10 randomized repetitions of 6 test trials. Kraljic and Samuel never tested (or made any claims about) whether exposure effects were still detectable during the 10th repetition. Rather they report *average* effects across the 10 repetitions (like other LGPL studies), which is perfectly compatible with the hypothesis that repeated testing reduces the effects of exposure [see @liu-jaeger2018].] -->
+```{r psychometric-model-block-1to4}
+# Fit a reduced psychometric model of human data (test blocks 1 to 4) for LOO comparability with the IA_predicted logodds model
+fit_test.upto.test4 <-
+  fit_model(
+    d.IA_predicted_logodds.mode,
+    phase = "test",
+    priorSD = 15,
+    formulation = "standard-upto-test4",
+    adapt_delta = .995)
+
+fit_test.upto.test4 <- add_criterion(fit_test.upto.test4, criterion = "loo", moment_match = TRUE)
+```
+
+```{r fit-IA-predicted-logodds-human-responses}
+# Fit linear model to human responses with IA-predicted-logodds as predictor
+# to assess how well IA predictions fit listeners' behaviour and how it changes from block to block
+# block is treated as linear
+d.IA_predicted_logodds.mode %<>%
+  mutate(Block = as.numeric(
+    case_when(
+      Block == "1" ~ 1,
+      Block == "3" ~ 2,
+      Block == "5" ~ 3,
+      Block == "7" ~ 4)),
+    Condition.Exposure = factor(Condition.Exposure))
+
+# Scale predictors
+d.IA_predicted_logodds.mode %<>%
+  ungroup() %>% 
+  mutate(
+    across(
+      c(
+        IA_predicted_logodds,
+        IA_predicted_logodds.prior,
+        IA_predicted_logodds.change,
+        IA_predicted_logodds.changes_in_intercept_across_block_condition,
+        IA_predicted_logodds.changes_in_slope_across_block_condition,
+        Block,
+        VOT), 
+      ~ gs_scale(.x), 
+      .names = "{.col}_gs"))
+
+# Use new priors for the predicted logodds model since it is not a mixture but a plain logistic regression model
+priors_logodds_model <-
+  c(
+    prior(student_t(3, 0, 2.5), class = "b"),
+    prior(cauchy(0, 2.5), class = "sd"))
+
+fit_test.IA_predicted_logodds <-
+  brm(
+    bf(
+      Response.Voiceless ~ 0 + IA_predicted_logodds_gs +
+        (1 | ParticipantID) + (1 | Item.MinimalPair)),
+    data = d.IA_predicted_logodds.mode,
+    prior = priors_logodds_model,
+    cores = 4,
+    chains = 4,
+    init = 0,
+    iter = 4000,
+    warmup = 2000,
+    sample_prior = "yes",
+    save_pars = save_pars(all = TRUE),
+    family = bernoulli("logit"),
+    control = list(adapt_delta = .999, max_treedepth = 15),
+    file ="../models/test_IA_predicted_logodds.rds",
+    file_refit = "on_change")
+
+fit_test.IA_predicted_logodds <- add_criterion(fit_test.IA_predicted_logodds, criterion = c("loo"), moment_match = T)
+# loo_compare(fit_test.IA_predicted_logodds, fit_test.upto.test4)
+
+## with random slopes
+fit_test.IA_predicted_logodds_with_RLs <-
+  brm(
+    bf(
+      Response.Voiceless ~ 0 + IA_predicted_logodds_gs +
+        (1 + IA_predicted_logodds_gs | ParticipantID) + (1 | Item.MinimalPair)),
+    data = d.IA_predicted_logodds.mode,
+    prior = priors_logodds_model,
+    cores = 4,
+    chains = 4,
+    init = 0,
+    iter = 4000,
+    warmup = 2000,
+    sample_prior = "yes",
+    save_pars = save_pars(all = TRUE),
+    family = bernoulli("logit"),
+    control = list(adapt_delta = .9995, max_treedepth = 15),
+    file ="../models/test_IA_predicted_logodds_with_RLs.rds",
+    file_refit = "on_change")
+
+fit_test.IA_predicted_logodds_with_RLs <- add_criterion(fit_test.IA_predicted_logodds_with_RLs, criterion = c("loo"), moment_match = T)
+# loo_compare(fit_test.IA_predicted_logodds_with_RLs, fit_test.upto.test4)
+```
+
+The predictions of the fitted ideal adaptor model are shown as shaded intervals in Figure \@ref(fig:plot-IA-human-PSE).  For the present data, the ideal adaptor model predicts the proportion of listeners' "t"-responses with a high $R^2 =$ `r round(cor(IA.prediction$Predicted_posterior, IA.prediction$Response) %>% . ^2, 3) * 100`$\%$, comparable to that of the psychometric model ($R^2 =$ `r round(cor(psych.model_prediction$predicted_proportion_voiceless, psych.model_prediction$proportion_voiceless) %>% . ^2, 3) * 100`$\%$). This demonstrates that the ideal adaptor can explain a non-trivial share of participants' changing behavior (for additional visualizations of the fit against participants' behavior, see SI, \@ref(sec:ideal-adaptor)). It does so substantially fewer degrees of freedom than the psychometric model. 
+
+To further compare the ideal adaptor learning model to the psychometric data analysis model, we conducted two Bayesian model comparisons. We first compared the Bayesian psychometric mixed-effects model against a Bayesian mixed-effects logistic regression model that only used the maximum a posteriori (MAP) predictions of the ideal adaptor as a predictor (MAP-predicted log-odds of a "t"-response), along with by-participant and by-item random intercepts.^[We used mixed-effect logistics regression rather than a psychometric model with lapses since the ideal adaptor's predictions already include the effects of the ideal adaptor's lapse rate.] This model assumes that the ideal adaptor's predictions provide an equally good fit to all participants, but allows for participant- and item-specific response-biases. Comparison of the two models suggests that the psychometric model provides a somewhat---but not decisively---better fit to participants' responses, capturing information beyond the predictions of the ideal adaptor ($\Delta_{elpd}=$ `r loo_compare(fit_test.IA_predicted_logodds, fit_test.upto.test4)[2, 1]`; SE$_\Delta=$ `r loo_compare(fit_test.IA_predicted_logodds, fit_test.upto.test4)[2, 2]`).^[The (log) predictive density can be thought of as the Bayesian equivalent of the (log) data likelihood in frequentist statistics (but the Bayesian approach incorporates prior beliefs). The *expected* log predictive density (ELPD) is the mean log posterior density of the data, estimated here using leave-one-out (with moment matching) through the `add_criterion()` function of `brms` [@R-brms_a]. This ELPD estimate provides a measure of the predictive accuracy of the model, essentially estimating how predictable a held-out data point is if the model is fit on all other data. Differences in the ELPD of more than 4-5 standard errors are often taken to be credible, whereas differences of 2-3 standard errors should be interpreted with more caution. <!-- TO DO: figure our comparison of IA directly against psychometric model so that the following does not hold anymore: We note that our approach to comparing the ideal adaptor against the psychometric model likely somewhat under-estimates the performance of the ideal adaptor since the use of MAP predictions discards the uncertainty the ideal adaptor has about its predictions.-->] This result held, though less decisively, even when participants were allowed to vary in their sensitivity to the ideal adaptor's predictions (by including random by-participant slopes for the ideal adaptor's prediction, $\Delta_{elpd}=$ `r loo_compare(fit_test.IA_predicted_logodds_with_RLs, fit_test.upto.test4)[2, 1]`; SE$_\Delta=$ `r loo_compare(fit_test.IA_predicted_logodds_with_RLs, fit_test.upto.test4)[2, 2]`). 
+
+In short, the ideal adaptor provides an impressively good quantitative model of participants' responses, with very few degrees of freedom. However, there is also some evidence that it does not *quite* capture all of the information captured by the psychometric analysis. *What* is this additional information that the psychometric model captures? As would be expected from a distributional learning model, the ideal adaptor displays predictions 1-4. Its PSE is initially fully determined by its prior beliefs (prediction 1), and then changes monotonically within increasing exposure (prediction 2a) in the direction expected from the exposure distribution (prediction 2b). These incremental changes initially proceed quickly, and then slow down (prediction 3); however, since convergence against the phonetic distributions of the unfamiliar talker has not yet occurred, the ideal adaptor is still clearly learning even after the last exposure block (see slope of shaded intervals in Figure \@ref(fig:plot-IA-human-PSE)). While predictions 1-3 were also met by participants, we saw above that prediction 4 does not seem to be met. Could this mismatch between the ideal adaptor and our participants be part of the information the ideal adaptor is lacking, compared to the psychometric model?
+
+A look at the posterior distribution of the ideal adaptor's fitted parameters, summarized in Table \@ref(tab:ideal-adaptor-parameter-summary), provides some support for this idea. The inferred lapse rate estimates overlap with those of the psychometric model (`r print_CI(fit_test, "theta1_Intercept")`, see above). The large inferred values for $\kappa_{0}$ and $\nu_{0}$ are the result of two factors: (1) a good fit between the prior $\mu_{c}$ and $\Sigma_c$ we obtained from the @chodroff-wilson2018 database against listeners' pre-exposure responses, and (2) the fact that, after exposure to 72 /d/s and 72 /t/s, listeners' categorization functions have shifted by only 20-50% towards the shift expected from an idealized learner (recall Figure \@ref(fig:plot-fit-PSE)). Recall that the ideal adaptor---like any standard distributional learning model---assumes that listeners keep integrating information until they have converged against the distributions in the input from the unfamiliar talker. *Because of this assumption*, the best fit the ideal adaptor can achieve *has* to assume that adaptation has not yet completed, since listeners have not yet converged against the idealized learner state. 
+
+```{r ideal-adaptor-parameter-summary, results='asis'}
+summarize.NIW_ideal_adaptor_stanfit <- function(
+    x,
+    pars = c("kappa", "nu", "lapse_rate"),
+    groups = c(
+      "prior",
+      "Cond Shift0AA_Up to test3", "Cond Shift0AA_Up to test5", "Cond Shift0AA_Up to test7",
+      "Cond Shift10AA_Up to test3", "Cond Shift10AA_Up to test5", "Cond Shift10AA_Up to test7",
+      "Cond Shift40AA_Up to test3", "Cond Shift40AA_Up to test5", "Cond Shift40AA_Up to test7")
+) {
+  add_ibbu_stanfit_draws(x, groups = groups, summarize = F) %>%
+    unnest_cue_information_in_model() %>%
+    gather_variables(exclude = c(".chain", ".iteration", ".draw", ".row", "cue", "cue2", "group", "category")) %>%
+    ungroup() %>%
+    # + Remove double mentions of variables that are constant across groups, categories, and cues
+    #   (currently: lapse_rate)
+    # + Remove double mentions of variables that are constant across cues
+    #   (currently: kappa and nu)
+    # + Remove double mentions of variables that are constant across cue2
+    #   (currently: m)
+    mutate(
+      across(
+        c(group, category),
+        ~ ifelse(.variable == "lapse_rate", NA_character_, as.character(.x))),
+      across(
+        c(cue, cue2),
+        ~ ifelse(.variable %in% c("kappa", "nu", "lapse_rate"), NA_character_, as.character(.x))),
+      across(
+        c(cue2),
+        ~ ifelse(.variable == "m", NA, .x))) %>%
+    distinct() %>%
+    group_by(group, category, cue, cue2, .variable) %>%
+    median_hdci() %>%
+    mutate(
+      group = factor(group, levels = groups),
+      .variable = factor(.variable, levels = pars)) %>%
+    # Format and sort output
+    relocate(group, category, .variable, cue, cue2, .value, everything()) %>%
+    arrange(match(.$.variable, levels(.$.variable)), match(.$group, levels(.$group)), category, cue, cue2) %>%
+    mutate(
+      .value = round(ifelse(.variable == "lapse_rate", .value * 100, .value), 1),
+      .lower = round(ifelse(.variable == "lapse_rate", .lower * 100, .lower), 1),
+      .upper = round(ifelse(.variable == "lapse_rate", .upper * 100, .upper), 1),
+      !! sym(unique(paste0(unique(.$.width * 100), "\\%-HDCI"))) := paste0("[", .lower, ", ", .upper, "]")) %>%
+    rename(
+      Parameter = .variable,
+      Estimate = .value) %>%
+    select(-c(.width, .point, .interval, .lower, .upper)) %>% 
+    # Simplifying for present paper
+    ungroup() %>%
+    filter(Parameter %in% pars & (group == "prior" | is.na(group))) %>%
+    select(-c(group, category, cue, cue2)) %>%
+    distinct() %>%
+    mutate(
+      Parameter = 
+        case_when(
+          Parameter == "kappa" ~ "strength of prior beliefs about $\\mu_c$ ($\\kappa_{0}$)",
+          Parameter == "nu" ~ "strength of prior beliefs about $\\Sigma_c$ ($\\nu_{0}$)",
+          Parameter == "lapse_rate" ~ "lapse rate ($\\lambda$)")) %>%
+    kable(
+      caption = "Summary of the ideal adaptor model's parameters fit to participants' behavior.",
+      format = "latex",
+      booktabs = TRUE,
+      escape = FALSE) 
+}
+
+summarize.NIW_ideal_adaptor_stanfit(m_IA.VOT_f0_vowelduration_informedprior) 
+```
 
 ```{r}
-rm(d.psychometric_intercept.slope.PSE.draws, fit_test.simple_effects_condition, fit_test.simple_effects_block)
+# model with interaction of block and change in IA-predicted logodds 
+fit_test.IA_predicted_logodds.prior.change.interaction_with_RLs <-
+  update(
+    fit_test.IA_predicted_logodds_with_RLs,
+    formula. =  Response.Voiceless ~ 1 + IA_predicted_logodds.prior_gs + (Block_gs * IA_predicted_logodds.change_gs) + 
+      (1 + IA_predicted_logodds.prior_gs + (Block_gs * IA_predicted_logodds.change_gs) | ParticipantID) + (1 | Item.MinimalPair),
+    newdata = d.IA_predicted_logodds.mode,
+    file ="../models/test_IA_predicted_logodds.prior.change.interaction_with_RLs.rds",
+    recompile = TRUE)
+
+fit_test.IA_predicted_logodds.prior.change.interaction_with_RLs <- add_criterion(fit_test.IA_predicted_logodds.prior.change.interaction_with_RLs, criterion = c("loo"), moment_match = T)
+
+# loo_compare(fit_test.IA_predicted_logodds.prior.change.interaction_with_RLs, fit_test.upto.test4)
+```
+
+Critically, this assumption comes at a cost, as evident in Figure \@ref(fig:plot-IA-human-PSE): the ideal adaptor *under*-predicts the rapid changes in listeners' PSEs  during initial exposure, while *over*-predicting the slower changes in listeners' PSE following exposure (see, in particular, the -20ms and -10ms conditions in Test 4). This pattern was confirmed by an additional mixed-effects logistic regression that allowed the predicted log-odds of the ideal adaptor to interact with a linear effect of test block (1-4), while keeping the by-participant and by-item random intercepts (for details, see SI, \@ref(sec:ideal-adaptor-fit)). This analysis found a credible negative interaction between the ideal adaptor's predictions and test block (`r get_bf(fit_test.IA_predicted_logodds.prior.change.interaction_with_RLs, "Block_gs:IA_predicted_logodds.change_gs < 0", unscale = T, data = d.IA_predicted_logodds.mode)`): with increasing exposure, changes in the ideal adaptor's categorization function become increasingly less predictive of participants' actual behavior.
+
+Simply put, constrained by the assumptions of distributional learning, the ideal adaptor cannot fit all three of (i) listeners' pre-exposure behavior, (ii) the rapid changes in listeners' PSEs during initial exposure, and (iii) the premature flattening off of changes in listeners' PSEs. Rather, an ideal adaptor can *either* explain the fact that listeners' PSEs changed rapidly at the start of exposure *or* that there seem to be little to no changes in listeners' PSE after the second exposure block. But it cannot explain both. 
+
+```{r}
+rm(d.psychometric_intercept.slope.PSE.draws, fit_test.simple_effects_block)
 ```

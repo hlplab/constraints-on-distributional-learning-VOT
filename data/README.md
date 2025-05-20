@@ -1,29 +1,10 @@
-This is where your raw data files should go. 
-Ideally, only generally accessible formats should be used. E.g., .csv or .tab files or, if necessary, .RData (but not .rds) files. 
-Make sure that the filenames are verbose, making it easier for your collaborators (or others you share your project with) to navigate 
-the raw data, to check, edit, etc. as necessary. I.e., don't use opaque abbreviations. Instead write out words. It might seem like 
-unnecessary work, but you're only doing it once. Also coding does *not* become more complicated with longer filenames since RStudio 
-and other programs all offer auto-completion while coding, including for filenames.
+This directory contains all necessary data files for the reproduction of "Learning to Understand and Unfamiliar Talker: Testing distributional learning as a model of rapid adaptive speech perception".
 
-Additionally, try to follow a consistent naming scheme. For example, if you're working with multiple languages, you might have data files like
+1.  The Chodroff & Wilson 2017 corpus data cited in the paper is in "./chodroff_wilson_speech_db.csv", a dataframe of isolated and connected speech. 
+    This file is an amalgamation of their Mixer 6 corpus (production_db/chodroff_wilson_mixer6_non-missing_vot_cog_f0.csv) and 
+    (production_db/cueAnalysis_engCVC.txt with production_db/engCVC_gender.csv). 
+    Please refer to "../scripts/production_database.R" to see how the dataframe of isolated and connected speech was created. 
 
-*German-perception-data.csv*
+2.  The perceptual experiment data are stored in ./experiment-results.csv
 
-*English-perception-data.csv*
-
-*English-production-data.csv*
-
-...
-
-rather than 
-
-*German-perception-data.csv*
-
-*Perception.csv*
-
-*Production-English.csv*
-
-...
-
-If this project has a lot of data files, consider grouping them into subfolders. For example, if you're important many individual data files 
-from various data sources, make different folders for each data source.
+3.  Exposure stimuli and its cue measurements for that experiment are in ./exposure_stimuli_cue_measurements.csv

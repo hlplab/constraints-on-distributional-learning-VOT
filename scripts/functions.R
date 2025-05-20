@@ -3,12 +3,86 @@ logit_to_prob <- function(model, term, index = 1) {
   paste0(round(plogis(as.numeric(summary(model)$fixed[term, index])) * 100, 1), "%")
 }
 
+gs_scale <- function(.vec) {
+
+  # Calculate mean and standard deviation
+  var_mean <- mean({{.vec}}, na.rm = TRUE)
+  var_sd <- sd({{.vec}}, na.rm = TRUE)
+
+  # Scale the variable
+  scaled_var <- ({{.vec}} - var_mean) / (2 * var_sd)
+
+  # Add mean and SD as attributes
+  label <- substitute(.vec)
+  attr(scaled_var, paste0(label, ".mean")) <- var_mean
+  attr(scaled_var, paste0(label, ".SD")) <- var_sd
+
+  # Return the scaled variable
+  return(scaled_var)
+}
+
+
 # function to transform Gelman-scaled values back
 descale <- function(x, mean, sd) {
   (x * 2 * sd) + mean
 }
 
-
+# this unscaling function works for slope estimates and interactions only
+unscale_all_estimates <- function(model, coef_name, data) {
+  # get all the estimates
+  coef_value <- fixef(model)[coef_name, "Estimate"]
+  coef_std_error <- fixef(model)[coef_name, "Est.Error"]
+  coef_lower_ci <- fixef(model)[coef_name, "Q2.5"]
+  coef_upper_ci <- fixef(model)[coef_name, "Q97.5"]
+  
+  # check if this is an interaction term
+  if(str_detect(coef_name, ":")){
+    var_names <- str_split(coef_name, ":")[[1]]
+    var_names <- str_remove(var_names, "_gs$")
+    
+    sds <- map_dbl(var_names, function(var) {
+      var_gs <- str_c(var, "_gs")
+      sd_attr <- attr(data[[var_gs]], str_c(var, ".SD")) 
+      
+      if (is.null(sd_attr)) {
+        warning("Could not find SD attribute for ", var, "- using default of 1 instead")
+        return(1)
+      }
+      return(sd_attr)
+    })  
+    # unscale the coef and accompanying estimates
+    scaling_factor <- 1 / prod(sds * 2)
+    unscaled_estimates <- list(
+      Estimate = coef_value * scaling_factor,
+      Est.Error = coef_std_error * scaling_factor,
+      Q2.5 = coef_lower_ci * scaling_factor,
+      Q97.5 = coef_upper_ci * scaling_factor,
+      scaling_factor = scaling_factor)
+    
+    return(unscaled_estimates)
+  } 
+  else {
+    var_name <- str_remove(coef_name, "_gs$")
+    var_gs <- str_c(var_name, "_gs")
+    sd_attr <- attr(data[[var_gs]], str_c(var_name, ".SD"))
+    
+    if (is.null(sd_attr)) {
+      warning("Could not find SD attribute for ", var_name, "- using default of 1 instead")
+      sd_attr <- 1
+    }
+    
+    # unscale coef
+    scaling_factor <- 1 / (2 * sd_attr)
+    unscaled_estimates <- list(
+      Estimate = coef_value * scaling_factor,
+      Est.Error = coef_std_error * scaling_factor,
+      Q2.5 = coef_lower_ci * scaling_factor,
+      Q97.5 = coef_upper_ci * scaling_factor,
+      scaling_factor = scaling_factor)
+    
+    return(unscaled_estimates)
+  }
+}
 # Knitr output formatting --------------------------------------------
 percent <- function(x) paste0(round(x * 100, 1), "%")
 
@@ -240,17 +314,22 @@ prepVars <- function(
                                            "_Shift40 vs. Shift10" = c(-1/3,-1/3, 2/3))
   message(contrasts(d$Condition.Exposure))
 
-  if (all(d$Phase == "test") & n_distinct(d$Block) > 1) {
+  if (all(d$Phase == "test") & n_distinct(d$Block) == 6) {
     contrasts(d$Block) <- MASS::fractions(MASS::contr.sdif(6))
     dimnames(contrasts(d$Block))[[2]] <- c("_Test2 vs. Test1", "_Test3 vs. Test2", "_Test4 vs. Test3", "_Test5 vs. Test4", "_Test6 vs. Test5")
     message("Condition contrast is:", contrasts(d$Condition.Exposure))
     message("Block contrast is:", contrasts(d$Block))
-  } else if (all(d$Phase == "exposure") & n_distinct(d$Block) > 1) {
+  } else if (all(d$Phase == "test") & n_distinct(d$Block) == 4) {
+    contrasts(d$Block) <- MASS::fractions(MASS::contr.sdif(4))
+    dimnames(contrasts(d$Block))[[2]] <- c("_Test2 vs. Test1", "_Test3 vs. Test2", "_Test4 vs. Test3")
+    message("Condition contrast is:", contrasts(d$Condition.Exposure))
+    message("Block contrast is:", contrasts(d$Block))
+  } else if (all(d$Phase == "exposure") & n_distinct(d$Block) == 3) {
     contrasts(d$Block) <- cbind("_Exposure2 vs. Exposure1" = c(-2/3, 1/3, 1/3),
                                 "_Exposure3 vs. Exposure2" = c(-1/3,-1/3, 2/3))
     message("Condition contrast is:", MASS::fractions(contrasts(d$Condition.Exposure)))
     message("Block contrast is:", MASS::fractions(contrasts(d$Block)))
-  } else if (n_distinct(d$Block) > 1) {
+  } else if (n_distinct(d$Block) == 9) {
     contrasts(d$Block) <- MASS::fractions(MASS::contr.sdif(9))
     dimnames(contrasts(d$Block))[[2]] <- c("_Exp1 vs. Test1", "_Test2 vs. Exp1", "_Exp2 vs. Test2", "_Test3 vs. Exp2", "_Exp3 vs. Test3", "_Test4 vs. Exp3", "_Test5 vs. Test4", "_Test6 vs. Test5")
     message("Condition contrast is:", MASS::fractions(contrasts(d$Condition.Exposure)))
@@ -362,6 +441,7 @@ fit_model <- function(
     init = 0,
     iter = iter,
     warmup = warmup,
+    save_pars = save_pars(all = TRUE),
     family = mixture(bernoulli("logit"), bernoulli("logit"), order = F),
     control = list(adapt_delta = adapt_delta),
     file = paste0("../models/", phase, "-", formulation, "-priorSD", priorSD, "-", adapt_delta, ".rds")
@@ -400,7 +480,7 @@ get_prop_shift_by_draw <- function(data) {
 }
 
 
-get_conditional_effects <- function(model, data, phase) {
+get_conditional_effects <- function(model, data, phase, method = "posterior_epred") {
   conditional_effects(
     x = model,
     effects = "VOT_gs:Condition.Exposure",
@@ -409,7 +489,7 @@ get_conditional_effects <- function(model, data, phase) {
         filter(Phase == .env$phase & Item.Labeled == FALSE) %>%
         prepVars(test_mean = VOT.mean_test, levels.Condition = levels_Condition.Exposure),
       vars = c("Block")),
-    method = "posterior_epred",
+    method = method,
     ndraws = 500,
     re_formula = NA)
 }
@@ -438,35 +518,133 @@ get_nsamples <- function(model) {
   return(n.posterior_samples)
 }
 
+# This function manually calculates the BF for certain point hypotheses.
+# We avoid using built-in brms::hypothesis() to test point hypotheses that involve > 1 model parameter.
+# On 6 Mar, 2025 after looking at the code for hypothesis function (https://github.com/paul-buerkner/brms/blob/master/R/hypothesis.R)
+# we determined that the randomness is solely driven by the fact that we're testing a point hypothesis which requires prior draws (https://github.com/paul-buerkner/brms/blob/master/R/prior_draws.R).
+# Critically, the prior draws returned are randomly resampled.
+# This is done separately for each parameter of the model contained in the hypothesis because brms assumes independent priors on all parameters.
+# from the prior_draws function: "order draws randomly to avoid artificial dependencies between parameters using the same prior draws"
+# as long as only 1 parameter is contained in the hypothesis, this random reordering doesn't affect the density under the prior the point estimate (null)
+# This function by default makes 100 iterations of the point hypothesis test and takes the posterior density/mean of the 100 prior densities.
+get_mean_BF <- function(model, hypothesis, robust = TRUE, n.iterations = 100, n.density_steps = 2^12, use_seed = TRUE) {
+  # Set seed only if requested
+  if (use_seed) set.seed(GLOBAL_SEED)  # Assumes GLOBAL_SEED is defined in the environment
 
-get_bf <- function(model, hypothesis, est = F, bf = F, digits = 2) {
-  h <- hypothesis(model, hypothesis)[[1]]
-  BF <- if (is.infinite(h$Evid.Ratio)) paste("\\geq", get_nsamples(model)) else paste("=", round(h$Evid.Ratio, digits = digits))
-  if (est == T & bf == T) {  str_c("Est. = ", round(h[[2]], digits = digits), "; BF ", BF) }
-  else if (est) { h[[2]] }
-  else if (bf) { round(hypothesis(model, hypothesis)[[1]][[6]], digits = digits) }
-  else {
-    paste0(
-    "\\(\\hat{\\beta} = ", round(h$Estimate, digits = digits),
-    "\\), 90\\%-CI = \\([", round(h$CI.Lower, digits = digits + 1), ", ", round(h$CI.Upper, digits = digits + 1),
-    "]\\), \\(BF ", BF,
-    "\\), \\(p_{posterior} = \\) \\(", signif(h$Post.Prob, digits = 3), "\\)") }
+  # Get posterior density at zero
+  density.post <- density(hypothesis(model, hypothesis, robust = robust)$samples[["H1"]], n = n.density_steps)
+  density.post <- density.post$y[which.min(abs(density.post$x))]
+
+  # Pre-allocate vector for efficiency
+  density.priors <- numeric(n.iterations)
+
+  # Sample different prior densities at zero
+  for (i in 1:n.iterations) {
+    density.prior <- density(hypothesis(model, hypothesis, robust = robust)$prior_samples[["H1"]], n = n.density_steps)
+    density.priors[i] <- density.prior$y[which.min(abs(density.prior$x))]
+
+    #print(paste("Cumulative mean BF:", density.post / mean(density.priors[1:i])))
+  }
+
+  return(round(density.post / mean(density.priors), 1))
 }
 
-# Function to get identity CI of a model summary
-get_CI <- function(model, term, hypothesis) {
-
-  paste0(round(as.numeric(summary(model)$fixed[term, 1]), 1), " 95%-CI: ",
-         paste(round(as.numeric(summary(model)$fixed[term, 3:4]), 1), collapse = " to "),
-         "; ",
-         get_bf(model = model, hypothesis = hypothesis))
+get_bf <- function(model, hypothesis, est = FALSE, bf = FALSE, unscale = FALSE, 
+                   data = NULL, digits = 2, robust = TRUE, use_seed = TRUE) {
+  # Create hypothesis object ONCE to use consistently
+  h <- hypothesis(model, hypothesis, robust = robust)
+  
+  # If unscaling is requested, modify h results
+  if (unscale && !is.null(data)) {
+    # Extract coefficient name from hypothesis
+    hypothesis_text <- hypothesis
+    
+    # Clean up the hypothesis string to extract coefficient names
+    coef_name <- stringr::str_remove_all(hypothesis_text, "\\s*[<>=/+-]\\s*0.*$")
+    coef_name <- stringr::str_remove_all(coef_name, "[\\(\\)]")
+    
+    # Only process predictors with _gs suffix
+    if (stringr::str_detect(coef_name, "_gs")) {
+      tryCatch({
+        # Get unscaled estimates and scaling factor
+        unscaled_est <- unscale_all_estimates(model, coef_name, data)
+        
+        # Replace the estimate and error with unscaled versions
+        h$hypothesis$Estimate <- unscaled_est$Estimate
+        h$hypothesis$Est.Error <- unscaled_est$Est.Error
+        
+        # Scale CI bounds with the same scaling factor
+        scaling_factor <- unscaled_est$scaling_factor
+        h$hypothesis$CI.Lower <- h$hypothesis$CI.Lower * scaling_factor
+        h$hypothesis$CI.Upper <- h$hypothesis$CI.Upper * scaling_factor
+      }, error = function(e) {
+        warning(paste("Could not unscale:", coef_name, "-", e$message))
+      })
+    }
+  }
+  
+  # Extract evidence ratio and check if it's infinite
+  evid_ratio <- round(h[[1]]$Evid.Ratio, digits = digits - 1)
+  BF_formatted <- if (is.infinite(evid_ratio)) {
+    paste("\\geq", get_nsamples(model))
+  } else {
+    paste("=", round(evid_ratio, digits = digits - 1))
+  }
+  
+  # Return appropriate result based on parameters
+  if (est & bf) {
+    # Return both estimate and BF
+    return(str_c("Est. = ", round(h[[1]]$Estimate, digits = digits), "; BF ", BF_formatted))
+  }
+  else if (est) {
+    # Return only the estimate
+    return(h[[1]]$Estimate)
+  }
+  else if (bf) {
+    # Special case for point hypotheses with = sign
+    if (str_detect(hypothesis, "=") & !str_detect(hypothesis, "[<>]")) {
+      new_bf <- get_mean_BF(model, hypothesis, use_seed = use_seed)
+      new_post_prob <- new_bf / (1 + new_bf)
+      
+      # Store post_prob as an attribute of the return value
+      bf_value <- new_bf
+      attr(bf_value, "post_prob") <- new_post_prob
+      return(bf_value)
+    } else {
+      # Standard BF for other hypotheses
+      if (is.infinite(evid_ratio)) {
+        return(get_nsamples(model))
+      } else {
+        return(round(evid_ratio, digits = digits - 1))
+      }
+    }
+  } else {
+    # Default: full formatted string
+    return(paste0(
+      "estimate = ", round(h[[1]]$Estimate, digits = digits),
+      ", 90\\%-CI = \\([", round(h[[1]]$CI.Lower, digits = digits + 1),
+      ", ", round(h[[1]]$CI.Upper, digits = digits + 1),
+      "]\\), \\(BF ", BF_formatted,
+      "\\), \\(p_{posterior} = \\) \\(", round(h[[1]]$Post.Prob, digits = digits),
+      "\\)"))
+  }
 }
 
 print_CI <- function(model, term) {
-
-  paste0(round(plogis(as.numeric(summary(model)$fixed[term, 1])) * 100, 1),
+  # Get the estimate from fixef()
+  estimate <- fixef(model)[term, "Estimate"]
+  
+  # Get the CI bounds - also from fixef to be consistent
+  lower_ci <- fixef(model)[term, "Q2.5"]
+  upper_ci <- fixef(model)[term, "Q97.5"]
+  
+  # Format the output
+  paste0(round(plogis(estimate) * 100, 1),
          "%, 95%-CI: ",
-         paste0(round(plogis(as.numeric(summary(model)$fixed[term, 3:4])) * 100, 1), collapse = " to "), "%")
+         round(plogis(lower_ci) * 100, 1), 
+         " to ", 
+         round(plogis(upper_ci) * 100, 1), 
+         "%")
 }
 
 # Pipes and functions for plot and table aesthetics -----------------------------------------------------------
@@ -508,7 +686,7 @@ geom_linefit <- function(
     labs(x = "VOT (ms)", y = "Proportion \"t\"-responses"),
     scale_color_manual(
       "Condition",
-      labels = c("baseline", "+10ms", "+40ms"),
+      labels = c("-20ms", "-10ms", "+20ms"),
       values = colours.condition,
       aesthetics = c("color", "fill")),
     theme(
@@ -528,6 +706,86 @@ align_tab <- function(hyp) {
   map_chr(hyp, ~ ifelse(class(.x) == "numeric", "r","l"))
 }
 
+# Function to process hypothesis tables and calculate BFs for point hypotheses
+get_hyp_data <- function(model.fit, hyp.vec, use_seed = TRUE) {
+  # Get hypothesis results
+  hyp_data <- hypothesis(
+    model.fit,
+    hyp.vec,
+    robust = TRUE
+  )
+
+  results <- hyp_data %>%
+    .$hypothesis %>%
+    dplyr::select(-Star) %>%
+    bind_cols(p_direction(hyp_data$samples)["pd"])
+
+  # Identify point hypotheses
+  point_hyp_indices <- which(map_lgl(hyp.vec, function(h) {
+    str_detect(h, "=") & !str_detect(h, "[<>]")
+  }))
+
+  # Calculate BFs for identified point hypotheses
+  if (length(point_hyp_indices) > 0) {
+    # Get BF values for each point hypothesis
+    new_bf_values <- map_dbl(point_hyp_indices, function(idx) {
+
+      get_mean_BF(model.fit, hyp.vec[idx], use_seed = use_seed)
+    })
+    new_p.post_values <- map_dbl(new_bf_values, ~ .x / (1 + .x))
+
+    # Replace Evid.Ratio only for point hypotheses
+    results$Evid.Ratio[point_hyp_indices] <- new_bf_values
+    results$Post.Prob[point_hyp_indices] <- new_p.post_values
+  }
+
+  return(results)
+}
+
+get_unscaled_hyp_data <- function(model, hyp_vec, data = NULL, use_seed = TRUE) {
+  # First get regular hypothesis results 
+  results <- get_hyp_data(model, hyp_vec, use_seed)
+  
+  # If no data is provided, return the original results
+  if (is.null(data)) {
+    warning("No data provided for unscaling - returning scaled coefficients")
+    return(results)
+  }
+  
+  # Process each hypothesis
+  for (i in seq_along(results$Hypothesis)) {
+    # Extract coefficient name from hypothesis
+    hypothesis_text <- results$Hypothesis[i]
+    
+    # Clean up the hypothesis string to extract coefficient names
+    coef_name <- stringr::str_remove_all(hypothesis_text, "\\s*[<>=/+-]\\s*0.*$")
+    coef_name <- stringr::str_remove_all(coef_name, "[\\(\\)]")
+    
+    # Only process predictors with _gs suffix
+    if (stringr::str_detect(coef_name, "_gs")) {
+      # Get unscaled values
+      tryCatch({
+        # Get unscaled estimates and scaling factor
+        unscaled_est <- unscale_all_estimates(model, coef_name, data)
+        
+        # Replace the estimate and standard error with unscaled versions
+        results$Estimate[i] <- unscaled_est$Estimate
+        results$Est.Error[i] <- unscaled_est$Est.Error
+        
+        # Use the scaling factor directly to scale CI bounds 
+        # This handles the 90% CI from hypothesis() correctly
+        scaling_factor <- unscaled_est$scaling_factor
+        results$CI.Lower[i] <- results$CI.Lower[i] * scaling_factor
+        results$CI.Upper[i] <- results$CI.Upper[i] * scaling_factor}, 
+        error = function(e) {
+        warning(paste("Could not unscale:", coef_name, "-", e$message))
+      })
+    }
+  }
+  return(results)
+}
+
+
 make_hyp_table <- function(model = NULL, hypothesis, hypothesis_names, caption, col1_width = "15em", digits = 2) {
   bind_cols(
     tibble(Hypothesis = hypothesis_names), hypothesis) %>%
@@ -535,22 +793,23 @@ make_hyp_table <- function(model = NULL, hypothesis, hypothesis_names, caption, 
     mutate(
       across(
         c(Estimate, Est.Error, CI.Lower, CI.Upper),
-        ~ round(., digits = digits)),
+        ~ round(.x, digits = digits)),
       across(
-        c(Post.Prob),
-        ~ round(., digits = 3)),
+        c(Post.Prob, pd),
+        ~ round(.x, digits = 3)),
       Evid.Ratio = ifelse((is.infinite(Evid.Ratio)), paste("$\\geq", get_nsamples(model), "$"), round(Evid.Ratio, digits = 1)),
       CI = paste0("[", CI.Lower, ", ", CI.Upper, "]")) %>%
     dplyr::select(-c(CI.Upper, CI.Lower)) %>%
-    relocate(CI, .before = "Evid.Ratio") %>%
+    relocate(CI, .after = "Est.Error") %>%
+    relocate(pd, .before = "Evid.Ratio") %>%
     kbl(
       caption = caption,
       digits = digits,
-      align = align_tab(hypothesis),
+      align = c("l", "r", "r", "l", "r", "r", "r"),
       format = "latex",
       booktabs = TRUE,
       escape = FALSE,
-      col.names = c("Hypothesis", "Est.", "SE", "90\\%-CI", "BF", "$p_{post}$")) %>%
+      col.names = c("Hypothesis", "Est.", "SE", "90\\%-CI", "$p_{direction}$", "BF", "$p_{post}$")) %>%
     # HOLD_position for latex table placement H and hold_position for latex h!, neither if placement is left to latex
     kable_styling(latex_options = "HOLD_position", full_width = FALSE) %>%
     column_spec(1, width = col1_width)
@@ -751,7 +1010,8 @@ fit_logistic_regression_to_model_categorization <- function(.data, resolution = 
       group_by(group, .chain, .iteration, .draw) %>%
       nest()
   }
-  .data %>%
+
+  .data %<>%
     mutate(
     model_unscaled = map(data, ~ glm(
       cbind(n_t, n_d) ~ 1 + VOT,
@@ -770,6 +1030,8 @@ fit_logistic_regression_to_model_categorization <- function(.data, resolution = 
     # (this still keeps all individual predictions but only has one unique combination
     # of exposure condition and test
     { if ("group" %in% names(.)) mutate(., group = gsub("[ABC]A", "", group)) else (.) }
+
+  return(.data)
 }
 
 
@@ -837,9 +1099,9 @@ get_IBBU_predicted_response <- function(
     groups = NULL,
     untransform_cues = T,
     target_category = 2, # target category "/d/" = 1, "/t/" = 2
-    predict_test = T,
-    seed = 583,
-    ndraws = 1000
+    seed = NULL,
+    ndraws = NULL,
+    logit = F
 ) {
   # Get and summarize posterior draws from fitted model
   d.pars <-
@@ -853,34 +1115,31 @@ get_IBBU_predicted_response <- function(
       untransform_cues = untransform_cues) %>%
     filter(group %in% .env$groups)
 
-
   # Categorize data
   d.pars %<>%
     group_by(group, .chain, .iteration, .draw) %>%
-    do(f = get_categorization_function_from_grouped_ibbu_stanfit_draws(., logit = F)) %>%
+    do(f = get_categorization_function_from_grouped_ibbu_stanfit_draws(.)) %>%
     right_join(data, by = "group") %>%
     group_by(group, .chain, .iteration, .draw) %>%
     mutate(
       Predicted_posterior =
         pmap(
           .l = list(f, cues_joint, target_category),
-          .f = ~ exec(..1, x = ..2$x, target_category = target_category))) %>%
+          .f = ~ exec(..1, x = ..2$x, target_category = target_category, logit = logit))) %>%
     select(-f) %>%
-    unnest(c(cues_joint, cues_separate, Predicted_posterior)) %>%
+    unnest(c(cues_joint, cues_separate, Predicted_posterior))
+
+  d.pars %<>%
     # Repair estimates that yield infinite posteriors
-    mutate(
+    { if (logit == F) . else mutate(
+      .,
       Predicted_posterior =
         case_when(
           is.infinite(Predicted_posterior) & sign(Predicted_posterior) == 1 ~ 1,
           is.infinite(Predicted_posterior) & sign(Predicted_posterior) == -1 ~ 0,
-          T ~ Predicted_posterior)) %>%
-    # for posterior predictions of exposure stimuli, get categorisations based on proportion and criterion decision rules
-    { if (predict_test) . else mutate(
-      .,
-      Response.Proportion = ifelse(category == "/t/", Predicted_posterior, 1 - Predicted_posterior),
-      Response.Criterion = ifelse(Predicted_posterior >= .5, "/t/","/d/")
-      ) }
+          T ~ Predicted_posterior)) }
 }
+
 
 get_IO_predicted_PSE <- function(
     condition,
