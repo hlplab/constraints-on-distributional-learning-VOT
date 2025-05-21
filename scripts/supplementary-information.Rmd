@@ -105,7 +105,7 @@ We used the *corrected* rather than *measured* f0 and vowel duration values. Thi
 
 (ref:exposure-stimuli-cues) Correlations of VOT, f0 and vowel duration of the synthesized stimuli **A)** before and **B)** after measurement corrections.
 
-```{r exposure-stimuli-cues, fig.height=5.5, fig.width=10, fig.cap="(ref:exposure-stimuli-cues)"}
+```{r exposure-stimuli-cues, fig.height=5.5, fig.width=10, out.width="100%", fig.cap="(ref:exposure-stimuli-cues)"}
 cue_measurements <- 
   read_csv("../data/exposure_stimuli_cue_measurements.csv", show_col_types = F) %>% 
   rename(f0.target = Item.f0,
@@ -148,7 +148,7 @@ Figure \@ref(fig:exposure-means-database-matrix-plot-detailed) shows the placeme
 
 (ref:exposure-means-database-matrix-plot-detailed) Same as Figure \@ref(fig:prior-distributions-and-exposure-conditions)A in the main text. But also showing the distributions for `r nrow(d.chodroff_wilson.isolated)` words produced in connected speech by `r length(unique(d.chodroff_wilson.isolated$Talker))` female talkers from the same database (confirming the conclusions reached here). 
 
-```{r exposure-means-database-matrix-plot-detailed, fig.width=base.width*4, fig.height=base.height*2.5+2, fig.cap="(ref:exposure-means-database-matrix-plot-detailed)"}
+```{r exposure-means-database-matrix-plot-detailed, fig.width=base.width*4, fig.height=base.height*2.5+2, out.width="100%", fig.cap="(ref:exposure-means-database-matrix-plot-detailed)"}
 p.placement_of_exposure_means_relative_to_prior %+%
   (d.chodroff_wilson %>%
      group_by(speechstyle, category) %>%
@@ -427,7 +427,7 @@ p.matrix_connected.norm <-
 
 (ref:plot-database-pairwise-cue-correlations) Placement of test tokens of our experiment relative to distribution of three important cues to word-initial stop-voicing in L1-US English. **A)** Isolated speech of initial /d/ and /t/ syllables by `r length(unique(d.chodroff_wilson.isolated$Talker)) ` female talkers. **B)** Same as A) but talker-normalized. **C)** Connected speech of word-initial /d/ and /t/ by `r length(unique(d.chodroff_wilson.connected$Talker)) ` female talkers. **D)** Same as C) but talker-normalized. Following @xie2023, we added the overall cue mean to all talker-normalized tokens in order to show normalized tokens in the same space as unnormalized tokens (thus keeping the phonetic space constant across panels). <!-- TO DO: I actually liked the color version of this plot, but up to you -->
 
-```{r plot-database-pairwise-cue-correlations, fig.height=8.5, fig.width=10, fig.cap="(ref:plot-database-pairwise-cue-correlations)"}
+```{r plot-database-pairwise-cue-correlations, fig.height=8.5, fig.width=10, out.width="100%", fig.cap="(ref:plot-database-pairwise-cue-correlations)"}
 (p.matrix_isolated + p.matrix_isolated.norm) / (p.matrix_connected + p.matrix_connected.norm) +
   plot_annotation(tag_levels = 'A', tag_suffix = ")") + 
   plot_layout(guides = "collect") &
