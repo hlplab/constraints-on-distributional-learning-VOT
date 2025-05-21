@@ -739,7 +739,7 @@ DDDDEEEE
   theme(legend.position = "none", axis.text = element_text(size = 8))
 ```
 
-```{r plot-fit-pars, fig.width=12.5, fig.height=9, fig.cap="(ref:plot-fit-pars)"}
+```{r plot-fit-pars, fig.width=12.5, fig.height=9, out.width="100%", fig.cap="(ref:plot-fit-pars)"}
 (p.fit_1to7 + aes(
       xmin = -Inf, xmax = Inf,
       ymin = 1.05, ymax = 1.71)) + p.fit_7to9 + p.PSE_1to9 + p.estimates_1to7 +
