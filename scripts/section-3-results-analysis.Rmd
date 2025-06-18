@@ -808,24 +808,24 @@ m_IO.VOT_f0_vowel <-
 
 # fit ideal adaptor with 3 cue priors
 m_IA.VOT_f0_vowelduration_informedprior <-
-  infer_prior_beliefs(
-    exposure = d_for_ASP %>% filter(Phase == "exposure"),
-    test = d_for_ASP %>% filter(Phase == "test"),
-    cues = c("VOT", "f0_Mel", "vowel_duration"),  
-    category = "Item.ExpectedResponse.Category",
-    response = "Response.Category",
-    group = "ParticipantID",
-    group.unique = "ExposureGroup",
-    center.observations = T,   
-    scale.observations = F,
-    pca.observations = F,
-    lapse_rate = NULL,
-    mu_0 = m_IO.VOT_f0_vowel$mu,
-    Sigma_0 = map2(m_IO.VOT_f0_vowel$Sigma, m_IO.VOT_f0_vowel$Sigma_noise, `+`),
-    sample = T,
+  fit_ideal_adaptor(
+    staninput =
+      make_staninput(
+        exposure = d_for_ASP %>% filter(Phase == "exposure"),
+        test = d_for_ASP %>% filter(Phase == "test"),
+        cues = c("VOT", "f0_Mel", "vowel_duration"),  
+        category = "Item.ExpectedResponse.Category",
+        response = "Response.Category",
+        group = "ParticipantID",
+        group.unique = "ExposureGroup",
+        lapse_rate = NULL, 
+        mu_0 = m_IO.VOT_f0_vowel$mu,
+        Sigma_0 = map2(m_IO.VOT_f0_vowel$Sigma, m_IO.VOT_f0_vowel$Sigma_noise, `+`),
+        stanmodel = "NIW_ideal_adaptor"),
     file = "../models/IBBU_VOT+f0+vowelduration_informative_priors.RDS",
     warmup = 3000, iter = 4000,
-    control = list(adapt_delta = .995, max_treedepth = 15))
+    control = list(adapt_delta = .995, max_treedepth = 15),
+    file_refit = if (RESET_MODELS) "always" else "on_change")
 ```
 
 ```{r get-and-summarise-PSE-predictions-of-IA}
@@ -840,9 +840,9 @@ if (file.exists("../models/d.IA_predicted_test_informedprior.rds") & !RESET_MODE
 } else {
   d.IA_predicted_logodds <-
     get_IBBU_predicted_response(
-      m_IA.VOT_f0_vowelduration_informedprior,
+      model = m_IA.VOT_f0_vowelduration_informedprior,
       data = 
-        prep_data_for_IBBU_prediction(m_IA.VOT_f0_vowelduration_informedprior, prep_test = T, untransform_cues = T) %>%
+        prep_data_for_IBBU_prediction(m_IA.VOT_f0_vowelduration_informedprior, prep_test = T) %>%
         # Make additional rows for test block 1 so that there is 1 for each condition
         mutate(rows = ifelse(group == "no exposure", 3, 1)) %>%
         uncount(rows) %>%
@@ -850,8 +850,7 @@ if (file.exists("../models/d.IA_predicted_test_informedprior.rds") & !RESET_MODE
           Condition.Exposure = factor(c(rep("Shift0", 9), rep("Shift10", 9), rep("Shift40", 9), c("Shift0", "Shift10", "Shift40"))),
           Block = ifelse(group != "no exposure", str_replace(group, ".*(\\d)", "\\1"), group),
           Block = factor(ifelse(group == "no exposure", 1, Block))),
-      groups = get_group_levels_from_stanfit(m_IA.VOT_f0_vowelduration_informedprior),
-      untransform_cues = T,
+      groups = get_group_levels(m_IA.VOT_f0_vowelduration_informedprior),
       logit = T,
       seed = GLOBAL_SEED) 
  
@@ -950,6 +949,7 @@ d.psychometric_intercept.slope.PSE.median %>%
 ```
 
 Critically, such a distributional learning model is *much* more constrained in the type of changes it can fit than the psychometric model we have used above to analyze our data. The psychometric model makes no assumptions whatsoever about the way in which listeners' perception changes during exposure, and is thus free to fit any pattern of changes in participants' responses. This flexibility of the psychometric model was desirable for the evaluation of predictions 1-4 presented above: the findings so far are noteworthy precisely because the psychometric analysis could have just as well found that participants' behavior was completely unrelated to, or even directly contradicting, the predictions of distributional learning. However, psychometric analyses cannot address whether the totality of all changes in participants' perception across exposure conditions and test blocks is actually consistent with the predictions of distributional learning. For example, the psychometric analysis leaves open whether distributional learning can explain both the rapid changes at the start of exposure *and* the slower changes that occur later in exposure. In contrast, a distributional learning model specifies how information is integrated across exposure trials and blocks. As a consequence, listeners' responses during different test blocks and across different exposure conditions jointly constrain the parameters of model (e.g., for the ideal adaptor, due to assumption of ideal information integration within and across exposure blocks). To appreciate just how different the ideal adaptor is from the psychometric model, consider that the latter used `r sum(str_detect(rownames(fixef(fit_test)), "mu2")) - sum(str_detect(rownames(fixef(fit_test)), "Test5vs.Test4|Test6vs.Test5"))` population-level ('fixed') and `r length(get_variables(fit_test)[grep("^sd_|^cor_", get_variables(fit_test))]) - sum(str_detect(get_variables(fit_test)[grep("^sd_|^cor_", (get_variables(fit_test)))], "Block_Test6vs.Test5|Block_Test5vs.Test4"))` group-level ('random') effect parameters, whereas the ideal adaptor uses a total of 3 parameters! It is thus possible that a distributional learning model does *not* provide a good explanation for the quantitative changes in listeners' perception even if all qualitative predictions of distributional learning are met.
+
 ```{r compute-R2-between-ideal-adaptor-and-psychometric-model}
 psych.model_prediction <-
   epred_draws(
@@ -991,8 +991,7 @@ IA.prediction <-
   group_by(group, VOT) %>%
   summarise(across(Predicted_posterior, mean)) %>%
   mutate(ExposureGroup = ifelse(group == "prior", "no exposure", group)) %>%
-  left_join(get_test_data_from_stanfit(m_IA.VOT_f0_vowelduration_informedprior) %>%
-              get_untransform_function_from_stanfit(m_IA.VOT_f0_vowelduration_informedprior)(.)) %>%
+  left_join(get_test_data(m_IA.VOT_f0_vowelduration_informedprior, .from_staninput = T)) %>%
   mutate(
     Response = `/t/` / (`/d/` + `/t/`),
     group = gsub("[ABC]A", "", group))
@@ -1136,7 +1135,7 @@ summarize.NIW_ideal_adaptor_stanfit <- function(
       "Cond Shift10AA_Up to test3", "Cond Shift10AA_Up to test5", "Cond Shift10AA_Up to test7",
       "Cond Shift40AA_Up to test3", "Cond Shift40AA_Up to test5", "Cond Shift40AA_Up to test7")
 ) {
-  add_ibbu_stanfit_draws(x, groups = groups, summarize = F) %>%
+  get_draws(x, groups = groups, summarize = F) %>%
     unnest_cue_information_in_model() %>%
     gather_variables(exclude = c(".chain", ".iteration", ".draw", ".row", "cue", "cue2", "group", "category")) %>%
     ungroup() %>%

@@ -34,22 +34,22 @@ unscale_all_estimates <- function(model, coef_name, data) {
   coef_std_error <- fixef(model)[coef_name, "Est.Error"]
   coef_lower_ci <- fixef(model)[coef_name, "Q2.5"]
   coef_upper_ci <- fixef(model)[coef_name, "Q97.5"]
-  
+
   # check if this is an interaction term
   if(str_detect(coef_name, ":")){
     var_names <- str_split(coef_name, ":")[[1]]
     var_names <- str_remove(var_names, "_gs$")
-    
+
     sds <- map_dbl(var_names, function(var) {
       var_gs <- str_c(var, "_gs")
-      sd_attr <- attr(data[[var_gs]], str_c(var, ".SD")) 
-      
+      sd_attr <- attr(data[[var_gs]], str_c(var, ".SD"))
+
       if (is.null(sd_attr)) {
         warning("Could not find SD attribute for ", var, "- using default of 1 instead")
         return(1)
       }
       return(sd_attr)
-    })  
+    })
     # unscale the coef and accompanying estimates
     scaling_factor <- 1 / prod(sds * 2)
     unscaled_estimates <- list(
@@ -58,19 +58,19 @@ unscale_all_estimates <- function(model, coef_name, data) {
       Q2.5 = coef_lower_ci * scaling_factor,
       Q97.5 = coef_upper_ci * scaling_factor,
       scaling_factor = scaling_factor)
-    
+
     return(unscaled_estimates)
-  } 
+  }
   else {
     var_name <- str_remove(coef_name, "_gs$")
     var_gs <- str_c(var_name, "_gs")
     sd_attr <- attr(data[[var_gs]], str_c(var_name, ".SD"))
-    
+
     if (is.null(sd_attr)) {
       warning("Could not find SD attribute for ", var_name, "- using default of 1 instead")
       sd_attr <- 1
     }
-    
+
     # unscale coef
     scaling_factor <- 1 / (2 * sd_attr)
     unscaled_estimates <- list(
@@ -79,7 +79,7 @@ unscale_all_estimates <- function(model, coef_name, data) {
       Q2.5 = coef_lower_ci * scaling_factor,
       Q97.5 = coef_upper_ci * scaling_factor,
       scaling_factor = scaling_factor)
-    
+
     return(unscaled_estimates)
   }
 }
@@ -549,30 +549,30 @@ get_mean_BF <- function(model, hypothesis, robust = TRUE, n.iterations = 100, n.
   return(round(density.post / mean(density.priors), 1))
 }
 
-get_bf <- function(model, hypothesis, est = FALSE, bf = FALSE, unscale = FALSE, 
+get_bf <- function(model, hypothesis, est = FALSE, bf = FALSE, unscale = FALSE,
                    data = NULL, digits = 2, robust = TRUE, use_seed = TRUE) {
   # Create hypothesis object ONCE to use consistently
   h <- hypothesis(model, hypothesis, robust = robust)
-  
+
   # If unscaling is requested, modify h results
   if (unscale && !is.null(data)) {
     # Extract coefficient name from hypothesis
     hypothesis_text <- hypothesis
-    
+
     # Clean up the hypothesis string to extract coefficient names
     coef_name <- stringr::str_remove_all(hypothesis_text, "\\s*[<>=/+-]\\s*0.*$")
     coef_name <- stringr::str_remove_all(coef_name, "[\\(\\)]")
-    
+
     # Only process predictors with _gs suffix
     if (stringr::str_detect(coef_name, "_gs")) {
       tryCatch({
         # Get unscaled estimates and scaling factor
         unscaled_est <- unscale_all_estimates(model, coef_name, data)
-        
+
         # Replace the estimate and error with unscaled versions
         h$hypothesis$Estimate <- unscaled_est$Estimate
         h$hypothesis$Est.Error <- unscaled_est$Est.Error
-        
+
         # Scale CI bounds with the same scaling factor
         scaling_factor <- unscaled_est$scaling_factor
         h$hypothesis$CI.Lower <- h$hypothesis$CI.Lower * scaling_factor
@@ -582,7 +582,7 @@ get_bf <- function(model, hypothesis, est = FALSE, bf = FALSE, unscale = FALSE,
       })
     }
   }
-  
+
   # Extract evidence ratio and check if it's infinite
   evid_ratio <- round(h[[1]]$Evid.Ratio, digits = digits - 1)
   BF_formatted <- if (is.infinite(evid_ratio)) {
@@ -590,7 +590,7 @@ get_bf <- function(model, hypothesis, est = FALSE, bf = FALSE, unscale = FALSE,
   } else {
     paste("=", round(evid_ratio, digits = digits - 1))
   }
-  
+
   # Return appropriate result based on parameters
   if (est & bf) {
     # Return both estimate and BF
@@ -605,7 +605,7 @@ get_bf <- function(model, hypothesis, est = FALSE, bf = FALSE, unscale = FALSE,
     if (str_detect(hypothesis, "=") & !str_detect(hypothesis, "[<>]")) {
       new_bf <- get_mean_BF(model, hypothesis, use_seed = use_seed)
       new_post_prob <- new_bf / (1 + new_bf)
-      
+
       # Store post_prob as an attribute of the return value
       bf_value <- new_bf
       attr(bf_value, "post_prob") <- new_post_prob
@@ -633,17 +633,17 @@ get_bf <- function(model, hypothesis, est = FALSE, bf = FALSE, unscale = FALSE,
 print_CI <- function(model, term) {
   # Get the estimate from fixef()
   estimate <- fixef(model)[term, "Estimate"]
-  
+
   # Get the CI bounds - also from fixef to be consistent
   lower_ci <- fixef(model)[term, "Q2.5"]
   upper_ci <- fixef(model)[term, "Q97.5"]
-  
+
   # Format the output
   paste0(round(plogis(estimate) * 100, 1),
          "%, 95%-CI: ",
-         round(plogis(lower_ci) * 100, 1), 
-         " to ", 
-         round(plogis(upper_ci) * 100, 1), 
+         round(plogis(lower_ci) * 100, 1),
+         " to ",
+         round(plogis(upper_ci) * 100, 1),
          "%")
 }
 
@@ -743,40 +743,40 @@ get_hyp_data <- function(model.fit, hyp.vec, use_seed = TRUE) {
 }
 
 get_unscaled_hyp_data <- function(model, hyp_vec, data = NULL, use_seed = TRUE) {
-  # First get regular hypothesis results 
+  # First get regular hypothesis results
   results <- get_hyp_data(model, hyp_vec, use_seed)
-  
+
   # If no data is provided, return the original results
   if (is.null(data)) {
     warning("No data provided for unscaling - returning scaled coefficients")
     return(results)
   }
-  
+
   # Process each hypothesis
   for (i in seq_along(results$Hypothesis)) {
     # Extract coefficient name from hypothesis
     hypothesis_text <- results$Hypothesis[i]
-    
+
     # Clean up the hypothesis string to extract coefficient names
     coef_name <- stringr::str_remove_all(hypothesis_text, "\\s*[<>=/+-]\\s*0.*$")
     coef_name <- stringr::str_remove_all(coef_name, "[\\(\\)]")
-    
+
     # Only process predictors with _gs suffix
     if (stringr::str_detect(coef_name, "_gs")) {
       # Get unscaled values
       tryCatch({
         # Get unscaled estimates and scaling factor
         unscaled_est <- unscale_all_estimates(model, coef_name, data)
-        
+
         # Replace the estimate and standard error with unscaled versions
         results$Estimate[i] <- unscaled_est$Estimate
         results$Est.Error[i] <- unscaled_est$Est.Error
-        
-        # Use the scaling factor directly to scale CI bounds 
+
+        # Use the scaling factor directly to scale CI bounds
         # This handles the 90% CI from hypothesis() correctly
         scaling_factor <- unscaled_est$scaling_factor
         results$CI.Lower[i] <- results$CI.Lower[i] * scaling_factor
-        results$CI.Upper[i] <- results$CI.Upper[i] * scaling_factor}, 
+        results$CI.Upper[i] <- results$CI.Upper[i] * scaling_factor},
         error = function(e) {
         warning(paste("Could not unscale:", coef_name, "-", e$message))
       })
@@ -1063,19 +1063,17 @@ get_logistic_parameters_from_model <- function(
 prep_data_for_IBBU_prediction <- function(
     model,
     data = NULL,
-    untransform_cues = T,
     prep_test = T
 ) {
-  cue.labels <- get_cue_levels_from_stanfit(model)
+  cue.labels <- get_cue_levels(model)
   # gets test data from IA fit
   # exposure data needs to be obtained from relevant dataframe external to the IA fit object
   if (prep_test) {
-  get_test_data_from_stanfit(model) %>%
+  get_test_data(model, .from_staninput = T) %>%
     distinct(!!! syms(cue.labels)) %>%
-    { if (untransform_cues) get_untransform_function_from_stanfit(model)(.) else . } %>%
     make_vector_column(cols = cue.labels, vector_col = "x", .keep = "all") %>%
     nest(cues_joint = x, cues_separate = .env$cue.labels) %>%
-    expand_grid(group = get_group_levels_from_stanfit(model))
+    expand_grid(group = get_group_levels(model))
   } else {
     # Prepare exposure_data
     data %>%
@@ -1097,7 +1095,6 @@ get_IBBU_predicted_response <- function(
     model,
     data,
     groups = NULL,
-    untransform_cues = T,
     target_category = 2, # target category "/d/" = 1, "/t/" = 2
     seed = NULL,
     ndraws = NULL,
@@ -1105,22 +1102,16 @@ get_IBBU_predicted_response <- function(
 ) {
   # Get and summarize posterior draws from fitted model
   d.pars <-
-    add_ibbu_stanfit_draws(
+    get_categorization_function(
       model,
       groups = groups,
-      summarize = F,
-      wide = F,
       seed = seed,
-      ndraws = ndraws,
-      untransform_cues = untransform_cues) %>%
-    filter(group %in% .env$groups)
+      ndraws = ndraws)
 
   # Categorize data
   d.pars %<>%
-    group_by(group, .chain, .iteration, .draw) %>%
-    do(f = get_categorization_function_from_grouped_ibbu_stanfit_draws(.)) %>%
     right_join(data, by = "group") %>%
-    group_by(group, .chain, .iteration, .draw) %>%
+    group_by(group, .draw) %>%
     mutate(
       Predicted_posterior =
         pmap(

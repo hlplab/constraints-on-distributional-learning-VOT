@@ -1909,28 +1909,25 @@ plot_predicted_vs_actual_categorization_responses <- function(data, colors.group
 prep_posterior_draws_for_plotting <- function(
     model,
     groups = NULL,
-    untransform_cues = F,
     # target category "/d/" = 1, "/t/" = 2
     target_category = 2
 ) {
   # Get and summarize posterior draws from fitted model
   d.pars <-
-    add_ibbu_stanfit_draws(
+    get_draws(
       model,
       groups = groups,
       summarize = F,
       wide = F,
-      ndraws = NULL,
-      untransform_cues = untransform_cues) %>%
+      ndraws = NULL) %>%
     filter(group %in% .env$groups)
   
   # Prepare test_data
   # --------- TO DO: THIS MIGHT NEED WORK --------
-  cue.labels <- get_cue_levels_from_stanfit(model)
+  cue.labels <- get_cue_levels(model)
   data.test <-
-    get_test_data_from_stanfit(model) %>%
+    get_test_data(model, .from_staninput = T) %>%
     distinct(!!! syms(cue.labels)) %>%
-    { if (untransform_cues) get_untransform_function_from_stanfit(model)(.) else . } %>%
     make_vector_column(cols = cue.labels, vector_col = "x", .keep = "all") %>%
     nest(cues_joint = x, cues_separate = .env$cue.labels)  %>%
     crossing(group = levels(d.pars$group))
@@ -1938,7 +1935,7 @@ prep_posterior_draws_for_plotting <- function(
   # Categorize test data
   d.pars %>%
     group_by(group, .draw) %>%
-    do(f = get_categorization_function_from_grouped_ibbu_stanfit_draws(.)) %>%
+    do(f = get_categorization_function(.)) %>%
     right_join(data.test, by = "group") %>%
     group_by(group, .draw) %>%
     mutate(
@@ -2000,7 +1997,7 @@ if (!file.exists(paste0(f, ".png")) | RESET_FIGURES){
         "Cond Shift10CA_Up to test3", "Cond Shift10CA_Up to test5", "Cond Shift10CA_Up to test7",
         "Cond Shift40CA_Up to test3", "Cond Shift40CA_Up to test5", "Cond Shift40CA_Up to test7",
         "no exposure"), 
-      untransform_cues = F, target_category = target_category)
+      target_category = target_category)
   
   # Compare predicted and actual responses
   p <- 
@@ -2009,7 +2006,7 @@ if (!file.exists(paste0(f, ".png")) | RESET_FIGURES){
     summarise(across(Predicted_posterior, mean)) %>%
     mutate(VOT = VOT, ExposureGroup = ifelse(group == "prior", "no exposure", group)) %>%
     # Join in participants' responses
-    left_join(get_test_data_from_stanfit(m_IA.VOT_f0_vowelduration_informedprior)) %>%
+    left_join(get_test_data(m_IA.VOT_f0_vowelduration_informedprior, .from_staninput = T)) %>%
     mutate(
       # Get proportion of "t"-responses (since we used target_category = 2 above, when 
       # eliciting predictions from the ideal adaptor)
