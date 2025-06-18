@@ -1914,13 +1914,11 @@ prep_posterior_draws_for_plotting <- function(
 ) {
   # Get and summarize posterior draws from fitted model
   d.pars <-
-    get_draws(
+    get_categorization_function(
       model,
       groups = groups,
-      summarize = F,
-      wide = F,
-      ndraws = NULL) %>%
-    filter(group %in% .env$groups)
+      seed = seed,
+      ndraws = ndraws)
   
   # Prepare test_data
   # --------- TO DO: THIS MIGHT NEED WORK --------
@@ -1934,8 +1932,6 @@ prep_posterior_draws_for_plotting <- function(
 
   # Categorize test data
   d.pars %>%
-    group_by(group, .draw) %>%
-    do(f = get_categorization_function(.)) %>%
     right_join(data.test, by = "group") %>%
     group_by(group, .draw) %>%
     mutate(
@@ -1968,7 +1964,7 @@ ncol <- 3
 
 f <- "../figures/ideal-adaptor-parameter-correlations.png"
 if (!file.exists(f) | RESET_FIGURES){
-  p <- plot_ibbu_stanfit_parameter_correlations(m_IA.VOT_f0_vowelduration_informedprior, category.colors = colours.category_greyscale)
+  p <- plot_parameter_correlations(m_IA.VOT_f0_vowelduration_informedprior, category.colors = colours.category_greyscale)
   ggsave(p, filename = f, width = 12, height = 12)
   plot(p)
 } else {

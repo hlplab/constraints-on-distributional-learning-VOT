@@ -155,5 +155,5 @@ During the preparation of this work, some of the authors used Github Copilot wit
 
 \erefsection
 
-```{r, child="supplementary-information.Rmd", eval =FALSE}
+```{r, child="supplementary-information.Rmd", eval=TRUE}
 ```
