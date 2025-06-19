@@ -1917,8 +1917,7 @@ prep_posterior_draws_for_plotting <- function(
     get_categorization_function(
       model,
       groups = groups,
-      seed = seed,
-      ndraws = ndraws)
+      ndraws = NULL)
   
   # Prepare test_data
   # --------- TO DO: THIS MIGHT NEED WORK --------

@@ -1069,11 +1069,11 @@ prep_data_for_IBBU_prediction <- function(
   # gets test data from IA fit
   # exposure data needs to be obtained from relevant dataframe external to the IA fit object
   if (prep_test) {
-  get_test_data(model, .from_staninput = T) %>%
-    distinct(!!! syms(cue.labels)) %>%
-    make_vector_column(cols = cue.labels, vector_col = "x", .keep = "all") %>%
-    nest(cues_joint = x, cues_separate = .env$cue.labels) %>%
-    expand_grid(group = get_group_levels(model))
+    get_test_data(model, .from_staninput = T) %>%
+      distinct(!!! syms(cue.labels)) %>%
+      make_vector_column(cols = cue.labels, vector_col = "x", .keep = "all") %>%
+      nest(cues_joint = x, cues_separate = .env$cue.labels) %>%
+      expand_grid(group = get_group_levels(model))
   } else {
     # Prepare exposure_data
     data %>%
