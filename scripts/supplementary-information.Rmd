@@ -1815,7 +1815,7 @@ We compared participants' responses against the predictions of an ideal learning
     \node[right=of theta, xshift=-.5cm] (theta_description) {{\em normalization parameters} (here: none)} ; %
     \node[obs, below=of x_prime3] (x) {x} ; %
     \node[const, right=of x, xshift=-.59cm] (x_description) {{\em phonetic properties of stimulus} (VOT, f0, vowel duration)} ;
-%e dges
+% edges
     \edge {x_prime3} {x_prime2} ; %
     \edge {theta} {x_prime3} ; %
     \edge {x} {x_prime3} ; %
